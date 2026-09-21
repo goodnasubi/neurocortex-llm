@@ -1,0 +1,22 @@
+### 参照: results/rust/reference.npz
+[event] 参照 torch-f32 : スパイク不一致 0/1769472 / logits 最大絶対誤差 5.722e-6 最大相対誤差 4.252e-7 ← 厳密一致
+[event] 参照 torch-f64 : スパイク不一致 31/1769472 / logits 最大絶対誤差 6.272e-1 最大相対誤差 4.660e-2
+[event] → 合格
+[spiking-dense] 参照 torch-f32 : スパイク不一致 0/1769472 / logits 最大絶対誤差 5.722e-6 最大相対誤差 4.252e-7 ← 厳密一致
+[spiking-dense] 参照 torch-f64 : スパイク不一致 31/1769472 / logits 最大絶対誤差 6.272e-1 最大相対誤差 4.660e-2
+[spiking-dense] → 合格
+[dense] 参照 torch-f32 : logits 最大絶対誤差 1.776e-5 最大相対誤差 8.547e-7
+[dense] 参照 torch-f64 : logits 最大絶対誤差 1.431e-5 最大相対誤差 6.883e-7
+[dense] → 合格
+検証: 全項目合格
+### 参照: results/rust/reference_corpus.npz
+[event] 参照 torch-f32 : スパイク不一致 0/1769472 / logits 最大絶対誤差 8.583e-6 最大相対誤差 7.352e-7 ← 厳密一致
+[event] 参照 torch-f64 : スパイク不一致 0/1769472 / logits 最大絶対誤差 7.629e-6 最大相対誤差 6.536e-7 ← 厳密一致
+[event] → 合格
+[spiking-dense] 参照 torch-f32 : スパイク不一致 0/1769472 / logits 最大絶対誤差 8.583e-6 最大相対誤差 7.352e-7 ← 厳密一致
+[spiking-dense] 参照 torch-f64 : スパイク不一致 0/1769472 / logits 最大絶対誤差 7.629e-6 最大相対誤差 6.536e-7 ← 厳密一致
+[spiking-dense] → 合格
+[dense] 参照 torch-f32 : logits 最大絶対誤差 1.335e-5 最大相対誤差 7.094e-7
+[dense] 参照 torch-f64 : logits 最大絶対誤差 1.240e-5 最大相対誤差 6.588e-7
+[dense] → 合格
+検証: 全項目合格

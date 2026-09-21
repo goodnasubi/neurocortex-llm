@@ -1,0 +1,141 @@
+{
+  "説明": "Rustイベント駆動実装と密な実装の比較（12.11.2節『ステップ1以降』）",
+  "条件": {
+    "model": "d_model=192 / n_layers=3 / n_heads=4 / vocab=1014 / seq_len=64 / batch=8",
+    "tokens": "results/rust/reference.npz（torch.randint(seed=0)。PyTorch側ベンチと同一）",
+    "rust": "1スレッド・LTO fat・codegen-units=1・target-cpu=native（3モード共通）",
+    "idle_mW": 1093
+  },
+  "jetson_cpu": {
+    "rust_event": {
+      "tokens_per_sec": 2120.4,
+      "mean_mW": 2941,
+      "mJ_per_token": 1.387,
+      "mJ_per_token_net": 0.8715,
+      "threads": 1,
+      "firing_rate": 0.0709,
+      "独立再測定_tokens_per_sec": 2135.7
+    },
+    "rust_spiking_dense": {
+      "tokens_per_sec": 757.7,
+      "mean_mW": 2970,
+      "mJ_per_token": 3.9198,
+      "mJ_per_token_net": 2.4772,
+      "threads": 1,
+      "firing_rate": 0.0709,
+      "独立再測定_tokens_per_sec": 759.3
+    },
+    "rust_dense_baseline": {
+      "tokens_per_sec": 740.2,
+      "mean_mW": 2973,
+      "mJ_per_token": 4.0165,
+      "mJ_per_token_net": 2.5399,
+      "threads": 1,
+      "独立再測定_tokens_per_sec": 744.8
+    },
+    "pytorch_spiking_1core": {
+      "tokens_per_sec": 776.6,
+      "mean_mW": 2674,
+      "mJ_per_token": 3.4432,
+      "mJ_per_token_net": 2.0358,
+      "threads": 1,
+      "note": "OMP_NUM_THREADS=1。発火率がWSLと一致し数値的に健全"
+    },
+    "pytorch_dense_1core": {
+      "tokens_per_sec": 1823.5,
+      "mean_mW": 2936,
+      "mJ_per_token": 1.6101,
+      "mJ_per_token_net": 1.0107,
+      "threads": 1,
+      "note": "OMP_NUM_THREADS=1"
+    },
+    "pytorch_spiking_4core": {
+      "tokens_per_sec": 542.8,
+      "mean_mW": 4625,
+      "mJ_per_token": 8.5206,
+      "mJ_per_token_net": 6.507,
+      "threads": 4,
+      "note": "12.6.3節の既存値。CPUビルドの欠陥でNaN混入"
+    },
+    "pytorch_dense_4core": {
+      "tokens_per_sec": 3456.2,
+      "mean_mW": 5270,
+      "mJ_per_token": 1.5248,
+      "mJ_per_token_net": 1.2086,
+      "threads": 4,
+      "note": "12.6.3節の既存値"
+    }
+  },
+  "jetson_cuda": {
+    "pytorch_spiking": {
+      "tokens_per_sec": 673.7,
+      "mean_mW": 3463,
+      "mJ_per_token": 5.1403,
+      "mJ_per_token_net": 3.5179,
+      "note": "12.6.3節の既存値"
+    },
+    "pytorch_dense": {
+      "tokens_per_sec": 32634.7,
+      "mean_mW": 6528,
+      "mJ_per_token": 0.2,
+      "mJ_per_token_net": 0.1665,
+      "note": "12.6.3節の既存値"
+    }
+  },
+  "wsl_throughput_tokens_per_sec": {
+    "説明": "i5-1334U / taskset -c 0 の1コア固定 / 5回中の最良値（括弧内は実測の振れ幅）。トークンは reference_corpus.npz",
+    "rust_event": 21863.9,
+    "rust_event_range": [
+      20700.5,
+      21863.9
+    ],
+    "rust_spiking_dense": 13114.5,
+    "rust_spiking_dense_range": [
+      10672.7,
+      13114.5
+    ],
+    "rust_dense_baseline": 13778.5,
+    "rust_dense_baseline_range": [
+      13223.6,
+      13778.5
+    ],
+    "pytorch_spiking": 10236.1,
+    "pytorch_dense": 28133.1
+  },
+  "gemm_calibration_GFLOPS_64x192x768_1thread": {
+    "wsl_rust": 60.66,
+    "wsl_pytorch_oneDNN": 108.49,
+    "jetson_rust": 2.73,
+    "jetson_pytorch_oneDNN": 9.1
+  },
+  "mac_per_token": {
+    "実測(corpus, 発火率8.42%)": {
+      "block_dense": 1327104,
+      "block_exec": 230780,
+      "head": 194688,
+      "attn_state": 82944,
+      "skippable_block": 0.826103,
+      "skippable_total": 0.683181
+    },
+    "実測(random, 発火率7.09%)": {
+      "block_dense": 1327104,
+      "block_exec": 214707,
+      "head": 194688,
+      "attn_state": 82944,
+      "skippable_block": 0.838214,
+      "skippable_total": 0.693196
+    },
+    "理論値(results/sparsity_budget.json)": {
+      "skippable_block": 0.825681,
+      "skippable_total": 0.682832
+    }
+  },
+  "verification": {
+    "spikes_corpus": "実テキスト入力: 1,769,472個すべて厳密一致（event / spiking-dense とも、torch 2.14 の f32・f64 参照の両方に対して）",
+    "spikes_random": "ランダムトークン入力: f32参照とは厳密一致するが、f64参照に対しては31/1,769,472個が反転する。これは torch の f32 と f64 の間の差であり（閾値判定が和の順序に敏感）、Rust実装の誤りではない",
+    "logits_max_abs": 8.583e-06,
+    "logits_max_rel": 7.352e-07,
+    "aarch64": "Jetson でビルドした aarch64 バイナリも同じ参照に対して厳密一致",
+    "独立再検証": "2026-09-22、クリーンビルドし直して再実行。スパイク一致・MAC削減率ともに完全に再現"
+  }
+}

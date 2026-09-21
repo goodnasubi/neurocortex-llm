@@ -1,0 +1,16 @@
+# Rust推論実装（12.10節・12.11.2節）
+# イベント駆動スパイキング実装と密な実装を同一言語・同一最適化水準で比較するためのクレート。
+# 外部クレートには一切依存しない（.npz は ZIP_STORED なので標準ライブラリだけで読める）。
+[package]
+name = "neurocortex-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[profile.release]
+# 両実装に等しく適用される最適化設定（公平性のため条件分岐は一切しない）
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
