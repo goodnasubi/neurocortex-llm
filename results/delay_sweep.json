@@ -1,0 +1,342 @@
+{
+  "args": {
+    "delays": "4,8,16,32,64",
+    "betas": "0.5,0.7,0.9,0.95,0.99",
+    "activations": "spiking",
+    "seeds": 3,
+    "steps": 1000,
+    "lr": 0.003,
+    "batch_size": 64,
+    "d_model": 64,
+    "n_layers": 2,
+    "threads": 6,
+    "out": "results/delay_sweep.json"
+  },
+  "rows": [
+    {
+      "activation": "spiking",
+      "beta": 0.5,
+      "delay": 4,
+      "retention_estimate": 2.0,
+      "acc_per_seed": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_acc": 1.0,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.5,
+      "delay": 8,
+      "retention_estimate": 2.0,
+      "acc_per_seed": [
+        0.908203125,
+        0.9287109375,
+        0.9140625
+      ],
+      "mean_acc": 0.9169921875,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.5,
+      "delay": 16,
+      "retention_estimate": 2.0,
+      "acc_per_seed": [
+        0.73193359375,
+        0.5966796875,
+        0.80712890625
+      ],
+      "mean_acc": 0.7119140625,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.5,
+      "delay": 32,
+      "retention_estimate": 2.0,
+      "acc_per_seed": [
+        0.30615234375,
+        0.16162109375,
+        0.15185546875
+      ],
+      "mean_acc": 0.20654296875,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.5,
+      "delay": 64,
+      "retention_estimate": 2.0,
+      "acc_per_seed": [
+        0.111328125,
+        0.1240234375,
+        0.115234375
+      ],
+      "mean_acc": 0.11686197916666667,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.7,
+      "delay": 4,
+      "retention_estimate": 3.333333333333333,
+      "acc_per_seed": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_acc": 1.0,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.7,
+      "delay": 8,
+      "retention_estimate": 3.333333333333333,
+      "acc_per_seed": [
+        0.998046875,
+        1.0,
+        1.0
+      ],
+      "mean_acc": 0.9993489583333334,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.7,
+      "delay": 16,
+      "retention_estimate": 3.333333333333333,
+      "acc_per_seed": [
+        0.923828125,
+        0.91943359375,
+        0.39697265625
+      ],
+      "mean_acc": 0.7467447916666666,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.7,
+      "delay": 32,
+      "retention_estimate": 3.333333333333333,
+      "acc_per_seed": [
+        0.14501953125,
+        0.15185546875,
+        0.10302734375
+      ],
+      "mean_acc": 0.13330078125,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.7,
+      "delay": 64,
+      "retention_estimate": 3.333333333333333,
+      "acc_per_seed": [
+        0.12744140625,
+        0.12158203125,
+        0.11376953125
+      ],
+      "mean_acc": 0.12093098958333333,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.9,
+      "delay": 4,
+      "retention_estimate": 10.000000000000002,
+      "acc_per_seed": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_acc": 1.0,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.9,
+      "delay": 8,
+      "retention_estimate": 10.000000000000002,
+      "acc_per_seed": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_acc": 1.0,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.9,
+      "delay": 16,
+      "retention_estimate": 10.000000000000002,
+      "acc_per_seed": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_acc": 1.0,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.9,
+      "delay": 32,
+      "retention_estimate": 10.000000000000002,
+      "acc_per_seed": [
+        0.99951171875,
+        0.9814453125,
+        0.8212890625
+      ],
+      "mean_acc": 0.93408203125,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.9,
+      "delay": 64,
+      "retention_estimate": 10.000000000000002,
+      "acc_per_seed": [
+        0.1474609375,
+        0.12158203125,
+        0.134765625
+      ],
+      "mean_acc": 0.13460286458333334,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.95,
+      "delay": 4,
+      "retention_estimate": 19.999999999999982,
+      "acc_per_seed": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_acc": 1.0,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.95,
+      "delay": 8,
+      "retention_estimate": 19.999999999999982,
+      "acc_per_seed": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_acc": 1.0,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.95,
+      "delay": 16,
+      "retention_estimate": 19.999999999999982,
+      "acc_per_seed": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_acc": 1.0,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.95,
+      "delay": 32,
+      "retention_estimate": 19.999999999999982,
+      "acc_per_seed": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_acc": 1.0,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.95,
+      "delay": 64,
+      "retention_estimate": 19.999999999999982,
+      "acc_per_seed": [
+        0.6953125,
+        0.45947265625,
+        0.3828125
+      ],
+      "mean_acc": 0.5125325520833334,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.99,
+      "delay": 4,
+      "retention_estimate": 99.99999999999991,
+      "acc_per_seed": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_acc": 1.0,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.99,
+      "delay": 8,
+      "retention_estimate": 99.99999999999991,
+      "acc_per_seed": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_acc": 1.0,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.99,
+      "delay": 16,
+      "retention_estimate": 99.99999999999991,
+      "acc_per_seed": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_acc": 1.0,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.99,
+      "delay": 32,
+      "retention_estimate": 99.99999999999991,
+      "acc_per_seed": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_acc": 1.0,
+      "chance": 0.125
+    },
+    {
+      "activation": "spiking",
+      "beta": 0.99,
+      "delay": 64,
+      "retention_estimate": 99.99999999999991,
+      "acc_per_seed": [
+        0.9990234375,
+        0.990234375,
+        1.0
+      ],
+      "mean_acc": 0.9964192708333334,
+      "chance": 0.125
+    }
+  ]
+}

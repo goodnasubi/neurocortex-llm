@@ -1,0 +1,53 @@
+[main] spiking  lr=0.001   seed=0 acc@16=1.0000 loss=0.0019 fr=[0.081, 0.063] (15s)
+[main] spiking  lr=0.001   seed=1 acc@16=1.0000 loss=0.0018 fr=[0.091, 0.065] (16s)
+[main] spiking  lr=0.001   seed=2 acc@16=1.0000 loss=0.0018 fr=[0.075, 0.059] (14s)
+[main] spiking  lr=0.001   seed=3 acc@16=1.0000 loss=0.0018 fr=[0.082, 0.058] (17s)
+[main] spiking  lr=0.001   seed=4 acc@16=1.0000 loss=0.0021 fr=[0.087, 0.068] (16s)
+[main] spiking  lr=0.003   seed=0 acc@16=1.0000 loss=0.0004 fr=[0.078, 0.073] (18s)
+[main] spiking  lr=0.003   seed=1 acc@16=1.0000 loss=0.0004 fr=[0.091, 0.078] (18s)
+[main] spiking  lr=0.003   seed=2 acc@16=1.0000 loss=0.0004 fr=[0.083, 0.078] (22s)
+[main] spiking  lr=0.003   seed=3 acc@16=1.0000 loss=0.0004 fr=[0.09, 0.072] (19s)
+[main] spiking  lr=0.003   seed=4 acc@16=1.0000 loss=0.0004 fr=[0.081, 0.079] (19s)
+[main] spiking  lr=0.01    seed=0 acc@16=1.0000 loss=0.0001 fr=[0.087, 0.127] (16s)
+[main] spiking  lr=0.01    seed=1 acc@16=1.0000 loss=0.0001 fr=[0.147, 0.144] (18s)
+[main] spiking  lr=0.01    seed=2 acc@16=1.0000 loss=0.0001 fr=[0.102, 0.114] (21s)
+[main] spiking  lr=0.01    seed=3 acc@16=1.0000 loss=0.0001 fr=[0.13, 0.122] (21s)
+[main] spiking  lr=0.01    seed=4 acc@16=1.0000 loss=0.0001 fr=[0.103, 0.12] (19s)
+[main] step     lr=0.001   seed=0 acc@16=0.1274 loss=1.9641 fr=[0.105, 0.11] (21s)
+[main] step     lr=0.001   seed=1 acc@16=0.1348 loss=1.9559 fr=[0.176, 0.204] (27s)
+[main] step     lr=0.001   seed=2 acc@16=0.1284 loss=1.9523 fr=[0.17, 0.194] (46s)
+[main] step     lr=0.001   seed=3 acc@16=0.1279 loss=1.9505 fr=[0.206, 0.277] (26s)
+[main] step     lr=0.001   seed=4 acc@16=0.1182 loss=1.9438 fr=[0.156, 0.167] (47s)
+[main] step     lr=0.003   seed=0 acc@16=0.1274 loss=1.9639 fr=[0.107, 0.118] (25s)
+[main] step     lr=0.003   seed=1 acc@16=0.1348 loss=1.9559 fr=[0.168, 0.197] (25s)
+[main] step     lr=0.003   seed=2 acc@16=0.1284 loss=1.9521 fr=[0.276, 0.286] (24s)
+[main] step     lr=0.003   seed=3 acc@16=0.1279 loss=1.9501 fr=[0.3, 0.317] (25s)
+[main] step     lr=0.003   seed=4 acc@16=0.1182 loss=1.9433 fr=[0.158, 0.161] (23s)
+[main] step     lr=0.01    seed=0 acc@16=0.1274 loss=1.9644 fr=[0.135, 0.134] (23s)
+[main] step     lr=0.01    seed=1 acc@16=0.1313 loss=1.9564 fr=[0.139, 0.126] (23s)
+[main] step     lr=0.01    seed=2 acc@16=0.1284 loss=1.9529 fr=[0.402, 0.35] (20s)
+[main] step     lr=0.01    seed=3 acc@16=0.1279 loss=1.9507 fr=[0.417, 0.384] (20s)
+[main] step     lr=0.01    seed=4 acc@16=0.1182 loss=1.9439 fr=[0.18, 0.125] (19s)
+[ctrl1] spiking  seed=0 acc@0=1.0000
+[ctrl1] spiking  seed=1 acc@0=1.0000
+[ctrl1] spiking  seed=2 acc@0=1.0000
+[ctrl1] spiking  seed=3 acc@0=1.0000
+[ctrl1] spiking  seed=4 acc@0=1.0000
+[ctrl1] step     seed=0 acc@0=1.0000
+[ctrl1] step     seed=1 acc@0=1.0000
+[ctrl1] step     seed=2 acc@0=1.0000
+[ctrl1] step     seed=3 acc@0=1.0000
+[ctrl1] step     seed=4 acc@0=1.0000
+[ctrl2] seed=0 carry=ON 1.0000 -> OFF 0.1128
+[ctrl2] seed=1 carry=ON 1.0000 -> OFF 0.1313
+[ctrl2] seed=2 carry=ON 1.0000 -> OFF 0.1284
+[ctrl2] seed=3 carry=ON 1.0000 -> OFF 0.1250
+[ctrl2] seed=4 carry=ON 1.0000 -> OFF 0.1255
+{
+  "spiking_all_seeds_ge_90": true,
+  "control_all_seeds_within_chance_2sigma": true,
+  "control1_step_solves_zero_delay": true,
+  "control2_ablation_drops_to_chance": true,
+  "passed": true
+}
+保存: results/identification_N16.json
