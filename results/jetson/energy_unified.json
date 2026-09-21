@@ -96,5 +96,42 @@
     "skippable_total": 0.686312,
     "firing_rate": 0.077098
   },
-  "正当性": "Rust 3モードとも語彙1028の重みで PyTorch と照合し、スパイク 1,769,472 個が f32・f64 両参照に厳密一致（WSL2 x86_64 と Jetson aarch64 の両バイナリ）"
+  "正当性": "Rust 3モードとも語彙1028の重みで PyTorch と照合し、スパイク 1,769,472 個が f32・f64 両参照に厳密一致（WSL2 x86_64 と Jetson aarch64 の両バイナリ）",
+  "x86_throughput_tokens_per_sec": {
+    "説明": "WSL2 / i5-1334U / 1スレッド（taskset -c 0 + OMP_NUM_THREADS=1）/ 測定区間100秒 / 語彙1028の同一重み・同一トークン列。電力センサがないためスループットのみ",
+    "rust_event": 21044.0,
+    "rust_spiking_dense": 10731.2,
+    "rust_dense": 12966.5,
+    "pytorch_spiking": 10401.7,
+    "pytorch_dense": 27817.8,
+    "全測定 finite": true
+  },
+  "mac_throughput_GMACps": {
+    "説明": "実行MAC数 × tokens/sec。イベント駆動が密な行列積に対してMACあたりどれだけ効率が落ちるかを見る",
+    "x86": {
+      "event": 10.61,
+      "dense": 20.25,
+      "効率比": 0.524
+    },
+    "jetson": {
+      "event": 1.057,
+      "dense": 1.156,
+      "効率比": 0.915
+    }
+  },
+  "gemm_calibration_GFLOPS_64x192x768_1thread": {
+    "説明": "自作Rust密カーネルが手抜きでないかの開示。oneDNNとの比",
+    "x86_rust": 58.45,
+    "x86_pytorch_oneDNN": 110.2,
+    "x86_比": 0.53,
+    "jetson_rust": 2.73,
+    "jetson_pytorch_oneDNN": 9.1,
+    "jetson_比": 0.3
+  },
+  "速度比": {
+    "x86_event/rust_dense": 1.62,
+    "x86_event/rust_spiking_dense": 1.96,
+    "jetson_event/rust_dense": 2.83,
+    "MAC比": 3.19
+  }
 }

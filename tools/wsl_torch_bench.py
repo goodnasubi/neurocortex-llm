@@ -1,10 +1,15 @@
 """WSL2(torch 2.14) 上で PyTorch 版のスループットを測る（Rust実装との比較基準）。
 
-入力トークンは Rust ベンチと同じ results/rust/reference_corpus.npz を使う。
-最後に密な行列積の素の性能（GFLOPS）も出す。自作の Rust カーネルが
-手抜きでないかを開示するための校正値（12.11.2節 公平性）。
+入力トークンと重みは Rust ベンチと同一のものを使う。最後に密な行列積の素の性能
+（GFLOPS）も出す。自作の Rust カーネルが手抜きでないかを開示するための校正値
+（12.11.2節 公平性）。
 
-使い方: PYTHONPATH=src python tools/wsl_torch_bench.py [スレッド数]
+12.11.3節の統一条件に合わせ、**測定区間の長さを秒で指定する**（反復数固定だと
+実装ごとに測定窓の長さが変わり、比較条件が揃わない）。
+
+使い方:
+    PYTHONPATH=src python tools/wsl_torch_bench.py \
+        [スレッド数] [重みディレクトリ] [トークンnpz] [測定秒数]
 """
 import json,sys,time,numpy as np,torch
 from pathlib import Path
@@ -12,21 +17,27 @@ sys.path.insert(0,"src")
 from neurocortex.lm import DenseBaseline, SpikingLM
 from neurocortex.neurons import NeuronConfig
 th=int(sys.argv[1]) if len(sys.argv)>1 else 1
+wdir=sys.argv[2] if len(sys.argv)>2 else "results/weights"
+tokpath=sys.argv[3] if len(sys.argv)>3 else "results/rust/reference_corpus.npz"
+secs=float(sys.argv[4]) if len(sys.argv)>4 else 20.0
 torch.set_num_threads(th)
-meta=json.loads(Path("results/weights/meta.json").read_text());a=meta["args"];v=meta["vocab_size"]
-z=np.load("results/rust/reference_corpus.npz");tok=torch.from_numpy(z["tokens"]).long()
+meta=json.loads(Path(f"{wdir}/meta.json").read_text());a=meta["args"];v=meta["vocab_size"]
+z=np.load(tokpath);tok=torch.from_numpy(z["tokens"]).long().clamp_max(v-1)
 for tag in ("spiking","dense"):
     m=(SpikingLM(v,d_model=a["d_model"],n_layers=a["n_layers"],n_heads=a["n_heads"],cfg=NeuronConfig(beta=a["beta"]))
        if tag=="spiking" else DenseBaseline(v,d_model=a["d_model"],n_layers=a["n_layers"],n_heads=a["n_heads"]))
-    w=np.load(f"results/weights/{tag}.npz");m.load_state_dict({k:torch.from_numpy(w[k]) for k in w.files});m.eval()
-    it=10 if tag=="spiking" else 60
+    w=np.load(f"{wdir}/{tag}.npz");m.load_state_dict({k:torch.from_numpy(w[k]) for k in w.files});m.eval()
     with torch.no_grad():
-        for _ in range(3): m(tok)
-        t0=time.time()
-        for _ in range(it): m(tok)
+        for _ in range(3): out=m(tok)
+        finite=bool(torch.isfinite(out).all())
+        # 指定秒数に達するまで回す（測定窓を実装間で揃えるため）
+        t0=time.time();it=0
+        while time.time()-t0<secs:
+            out=m(tok);it+=1
         dt=time.time()-t0
+        finite=finite and bool(torch.isfinite(out).all())
     n=it*tok.numel()
-    print(f"RESULT {json.dumps({'impl':'pytorch','mode':tag,'threads':th,'tokens':n,'sec':round(dt,3),'tokens_per_sec':round(n/dt,1)})}")
+    print(f"RESULT {json.dumps({'impl':'pytorch','mode':tag,'threads':th,'iters':it,'tokens':n,'sec':round(dt,3),'tokens_per_sec':round(n/dt,1),'finite':finite,'weights_dir':wdir})}")
 # 密な行列積のピーク（比較の校正用）
 x=torch.randn(64,192);W=torch.randn(768,192)
 t0=time.time();n=0
