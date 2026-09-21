@@ -138,3 +138,79 @@ def make_order_batch(
             tokens[b, second] = spec.b_id
             labels[b] = 0
     return tokens, labels
+
+
+@dataclass
+class FactSpec:
+    """ステップ1（海馬モジュール, 12.6.4節）の三つ組課題の仕様。
+
+    系列は `[接頭] [接尾] [関係] [目的語]` の4トークン。書き込み相では全体を、
+    想起相では先頭3トークンだけを通し、最終位置（関係トークンの位置）の残差
+    ストリームをキーにする。
+
+    **主語の類似度を制御できることが設計の要点**である（12.6.4節）。主語は
+    (接頭, 接尾) の対で表され、`n_prefix` が小さいほど多くの主語が接頭トークンを
+    共有するため、埋め込み空間で互いに似る。パターン分離層の有無で差が出るはずの
+    領域を、この軸で狙い撃ちする。
+
+    目的語は主語と独立に毎回サンプリングされるため、**皮質バックボーンが事前に
+    その対応を知ることは原理的にありえない**。これにより統制2（因果的除去）が
+    構成上保証される。
+
+    語彙の割り当て:
+        0 .. n_prefix-1                        : 主語の接頭トークン
+        n_prefix .. n_prefix+n_suffix-1        : 主語の接尾トークン
+        n_prefix+n_suffix                      : 関係トークン
+        その次から n_object 個                  : 目的語
+    """
+
+    n_prefix: int = 8
+    n_suffix: int = 4096
+    n_object: int = 64
+
+    @property
+    def relation_id(self) -> int:
+        return self.n_prefix + self.n_suffix
+
+    @property
+    def object_offset(self) -> int:
+        return self.relation_id + 1
+
+    @property
+    def vocab_size(self) -> int:
+        return self.object_offset + self.n_object
+
+    @property
+    def seq_len(self) -> int:
+        return 4
+
+    @property
+    def n_subject(self) -> int:
+        return self.n_prefix * self.n_suffix
+
+    @property
+    def chance(self) -> float:
+        return 1.0 / self.n_object
+
+
+def make_fact_batch(
+    spec: FactSpec,
+    n_facts: int,
+    generator: torch.Generator,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """互いに異なる主語を持つ三つ組を n_facts 件作る。
+
+    Returns:
+        (prompts [N, 3], objects [N])。prompts は `[接頭] [接尾] [関係]`、
+        objects は語彙IDでの目的語（正解ラベル）。
+    """
+    if n_facts > spec.n_subject:
+        raise ValueError(f"主語が足りない（{spec.n_subject} 通りに対し {n_facts} 件）")
+    # 主語は重複させない。重複を許すと「同じキーに別の値」という別種の失敗が
+    # 混ざり、パターン分離の効果と区別がつかなくなる。
+    flat = torch.randperm(spec.n_subject, generator=generator)[:n_facts]
+    prefix = flat // spec.n_suffix
+    suffix = flat % spec.n_suffix + spec.n_prefix
+    relation = torch.full((n_facts,), spec.relation_id, dtype=torch.long)
+    objects = torch.randint(0, spec.n_object, (n_facts,), generator=generator) + spec.object_offset
+    return torch.stack([prefix, suffix, relation], dim=1), objects

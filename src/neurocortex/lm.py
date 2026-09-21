@@ -106,13 +106,20 @@ class SpikingLM(nn.Module):
             if isinstance(m, ALIFNeuron):
                 m.carry_membrane = enabled
 
-    def forward(self, tokens: torch.Tensor) -> torch.Tensor:
+    def encode(self, tokens: torch.Tensor) -> torch.Tensor:
+        """出力ヘッド直前の表現 `ln_f(x)` [B, T, d_model] を返す。
+
+        海馬モジュール（12.6.4節）がキーを取り出し、読み出しを注入する地点。
+        """
         b, t = tokens.shape
         pos = torch.arange(t, device=tokens.device)
         x = self.embed(tokens) + self.pos(pos)[None]
         for blk in self.blocks:
             x = blk(x)
-        return self.head(self.ln_f(x))
+        return self.ln_f(x)
+
+    def forward(self, tokens: torch.Tensor) -> torch.Tensor:
+        return self.head(self.encode(tokens))
 
 
 class DenseBlock(nn.Module):

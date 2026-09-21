@@ -126,3 +126,31 @@ def test_membrane_is_the_only_cross_position_path() -> None:
     jac = _cross_position_jacobian(_make("spiking", carry=False))
     off_diagonal = jac - torch.diag(torch.diagonal(jac))
     assert float(off_diagonal.abs().max()) == 0.0
+
+
+# --- ステップ1（海馬モジュール, 12.6.4節）統制5 ------------------------------
+#
+# 「書き込みに勾配を要しない」という主張は、コード上で保証しない限り主張にならない。
+# 皮質バックボーンが凍結されたままであることを機械的に確かめる。
+
+def test_hippocampus_leaves_the_cortex_frozen() -> None:
+    from neurocortex.experiments.run_hippocampus import build_backbone, run_condition
+    from neurocortex.tasks import FactSpec, make_fact_batch
+
+    spec = FactSpec(n_prefix=2, n_suffix=32, n_object=8)
+    model = build_backbone(spec, d_model=16, n_layers=1, n_heads=2,
+                           seed=0, train_steps=2, lr=1e-3, batch_size=8)
+    assert not any(p.requires_grad for p in model.parameters()), "皮質が凍結されていない"
+
+    before = [p.detach().clone() for p in model.parameters()]
+    prompts, objects = make_fact_batch(spec, 16, torch.Generator().manual_seed(0))
+
+    class _Args:
+        n_units, sep_seed, cue_noise = 128, 0, 0.0
+
+    row = run_condition(model, spec, prompts, objects, "sdr", _Args(),
+                        beta=50.0, gain=16.0, k=8, sep_seed=0)
+    assert row["n_stored"] == 16
+    # 書き込み・読み出しを経ても皮質の重みが1ビットも変わらないこと。
+    for p, q in zip(model.parameters(), before):
+        assert torch.equal(p, q), "海馬の書き込みが皮質の重みを変えている"
