@@ -1,0 +1,100 @@
+{
+  "説明": "12.6.3節・12.11.3節のエネルギー測定を単一条件に統一してやり直した結果",
+  "条件": {
+    "weights": "results/weights_r2_pre / _post（現行コーパス、語彙1028）",
+    "threads": "全条件 1コア（OMP_NUM_THREADS=1、Rustは taskset -c 0）",
+    "測定窓": "全条件で実測区間を約100秒に揃えた。従来は10〜15秒で、測定窓の3〜5割を占める低電力の起動時間が平均電力を押し下げ、起動の速いRustに対してPyTorchが有利になる非対称性があった",
+    "idle_mW": 1099,
+    "算出": "mJ/token = mean_mW / tokens_per_sec",
+    "有限性検査": "全測定で finite=true"
+  },
+  "measurements": {
+    "pytorch_spiking_cpu_pre": {
+      "mean_mW": 2708,
+      "tokens_per_sec": 781.4,
+      "mJ_per_token": 3.4656,
+      "mJ_per_token_net": 2.0591,
+      "finite": true
+    },
+    "pytorch_spiking_cpu_post": {
+      "mean_mW": 2745,
+      "tokens_per_sec": 876.6,
+      "mJ_per_token": 3.1314,
+      "mJ_per_token_net": 1.8777,
+      "finite": true
+    },
+    "pytorch_dense_cpu": {
+      "mean_mW": 3030,
+      "tokens_per_sec": 1821.6,
+      "mJ_per_token": 1.6634,
+      "mJ_per_token_net": 1.0601,
+      "finite": true
+    },
+    "pytorch_spiking_cuda_pre": {
+      "mean_mW": 3046,
+      "tokens_per_sec": 683.5,
+      "mJ_per_token": 4.4565,
+      "mJ_per_token_net": 2.8486,
+      "finite": true
+    },
+    "pytorch_spiking_cuda_post": {
+      "mean_mW": 3111,
+      "tokens_per_sec": 880.2,
+      "mJ_per_token": 3.5344,
+      "mJ_per_token_net": 2.2858,
+      "finite": true
+    },
+    "pytorch_dense_cuda": {
+      "mean_mW": 7330,
+      "tokens_per_sec": 32450.7,
+      "mJ_per_token": 0.2259,
+      "mJ_per_token_net": 0.192,
+      "finite": true
+    },
+    "rust_event": {
+      "mean_mW": 2947,
+      "tokens_per_sec": 2096.9,
+      "mJ_per_token": 1.4054,
+      "mJ_per_token_net": 0.8813,
+      "finite": true
+    },
+    "rust_spiking_dense": {
+      "mean_mW": 2961,
+      "tokens_per_sec": 758.3,
+      "mJ_per_token": 3.9048,
+      "mJ_per_token_net": 2.4555,
+      "finite": true
+    },
+    "rust_dense": {
+      "mean_mW": 2979,
+      "tokens_per_sec": 740.1,
+      "mJ_per_token": 4.0251,
+      "mJ_per_token_net": 2.5402,
+      "finite": true
+    }
+  },
+  "倍率": {
+    "CPU_pytorch_spiking/dense": {
+      "新配置": 2.08,
+      "旧配置": 1.88
+    },
+    "CUDA_pytorch_spiking/dense": {
+      "新配置": 19.7,
+      "旧配置": 15.6
+    },
+    "rust_spiking_dense/event": 2.78,
+    "rust_dense/event": 2.86,
+    "pytorch_dense_cpu/event": 1.18,
+    "event/pytorch_dense_cuda": 6.22
+  },
+  "mac_per_token_vocab1028": {
+    "block_dense": 1327104,
+    "block_exec": 223910,
+    "head": 197376,
+    "attn_state": 82944,
+    "skippable_block": 0.831279,
+    "skippable_total": 0.686312,
+    "firing_rate": 0.077098
+  },
+  "正当性": "Rust 3モードとも語彙1028の重みで PyTorch と照合し、スパイク 1,769,472 個が f32・f64 両参照に厳密一致（WSL2 x86_64 と Jetson aarch64 の両バイナリ）"
+}
