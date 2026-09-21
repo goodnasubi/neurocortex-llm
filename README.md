@@ -1,4 +1,4 @@
-# NeuroCortex-LLM
+# NeuroCortex-LLM (大脳新皮質-LLM)
 
 ## プロジェクトの目的
 
