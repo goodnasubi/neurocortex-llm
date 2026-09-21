@@ -13,14 +13,15 @@ from neurocortex.lm import DenseBaseline, SpikingLM, count_params
 from neurocortex.neurons import NeuronConfig
 
 
-def load(tag, meta, device):
+def load(tag, meta, device, wdir):
     a = meta["args"]; v = meta["vocab_size"]
     if tag == "spiking":
         m = SpikingLM(v, d_model=a["d_model"], n_layers=a["n_layers"],
-                      n_heads=a["n_heads"], cfg=NeuronConfig(beta=a["beta"]))
+                      n_heads=a["n_heads"], cfg=NeuronConfig(beta=a["beta"]),
+                      placement=a.get("placement", "pre"))
     else:
         m = DenseBaseline(v, d_model=a["d_model"], n_layers=a["n_layers"], n_heads=a["n_heads"])
-    z = np.load(f"/home/ikeda/neurocortex/weights/{tag}.npz")
+    z = np.load(f"{wdir}/{tag}.npz")
     sd = {k: torch.from_numpy(z[k]) for k in z.files}
     m.load_state_dict(sd)
     return m.to(device).eval()
@@ -34,33 +35,44 @@ def main():
     ap.add_argument("--batch-size", type=int, default=8)
     ap.add_argument("--iters", type=int, default=30)
     ap.add_argument("--threads", type=int, default=4)
+    ap.add_argument("--weights-dir", default="/home/ikeda/neurocortex/weights")
     a = ap.parse_args()
     torch.set_num_threads(a.threads)
 
-    meta = json.load(open("/home/ikeda/neurocortex/weights/meta.json"))
+    meta = json.load(open(f"{a.weights_dir}/meta.json"))
     dev = torch.device(a.device)
-    m = load(a.tag, meta, dev)
+    m = load(a.tag, meta, dev, a.weights_dir)
     g = torch.Generator(); g.manual_seed(0)
     x = torch.randint(0, meta["vocab_size"], (a.batch_size, a.seq_len), generator=g).to(dev)
 
     with torch.no_grad():
         for _ in range(3):
-            m(x)
+            out = m(x)
         if a.device == "cuda":
             torch.cuda.synchronize()
+        finite = bool(torch.isfinite(out).all())
         t0 = time.time()
         for _ in range(a.iters):
-            m(x)
+            out = m(x)
+        finite = finite and bool(torch.isfinite(out).all())
         if a.device == "cuda":
             torch.cuda.synchronize()
         dt = time.time() - t0
 
     tokens = a.iters * a.batch_size * a.seq_len
     res = {"tag": a.tag, "device": a.device, "params": count_params(m), "tokens": tokens,
-           "sec": round(dt, 3), "tokens_per_sec": round(tokens / dt, 1)}
+           "sec": round(dt, 3), "tokens_per_sec": round(tokens / dt, 1),
+           "threads": a.threads, "placement": meta["args"].get("placement", "pre"),
+           "weights_dir": a.weights_dir,
+           # 12.11.2節: Jetson の torch 1.12 は CPU かつマルチスレッドで非有限値を
+           # 返すことがある。測定値が壊れていないことを毎回ここで確かめる。
+           "finite": finite}
     if a.tag == "spiking":
         res["firing_rates"] = [round(r, 4) for r in m.firing_rates() if r is not None]
     print("RESULT " + json.dumps(res), flush=True)
+    if not finite:
+        print("警告: 出力に非有限値が含まれる。この測定値は信用できない", flush=True)
+        sys.exit(3)
 
 
 if __name__ == "__main__":

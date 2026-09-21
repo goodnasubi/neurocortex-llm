@@ -1,0 +1,36 @@
+{
+  "args": {
+    "data": "docs/brain-structure-research.md",
+    "steps": 1000,
+    "seq_len": 64,
+    "batch_size": 16,
+    "lr": 0.002,
+    "d_model": 192,
+    "n_layers": 3,
+    "n_heads": 4,
+    "beta": 0.95,
+    "seed": 0,
+    "threads": 6,
+    "placement": "post",
+    "out": "results/weights_r2_post"
+  },
+  "vocab_size": 1028,
+  "runs": [
+    {
+      "tag": "spiking",
+      "params": 1752000,
+      "final_loss": 2.594797372817993,
+      "train_sec": 742.4,
+      "npz": "results/weights_r2_post/spiking.npz",
+      "n_tensors": 35
+    },
+    {
+      "tag": "dense",
+      "params": 1752000,
+      "final_loss": 0.6885977387428284,
+      "train_sec": 137.4,
+      "npz": "results/weights_r2_post/dense.npz",
+      "n_tensors": 35
+    }
+  ]
+}

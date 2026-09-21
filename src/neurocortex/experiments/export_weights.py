@@ -56,6 +56,8 @@ def main() -> None:
     ap.add_argument("--beta", type=float, default=0.95)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--threads", type=int, default=6)
+    ap.add_argument("--placement", default="pre", choices=["pre", "post"],
+                    help="pre=新配置（スパイクを射影の前）, post=旧配置（12.3.1節の設計訂正以前）")
     ap.add_argument("--out", default="results/weights")
     args = ap.parse_args()
     torch.set_num_threads(args.threads)
@@ -67,7 +69,8 @@ def main() -> None:
 
     builders = {
         "spiking": lambda: SpikingLM(corpus.vocab_size, d_model=args.d_model,
-                                     n_layers=args.n_layers, n_heads=args.n_heads, cfg=cfg),
+                                     n_layers=args.n_layers, n_heads=args.n_heads, cfg=cfg,
+                                     placement=args.placement),
         "dense": lambda: DenseBaseline(corpus.vocab_size, d_model=args.d_model,
                                        n_layers=args.n_layers, n_heads=args.n_heads),
     }
