@@ -20,21 +20,46 @@ from .neurons import ALIFNeuron, NeuronConfig, make_activation
 
 
 class SpikingBlock(nn.Module):
-    """線形アテンション経路とFFN経路の双方にスパイキングニューロンを置くブロック。"""
+    """スパイクを射影の「前」に置くブロック（12.3.1節 2026-09-22 の設計訂正）。
 
-    def __init__(self, d_model: int, n_heads: int, cfg: NeuronConfig, activation: str) -> None:
+    配置は `x → LN → ALIF → Linear → …` であり、qkv・fc1・fc2 のすべてが
+    スパイクを入力に取る。これにより「発火しないニューロンは計算コストを消費しない」
+    というイベント駆動性が、線形演算の大部分（qkv 25% + fc1 33% + fc2 33% ≒ 91%）に
+    対して成立しうる配置になる。残差ストリーム自体は連続値のまま（加算のみ）。
+
+    旧配置（`x + Linear(ALIF(Attention(LN(x))))`, `x + fc2(ALIF(fc1(LN(x))))`）では
+    スパイクを入力に取る行列積は fc2 だけで、削減余地は約30%にとどまっていた。
+
+    アテンション内部の出力射影 `attn.out` は線形アテンションの連続値出力を受けるため、
+    ここだけは密なままである（線形演算全体の約8%）。
+    """
+
+    def __init__(self, d_model: int, n_heads: int, cfg: NeuronConfig, activation: str,
+                 placement: str = "pre") -> None:
         super().__init__()
+        if placement not in ("pre", "post"):
+            raise ValueError(f"未知の配置: {placement}")
+        # "pre"  … 新配置（スパイクを射影の前に置く。本設計）
+        # "post" … 旧配置（2026-09-22の訂正以前。比較のためだけに残す）
+        self.placement = placement
         self.ln1 = nn.LayerNorm(d_model)
-        self.attn = CausalLinearAttention(d_model, n_heads)
+        # アテンション経路: LN → スパイク → qkv（qkvがスパイクを入力に取る）
         self.act_attn = make_activation(activation, cfg)
+        self.attn = CausalLinearAttention(d_model, n_heads)
         self.ln2 = nn.LayerNorm(d_model)
+        # FFN経路: LN → スパイク → fc1 → スパイク → fc2（両方がスパイクを入力に取る）
+        self.act_fc1 = make_activation(activation, cfg)
         self.fc1 = nn.Linear(d_model, 4 * d_model)
-        self.act_ffn = make_activation(activation, cfg)
+        self.act_fc2 = make_activation(activation, cfg)
         self.fc2 = nn.Linear(4 * d_model, d_model)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = x + self.act_attn(self.attn(self.ln1(x)))
-        x = x + self.fc2(self.act_ffn(self.fc1(self.ln2(x))))
+        if self.placement == "post":
+            # 旧配置。スパイクを入力に取る行列積は fc2 だけ（act_fc1 は未使用）。
+            x = x + self.attn.out_only(self.act_attn(self.attn.attend(self.ln1(x))))
+            return x + self.fc2(self.act_fc2(self.fc1(self.ln2(x))))
+        x = x + self.attn(self.act_attn(self.ln1(x)))
+        x = x + self.fc2(self.act_fc2(self.fc1(self.act_fc1(self.ln2(x)))))
         return x
 
 
@@ -50,22 +75,30 @@ class SpikingLM(nn.Module):
         max_len: int = 128,
         cfg: NeuronConfig | None = None,
         activation: str = "spiking",
+        placement: str = "pre",
     ) -> None:
         super().__init__()
         cfg = cfg or NeuronConfig()
         self.embed = nn.Embedding(vocab_size, d_model)
         self.pos = nn.Embedding(max_len, d_model)
         self.blocks = nn.ModuleList(
-            SpikingBlock(d_model, n_heads, cfg, activation) for _ in range(n_layers)
+            SpikingBlock(d_model, n_heads, cfg, activation, placement)
+            for _ in range(n_layers)
         )
         self.ln_f = nn.LayerNorm(d_model)
         self.head = nn.Linear(d_model, vocab_size, bias=False)
 
     def firing_rates(self) -> list[float]:
+        # ブロックあたり3つ（qkv前・fc1前・fc2前）。旧配置では2つだった。
         return [
             r
             for blk in self.blocks
-            for r in (blk.act_attn.last_firing_rate, blk.act_ffn.last_firing_rate)
+            for r in (
+                blk.act_attn.last_firing_rate,
+                blk.act_fc1.last_firing_rate,
+                blk.act_fc2.last_firing_rate,
+            )
+            if r is not None  # 旧配置では act_fc1 が使われないので None になる
         ]
 
     def set_carry_membrane(self, enabled: bool) -> None:

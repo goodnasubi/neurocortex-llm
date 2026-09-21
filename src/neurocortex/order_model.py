@@ -41,5 +41,7 @@ class OrderModel(nn.Module):
                 m.carry_membrane = enabled
 
     def forward(self, tokens: torch.Tensor) -> torch.Tensor:
-        h = self.act(self.attn(self.embed(tokens)))
+        # スパイク化してから射影する（12.3.1節 2026-09-22 の設計訂正）。
+        # アテンション内部の qkv がスパイクを入力に取る配置になる。
+        h = self.attn(self.act(self.embed(tokens)))
         return self.head(h[:, -1, :])

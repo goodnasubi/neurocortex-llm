@@ -120,6 +120,8 @@ def main() -> None:
     p.add_argument("--beta", type=float, default=0.95)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--threads", type=int, default=6)
+    p.add_argument("--placement", type=str, default="pre", choices=["pre", "post"],
+                   help="pre=新配置（スパイクを射影の前）、post=旧配置（比較用）")
     p.add_argument("--out", type=str, default="results/lm.json")
     args = p.parse_args()
 
@@ -130,7 +132,7 @@ def main() -> None:
                   n_layers=args.n_layers, n_heads=args.n_heads, max_len=args.seq_len)
 
     def build_spiking(activation: str = "spiking"):
-        return SpikingLM(cfg=ncfg, activation=activation, **common)
+        return SpikingLM(cfg=ncfg, activation=activation, placement=args.placement, **common)
 
     results = {
         "args": vars(args),

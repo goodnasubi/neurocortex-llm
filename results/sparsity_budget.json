@@ -1,0 +1,150 @@
+{
+  "args": {
+    "weights": "results/weights/spiking.npz",
+    "data": "docs/brain-structure-research.md",
+    "d_model": 192,
+    "n_layers": 3,
+    "n_heads": 4,
+    "seq_len": 64,
+    "max_len": 128,
+    "batch_size": 8,
+    "n_batches": 8,
+    "beta": 0.95,
+    "seed": 0,
+    "threads": 6,
+    "out": "results/sparsity_budget.json"
+  },
+  "weights_loaded": true,
+  "vocab_size": 1014,
+  "firing_rates_per_layer": [
+    [
+      0.0721804304048419,
+      0.1306991595774889,
+      0.0718167619779706
+    ],
+    [
+      0.08515930082648993,
+      0.13722356222569942,
+      0.07154464814811945
+    ],
+    [
+      0.09921518992632627,
+      0.14250818826258183,
+      0.07266140077263117
+    ]
+  ],
+  "mean_firing_rate": 0.0981120713469055,
+  "sites": [
+    {
+      "layer": 0,
+      "site": "qkv",
+      "macs_per_token": 110592,
+      "firing_rate": 0.0721804304048419,
+      "spike_input_new": true,
+      "spike_input_old": false
+    },
+    {
+      "layer": 0,
+      "site": "attn.out",
+      "macs_per_token": 36864,
+      "firing_rate": null,
+      "spike_input_new": false,
+      "spike_input_old": false
+    },
+    {
+      "layer": 0,
+      "site": "fc1",
+      "macs_per_token": 147456,
+      "firing_rate": 0.1306991595774889,
+      "spike_input_new": true,
+      "spike_input_old": false
+    },
+    {
+      "layer": 0,
+      "site": "fc2",
+      "macs_per_token": 147456,
+      "firing_rate": 0.0718167619779706,
+      "spike_input_new": true,
+      "spike_input_old": true
+    },
+    {
+      "layer": 1,
+      "site": "qkv",
+      "macs_per_token": 110592,
+      "firing_rate": 0.08515930082648993,
+      "spike_input_new": true,
+      "spike_input_old": false
+    },
+    {
+      "layer": 1,
+      "site": "attn.out",
+      "macs_per_token": 36864,
+      "firing_rate": null,
+      "spike_input_new": false,
+      "spike_input_old": false
+    },
+    {
+      "layer": 1,
+      "site": "fc1",
+      "macs_per_token": 147456,
+      "firing_rate": 0.13722356222569942,
+      "spike_input_new": true,
+      "spike_input_old": false
+    },
+    {
+      "layer": 1,
+      "site": "fc2",
+      "macs_per_token": 147456,
+      "firing_rate": 0.07154464814811945,
+      "spike_input_new": true,
+      "spike_input_old": true
+    },
+    {
+      "layer": 2,
+      "site": "qkv",
+      "macs_per_token": 110592,
+      "firing_rate": 0.09921518992632627,
+      "spike_input_new": true,
+      "spike_input_old": false
+    },
+    {
+      "layer": 2,
+      "site": "attn.out",
+      "macs_per_token": 36864,
+      "firing_rate": null,
+      "spike_input_new": false,
+      "spike_input_old": false
+    },
+    {
+      "layer": 2,
+      "site": "fc1",
+      "macs_per_token": 147456,
+      "firing_rate": 0.14250818826258183,
+      "spike_input_new": true,
+      "spike_input_old": false
+    },
+    {
+      "layer": 2,
+      "site": "fc2",
+      "macs_per_token": 147456,
+      "firing_rate": 0.07266140077263117,
+      "spike_input_new": true,
+      "spike_input_old": true
+    }
+  ],
+  "weight_macs_per_token_blocks": 1327104.0,
+  "aux_macs_per_token": {
+    "linear_attention_state": 82944,
+    "output_head": 194688
+  },
+  "new_placement": {
+    "spike_input_share": 0.9166666666666666,
+    "skippable_share_of_block_macs": 0.8256811209074739,
+    "skippable_share_including_aux": 0.6828317668954845
+  },
+  "old_placement": {
+    "spike_input_share": 0.3333333333333333,
+    "skippable_share_of_block_macs": 0.30933079878903097,
+    "skippable_share_including_aux": 0.2558141279289043
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "spiking_cpu": {
+    "tokens_per_sec": 640.2,
+    "mean_mW": 4725,
+    "cpu_mW": 3115,
+    "gpu_mW": 2,
+    "mJ_per_token": 7.3811,
+    "mJ_per_token_net": 5.6862
+  },
+  "spiking_cuda": {
+    "tokens_per_sec": 878.7,
+    "mean_mW": 3641,
+    "cpu_mW": 1813,
+    "gpu_mW": 199,
+    "mJ_per_token": 4.1436,
+    "mJ_per_token_net": 2.9088
+  },
+  "dense_cpu": {
+    "tokens_per_sec": 3603.1,
+    "mean_mW": 4970,
+    "cpu_mW": 3264,
+    "gpu_mW": 4,
+    "mJ_per_token": 1.3795,
+    "mJ_per_token_net": 1.0783
+  },
+  "dense_cuda": {
+    "tokens_per_sec": 31540.0,
+    "mean_mW": 4567,
+    "cpu_mW": 2640,
+    "gpu_mW": 243,
+    "mJ_per_token": 0.1448,
+    "mJ_per_token_net": 0.1104
+  },
+  "idle_mW": 1085
+}

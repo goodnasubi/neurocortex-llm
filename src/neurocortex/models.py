@@ -20,7 +20,9 @@ class RecallModel(nn.Module):
         vocab_size: 入力語彙数。
         n_classes: 出力クラス数（cue記号数）。
         d_model: 隠れ次元。
-        n_layers: [Linear → 活性化] ブロックの段数。両群で必ずそろえる。
+        n_layers: [活性化 → Linear] ブロックの段数。両群で必ずそろえる。
+            （12.3.1節の設計訂正により、スパイクを射影の「前」に置く配置にした。
+            旧配置は [Linear → 活性化] であった。）
         cfg: ニューロン設定。
         activation: "spiking"（ALIF）または "step"（12.9節の階段関数＝対照群）。
     """
@@ -62,14 +64,15 @@ class RecallModel(nn.Module):
         """Args: tokens [B, T]。Returns: 最終位置のロジット [B, n_classes]。"""
         h = self.embed(tokens)
         for proj, act in zip(self.projections, self.activations):
-            h = act(proj(h))
+            # スパイク化してから射影する（12.3.1節 2026-09-22 の設計訂正）
+            h = proj(act(h))
         return self.head(h[:, -1, :])
 
     def forward_all(self, tokens: torch.Tensor) -> torch.Tensor:
         """全位置のロジット [B, T, n_classes]（経路監査で使う）。"""
         h = self.embed(tokens)
         for proj, act in zip(self.projections, self.activations):
-            h = act(proj(h))
+            h = proj(act(h))
         return self.head(h)
 
 
@@ -80,7 +83,7 @@ class EmbeddingFreeRecallModel(RecallModel):
         """Args: x [B, T, d_model]。Returns: [B, T, n_classes]。"""
         h = x
         for proj, act in zip(self.projections, self.activations):
-            h = act(proj(h))
+            h = proj(act(h))
         return self.head(h)
 
 

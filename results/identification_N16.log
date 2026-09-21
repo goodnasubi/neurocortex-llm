@@ -1,33 +1,33 @@
-[main] spiking  lr=0.001   seed=0 acc@16=1.0000 loss=0.0019 fr=[0.081, 0.063] (15s)
-[main] spiking  lr=0.001   seed=1 acc@16=1.0000 loss=0.0018 fr=[0.091, 0.065] (16s)
-[main] spiking  lr=0.001   seed=2 acc@16=1.0000 loss=0.0018 fr=[0.075, 0.059] (14s)
-[main] spiking  lr=0.001   seed=3 acc@16=1.0000 loss=0.0018 fr=[0.082, 0.058] (17s)
-[main] spiking  lr=0.001   seed=4 acc@16=1.0000 loss=0.0021 fr=[0.087, 0.068] (16s)
-[main] spiking  lr=0.003   seed=0 acc@16=1.0000 loss=0.0004 fr=[0.078, 0.073] (18s)
-[main] spiking  lr=0.003   seed=1 acc@16=1.0000 loss=0.0004 fr=[0.091, 0.078] (18s)
-[main] spiking  lr=0.003   seed=2 acc@16=1.0000 loss=0.0004 fr=[0.083, 0.078] (22s)
-[main] spiking  lr=0.003   seed=3 acc@16=1.0000 loss=0.0004 fr=[0.09, 0.072] (19s)
-[main] spiking  lr=0.003   seed=4 acc@16=1.0000 loss=0.0004 fr=[0.081, 0.079] (19s)
-[main] spiking  lr=0.01    seed=0 acc@16=1.0000 loss=0.0001 fr=[0.087, 0.127] (16s)
-[main] spiking  lr=0.01    seed=1 acc@16=1.0000 loss=0.0001 fr=[0.147, 0.144] (18s)
-[main] spiking  lr=0.01    seed=2 acc@16=1.0000 loss=0.0001 fr=[0.102, 0.114] (21s)
-[main] spiking  lr=0.01    seed=3 acc@16=1.0000 loss=0.0001 fr=[0.13, 0.122] (21s)
-[main] spiking  lr=0.01    seed=4 acc@16=1.0000 loss=0.0001 fr=[0.103, 0.12] (19s)
-[main] step     lr=0.001   seed=0 acc@16=0.1274 loss=1.9641 fr=[0.105, 0.11] (21s)
-[main] step     lr=0.001   seed=1 acc@16=0.1348 loss=1.9559 fr=[0.176, 0.204] (27s)
-[main] step     lr=0.001   seed=2 acc@16=0.1284 loss=1.9523 fr=[0.17, 0.194] (46s)
-[main] step     lr=0.001   seed=3 acc@16=0.1279 loss=1.9505 fr=[0.206, 0.277] (26s)
-[main] step     lr=0.001   seed=4 acc@16=0.1182 loss=1.9438 fr=[0.156, 0.167] (47s)
-[main] step     lr=0.003   seed=0 acc@16=0.1274 loss=1.9639 fr=[0.107, 0.118] (25s)
-[main] step     lr=0.003   seed=1 acc@16=0.1348 loss=1.9559 fr=[0.168, 0.197] (25s)
-[main] step     lr=0.003   seed=2 acc@16=0.1284 loss=1.9521 fr=[0.276, 0.286] (24s)
-[main] step     lr=0.003   seed=3 acc@16=0.1279 loss=1.9501 fr=[0.3, 0.317] (25s)
-[main] step     lr=0.003   seed=4 acc@16=0.1182 loss=1.9433 fr=[0.158, 0.161] (23s)
-[main] step     lr=0.01    seed=0 acc@16=0.1274 loss=1.9644 fr=[0.135, 0.134] (23s)
-[main] step     lr=0.01    seed=1 acc@16=0.1313 loss=1.9564 fr=[0.139, 0.126] (23s)
-[main] step     lr=0.01    seed=2 acc@16=0.1284 loss=1.9529 fr=[0.402, 0.35] (20s)
-[main] step     lr=0.01    seed=3 acc@16=0.1279 loss=1.9507 fr=[0.417, 0.384] (20s)
-[main] step     lr=0.01    seed=4 acc@16=0.1182 loss=1.9439 fr=[0.18, 0.125] (19s)
+[main] spiking  lr=0.001   seed=0 acc@16=0.9849 loss=0.0117 fr=[0.119, 0.038] (36s)
+[main] spiking  lr=0.001   seed=1 acc@16=0.9878 loss=0.0077 fr=[0.168, 0.039] (38s)
+[main] spiking  lr=0.001   seed=2 acc@16=0.9692 loss=0.0142 fr=[0.129, 0.051] (39s)
+[main] spiking  lr=0.001   seed=3 acc@16=0.9868 loss=0.0106 fr=[0.146, 0.053] (39s)
+[main] spiking  lr=0.001   seed=4 acc@16=0.9932 loss=0.0047 fr=[0.119, 0.044] (39s)
+[main] spiking  lr=0.003   seed=0 acc@16=0.9907 loss=0.0025 fr=[0.108, 0.052] (44s)
+[main] spiking  lr=0.003   seed=1 acc@16=0.9980 loss=0.0042 fr=[0.151, 0.068] (39s)
+[main] spiking  lr=0.003   seed=2 acc@16=0.9976 loss=0.0009 fr=[0.12, 0.067] (38s)
+[main] spiking  lr=0.003   seed=3 acc@16=0.9907 loss=0.0049 fr=[0.133, 0.058] (34s)
+[main] spiking  lr=0.003   seed=4 acc@16=0.9980 loss=0.0002 fr=[0.111, 0.062] (33s)
+[main] spiking  lr=0.01    seed=0 acc@16=0.9990 loss=0.0000 fr=[0.075, 0.126] (36s)
+[main] spiking  lr=0.01    seed=1 acc@16=0.9961 loss=0.0028 fr=[0.109, 0.149] (35s)
+[main] spiking  lr=0.01    seed=2 acc@16=0.9966 loss=0.0083 fr=[0.078, 0.138] (35s)
+[main] spiking  lr=0.01    seed=3 acc@16=0.9995 loss=0.0000 fr=[0.085, 0.115] (41s)
+[main] spiking  lr=0.01    seed=4 acc@16=0.9590 loss=0.0176 fr=[0.08, 0.113] (41s)
+[main] step     lr=0.001   seed=0 acc@16=0.1274 loss=1.9641 fr=[0.175, 0.095] (32s)
+[main] step     lr=0.001   seed=1 acc@16=0.1313 loss=1.9566 fr=[0.25, 0.146] (34s)
+[main] step     lr=0.001   seed=2 acc@16=0.1284 loss=1.9526 fr=[0.198, 0.114] (40s)
+[main] step     lr=0.001   seed=3 acc@16=0.1279 loss=1.9503 fr=[0.224, 0.171] (43s)
+[main] step     lr=0.001   seed=4 acc@16=0.1182 loss=1.9436 fr=[0.179, 0.111] (48s)
+[main] step     lr=0.003   seed=0 acc@16=0.1274 loss=1.9643 fr=[0.175, 0.066] (41s)
+[main] step     lr=0.003   seed=1 acc@16=0.1313 loss=1.9565 fr=[0.25, 0.087] (43s)
+[main] step     lr=0.003   seed=2 acc@16=0.1284 loss=1.9530 fr=[0.198, 0.103] (44s)
+[main] step     lr=0.003   seed=3 acc@16=0.1279 loss=1.9508 fr=[0.224, 0.164] (42s)
+[main] step     lr=0.003   seed=4 acc@16=0.1182 loss=1.9439 fr=[0.179, 0.101] (43s)
+[main] step     lr=0.01    seed=0 acc@16=0.1274 loss=1.9660 fr=[0.176, 0.046] (47s)
+[main] step     lr=0.01    seed=1 acc@16=0.1313 loss=1.9585 fr=[0.251, 0.059] (41s)
+[main] step     lr=0.01    seed=2 acc@16=0.1191 loss=1.9544 fr=[0.2, 0.103] (43s)
+[main] step     lr=0.01    seed=3 acc@16=0.1328 loss=1.9546 fr=[0.226, 0.143] (46s)
+[main] step     lr=0.01    seed=4 acc@16=0.1323 loss=1.9457 fr=[0.18, 0.06] (51s)
 [ctrl1] spiking  seed=0 acc@0=1.0000
 [ctrl1] spiking  seed=1 acc@0=1.0000
 [ctrl1] spiking  seed=2 acc@0=1.0000
@@ -38,11 +38,11 @@
 [ctrl1] step     seed=2 acc@0=1.0000
 [ctrl1] step     seed=3 acc@0=1.0000
 [ctrl1] step     seed=4 acc@0=1.0000
-[ctrl2] seed=0 carry=ON 1.0000 -> OFF 0.1128
-[ctrl2] seed=1 carry=ON 1.0000 -> OFF 0.1313
-[ctrl2] seed=2 carry=ON 1.0000 -> OFF 0.1284
-[ctrl2] seed=3 carry=ON 1.0000 -> OFF 0.1250
-[ctrl2] seed=4 carry=ON 1.0000 -> OFF 0.1255
+[ctrl2] seed=0 carry=ON 0.9907 -> OFF 0.1309
+[ctrl2] seed=1 carry=ON 0.9980 -> OFF 0.1313
+[ctrl2] seed=2 carry=ON 0.9976 -> OFF 0.1152
+[ctrl2] seed=3 carry=ON 0.9907 -> OFF 0.1250
+[ctrl2] seed=4 carry=ON 0.9980 -> OFF 0.1270
 {
   "spiking_all_seeds_ge_90": true,
   "control_all_seeds_within_chance_2sigma": true,

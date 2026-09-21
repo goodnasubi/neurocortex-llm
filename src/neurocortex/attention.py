@@ -49,7 +49,8 @@ class CausalLinearAttention(nn.Module):
         self.qkv = nn.Linear(d_model, 3 * d_model, bias=False)
         self.out = nn.Linear(d_model, d_model, bias=False)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def attend(self, x: torch.Tensor) -> torch.Tensor:
+        """出力射影の手前まで（旧配置の再現に使う）。"""
         b, t, d = x.shape
         q, k, v = self.qkv(x).chunk(3, dim=-1)
 
@@ -61,5 +62,11 @@ class CausalLinearAttention(nn.Module):
         k = F.elu(split(k)) + 1.0
         v = split(v)
         y = linear_attention_causal(q, k, v)
-        y = y.transpose(1, 2).reshape(b, t, d)
+        return y.transpose(1, 2).reshape(b, t, d)
+
+    def out_only(self, y: torch.Tensor) -> torch.Tensor:
+        """出力射影だけ（旧配置の再現に使う）。"""
         return self.out(y)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.out(self.attend(x))

@@ -1,0 +1,16 @@
+/mnt/c/Users/tks_i/Claude/Projects/neurocortex-llm/src/neurocortex/experiments/export_weights.py:41: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:820.)
+  print(f"  [{tag}] step {step+1}/{args.steps} loss={float(loss):.4f}", flush=True)
+  [spiking] step 200/1000 loss=3.2139
+  [spiking] step 400/1000 loss=2.9506
+  [spiking] step 600/1000 loss=2.6489
+  [spiking] step 800/1000 loss=2.7331
+  [spiking] step 1000/1000 loss=2.5254
+  [spiking] 保存: results/weights/spiking.npz (35 テンソル)
+  [dense] step 200/1000 loss=2.7116
+  [dense] step 400/1000 loss=1.8486
+  [dense] step 600/1000 loss=1.0153
+  [dense] step 800/1000 loss=0.6683
+  [dense] step 1000/1000 loss=0.5235
+  [dense] 保存: results/weights/dense.npz (35 テンソル)
+完了: results/weights/meta.json

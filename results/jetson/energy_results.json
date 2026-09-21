@@ -1,35 +1,41 @@
 {
   "spiking_cpu": {
-    "tokens_per_sec": 640.2,
-    "mean_mW": 4725,
-    "cpu_mW": 3115,
-    "gpu_mW": 2,
-    "mJ_per_token": 7.3811,
-    "mJ_per_token_net": 5.6862
+    "tokens_per_sec": 542.8,
+    "mean_mW": 4625,
+    "cpu_mW": 3038,
+    "gpu_mW": 1,
+    "mJ_per_token": 8.5206,
+    "mJ_per_token_net": 6.413,
+    "samples": 323
   },
   "spiking_cuda": {
-    "tokens_per_sec": 878.7,
-    "mean_mW": 3641,
-    "cpu_mW": 1813,
-    "gpu_mW": 199,
-    "mJ_per_token": 4.1436,
-    "mJ_per_token_net": 2.9088
+    "tokens_per_sec": 673.7,
+    "mean_mW": 3463,
+    "cpu_mW": 1662,
+    "gpu_mW": 189,
+    "mJ_per_token": 5.1403,
+    "mJ_per_token_net": 3.4422,
+    "samples": 433
   },
   "dense_cpu": {
-    "tokens_per_sec": 3603.1,
-    "mean_mW": 4970,
-    "cpu_mW": 3264,
-    "gpu_mW": 4,
-    "mJ_per_token": 1.3795,
-    "mJ_per_token_net": 1.0783
+    "tokens_per_sec": 3456.2,
+    "mean_mW": 5270,
+    "cpu_mW": 3544,
+    "gpu_mW": 1,
+    "mJ_per_token": 1.5248,
+    "mJ_per_token_net": 1.1938,
+    "samples": 318
   },
   "dense_cuda": {
-    "tokens_per_sec": 31540.0,
-    "mean_mW": 4567,
-    "cpu_mW": 2640,
-    "gpu_mW": 243,
-    "mJ_per_token": 0.1448,
-    "mJ_per_token_net": 0.1104
+    "tokens_per_sec": 32634.7,
+    "mean_mW": 6528,
+    "cpu_mW": 1939,
+    "gpu_mW": 2469,
+    "mJ_per_token": 0.2,
+    "mJ_per_token_net": 0.165,
+    "samples": 258
   },
-  "idle_mW": 1085
+  "idle_mW": 1144,
+  "placement": "pre (12.3.1節 2026-09-22 の設計訂正後)",
+  "note_cpu_invalid": "Jetson の torch 1.12 CPU ビルドは 3次元入力の nn.Linear で散発的に非有限値を返す（spiking/dense の両方で発生し、スパイク固有ではない）。CPU 側の出力は NaN になるため数値的正当性は担保できない。CUDA 側は WSL の出力と最大 1.1e-5 で一致する。"
 }

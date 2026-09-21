@@ -1,0 +1,74 @@
+== spiking ==
+/mnt/c/Users/tks_i/Claude/Projects/neurocortex-llm/src/neurocortex/experiments/run_lm.py:71: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:820.)
+  curve.append({"step": step + 1, "train_loss": float(loss), "val_ppl": ppl,
+  [spiking] step 100/1000 loss=0.4134 val_ppl=1.553 gnorm=0.41
+  [spiking] step 200/1000 loss=0.3765 val_ppl=1.450 gnorm=0.33
+  [spiking] step 300/1000 loss=0.3512 val_ppl=1.441 gnorm=0.33
+  [spiking] step 400/1000 loss=0.3351 val_ppl=1.416 gnorm=0.32
+  [spiking] step 500/1000 loss=0.3397 val_ppl=1.410 gnorm=0.28
+  [spiking] step 600/1000 loss=0.3326 val_ppl=1.400 gnorm=0.28
+  [spiking] step 700/1000 loss=0.3320 val_ppl=1.391 gnorm=0.26
+  [spiking] step 800/1000 loss=0.3212 val_ppl=1.385 gnorm=0.33
+  [spiking] step 900/1000 loss=0.3170 val_ppl=1.386 gnorm=0.25
+  [spiking] step 1000/1000 loss=0.3267 val_ppl=1.384 gnorm=0.26
+  [spiking] overfit 3.5690 -> 0.0057
+== step ==
+  [step] step 100/1000 loss=1.1600 val_ppl=3.251 gnorm=0.67
+  [step] step 200/1000 loss=0.4879 val_ppl=1.528 gnorm=0.64
+  [step] step 300/1000 loss=0.3401 val_ppl=1.431 gnorm=0.33
+  [step] step 400/1000 loss=0.3363 val_ppl=1.419 gnorm=0.34
+  [step] step 500/1000 loss=0.3289 val_ppl=1.392 gnorm=0.29
+  [step] step 600/1000 loss=0.3253 val_ppl=1.386 gnorm=0.25
+  [step] step 700/1000 loss=0.3218 val_ppl=1.382 gnorm=0.25
+  [step] step 800/1000 loss=0.3147 val_ppl=1.377 gnorm=0.31
+  [step] step 900/1000 loss=0.3116 val_ppl=1.374 gnorm=0.25
+  [step] step 1000/1000 loss=0.3143 val_ppl=1.375 gnorm=0.24
+  [step] overfit 3.5845 -> 0.0057
+== dense ==
+  [dense] step 100/1000 loss=0.5070 val_ppl=1.633 gnorm=0.59
+  [dense] step 200/1000 loss=0.3678 val_ppl=1.429 gnorm=0.35
+  [dense] step 300/1000 loss=0.3263 val_ppl=1.411 gnorm=0.29
+  [dense] step 400/1000 loss=0.3382 val_ppl=1.406 gnorm=0.36
+  [dense] step 500/1000 loss=0.3212 val_ppl=1.385 gnorm=0.26
+  [dense] step 600/1000 loss=0.3234 val_ppl=1.382 gnorm=0.24
+  [dense] step 700/1000 loss=0.3195 val_ppl=1.376 gnorm=0.21
+  [dense] step 800/1000 loss=0.3109 val_ppl=1.373 gnorm=0.29
+  [dense] step 900/1000 loss=0.3107 val_ppl=1.371 gnorm=0.22
+  [dense] step 1000/1000 loss=0.3129 val_ppl=1.371 gnorm=0.23
+  [dense] overfit 3.5862 -> 0.0056
+{
+  "spiking": {
+    "params": 1355712,
+    "val_ppl": 1.3726664327313358,
+    "diverged": false,
+    "firing_rates": [
+      0.0521901436150074,
+      0.11304346472024918,
+      0.0460866279900074,
+      0.14127349853515625,
+      0.0576731376349926,
+      0.1826171875
+    ]
+  },
+  "step": {
+    "params": 1355712,
+    "val_ppl": 1.3652795932468007,
+    "diverged": false,
+    "firing_rates": [
+      0.4068183898925781,
+      0.08384895324707031,
+      0.39931997656822205,
+      0.12450059503316879,
+      0.41845956444740295,
+      0.20779705047607422
+    ]
+  },
+  "dense": {
+    "params": 1355712,
+    "val_ppl": 1.362484589537191,
+    "diverged": false,
+    "firing_rates": null
+  }
+}
+保存: results/lm.json
