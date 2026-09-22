@@ -1,5 +1,7 @@
 # アイデアメモ
 
+typesafe-aiによる評価根拠は [docs/decisions/2026-09-22-next-direction.md](docs/decisions/2026-09-22-next-direction.md) 参照。
+
 ## 1. TypeSafe AI (JEV)
 
 - 有望度: 1.38/3（typesafe-ai評価）
