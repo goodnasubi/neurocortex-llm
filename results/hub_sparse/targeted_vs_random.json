@@ -1,0 +1,324 @@
+{
+  "説明": "ステップ3 皮質バックボーンのハブスパース化: 標的除去とランダム除去の比の比較（12.6.12節）",
+  "条件": {
+    "seeds": 5,
+    "conditions": [
+      "hub-sparse",
+      "dense",
+      "random-wire"
+    ],
+    "n_experts": 6,
+    "relevant": [
+      0,
+      1
+    ],
+    "n_removable": 8,
+    "n_hubs": 2,
+    "steps": 3000,
+    "batch_size": 64,
+    "lr": 0.05,
+    "n_eval": 2000,
+    "base_acc_min": 0.9,
+    "out": "results/hub_sparse/targeted_vs_random.json"
+  },
+  "control1_ok": false,
+  "summary": {
+    "hub-sparse": {
+      "base_acc_mean": 0.9538000226020813,
+      "base_acc_min": 0.7689999938011169,
+      "ratio_mean": 5.417119026184082,
+      "ratio_std": 0.7376861572265625,
+      "ratio_min": 4.0,
+      "ratio_max": 6.0279998779296875
+    },
+    "dense": {
+      "base_acc_mean": 1.0,
+      "base_acc_min": 1.0,
+      "ratio_mean": 0.0,
+      "ratio_std": 0.0,
+      "ratio_min": 0.0,
+      "ratio_max": 0.0
+    },
+    "random-wire": {
+      "base_acc_mean": 1.0,
+      "base_acc_min": 1.0,
+      "ratio_mean": 5.846057891845703,
+      "ratio_std": 1.842637538909912,
+      "ratio_min": 3.821605682373047,
+      "ratio_max": 8.0
+    }
+  },
+  "rows": [
+    {
+      "condition": "hub-sparse",
+      "seed": 0,
+      "base_acc": 1.0,
+      "targeted_drop": 0.5175000429153442,
+      "random_drop": 0.09331250190734863,
+      "ratio": 5.545881271362305,
+      "degree": [
+        6.0,
+        6.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "condition": "hub-sparse",
+      "seed": 1,
+      "base_acc": 1.0,
+      "targeted_drop": 0.5099999904632568,
+      "random_drop": 0.09206249564886093,
+      "ratio": 5.539714813232422,
+      "degree": [
+        6.0,
+        6.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "condition": "hub-sparse",
+      "seed": 2,
+      "base_acc": 1.0,
+      "targeted_drop": 0.7465000152587891,
+      "random_drop": 0.125,
+      "ratio": 5.9720001220703125,
+      "degree": [
+        6.0,
+        6.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "condition": "hub-sparse",
+      "seed": 3,
+      "base_acc": 1.0,
+      "targeted_drop": 0.7534999847412109,
+      "random_drop": 0.125,
+      "ratio": 6.0279998779296875,
+      "degree": [
+        6.0,
+        6.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "condition": "hub-sparse",
+      "seed": 4,
+      "base_acc": 0.7689999938011169,
+      "targeted_drop": 0.2394999861717224,
+      "random_drop": 0.0598749965429306,
+      "ratio": 4.0,
+      "degree": [
+        6.0,
+        6.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "condition": "dense",
+      "seed": 0,
+      "base_acc": 1.0,
+      "targeted_drop": 0.0,
+      "random_drop": 0.0,
+      "ratio": 0.0,
+      "degree": [
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0
+      ]
+    },
+    {
+      "condition": "dense",
+      "seed": 1,
+      "base_acc": 1.0,
+      "targeted_drop": 0.0,
+      "random_drop": 0.0,
+      "ratio": 0.0,
+      "degree": [
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0
+      ]
+    },
+    {
+      "condition": "dense",
+      "seed": 2,
+      "base_acc": 1.0,
+      "targeted_drop": 0.0,
+      "random_drop": 0.0,
+      "ratio": 0.0,
+      "degree": [
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0
+      ]
+    },
+    {
+      "condition": "dense",
+      "seed": 3,
+      "base_acc": 1.0,
+      "targeted_drop": 0.0,
+      "random_drop": 0.0,
+      "ratio": 0.0,
+      "degree": [
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0
+      ]
+    },
+    {
+      "condition": "dense",
+      "seed": 4,
+      "base_acc": 1.0,
+      "targeted_drop": 0.0,
+      "random_drop": 0.0,
+      "ratio": 0.0,
+      "degree": [
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0
+      ]
+    },
+    {
+      "condition": "random-wire",
+      "seed": 0,
+      "base_acc": 1.0,
+      "targeted_drop": 0.24299997091293335,
+      "random_drop": 0.03037499636411667,
+      "ratio": 8.0,
+      "degree": [
+        3.0,
+        0.0,
+        0.0,
+        1.0,
+        2.0,
+        1.0,
+        2.0,
+        3.0
+      ]
+    },
+    {
+      "condition": "random-wire",
+      "seed": 1,
+      "base_acc": 1.0,
+      "targeted_drop": 0.25199997425079346,
+      "random_drop": 0.03149999678134918,
+      "ratio": 8.0,
+      "degree": [
+        0.0,
+        4.0,
+        0.0,
+        1.0,
+        2.0,
+        2.0,
+        1.0,
+        2.0
+      ]
+    },
+    {
+      "condition": "random-wire",
+      "seed": 2,
+      "base_acc": 1.0,
+      "targeted_drop": 0.48799997568130493,
+      "random_drop": 0.12199999392032623,
+      "ratio": 4.0,
+      "degree": [
+        5.0,
+        2.0,
+        1.0,
+        2.0,
+        2.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "condition": "random-wire",
+      "seed": 3,
+      "base_acc": 1.0,
+      "targeted_drop": 0.4819999933242798,
+      "random_drop": 0.12612499296665192,
+      "ratio": 3.821605682373047,
+      "degree": [
+        2.0,
+        1.0,
+        1.0,
+        3.0,
+        2.0,
+        0.0,
+        1.0,
+        2.0
+      ]
+    },
+    {
+      "condition": "random-wire",
+      "seed": 4,
+      "base_acc": 1.0,
+      "targeted_drop": 0.49049997329711914,
+      "random_drop": 0.09068749845027924,
+      "ratio": 5.4086833000183105,
+      "degree": [
+        1.0,
+        2.0,
+        1.0,
+        3.0,
+        1.0,
+        0.0,
+        3.0,
+        1.0
+      ]
+    }
+  ],
+  "sec": 25.3
+}
