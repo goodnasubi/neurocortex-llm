@@ -1,0 +1,229 @@
+{
+  "説明": "ステップ2 基底核モジュール: フェーズ2（無関係腕への集中的な失敗信号）によるチャンピオン（良腕内の相対的選好）の破局的抑制の比較（12.6.10節）",
+  "条件": {
+    "seeds": 5,
+    "conditions": [
+      "single",
+      "single-asym",
+      "dual"
+    ],
+    "n_good": 4,
+    "n_bad": 4,
+    "good_reward_prob": 0.1,
+    "champion_reward_prob": 0.3,
+    "bad_penalty_prob": 1.0,
+    "phase1_target": 0.6,
+    "phase1_max_steps": 20000,
+    "check_every": 5,
+    "phase2_target": 0.05,
+    "phase2_max_steps": 2000,
+    "batch_size": 16,
+    "lr": 0.1,
+    "lr_neg": 0.1,
+    "lr_go": 0.1,
+    "lr_nogo": 0.1,
+    "critic_lr": 0.1,
+    "out": "results/basal_ganglia/catastrophic_suppression.json"
+  },
+  "control1_ok": true,
+  "summary": {
+    "single": {
+      "champion_drop_mean": -0.0919782966375351,
+      "champion_drop_std": 0.031464457511901855,
+      "champion_drop_min": -0.12294411659240723,
+      "champion_drop_max": -0.03547543287277222,
+      "champion_before_mean": 0.6361786127090454,
+      "champion_before_std": 0.037736862897872925,
+      "phase1_steps_mean": 259.0,
+      "phase1_hit_max_steps": 0
+    },
+    "single-asym": {
+      "champion_drop_mean": -0.0919782966375351,
+      "champion_drop_std": 0.031464457511901855,
+      "champion_drop_min": -0.12294411659240723,
+      "champion_drop_max": -0.03547543287277222,
+      "champion_before_mean": 0.6361786127090454,
+      "champion_before_std": 0.037736862897872925,
+      "phase1_steps_mean": 259.0,
+      "phase1_hit_max_steps": 0
+    },
+    "dual": {
+      "champion_drop_mean": -0.037047017365694046,
+      "champion_drop_std": 0.01086221169680357,
+      "champion_drop_min": -0.05712229013442993,
+      "champion_drop_max": -0.02584552764892578,
+      "champion_before_mean": 0.6091078519821167,
+      "champion_before_std": 0.005498644430190325,
+      "phase1_steps_mean": 323.0,
+      "phase1_hit_max_steps": 0
+    }
+  },
+  "rows": [
+    {
+      "condition": "single",
+      "seed": 0,
+      "phase1_steps_used": 155,
+      "phase2_steps_used": 2000,
+      "champion_share_before": 0.6343585252761841,
+      "champion_share_after": 0.7186593413352966,
+      "champion_drop": -0.08430081605911255,
+      "good_prob_before": 0.8180657625198364,
+      "good_prob_after": 0.9100472331047058
+    },
+    {
+      "condition": "single",
+      "seed": 1,
+      "phase1_steps_used": 135,
+      "phase2_steps_used": 2000,
+      "champion_share_before": 0.6192489266395569,
+      "champion_share_after": 0.7375313639640808,
+      "champion_drop": -0.11828243732452393,
+      "good_prob_before": 0.8629355430603027,
+      "good_prob_after": 0.9310874342918396
+    },
+    {
+      "condition": "single",
+      "seed": 2,
+      "phase1_steps_used": 25,
+      "phase2_steps_used": 2000,
+      "champion_share_before": 0.6118040084838867,
+      "champion_share_after": 0.7106927037239075,
+      "champion_drop": -0.09888869524002075,
+      "good_prob_before": 0.7182482481002808,
+      "good_prob_after": 0.8283510208129883
+    },
+    {
+      "condition": "single",
+      "seed": 3,
+      "phase1_steps_used": 975,
+      "phase2_steps_used": 5,
+      "champion_share_before": 0.6062312126159668,
+      "champion_share_after": 0.729175329208374,
+      "champion_drop": -0.12294411659240723,
+      "good_prob_before": 0.949515163898468,
+      "good_prob_after": 0.9764774441719055
+    },
+    {
+      "condition": "single",
+      "seed": 4,
+      "phase1_steps_used": 5,
+      "phase2_steps_used": 2000,
+      "champion_share_before": 0.7092502117156982,
+      "champion_share_after": 0.7447256445884705,
+      "champion_drop": -0.03547543287277222,
+      "good_prob_before": 0.29044651985168457,
+      "good_prob_after": 0.32301220297813416
+    },
+    {
+      "condition": "single-asym",
+      "seed": 0,
+      "phase1_steps_used": 155,
+      "phase2_steps_used": 2000,
+      "champion_share_before": 0.6343585252761841,
+      "champion_share_after": 0.7186593413352966,
+      "champion_drop": -0.08430081605911255,
+      "good_prob_before": 0.8180657625198364,
+      "good_prob_after": 0.9100472331047058
+    },
+    {
+      "condition": "single-asym",
+      "seed": 1,
+      "phase1_steps_used": 135,
+      "phase2_steps_used": 2000,
+      "champion_share_before": 0.6192489266395569,
+      "champion_share_after": 0.7375313639640808,
+      "champion_drop": -0.11828243732452393,
+      "good_prob_before": 0.8629355430603027,
+      "good_prob_after": 0.9310874342918396
+    },
+    {
+      "condition": "single-asym",
+      "seed": 2,
+      "phase1_steps_used": 25,
+      "phase2_steps_used": 2000,
+      "champion_share_before": 0.6118040084838867,
+      "champion_share_after": 0.7106927037239075,
+      "champion_drop": -0.09888869524002075,
+      "good_prob_before": 0.7182482481002808,
+      "good_prob_after": 0.8283510208129883
+    },
+    {
+      "condition": "single-asym",
+      "seed": 3,
+      "phase1_steps_used": 975,
+      "phase2_steps_used": 5,
+      "champion_share_before": 0.6062312126159668,
+      "champion_share_after": 0.729175329208374,
+      "champion_drop": -0.12294411659240723,
+      "good_prob_before": 0.949515163898468,
+      "good_prob_after": 0.9764774441719055
+    },
+    {
+      "condition": "single-asym",
+      "seed": 4,
+      "phase1_steps_used": 5,
+      "phase2_steps_used": 2000,
+      "champion_share_before": 0.7092502117156982,
+      "champion_share_after": 0.7447256445884705,
+      "champion_drop": -0.03547543287277222,
+      "good_prob_before": 0.29044651985168457,
+      "good_prob_after": 0.32301220297813416
+    },
+    {
+      "condition": "dual",
+      "seed": 0,
+      "phase1_steps_used": 200,
+      "phase2_steps_used": 2000,
+      "champion_share_before": 0.6189365983009338,
+      "champion_share_after": 0.6760588884353638,
+      "champion_drop": -0.05712229013442993,
+      "good_prob_before": 0.8085205554962158,
+      "good_prob_after": 0.8577055931091309
+    },
+    {
+      "condition": "dual",
+      "seed": 1,
+      "phase1_steps_used": 5,
+      "phase2_steps_used": 2000,
+      "champion_share_before": 0.6052147746086121,
+      "champion_share_after": 0.6310603022575378,
+      "champion_drop": -0.02584552764892578,
+      "good_prob_before": 0.4398544430732727,
+      "good_prob_after": 0.47547587752342224
+    },
+    {
+      "condition": "dual",
+      "seed": 2,
+      "phase1_steps_used": 275,
+      "phase2_steps_used": 2000,
+      "champion_share_before": 0.6075208783149719,
+      "champion_share_after": 0.6411409974098206,
+      "champion_drop": -0.03362011909484863,
+      "good_prob_before": 0.5985191464424133,
+      "good_prob_after": 0.6585604548454285
+    },
+    {
+      "condition": "dual",
+      "seed": 3,
+      "phase1_steps_used": 35,
+      "phase2_steps_used": 2000,
+      "champion_share_before": 0.6106377243995667,
+      "champion_share_after": 0.6407857537269592,
+      "champion_drop": -0.030148029327392578,
+      "good_prob_before": 0.4651104211807251,
+      "good_prob_after": 0.5028430223464966
+    },
+    {
+      "condition": "dual",
+      "seed": 4,
+      "phase1_steps_used": 1100,
+      "phase2_steps_used": 2000,
+      "champion_share_before": 0.6032294034957886,
+      "champion_share_after": 0.6417285203933716,
+      "champion_drop": -0.03849911689758301,
+      "good_prob_before": 0.9134003520011902,
+      "good_prob_after": 0.93923419713974
+    }
+  ],
+  "sec": 8.7
+}
