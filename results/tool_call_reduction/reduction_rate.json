@@ -1,0 +1,48 @@
+{
+  "説明": "ステップ20 評価指標の設計（小脳モジュールのツール呼び出し試行回数削減率）: cerebellum（本設計）のrandom-search基準削減率（主指標）とfrom-scratch基準削減率（補足値、持続性固有の効果）を早期/後期エピソードに分けて実測（12.6.48節）",
+  "条件": {
+    "seeds": 10,
+    "dim": 3,
+    "n_episodes": 30,
+    "early_episodes": 3,
+    "late_start_episode": 15,
+    "eps": 0.1,
+    "max_real_calls": 30,
+    "n_candidates": 64,
+    "step_size": 1.0,
+    "lr": 0.3,
+    "target_scale": 1.0,
+    "out": "results/tool_call_reduction/reduction_rate.json"
+  },
+  "claim1_positive_reduction_ok（random-search基準削減率が明確に正か）": true,
+  "summary": {
+    "early": {
+      "mean_calls": {
+        "cerebellum": 11.233333333333333,
+        "from-scratch": 10.933333333333334,
+        "random-search": 19.433333333333334
+      },
+      "reduction_vs_random_search": 0.4219554030874786,
+      "reduction_vs_from_scratch": -0.027439024390243816
+    },
+    "late": {
+      "mean_calls": {
+        "cerebellum": 17.526666666666667,
+        "from-scratch": 12.813333333333333,
+        "random-search": 21.96
+      },
+      "reduction_vs_random_search": 0.20188221007893137,
+      "reduction_vs_from_scratch": -0.36784599375650373
+    },
+    "all": {
+      "mean_calls": {
+        "cerebellum": 16.13,
+        "from-scratch": 12.453333333333333,
+        "random-search": 22.35333333333333
+      },
+      "reduction_vs_random_search": 0.2784073963614674,
+      "reduction_vs_from_scratch": -0.29523554603854385
+    }
+  },
+  "sec": 0.5
+}
