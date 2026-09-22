@@ -111,12 +111,43 @@ class SpikingLM(nn.Module):
 
         海馬モジュール（12.6.4節）がキーを取り出し、読み出しを注入する地点。
         """
+        return self.encode_taps(tokens)["ln_f"]
+
+    def encode_taps(self, tokens: torch.Tensor) -> dict[str, torch.Tensor]:
+        """残差ストリーム・各ブロックのスパイク層の出力を、タップ位置ごとに全部返す。
+
+        12.6.7節でタップ位置（当初は `ln_f`）が学習で縮退することが判明したため、
+        タップ位置の選び直し（12.6.8節）に使う。キーは ``"embed"``、
+        ``f"block{i}.{attn,fc1,fc2}"``（スパイク、[B,T,d] または fc1 は [B,T,4d]）、
+        ``f"resid{i}"``（ブロックi通過後の残差ストリーム、連続値）、``"ln_f"``。
+        アドホックな forward hook より、実験コードが参照できる一級の機能として置く。
+        """
         b, t = tokens.shape
         pos = torch.arange(t, device=tokens.device)
         x = self.embed(tokens) + self.pos(pos)[None]
-        for blk in self.blocks:
-            x = blk(x)
-        return self.ln_f(x)
+        taps: dict[str, torch.Tensor] = {"embed": x}
+        for i, blk in enumerate(self.blocks):
+            if blk.placement == "post":
+                s_attn = blk.act_attn(blk.ln1(x))
+                x = x + blk.attn.out_only(s_attn)
+                pre_fc = blk.fc1(blk.ln2(x))
+                s_fc2 = blk.act_fc2(pre_fc)
+                x = x + blk.fc2(s_fc2)
+                taps[f"block{i}.attn"] = s_attn
+                taps[f"block{i}.fc2"] = s_fc2
+            else:
+                s_attn = blk.act_attn(blk.ln1(x))
+                x = x + blk.attn(s_attn)
+                s_fc1 = blk.act_fc1(blk.ln2(x))
+                pre_fc2 = blk.fc1(s_fc1)
+                s_fc2 = blk.act_fc2(pre_fc2)
+                x = x + blk.fc2(s_fc2)
+                taps[f"block{i}.attn"] = s_attn
+                taps[f"block{i}.fc1"] = s_fc1
+                taps[f"block{i}.fc2"] = s_fc2
+            taps[f"resid{i}"] = x
+        taps["ln_f"] = self.ln_f(x)
+        return taps
 
     def forward(self, tokens: torch.Tensor) -> torch.Tensor:
         return self.head(self.encode(tokens))

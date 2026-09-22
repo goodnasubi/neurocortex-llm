@@ -140,3 +140,42 @@ def test_fact_batch_rejects_too_many() -> None:
     spec = FactSpec(n_prefix=2, n_suffix=4, n_object=4)
     with pytest.raises(ValueError):
         make_fact_batch(spec, 9, torch.Generator().manual_seed(0))
+
+
+# --- タップ位置の再設計（12.6.8節） -------------------------------------------
+
+def test_encode_taps_matches_forward() -> None:
+    """encode_taps()["ln_f"] は encode() と一致し、forward の再計算になっていること。"""
+    from neurocortex.lm import SpikingLM
+    from neurocortex.neurons import NeuronConfig
+
+    torch.manual_seed(0)
+    model = SpikingLM(50, d_model=16, n_layers=3, n_heads=2, max_len=4, cfg=NeuronConfig())
+    model.eval()
+    tokens = torch.randint(0, 50, (2, 4))
+    with torch.no_grad():
+        taps = model.encode_taps(tokens)
+        assert torch.equal(taps["ln_f"], model.encode(tokens))
+        assert torch.equal(model.head(taps["ln_f"]), model(tokens))
+
+
+def test_encode_taps_has_expected_keys() -> None:
+    from neurocortex.lm import SpikingLM
+    from neurocortex.neurons import NeuronConfig
+
+    model = SpikingLM(50, d_model=16, n_layers=2, n_heads=2, max_len=4, cfg=NeuronConfig())
+    taps = model.encode_taps(torch.randint(0, 50, (1, 4)))
+    for name in ("embed", "block0.attn", "block0.fc1", "block0.fc2",
+                 "resid0", "block1.attn", "resid1", "ln_f"):
+        assert name in taps, f"{name} が encode_taps に含まれない"
+
+
+def test_block0_attn_is_binary_spikes() -> None:
+    """12.6.8節で採用したタップは二値スパイクであること（連続値ではない）。"""
+    from neurocortex.lm import SpikingLM
+    from neurocortex.neurons import NeuronConfig
+
+    model = SpikingLM(50, d_model=16, n_layers=1, n_heads=2, max_len=4, cfg=NeuronConfig())
+    taps = model.encode_taps(torch.randint(0, 50, (4, 4)))
+    v = taps["block0.attn"]
+    assert torch.all((v == 0) | (v == 1))
