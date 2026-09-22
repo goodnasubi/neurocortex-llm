@@ -47,6 +47,16 @@ def test_measure_one_is_deterministic_given_seed() -> None:
     assert r1["memory_bytes"] == r2["memory_bytes"]
 
 
+def test_measure_one_includes_batched_ann_fields() -> None:
+    """ステップ24（12.6.56節）: `measure_one`はバッチ版ann（`ann_batched`）の
+    計測結果・旧実装との回帰比較用一致率も返す。
+    """
+    result = measure_one(200, 64, 64, seed=0)
+    assert result["ann_batched_read_time_median_sec"] > 0.0
+    assert 0.0 <= result["top1_match_rate_batched"] <= 1.0
+    assert 0.0 <= result["top1_match_rate_old_vs_batched"] <= 1.0
+
+
 def test_full_candidate_coverage_gives_perfect_match_rate() -> None:
     """`read_approx`が全件を候補にできる小規模ストアでは、厳密探索と一致するはず
     （候補絞り込みロジック自体のバグがないことの健全性確認、hippocampus.py側の

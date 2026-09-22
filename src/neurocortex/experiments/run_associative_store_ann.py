@@ -38,7 +38,9 @@ def _bytes_of(store: AssociativeStore) -> int:
 
 
 def measure_one(n: int, d_model: int, value_dim: int, seed: int) -> dict:
-    """同一N・同一シードで`exact`（厳密）・`ann`（近似）双方のreadを測定する。"""
+    """同一N・同一シードで`exact`（厳密）・`ann`（近似, 旧Pythonループ実装）・
+    `ann_batched`（近似, ステップ24のベクトル化再実装）の3方式のreadを測定する。
+    """
     g = torch.Generator().manual_seed(seed)
     keys = torch.randn(n, d_model, generator=g)
     keys = keys / keys.norm(dim=-1, keepdim=True).clamp_min(1e-8)
@@ -48,6 +50,8 @@ def measure_one(n: int, d_model: int, value_dim: int, seed: int) -> dict:
     store_exact.write(keys, values)
     store_ann = AssociativeStore(d_model, value_dim, exact=True)
     store_ann.write(keys, values)
+    store_ann_batched = AssociativeStore(d_model, value_dim, exact=True)
+    store_ann_batched.write(keys, values)
 
     query_g = torch.Generator().manual_seed(seed + 90_000)
     queries = torch.randn(QUERY_BATCH, d_model, generator=query_g)
@@ -62,7 +66,7 @@ def measure_one(n: int, d_model: int, value_dim: int, seed: int) -> dict:
         _, exact_stats = store_exact.read(queries)
         exact_times.append(time.perf_counter() - t0)
 
-    # --- ann（ウォームアップでk-means索引を構築・キャッシュしてから計測） ---
+    # --- ann（旧実装, ウォームアップでk-means索引を構築・キャッシュしてから計測） ---
     for _ in range(N_WARMUP):
         store_ann.read_approx(queries, seed=seed)
     ann_times = []
@@ -72,14 +76,30 @@ def measure_one(n: int, d_model: int, value_dim: int, seed: int) -> dict:
         _, ann_stats = store_ann.read_approx(queries, seed=seed)
         ann_times.append(time.perf_counter() - t0)
 
+    # --- ann_batched（ステップ24のベクトル化再実装） ---
+    for _ in range(N_WARMUP):
+        store_ann_batched.read_approx_batched(queries, seed=seed)
+    ann_batched_times = []
+    ann_batched_stats = None
+    for _ in range(N_MEASURE):
+        t0 = time.perf_counter()
+        _, ann_batched_stats = store_ann_batched.read_approx_batched(queries, seed=seed)
+        ann_batched_times.append(time.perf_counter() - t0)
+
     top1_match = (exact_stats.top1_index == ann_stats.top1_index).float().mean().item()
+    top1_match_batched = (exact_stats.top1_index == ann_batched_stats.top1_index).float().mean().item()
+    # 統制: 旧実装と新実装の候補選択がアルゴリズム的に同じであることの確認
+    top1_match_old_vs_batched = (ann_stats.top1_index == ann_batched_stats.top1_index).float().mean().item()
 
     return {
         "n": n,
         "exact_read_time_median_sec": statistics.median(exact_times),
         "ann_read_time_median_sec": statistics.median(ann_times),
+        "ann_batched_read_time_median_sec": statistics.median(ann_batched_times),
         "memory_bytes": _bytes_of(store_exact),
         "top1_match_rate": top1_match,
+        "top1_match_rate_batched": top1_match_batched,
+        "top1_match_rate_old_vs_batched": top1_match_old_vs_batched,
     }
 
 

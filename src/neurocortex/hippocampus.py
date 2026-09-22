@@ -269,6 +269,92 @@ class AssociativeStore:
             out[i] = values_dev[cand_idx[top.indices]].to(keys.device)
         return out, StoreStats(best, arg)
 
+    # ------------------------------------------------------------------
+    # ステップ24（12.6.56節の設計）: `read_approx`のベクトル化再実装。
+    # クラスタ索引構築（`_ensure_ann_index`）・候補絞り込みのアルゴリズムは
+    # 一切変更しない。変更対象は候補探索部分のみ: クエリごとのPythonループを
+    # 「同一の候補クラスタ集合を共有するクエリ群」単位のバッチ行列積に置き換える。
+    # ------------------------------------------------------------------
+
+    @torch.no_grad()
+    def read_approx_batched(
+        self,
+        keys: torch.Tensor,
+        n_clusters: int | None = None,
+        n_probe: int = 8,
+        n_iters: int = 5,
+        seed: int = 0,
+        min_candidates: int = 64,
+    ) -> tuple[torch.Tensor, StoreStats]:
+        """`read_approx`のベクトル化再実装（12.6.56節）。
+
+        `read_approx`と同一のアルゴリズム（k-means粗量子化による2段階探索、
+        `min_candidates`による一様サンプル補完）を使うが、クエリごとの
+        Pythonループ（候補集合の構築・部分行列積を1件ずつ実行）を、
+        「上位`n_probe`クラスタの集合が同一のクエリ」をまとめてバッチ行列積で
+        処理する形に置き換える。候補集合はクラスタ集合が同一なら同一件数に
+        揃うため、グループ内でのパディングは不要（グループ間の候補件数の
+        不揃いは、グループごとに独立した行列積で吸収される）。
+        `read_approx`と数学的に同じ候補選択・厳密argmaxを行うため、
+        結果はほぼ一致するはず（乱数補完の消費順序が異なるため`min_candidates`
+        による補完候補がわずかに変わりうる点のみ相違しうる）。
+        """
+        b = keys.shape[0]
+        out = torch.zeros(b, self.value_dim, device=keys.device)
+        best = torch.zeros(b, device=keys.device)
+        arg = torch.full((b,), -1, dtype=torch.long, device=keys.device)
+        if len(self) == 0:
+            return out, StoreStats(best, arg)
+
+        n_total = len(self)
+        if n_clusters is None:
+            n_clusters = max(1, int(round(n_total ** 0.5)))
+        self._ensure_ann_index(n_clusters, n_iters, seed)
+        centroids = self._ann_centroids
+        buckets = self._ann_buckets
+        nc = centroids.shape[0]
+        n_probe_eff = min(n_probe, nc)
+
+        keys_cpu = keys.detach().to("cpu")
+        csims = keys_cpu @ centroids.T  # [B, nc]
+        top_clusters = csims.topk(n_probe_eff, dim=-1).indices  # [B, n_probe_eff]
+        # クラスタ集合が同一なら候補集合も同一になるよう、ソートしてグループ化する。
+        top_clusters_sorted, _ = torch.sort(top_clusters, dim=-1)
+
+        rng = np.random.default_rng(seed)
+        keys_dev = self._keys
+        values_dev = self._values
+
+        # 全クエリの所属クラスタ集合をグルーピングする（`torch.bincount`相当の
+        # 効果を持つ辞書ベースのグルーピング。B件のPythonループを、Bよりも
+        # 少ない「重複しないクラスタ集合」の件数分のループに削減する）。
+        groups: dict[tuple[int, ...], list[int]] = {}
+        for i, row in enumerate(top_clusters_sorted.tolist()):
+            groups.setdefault(tuple(row), []).append(i)
+
+        for cluster_key, q_indices in groups.items():
+            cand: list[int] = []
+            for c in cluster_key:
+                cand.extend(buckets.get(c, []))
+            if cand:
+                cand = list(dict.fromkeys(cand))
+            if len(cand) < min_candidates:
+                extra_n = min(min_candidates - len(cand), n_total)
+                if extra_n > 0:
+                    extra = rng.choice(n_total, size=extra_n, replace=False).tolist()
+                    cand = list(dict.fromkeys(cand + extra))
+            cand_idx = torch.tensor(cand, dtype=torch.long, device=self._device)
+            q_idx_t = torch.tensor(q_indices, dtype=torch.long)
+            q = keys[q_idx_t].to(self._device)  # [g, key_dim]
+            cand_keys = keys_dev[cand_idx]  # [C, key_dim]
+            scores = q @ cand_keys.T  # [g, C] グループ内クエリをまとめたバッチ行列積
+            top = scores.max(dim=-1)
+            best[q_idx_t] = top.values.to(keys.device)
+            sel = cand_idx[top.indices]
+            arg[q_idx_t] = sel.to(keys.device)
+            out[q_idx_t] = values_dev[sel].to(keys.device)
+        return out, StoreStats(best, arg)
+
 
 class HippocampalMemory(nn.Module):
     """分離層と連想ストアを束ね、皮質の残差ストリームに読み出しを注入する。

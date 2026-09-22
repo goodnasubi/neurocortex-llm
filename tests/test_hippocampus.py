@@ -145,6 +145,81 @@ def test_read_approx_does_not_mutate_write_or_read() -> None:
     assert torch.allclose(out_before, out_after, atol=1e-5)
 
 
+def test_read_approx_batched_roundtrip_small_store() -> None:
+    """ステップ24（12.6.56節）: `read_approx_batched`も1件だけ書けば必ず戻る。"""
+    store = AssociativeStore(4, 4)
+    key = torch.zeros(1, 4)
+    key[0, 3] = 1.0
+    value = torch.tensor([[1.0, 0.0, 0.0, 0.0]])
+    store.write(key, value)
+    out, stats = store.read_approx_batched(key)
+    assert torch.allclose(out, value, atol=1e-5)
+    assert pytest.approx(1.0, abs=1e-5) == float(stats.max_score)
+    assert int(stats.top1_index[0]) == 0
+
+
+def test_read_approx_batched_matches_exact_when_min_candidates_covers_all() -> None:
+    """`min_candidates`が全件をカバーすれば`read_approx_batched`は厳密探索と完全一致する。"""
+    torch.manual_seed(0)
+    keys = torch.nn.functional.normalize(torch.randn(30, 8), dim=-1)
+    values = torch.nn.functional.normalize(torch.randn(30, 4), dim=-1)
+
+    store_exact = AssociativeStore(8, 4, exact=True)
+    store_exact.write(keys, values)
+    out_exact, stats_exact = store_exact.read(keys)
+
+    store_ann = AssociativeStore(8, 4)
+    store_ann.write(keys, values)
+    out_ann, stats_ann = store_ann.read_approx_batched(keys, min_candidates=30)
+
+    assert torch.equal(stats_exact.top1_index, stats_ann.top1_index)
+    assert torch.allclose(out_exact, out_ann, atol=1e-5)
+
+
+def test_read_approx_batched_empty_store_returns_zero() -> None:
+    """`read_approx_batched`も空ストアではゼロと-1を返す（`read`・`read_approx`と同じ挙動）。"""
+    store = AssociativeStore(8, 4)
+    out, stats = store.read_approx_batched(torch.randn(3, 8))
+    assert float(out.abs().max()) == 0.0
+    assert torch.equal(stats.top1_index, torch.full((3,), -1))
+
+
+def test_read_approx_batched_does_not_mutate_write_or_read() -> None:
+    """`read_approx_batched`の追加は既存`write`・`read`・`read_approx`の挙動を変えない。"""
+    torch.manual_seed(1)
+    keys = torch.nn.functional.normalize(torch.randn(16, 8), dim=-1)
+    values = torch.nn.functional.normalize(torch.randn(16, 4), dim=-1)
+    store = AssociativeStore(8, 4, exact=True)
+    store.write(keys, values)
+    out_before, stats_before = store.read(keys)
+    store.read_approx_batched(keys)  # 呼び出しても既存の状態・以後のreadに影響しない
+    out_after, stats_after = store.read(keys)
+    assert torch.equal(stats_before.top1_index, stats_after.top1_index)
+    assert torch.allclose(out_before, out_after, atol=1e-5)
+
+
+def test_read_approx_batched_agrees_with_read_approx_on_moderate_store() -> None:
+    """ステップ24の統制: 新実装（バッチ版）と旧実装（`read_approx`）は同一アルゴリズムの
+    はずなので、候補絞り込みが効く中規模ストアでもtop-1一致率がほぼ一致する。
+    """
+    torch.manual_seed(2)
+    n = 500
+    keys = torch.nn.functional.normalize(torch.randn(n, 16), dim=-1)
+    values = torch.nn.functional.normalize(torch.randn(n, 4), dim=-1)
+    queries = torch.nn.functional.normalize(torch.randn(64, 16), dim=-1)
+
+    store_old = AssociativeStore(16, 4)
+    store_old.write(keys, values)
+    _, stats_old = store_old.read_approx(queries, seed=7)
+
+    store_new = AssociativeStore(16, 4)
+    store_new.write(keys, values)
+    _, stats_new = store_new.read_approx_batched(queries, seed=7)
+
+    match = (stats_old.top1_index == stats_new.top1_index).float().mean().item()
+    assert match >= 0.9
+
+
 def test_empty_store_returns_zero() -> None:
     """統制2「因果的除去」: ストアを空にすると注入がゼロになる。"""
     store = AssociativeStore(8, 4)
