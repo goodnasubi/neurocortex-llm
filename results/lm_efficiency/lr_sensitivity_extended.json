@@ -1,0 +1,93 @@
+{
+  "説明": "ステップ25 学習率0.1台でのスパイキング発散再検証（12.6.58〜59節）: SpikingLM対DenseBaselineのdiverged_fractionを1e-4〜0.3の8学習率で比較",
+  "条件": {
+    "seeds": 3,
+    "d_model": 64,
+    "n_layers": 2,
+    "n_heads": 2,
+    "seq_len": 48,
+    "batch_size": 16,
+    "lr_sweep_steps": 300,
+    "lrs": [
+      0.0001,
+      0.0003,
+      0.001,
+      0.003,
+      0.01,
+      0.03,
+      0.1,
+      0.3
+    ],
+    "beta": 0.95,
+    "out": "results\\lm_efficiency\\lr_sensitivity_extended.json"
+  },
+  "lr_sensitivity": {
+    "spiking": {
+      "0.0001": {
+        "diverged_fraction": 0.0
+      },
+      "0.0003": {
+        "diverged_fraction": 0.0
+      },
+      "0.001": {
+        "diverged_fraction": 0.0
+      },
+      "0.003": {
+        "diverged_fraction": 0.0
+      },
+      "0.01": {
+        "diverged_fraction": 0.0
+      },
+      "0.03": {
+        "diverged_fraction": 0.0
+      },
+      "0.1": {
+        "diverged_fraction": 0.0
+      },
+      "0.3": {
+        "diverged_fraction": 0.0
+      }
+    },
+    "dense": {
+      "0.0001": {
+        "diverged_fraction": 0.0
+      },
+      "0.0003": {
+        "diverged_fraction": 0.0
+      },
+      "0.001": {
+        "diverged_fraction": 0.0
+      },
+      "0.003": {
+        "diverged_fraction": 0.0
+      },
+      "0.01": {
+        "diverged_fraction": 0.0
+      },
+      "0.03": {
+        "diverged_fraction": 0.0
+      },
+      "0.1": {
+        "diverged_fraction": 0.0
+      },
+      "0.3": {
+        "diverged_fraction": 0.0
+      }
+    }
+  },
+  "control_diffs（既存6点の|spiking-dense|）": {
+    "0.0001": 0.0,
+    "0.0003": 0.0,
+    "0.001": 0.0,
+    "0.003": 0.0,
+    "0.01": 0.0,
+    "0.03": 0.0
+  },
+  "claim_a_diffs（拡張2点のspiking-dense）": {
+    "0.1": 0.0,
+    "0.3": 0.0
+  },
+  "control_b_ok（統制/主張b: 既存6点で差が全点0.2以内）": true,
+  "claim_a_ok（主張a: 0.1または0.3のいずれかで差が0.4以上）": false,
+  "sec": 2483.9
+}
