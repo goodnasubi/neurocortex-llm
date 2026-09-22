@@ -1,0 +1,112 @@
+{
+  "説明": "ステップ17 スパイクベース設計に伴う学習効率上の代償の実測: SpikingLM対DenseBaselineの(a)収束速度・(b)学習率感度の比較（12.6.42節）",
+  "条件": {
+    "seeds": 5,
+    "d_model": 64,
+    "n_layers": 2,
+    "n_heads": 2,
+    "seq_len": 48,
+    "batch_size": 16,
+    "steps": 1000,
+    "lr": 0.002,
+    "target_ppl": 3.0,
+    "lr_sweep_steps": 300,
+    "lrs": [
+      0.0001,
+      0.0003,
+      0.001,
+      0.003,
+      0.01,
+      0.03
+    ],
+    "beta": 0.95,
+    "out": "results/lm_efficiency/spiking_vs_dense_efficiency.json"
+  },
+  "convergence": {
+    "spiking": {
+      "steps_to_target_ppl": [
+        300,
+        300,
+        400,
+        400,
+        300
+      ],
+      "final_val_ppl": [
+        1.9713989292955727,
+        1.8963184431848867,
+        1.9258021363654658,
+        1.9692546764795578,
+        1.9026158465069358
+      ],
+      "reached_target_fraction": 1.0
+    },
+    "dense": {
+      "steps_to_target_ppl": [
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "final_val_ppl": [
+        1.394227719450753,
+        1.3908425180116166,
+        1.397902485099827,
+        1.4012089168837025,
+        1.3915365075619952
+      ],
+      "reached_target_fraction": 1.0
+    }
+  },
+  "lr_sensitivity": {
+    "spiking": {
+      "0.0001": {
+        "diverged_fraction": 0.0
+      },
+      "0.0003": {
+        "diverged_fraction": 0.0
+      },
+      "0.001": {
+        "diverged_fraction": 0.0
+      },
+      "0.003": {
+        "diverged_fraction": 0.0
+      },
+      "0.01": {
+        "diverged_fraction": 0.0
+      },
+      "0.03": {
+        "diverged_fraction": 0.0
+      }
+    },
+    "dense": {
+      "0.0001": {
+        "diverged_fraction": 0.0
+      },
+      "0.0003": {
+        "diverged_fraction": 0.0
+      },
+      "0.001": {
+        "diverged_fraction": 0.0
+      },
+      "0.003": {
+        "diverged_fraction": 0.0
+      },
+      "0.01": {
+        "diverged_fraction": 0.0
+      },
+      "0.03": {
+        "diverged_fraction": 0.0
+      }
+    }
+  },
+  "convergence_summary": {
+    "spiking_mean_steps_to_target": 340.0,
+    "dense_mean_steps_to_target": 200.0,
+    "spiking_mean_final_ppl": 1.9330780063664839,
+    "dense_mean_final_ppl": 1.3951436294015789
+  },
+  "claim_a_ok（収束速度で代償が見られたか）": true,
+  "claim_b_ok（学習率感度で代償が見られたか）": false,
+  "sec": 1900.1
+}
