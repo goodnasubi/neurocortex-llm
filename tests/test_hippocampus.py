@@ -83,6 +83,68 @@ def test_exact_mode_is_nearest_neighbour() -> None:
     assert torch.allclose(out, values, atol=1e-5)
 
 
+def test_read_approx_roundtrip_small_store() -> None:
+    """ステップ23（12.6.54節）: `read_approx`も1件だけ書けば必ず戻る。
+
+    小規模ストアでは候補絞り込み後のフォールバック（一様サンプル補完）が
+    全件をカバーするため、`read`（exact相当）と一致するはず。
+    """
+    store = AssociativeStore(key_dim=8, value_dim=4)
+    key = torch.zeros(1, 8)
+    key[0, 3] = 1.0
+    value = torch.tensor([[1.0, 0.0, 0.0, 0.0]])
+    store.write(key, value)
+    out, stats = store.read_approx(key)
+    assert torch.allclose(out, value, atol=1e-5)
+    assert pytest.approx(1.0, abs=1e-5) == float(stats.max_score)
+    assert int(stats.top1_index[0]) == 0
+
+
+def test_read_approx_matches_exact_when_min_candidates_covers_all() -> None:
+    """`min_candidates`が全件をカバーすれば`read_approx`は厳密探索と完全一致する。
+
+    候補絞り込みロジック自体のバグ（フォールバックの取りこぼし等）がないことの
+    健全性確認。`write`・`read`はコード変更していないので、既存の`exact=True`と
+    比較する。
+    """
+    torch.manual_seed(0)
+    keys = torch.nn.functional.normalize(torch.randn(40, 8), dim=-1)
+    values = torch.nn.functional.normalize(torch.randn(40, 4), dim=-1)
+
+    store_exact = AssociativeStore(8, 4, exact=True)
+    store_exact.write(keys, values)
+    out_exact, stats_exact = store_exact.read(keys)
+
+    store_ann = AssociativeStore(8, 4)
+    store_ann.write(keys, values)
+    out_ann, stats_ann = store_ann.read_approx(keys, min_candidates=40)
+
+    assert torch.equal(stats_exact.top1_index, stats_ann.top1_index)
+    assert torch.allclose(out_exact, out_ann, atol=1e-5)
+
+
+def test_read_approx_empty_store_returns_zero() -> None:
+    """`read_approx`も空ストアではゼロと-1を返す（`read`と同じ挙動）。"""
+    store = AssociativeStore(8, 4)
+    out, stats = store.read_approx(torch.randn(3, 8))
+    assert float(out.abs().max()) == 0.0
+    assert torch.equal(stats.top1_index, torch.full((3,), -1))
+
+
+def test_read_approx_does_not_mutate_write_or_read() -> None:
+    """`read_approx`の追加は既存`write`・`read`の挙動を変えない（設計上の制約）。"""
+    torch.manual_seed(1)
+    keys = torch.nn.functional.normalize(torch.randn(16, 8), dim=-1)
+    values = torch.nn.functional.normalize(torch.randn(16, 4), dim=-1)
+    store = AssociativeStore(8, 4, exact=True)
+    store.write(keys, values)
+    out_before, stats_before = store.read(keys)
+    store.read_approx(keys)  # 呼び出しても既存の状態・以後のreadに影響しない
+    out_after, stats_after = store.read(keys)
+    assert torch.equal(stats_before.top1_index, stats_after.top1_index)
+    assert torch.allclose(out_before, out_after, atol=1e-5)
+
+
 def test_empty_store_returns_zero() -> None:
     """統制2「因果的除去」: ストアを空にすると注入がゼロになる。"""
     store = AssociativeStore(8, 4)

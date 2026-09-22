@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -159,6 +160,114 @@ class AssociativeStore:
         """統制2「因果的除去」用。ストアを空にする。"""
         self._keys = torch.zeros(0, self.key_dim, device=self._device)
         self._values = torch.zeros(0, self.value_dim, device=self._device)
+
+    # ------------------------------------------------------------------
+    # ステップ23（12.6.54節の設計）: ANN候補絞り込みモード。
+    # `write`・`read`のコード・挙動は一切変更せず、読み出し専用の付加機能として
+    # 追加する。k-meansによる粗量子化＋2段階探索（`clusters`個のクラスタに
+    # 割り当てた上で、クエリに近いクラスタ`n_probe`個だけを全件探索する）を
+    # 自前実装する。クラスタ内で厳密な argmax を取る（＝`exact=True`相当の返し方）。
+    # ------------------------------------------------------------------
+
+    def _ensure_ann_index(self, n_clusters: int, n_iters: int, seed: int) -> None:
+        """粗量子化用のk-means重心・クラスタ所属索引を（必要なら）再構築する。
+
+        `write`でキー件数が変わった場合や、ハイパーパラメータ（クラスタ数・
+        反復数・シード）が変わった場合のみ再構築する。索引はCPU上に保持する。
+        コサイン類似度を使うため、重心も毎反復L2正規化する（球面k-meansの簡易版）。
+        """
+        n_total = len(self)
+        nc = max(1, min(n_clusters, n_total))
+        cache_key = (nc, n_iters, seed, n_total)
+        if getattr(self, "_ann_cache_key", None) == cache_key:
+            return
+        keys_cpu = self._keys.detach().to("cpu")
+        g = torch.Generator().manual_seed(seed)
+        perm = torch.randperm(n_total, generator=g)[:nc]
+        centroids = keys_cpu[perm].clone()
+        assign = torch.zeros(n_total, dtype=torch.long)
+        for _ in range(n_iters):
+            sims = keys_cpu @ centroids.T  # [N, nc]
+            assign = sims.argmax(dim=1)
+            new_centroids = torch.zeros_like(centroids)
+            counts = torch.zeros(nc)
+            new_centroids.index_add_(0, assign, keys_cpu)
+            counts.index_add_(0, assign, torch.ones(n_total))
+            empty = counts == 0
+            new_centroids = new_centroids / counts.clamp_min(1).unsqueeze(1)
+            norm = new_centroids.norm(dim=-1, keepdim=True).clamp_min(1e-8)
+            new_centroids = new_centroids / norm
+            new_centroids[empty] = centroids[empty]
+            centroids = new_centroids
+        buckets: dict[int, list[int]] = {}
+        for idx, c in enumerate(assign.tolist()):
+            buckets.setdefault(c, []).append(idx)
+        self._ann_centroids = centroids
+        self._ann_buckets = buckets
+        self._ann_cache_key = cache_key
+
+    @torch.no_grad()
+    def read_approx(
+        self,
+        keys: torch.Tensor,
+        n_clusters: int | None = None,
+        n_probe: int = 8,
+        n_iters: int = 5,
+        seed: int = 0,
+        min_candidates: int = 64,
+    ) -> tuple[torch.Tensor, StoreStats]:
+        """`read`のANN版（k-means粗量子化による候補絞り込み）。
+
+        キーを`n_clusters`個のクラスタに粗量子化し（デフォルトは概ね
+        sqrt(N)個）、クエリに最も近いクラスタ`n_probe`個の中だけで厳密な
+        内積argmaxを取る。候補が`min_candidates`に満たない場合は全件からの
+        一様サンプルで補う（小規模N・空クラスタ時の劣化防止）。
+        `exact=True`の`read`と同じ形（softmaxを使わない最良一致）で値を返す。
+        空ストアではゼロを返す。
+        """
+        b = keys.shape[0]
+        out = torch.zeros(b, self.value_dim, device=keys.device)
+        best = torch.zeros(b, device=keys.device)
+        arg = torch.full((b,), -1, dtype=torch.long, device=keys.device)
+        if len(self) == 0:
+            return out, StoreStats(best, arg)
+
+        n_total = len(self)
+        if n_clusters is None:
+            n_clusters = max(1, int(round(n_total ** 0.5)))
+        self._ensure_ann_index(n_clusters, n_iters, seed)
+        centroids = self._ann_centroids
+        buckets = self._ann_buckets
+        nc = centroids.shape[0]
+        n_probe_eff = min(n_probe, nc)
+
+        keys_cpu = keys.detach().to("cpu")
+        csims = keys_cpu @ centroids.T  # [B, nc]
+        top_clusters = csims.topk(n_probe_eff, dim=-1).indices  # [B, n_probe_eff]
+
+        rng = np.random.default_rng(seed)
+        keys_dev = self._keys  # [N, key_dim] on store device
+        values_dev = self._values
+
+        for i in range(b):
+            cand: list[int] = []
+            for c in top_clusters[i].tolist():
+                cand.extend(buckets.get(c, []))
+            if cand:
+                cand = list(dict.fromkeys(cand))
+            if len(cand) < min_candidates:
+                extra_n = min(min_candidates - len(cand), n_total)
+                if extra_n > 0:
+                    extra = rng.choice(n_total, size=extra_n, replace=False).tolist()
+                    cand = list(dict.fromkeys(cand + extra))
+            cand_idx = torch.tensor(cand, dtype=torch.long, device=self._device)
+            q = keys[i : i + 1].to(self._device)
+            scores = (q @ keys_dev[cand_idx].T).squeeze(0)  # [len(cand)]
+            top = scores.max(dim=-1)
+            best[i] = top.values.to(keys.device)
+            arg[i] = cand_idx[top.indices].to(keys.device)
+            out[i] = values_dev[cand_idx[top.indices]].to(keys.device)
+        return out, StoreStats(best, arg)
 
 
 class HippocampalMemory(nn.Module):
