@@ -1,0 +1,44 @@
+{
+  "説明": "ステップ10 海馬モジュール（リプレイによる固定化）: naive-finetune（統制1）対 replay（本設計）対 ewc（統制5）のタスクA→B順次学習後のタスクA性能保持比較（12.6.28節）",
+  "条件": {
+    "seeds": 5,
+    "n_inputs": 8,
+    "hidden_dim": 32,
+    "pretrain_steps": 500,
+    "pretrain_batch": 64,
+    "pretrain_lr": 0.05,
+    "pretrain_weight_decay": 0.01,
+    "buffer_size": 50,
+    "fisher_batches": 20,
+    "fisher_batch_size": 64,
+    "ewc_lambda": 1000.0,
+    "b_steps": 500,
+    "b_batch": 64,
+    "b_lr": 0.05,
+    "eval_n": 2000,
+    "control1_threshold": 0.15,
+    "out": "results/hippocampus_replay/replay_vs_ewc.json"
+  },
+  "control1_ok": true,
+  "summary": {
+    "naive-finetune": {
+      "acc_a_mean": 0.49720001220703125,
+      "acc_a_std": 0.007658974267542362,
+      "acc_b_mean": 1.0,
+      "acc_b_std": 0.0
+    },
+    "replay": {
+      "acc_a_mean": 0.5789999961853027,
+      "acc_a_std": 0.020029965788125992,
+      "acc_b_mean": 0.926099956035614,
+      "acc_b_std": 0.017476839944720268
+    },
+    "ewc": {
+      "acc_a_mean": 0.49500003457069397,
+      "acc_a_std": 0.006082773208618164,
+      "acc_b_mean": 1.0,
+      "acc_b_std": 0.0
+    }
+  },
+  "sec": 7.1
+}
