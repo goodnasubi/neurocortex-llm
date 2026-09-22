@@ -204,3 +204,109 @@ class HippocampalMemory(nn.Module):
 
     def clear(self) -> None:
         self.store.clear()
+
+
+# --- 分離層の学習（12.6.6節・ロードマップ段階2） -----------------------------
+#
+# 【重要な但し書き】側方抑制（k-WTA）付きのSTDPは、レート符号化された入力に対して
+# 「勝者の重みを入力ベクトルの方へ動かす」更新に帰着し、オンライン競合学習とほぼ
+# 等価になることが知られている（Diehl & Cook 2015 系の定式化）。したがって
+# `fit_stdp` が `fit_hebbian` に勝てなければ「STDPである必然性」は何も示せない。
+# 12.9節で整数スパイク方式が階段関数に縮退したのと同じ構図なので、両方を実装して
+# 明示的に比較する。
+
+
+@torch.no_grad()
+def fit_hebbian(sep: PatternSeparator, x: torch.Tensor, epochs: int = 5,
+                eta: float = 0.05, batch_size: int = 256,
+                generator: torch.Generator | None = None) -> dict:
+    """競合ヘブ学習。勝者の重みを入力へ寄せ、行ごとにL2正規化する（Oja型の安定化）。
+
+    STDP + 側方抑制がレート符号化入力に対して縮退する先そのものであり、
+    「STDPだから効いた」と「クラスタリングしたから効いた」を分離する対照群。
+    """
+    if sep.mode == "identity":
+        raise ValueError("identity には学習する重みがない")
+    n = x.shape[0]
+    for ep in range(epochs):
+        perm = torch.randperm(n, generator=generator)
+        lr = eta * (1.0 - ep / max(1, epochs))  # 線形に冷ます
+        for i in range(0, n, batch_size):
+            xb = _l2_normalize(x[perm[i : i + batch_size]])
+            h = xb @ sep.weight.T
+            idx = h.topk(sep.k, dim=-1).indices  # [b, k] 勝者
+            # 勝者 i について W[i] += lr * (x - W[i])。同一勝者が複数回選ばれる
+            # 場合は加算される（発火頻度の高いユニットほど強く引かれる）。
+            flat = idx.reshape(-1)
+            src = xb[:, None, :].expand(-1, sep.k, -1).reshape(-1, xb.shape[-1])
+            delta = torch.zeros_like(sep.weight)
+            delta.index_add_(0, flat, src)
+            cnt = torch.zeros(sep.weight.shape[0], device=xb.device)
+            cnt.index_add_(0, flat, torch.ones_like(flat, dtype=xb.dtype))
+            hit = cnt > 0
+            delta[hit] = delta[hit] / cnt[hit, None] - sep.weight[hit]
+            sep.weight[hit] += lr * delta[hit]
+            sep.weight.copy_(_l2_normalize(sep.weight))
+    return {"rule": "hebbian", "epochs": epochs, "eta": eta, "n_samples": n}
+
+
+@torch.no_grad()
+def fit_stdp(sep: PatternSeparator, spikes: torch.Tensor, epochs: int = 5,
+             a_plus: float = 0.01, a_minus: float = 0.008, tau: float = 0.9,
+             batch_size: int = 256, generator: torch.Generator | None = None) -> dict:
+    """ペア型STDP（8.1節の指数窓）。時間軸はトークン位置そのもの（A案）。
+
+    前シナプス入力は皮質バックボーンの二値スパイク列 `spikes` [N, T, d]、
+    後シナプスは本層の k-WTA 出力である。指数トレースを用いた標準形::
+
+        trace_pre  <- tau * trace_pre  + s_pre
+        trace_post <- tau * trace_post + s_post
+        dW += a_plus * s_post^T @ trace_pre - a_minus * trace_post^T @ s_pre
+
+    第1項が「前が先に発火 → 増強」、第2項が「後が先 → 抑圧」に対応する。
+    """
+    if sep.mode == "identity":
+        raise ValueError("identity には学習する重みがない")
+    n, t_len, d = spikes.shape
+    for ep in range(epochs):
+        perm = torch.randperm(n, generator=generator)
+        scale = 1.0 - ep / max(1, epochs)
+        for i in range(0, n, batch_size):
+            sb = spikes[perm[i : i + batch_size]]  # [b, T, d]
+            b = sb.shape[0]
+            tr_pre = torch.zeros(b, d)
+            tr_post = torch.zeros(b, sep.weight.shape[0])
+            dw = torch.zeros_like(sep.weight)
+            for t in range(t_len):
+                s_pre = sb[:, t]                      # [b, d]
+                h = s_pre @ sep.weight.T              # [b, M]
+                idx = h.topk(sep.k, dim=-1).indices
+                s_post = torch.zeros_like(h).scatter_(-1, idx, 1.0)
+                tr_pre = tau * tr_pre + s_pre
+                tr_post = tau * tr_post + s_post
+                dw += a_plus * (s_post.T @ tr_pre) - a_minus * (tr_post.T @ s_pre)
+            sep.weight += scale * dw / b
+            sep.weight.copy_(_l2_normalize(sep.weight))
+    return {"rule": "stdp", "epochs": epochs, "a_plus": a_plus,
+            "a_minus": a_minus, "tau": tau, "n_samples": n}
+
+
+@torch.no_grad()
+def separation_diagnostics(sep: PatternSeparator, x: torch.Tensor,
+                           x_noisy: torch.Tensor) -> dict:
+    """12.6.5節が特定した敗因（k-WTAの勝者反転）を直接測る。
+
+    - `margin`  : 第k位と第k+1位の活性の差（大きいほど反転しにくい）
+    - `winner_retention`: 手がかりを劣化させたとき、勝者集合が保たれる割合
+    """
+    if sep.mode != "sdr":
+        # k-WTA を持たない条件では「勝者」が定義できない（identity には重みがなく、
+        # dense は全ユニットが非ゼロ）。無意味な値を返さず空にする。
+        return {}
+    h = _l2_normalize(x) @ sep.weight.T
+    top = h.topk(sep.k + 1, dim=-1).values
+    margin = (top[:, sep.k - 1] - top[:, sep.k]).mean()
+    a = sep(x) != 0
+    b = sep(x_noisy) != 0
+    retention = (a & b).sum(dim=-1).float() / sep.k
+    return {"margin": float(margin), "winner_retention": float(retention.mean())}

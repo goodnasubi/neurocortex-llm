@@ -1,0 +1,5529 @@
+{
+  "説明": "分離層をSTDP／競合ヘブ学習で学習させた場合の想起精度（12.6.6節）",
+  "条件": {
+    "counts": [
+      100,
+      1000,
+      10000
+    ],
+    "cue_noises": [
+      0.02,
+      0.1
+    ],
+    "seeds": 5,
+    "conditions": [
+      "cortex",
+      "dict",
+      "sdr",
+      "sdr-hebb",
+      "spike",
+      "spike-stdp",
+      "dense-hebb",
+      "none"
+    ],
+    "ks": [
+      40,
+      160,
+      640
+    ],
+    "betas": [
+      100.0,
+      1000.0,
+      10000.0,
+      100000.0,
+      1000000.0
+    ],
+    "gain": 16.0,
+    "n_units": 2048,
+    "n_train": 20000,
+    "epochs": 5,
+    "eta": 0.05,
+    "a_plus": 0.01,
+    "a_minus": 0.008,
+    "tau": 0.9,
+    "n_prefix": 8,
+    "n_suffix": 4096,
+    "n_object": 64,
+    "d_model": 192,
+    "train_steps": 400,
+    "out": "results/hippocampus/stdp_curve.json"
+  },
+  "chance": 0.015625,
+  "summary": {
+    "0.02|cortex|100": {
+      "mean": 1.0,
+      "std": 0.0
+    },
+    "0.02|cortex|1000": {
+      "mean": 1.0,
+      "std": 0.0
+    },
+    "0.02|cortex|10000": {
+      "mean": 1.0,
+      "std": 0.0
+    },
+    "0.02|dict|100": {
+      "mean": 1.0,
+      "std": 0.0
+    },
+    "0.02|dict|1000": {
+      "mean": 1.0,
+      "std": 0.0
+    },
+    "0.02|dict|10000": {
+      "mean": 1.0,
+      "std": 0.0
+    },
+    "0.02|sdr|100": {
+      "mean": 0.8639999628067017,
+      "std": 0.02870541624724865
+    },
+    "0.02|sdr|1000": {
+      "mean": 0.6025999784469604,
+      "std": 0.019095556810498238
+    },
+    "0.02|sdr|10000": {
+      "mean": 0.3427000045776367,
+      "std": 0.015313662588596344
+    },
+    "0.02|sdr-hebb|100": {
+      "mean": 0.05199999734759331,
+      "std": 0.0305941179394722
+    },
+    "0.02|sdr-hebb|1000": {
+      "mean": 0.020000001415610313,
+      "std": 0.005585695616900921
+    },
+    "0.02|sdr-hebb|10000": {
+      "mean": 0.015459999442100525,
+      "std": 0.0022490888368338346
+    },
+    "0.02|spike|100": {
+      "mean": 0.9979999661445618,
+      "std": 0.0039999959990382195
+    },
+    "0.02|spike|1000": {
+      "mean": 0.9848000407218933,
+      "std": 0.010419204831123352
+    },
+    "0.02|spike|10000": {
+      "mean": 0.9223799705505371,
+      "std": 0.0470622256398201
+    },
+    "0.02|spike-stdp|100": {
+      "mean": 0.9979999661445618,
+      "std": 0.0039999959990382195
+    },
+    "0.02|spike-stdp|1000": {
+      "mean": 0.9842000007629395,
+      "std": 0.010361459106206894
+    },
+    "0.02|spike-stdp|10000": {
+      "mean": 0.9192399978637695,
+      "std": 0.04630880802869797
+    },
+    "0.02|dense-hebb|100": {
+      "mean": 1.0,
+      "std": 0.0
+    },
+    "0.02|dense-hebb|1000": {
+      "mean": 1.0,
+      "std": 0.0
+    },
+    "0.02|dense-hebb|10000": {
+      "mean": 1.0,
+      "std": 0.0
+    },
+    "0.02|none|100": {
+      "mean": 0.02199999988079071,
+      "std": 0.01599999889731407
+    },
+    "0.02|none|1000": {
+      "mean": 0.01680000126361847,
+      "std": 0.0013266497990116477
+    },
+    "0.02|none|10000": {
+      "mean": 0.01534000039100647,
+      "std": 0.0011909662280231714
+    },
+    "0.1|cortex|100": {
+      "mean": 0.8059999346733093,
+      "std": 0.0662117674946785
+    },
+    "0.1|cortex|1000": {
+      "mean": 0.5582000017166138,
+      "std": 0.03727411478757858
+    },
+    "0.1|cortex|10000": {
+      "mean": 0.3100000023841858,
+      "std": 0.031224673613905907
+    },
+    "0.1|dict|100": {
+      "mean": 0.8040000200271606,
+      "std": 0.0659090206027031
+    },
+    "0.1|dict|1000": {
+      "mean": 0.5578000545501709,
+      "std": 0.03736521676182747
+    },
+    "0.1|dict|10000": {
+      "mean": 0.31011998653411865,
+      "std": 0.031203938648104668
+    },
+    "0.1|sdr|100": {
+      "mean": 0.12999999523162842,
+      "std": 0.03633180633187294
+    },
+    "0.1|sdr|1000": {
+      "mean": 0.0429999977350235,
+      "std": 0.006633250042796135
+    },
+    "0.1|sdr|10000": {
+      "mean": 0.021160000935196877,
+      "std": 0.0006711180321872234
+    },
+    "0.1|sdr-hebb|100": {
+      "mean": 0.017999999225139618,
+      "std": 0.021354155614972115
+    },
+    "0.1|sdr-hebb|1000": {
+      "mean": 0.016999999061226845,
+      "std": 0.002683281200006604
+    },
+    "0.1|sdr-hebb|10000": {
+      "mean": 0.015800001099705696,
+      "std": 0.0008508822065778077
+    },
+    "0.1|spike|100": {
+      "mean": 0.9959999918937683,
+      "std": 0.007999991998076439
+    },
+    "0.1|spike|1000": {
+      "mean": 0.9909999966621399,
+      "std": 0.00794985331594944
+    },
+    "0.1|spike|10000": {
+      "mean": 0.9210000038146973,
+      "std": 0.04707486554980278
+    },
+    "0.1|spike-stdp|100": {
+      "mean": 0.9899999499320984,
+      "std": 0.008944263681769371
+    },
+    "0.1|spike-stdp|1000": {
+      "mean": 0.9736000299453735,
+      "std": 0.029641857370734215
+    },
+    "0.1|spike-stdp|10000": {
+      "mean": 0.8794400095939636,
+      "std": 0.07411085069179535
+    },
+    "0.1|dense-hebb|100": {
+      "mean": 0.7859999537467957,
+      "std": 0.08014985918998718
+    },
+    "0.1|dense-hebb|1000": {
+      "mean": 0.5117999911308289,
+      "std": 0.042522452771663666
+    },
+    "0.1|dense-hebb|10000": {
+      "mean": 0.27230000495910645,
+      "std": 0.029934126883745193
+    },
+    "0.1|none|100": {
+      "mean": 0.009999999776482582,
+      "std": 0.00632455525919795
+    },
+    "0.1|none|1000": {
+      "mean": 0.016599999740719795,
+      "std": 0.004630334675312042
+    },
+    "0.1|none|10000": {
+      "mean": 0.015060000121593475,
+      "std": 0.0011482163099572062
+    }
+  },
+  "rows": [
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 91,
+      "n_queries": 100,
+      "margin": 0.00010987743735313416,
+      "winner_retention": 0.9912188053131104,
+      "accuracy": 0.91,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 10,
+      "n_queries": 100,
+      "margin": 0.00011039972014259547,
+      "winner_retention": 0.997374951839447,
+      "accuracy": 0.1,
+      "k": 160,
+      "beta": 1000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 99,
+      "n_queries": 100,
+      "margin": 0.0007847513188607991,
+      "winner_retention": 0.9775000214576721,
+      "accuracy": 0.99,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 99,
+      "n_queries": 100,
+      "margin": 0.0011635887203738093,
+      "winner_retention": 0.9852499961853027,
+      "accuracy": 0.99,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "dense-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 1,
+      "n_queries": 100,
+      "accuracy": 0.01,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 624,
+      "n_queries": 1000,
+      "margin": 0.00010761186422314495,
+      "winner_retention": 0.9913765788078308,
+      "accuracy": 0.624,
+      "k": 640,
+      "beta": 100000.0,
+      "condition": "sdr",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 31,
+      "n_queries": 1000,
+      "margin": 5.92029100516811e-05,
+      "winner_retention": 0.9980390667915344,
+      "accuracy": 0.031,
+      "k": 640,
+      "beta": 1000000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 976,
+      "n_queries": 1000,
+      "margin": 0.0005911068874411285,
+      "winner_retention": 0.9745500683784485,
+      "accuracy": 0.976,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 976,
+      "n_queries": 1000,
+      "margin": 0.0001686650502961129,
+      "winner_retention": 0.9858937859535217,
+      "accuracy": 0.976,
+      "k": 160,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "dense-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 19,
+      "n_queries": 1000,
+      "accuracy": 0.019,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 3607,
+      "n_queries": 10000,
+      "margin": 0.00010775971168186516,
+      "winner_retention": 0.9913440346717834,
+      "accuracy": 0.3607,
+      "k": 640,
+      "beta": 1000000.0,
+      "condition": "sdr",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 185,
+      "n_queries": 10000,
+      "margin": 6.057159771444276e-05,
+      "winner_retention": 0.9983150362968445,
+      "accuracy": 0.0185,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 8717,
+      "n_queries": 10000,
+      "margin": 0.0006265898700803518,
+      "winner_retention": 0.9743300676345825,
+      "accuracy": 0.8717,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 8717,
+      "n_queries": 10000,
+      "margin": 0.00017377671611029655,
+      "winner_retention": 0.985988199710846,
+      "accuracy": 0.8717,
+      "k": 160,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 146,
+      "n_queries": 10000,
+      "accuracy": 0.0146,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 82,
+      "n_queries": 100,
+      "accuracy": 0.82,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 81,
+      "n_queries": 100,
+      "accuracy": 0.81,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 6,
+      "n_queries": 100,
+      "margin": 0.0002152135275537148,
+      "winner_retention": 0.9275624752044678,
+      "accuracy": 0.06,
+      "k": 160,
+      "beta": 1000.0,
+      "condition": "sdr",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 6,
+      "n_queries": 100,
+      "margin": 9.785175643628463e-05,
+      "winner_retention": 0.9818125367164612,
+      "accuracy": 0.06,
+      "k": 160,
+      "beta": 1000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "margin": 0.0006526270299218595,
+      "winner_retention": 0.8817499279975891,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "margin": 0.0012685897527262568,
+      "winner_retention": 0.938499927520752,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 1000.0,
+      "condition": "spike-stdp",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 80,
+      "n_queries": 100,
+      "accuracy": 0.8,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 2,
+      "n_queries": 100,
+      "accuracy": 0.02,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 565,
+      "n_queries": 1000,
+      "accuracy": 0.565,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 564,
+      "n_queries": 1000,
+      "accuracy": 0.564,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 55,
+      "n_queries": 1000,
+      "margin": 0.00010873824066948146,
+      "winner_retention": 0.9563171863555908,
+      "accuracy": 0.055,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 14,
+      "n_queries": 1000,
+      "margin": 5.991286161588505e-05,
+      "winner_retention": 0.9919813275337219,
+      "accuracy": 0.014,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 987,
+      "n_queries": 1000,
+      "margin": 0.00024125867639668286,
+      "winner_retention": 0.9245063066482544,
+      "accuracy": 0.987,
+      "k": 160,
+      "beta": 1000.0,
+      "condition": "spike",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 987,
+      "n_queries": 1000,
+      "margin": 0.00018005109450314194,
+      "winner_retention": 0.9349312782287598,
+      "accuracy": 0.987,
+      "k": 160,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 539,
+      "n_queries": 1000,
+      "accuracy": 0.539,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 9,
+      "n_queries": 1000,
+      "accuracy": 0.009,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 3235,
+      "n_queries": 10000,
+      "accuracy": 0.3235,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 3234,
+      "n_queries": 10000,
+      "accuracy": 0.3234,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 211,
+      "n_queries": 10000,
+      "margin": 0.0001061719303834252,
+      "winner_retention": 0.9564271569252014,
+      "accuracy": 0.0211,
+      "k": 640,
+      "beta": 1000000.0,
+      "condition": "sdr",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 170,
+      "n_queries": 10000,
+      "margin": 0.00017013582692015916,
+      "winner_retention": 0.9776299595832825,
+      "accuracy": 0.017,
+      "k": 40,
+      "beta": 1000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 8721,
+      "n_queries": 10000,
+      "margin": 9.922731260303408e-05,
+      "winner_retention": 0.9552173018455505,
+      "accuracy": 0.8721,
+      "k": 640,
+      "beta": 1000.0,
+      "condition": "spike",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 8717,
+      "n_queries": 10000,
+      "margin": 0.00017471147293690592,
+      "winner_retention": 0.9338244199752808,
+      "accuracy": 0.8717,
+      "k": 160,
+      "beta": 1000.0,
+      "condition": "spike-stdp",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 2825,
+      "n_queries": 10000,
+      "accuracy": 0.2825,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 148,
+      "n_queries": 10000,
+      "accuracy": 0.0148,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 84,
+      "n_queries": 100,
+      "margin": 8.330218406626955e-05,
+      "winner_retention": 0.9906094074249268,
+      "accuracy": 0.84,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 7,
+      "n_queries": 100,
+      "margin": 0.00015546799113508314,
+      "winner_retention": 0.9978749752044678,
+      "accuracy": 0.07,
+      "k": 160,
+      "beta": 1000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "margin": 0.0007817886653356254,
+      "winner_retention": 0.9769999980926514,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "margin": 0.0012148580281063914,
+      "winner_retention": 0.9850000143051147,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "dense-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 2,
+      "n_queries": 100,
+      "accuracy": 0.02,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 625,
+      "n_queries": 1000,
+      "margin": 9.497800783719867e-05,
+      "winner_retention": 0.9907280802726746,
+      "accuracy": 0.625,
+      "k": 640,
+      "beta": 1000000.0,
+      "condition": "sdr",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 19,
+      "n_queries": 1000,
+      "margin": 0.00020782911451533437,
+      "winner_retention": 0.9985171556472778,
+      "accuracy": 0.019,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 970,
+      "n_queries": 1000,
+      "margin": 0.000719529518391937,
+      "winner_retention": 0.9776501655578613,
+      "accuracy": 0.97,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 970,
+      "n_queries": 1000,
+      "margin": 0.00015053739480208606,
+      "winner_retention": 0.9821187853813171,
+      "accuracy": 0.97,
+      "k": 160,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 16,
+      "n_queries": 1000,
+      "accuracy": 0.016,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 3268,
+      "n_queries": 10000,
+      "margin": 9.902449528453872e-05,
+      "winner_retention": 0.9906373023986816,
+      "accuracy": 0.3268,
+      "k": 640,
+      "beta": 1000000.0,
+      "condition": "sdr",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 149,
+      "n_queries": 10000,
+      "margin": 0.00020399296772666276,
+      "winner_retention": 0.9984745383262634,
+      "accuracy": 0.0149,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 8658,
+      "n_queries": 10000,
+      "margin": 0.00024003062571864575,
+      "winner_retention": 0.984058678150177,
+      "accuracy": 0.8658,
+      "k": 160,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 8658,
+      "n_queries": 10000,
+      "margin": 0.00014970300253480673,
+      "winner_retention": 0.9821232557296753,
+      "accuracy": 0.8658,
+      "k": 160,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 143,
+      "n_queries": 10000,
+      "accuracy": 0.0143,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 74,
+      "n_queries": 100,
+      "accuracy": 0.74,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 74,
+      "n_queries": 100,
+      "accuracy": 0.74,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 15,
+      "n_queries": 100,
+      "margin": 0.00010019428736995906,
+      "winner_retention": 0.9533438086509705,
+      "accuracy": 0.15,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 1,
+      "n_queries": 100,
+      "margin": 0.00024885236052796245,
+      "winner_retention": 0.9862499833106995,
+      "accuracy": 0.01,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "sdr-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 98,
+      "n_queries": 100,
+      "margin": 0.0008785471436567605,
+      "winner_retention": 0.9009999632835388,
+      "accuracy": 0.98,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 98,
+      "n_queries": 100,
+      "margin": 0.0010956047335639596,
+      "winner_retention": 0.9320000410079956,
+      "accuracy": 0.98,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 71,
+      "n_queries": 100,
+      "accuracy": 0.71,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 0,
+      "n_queries": 100,
+      "accuracy": 0.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 535,
+      "n_queries": 1000,
+      "accuracy": 0.535,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "cortex",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 536,
+      "n_queries": 1000,
+      "accuracy": 0.536,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 36,
+      "n_queries": 1000,
+      "margin": 0.00015554472338408232,
+      "winner_retention": 0.9056373834609985,
+      "accuracy": 0.036,
+      "k": 160,
+      "beta": 1000.0,
+      "condition": "sdr",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 17,
+      "n_queries": 1000,
+      "margin": 0.00020399183267727494,
+      "winner_retention": 0.9915735125541687,
+      "accuracy": 0.017,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 978,
+      "n_queries": 1000,
+      "margin": 0.00025301086134277284,
+      "winner_retention": 0.9250250458717346,
+      "accuracy": 0.978,
+      "k": 160,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 978,
+      "n_queries": 1000,
+      "margin": 0.00014962605200707912,
+      "winner_retention": 0.9153687357902527,
+      "accuracy": 0.978,
+      "k": 160,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 476,
+      "n_queries": 1000,
+      "accuracy": 0.476,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 14,
+      "n_queries": 1000,
+      "accuracy": 0.014,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 2889,
+      "n_queries": 10000,
+      "accuracy": 0.2889,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "cortex",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 2891,
+      "n_queries": 10000,
+      "accuracy": 0.2891,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 211,
+      "n_queries": 10000,
+      "margin": 9.949450759449974e-05,
+      "winner_retention": 0.953620433807373,
+      "accuracy": 0.0211,
+      "k": 640,
+      "beta": 1000000.0,
+      "condition": "sdr",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 149,
+      "n_queries": 10000,
+      "margin": 0.00020298459276091307,
+      "winner_retention": 0.9918738007545471,
+      "accuracy": 0.0149,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 8625,
+      "n_queries": 10000,
+      "margin": 9.64831851888448e-05,
+      "winner_retention": 0.9531397223472595,
+      "accuracy": 0.8625,
+      "k": 640,
+      "beta": 1000.0,
+      "condition": "spike",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 8625,
+      "n_queries": 10000,
+      "margin": 0.00014871828898321837,
+      "winner_retention": 0.9153644442558289,
+      "accuracy": 0.8625,
+      "k": 160,
+      "beta": 1000.0,
+      "condition": "spike-stdp",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 2493,
+      "n_queries": 10000,
+      "accuracy": 0.2493,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 139,
+      "n_queries": 10000,
+      "accuracy": 0.0139,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 88,
+      "n_queries": 100,
+      "margin": 0.00011705257202265784,
+      "winner_retention": 0.9919218420982361,
+      "accuracy": 0.88,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 4,
+      "n_queries": 100,
+      "margin": 0.00034334181691519916,
+      "winner_retention": 0.996999979019165,
+      "accuracy": 0.04,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "sdr-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "margin": 0.0007877987809479237,
+      "winner_retention": 0.9762500524520874,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "margin": 0.0008052577613852918,
+      "winner_retention": 0.9800000190734863,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "dense-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 4,
+      "n_queries": 100,
+      "accuracy": 0.04,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 596,
+      "n_queries": 1000,
+      "margin": 0.00010675512021407485,
+      "winner_retention": 0.9917046427726746,
+      "accuracy": 0.596,
+      "k": 640,
+      "beta": 100000.0,
+      "condition": "sdr",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 17,
+      "n_queries": 1000,
+      "margin": 0.00032204866874963045,
+      "winner_retention": 0.9964250326156616,
+      "accuracy": 0.017,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "sdr-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 998,
+      "n_queries": 1000,
+      "margin": 0.0007261455175466835,
+      "winner_retention": 0.9768500924110413,
+      "accuracy": 0.998,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 998,
+      "n_queries": 1000,
+      "margin": 0.0008189548389054835,
+      "winner_retention": 0.9792000651359558,
+      "accuracy": 0.998,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "dense-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 17,
+      "n_queries": 1000,
+      "accuracy": 0.017,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 3467,
+      "n_queries": 10000,
+      "margin": 0.00011163763701915741,
+      "winner_retention": 0.9918017387390137,
+      "accuracy": 0.3467,
+      "k": 640,
+      "beta": 100000.0,
+      "condition": "sdr",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 174,
+      "n_queries": 10000,
+      "margin": 0.0003062271571252495,
+      "winner_retention": 0.9961349368095398,
+      "accuracy": 0.0174,
+      "k": 40,
+      "beta": 1000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 9891,
+      "n_queries": 10000,
+      "margin": 0.0007303277379833162,
+      "winner_retention": 0.9775975346565247,
+      "accuracy": 0.9891,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 9891,
+      "n_queries": 10000,
+      "margin": 0.0008123298757709563,
+      "winner_retention": 0.9793000221252441,
+      "accuracy": 0.9891,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 172,
+      "n_queries": 10000,
+      "accuracy": 0.0172,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 86,
+      "n_queries": 100,
+      "accuracy": 0.86,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 86,
+      "n_queries": 100,
+      "accuracy": 0.86,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 15,
+      "n_queries": 100,
+      "margin": 0.00012083914043614641,
+      "winner_retention": 0.9554374814033508,
+      "accuracy": 0.15,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 1,
+      "n_queries": 100,
+      "margin": 0.00031727610621601343,
+      "winner_retention": 0.9785000085830688,
+      "accuracy": 0.01,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "sdr-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "margin": 0.0007601614343002439,
+      "winner_retention": 0.9042500257492065,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "margin": 0.0009505366324447095,
+      "winner_retention": 0.9075000286102295,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 85,
+      "n_queries": 100,
+      "accuracy": 0.85,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 1,
+      "n_queries": 100,
+      "accuracy": 0.01,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 620,
+      "n_queries": 1000,
+      "accuracy": 0.62,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "cortex",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 620,
+      "n_queries": 1000,
+      "accuracy": 0.62,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 42,
+      "n_queries": 1000,
+      "margin": 0.00011220408487133682,
+      "winner_retention": 0.9564593434333801,
+      "accuracy": 0.042,
+      "k": 640,
+      "beta": 1000000.0,
+      "condition": "sdr",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 20,
+      "n_queries": 1000,
+      "margin": 0.0002959876728709787,
+      "winner_retention": 0.9920203685760498,
+      "accuracy": 0.02,
+      "k": 640,
+      "beta": 1000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "margin": 0.0007261877763085067,
+      "winner_retention": 0.8982999920845032,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "margin": 0.00015868422633502632,
+      "winner_retention": 0.9159438014030457,
+      "accuracy": 1.0,
+      "k": 160,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 576,
+      "n_queries": 1000,
+      "accuracy": 0.576,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 18,
+      "n_queries": 1000,
+      "accuracy": 0.018,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 3628,
+      "n_queries": 10000,
+      "accuracy": 0.3628,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "cortex",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 3630,
+      "n_queries": 10000,
+      "accuracy": 0.363,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 204,
+      "n_queries": 10000,
+      "margin": 0.0001117385399993509,
+      "winner_retention": 0.9567418694496155,
+      "accuracy": 0.0204,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 159,
+      "n_queries": 10000,
+      "margin": 0.00029536153306253254,
+      "winner_retention": 0.9920096397399902,
+      "accuracy": 0.0159,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 9866,
+      "n_queries": 10000,
+      "margin": 0.0002470829349476844,
+      "winner_retention": 0.9262323975563049,
+      "accuracy": 0.9866,
+      "k": 160,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 9866,
+      "n_queries": 10000,
+      "margin": 0.00015229720156639814,
+      "winner_retention": 0.9150406122207642,
+      "accuracy": 0.9866,
+      "k": 160,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 3242,
+      "n_queries": 10000,
+      "accuracy": 0.3242,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 156,
+      "n_queries": 10000,
+      "accuracy": 0.0156,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 10000.0,
+      "condition": "cortex",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 83,
+      "n_queries": 100,
+      "margin": 0.00010033883154392242,
+      "winner_retention": 0.9908592700958252,
+      "accuracy": 0.83,
+      "k": 640,
+      "beta": 1000000.0,
+      "condition": "sdr",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 4,
+      "n_queries": 100,
+      "margin": 0.0004007953393738717,
+      "winner_retention": 0.9959999918937683,
+      "accuracy": 0.04,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "sdr-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "margin": 0.0006517030415125191,
+      "winner_retention": 0.9797500371932983,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "margin": 0.0014254589332267642,
+      "winner_retention": 0.9865000247955322,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "dense-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 4,
+      "n_queries": 100,
+      "accuracy": 0.04,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 576,
+      "n_queries": 1000,
+      "margin": 0.00010463678336236626,
+      "winner_retention": 0.9911875128746033,
+      "accuracy": 0.576,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 16,
+      "n_queries": 1000,
+      "margin": 0.00041120307287201285,
+      "winner_retention": 0.9989438056945801,
+      "accuracy": 0.016,
+      "k": 160,
+      "beta": 1000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 993,
+      "n_queries": 1000,
+      "margin": 0.00070331955794245,
+      "winner_retention": 0.976349949836731,
+      "accuracy": 0.993,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 993,
+      "n_queries": 1000,
+      "margin": 0.0005752210854552686,
+      "winner_retention": 0.9955188035964966,
+      "accuracy": 0.993,
+      "k": 160,
+      "beta": 1000.0,
+      "condition": "spike-stdp",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 15,
+      "n_queries": 1000,
+      "accuracy": 0.015,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 3229,
+      "n_queries": 10000,
+      "margin": 0.00010411443508928642,
+      "winner_retention": 0.9911862015724182,
+      "accuracy": 0.3229,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 143,
+      "n_queries": 10000,
+      "margin": 0.0004045400128234178,
+      "winner_retention": 0.9972700476646423,
+      "accuracy": 0.0143,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "sdr-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 9466,
+      "n_queries": 10000,
+      "margin": 0.0007182554109022021,
+      "winner_retention": 0.9773099422454834,
+      "accuracy": 0.9466,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 9458,
+      "n_queries": 10000,
+      "margin": 0.0005640009767375886,
+      "winner_retention": 0.9953243136405945,
+      "accuracy": 0.9458,
+      "k": 160,
+      "beta": 1000.0,
+      "condition": "spike-stdp",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 143,
+      "n_queries": 10000,
+      "accuracy": 0.0143,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 89,
+      "n_queries": 100,
+      "accuracy": 0.89,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 89,
+      "n_queries": 100,
+      "accuracy": 0.89,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 16,
+      "n_queries": 100,
+      "margin": 0.00010769329674076289,
+      "winner_retention": 0.9544999599456787,
+      "accuracy": 0.16,
+      "k": 640,
+      "beta": 1000000.0,
+      "condition": "sdr",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 1,
+      "n_queries": 100,
+      "margin": 0.00042986273183487356,
+      "winner_retention": 0.9930000305175781,
+      "accuracy": 0.01,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "sdr-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "margin": 0.0007707877666689456,
+      "winner_retention": 0.8977499604225159,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 99,
+      "n_queries": 100,
+      "margin": 0.0018725913250818849,
+      "winner_retention": 0.9519999623298645,
+      "accuracy": 0.99,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 89,
+      "n_queries": 100,
+      "accuracy": 0.89,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 1,
+      "n_queries": 100,
+      "accuracy": 0.01,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 563,
+      "n_queries": 1000,
+      "accuracy": 0.563,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "cortex",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 562,
+      "n_queries": 1000,
+      "accuracy": 0.562,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 44,
+      "n_queries": 1000,
+      "margin": 0.00010365118941990659,
+      "winner_retention": 0.9534062147140503,
+      "accuracy": 0.044,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 20,
+      "n_queries": 1000,
+      "margin": 0.00040622014785185456,
+      "winner_retention": 0.9883750081062317,
+      "accuracy": 0.02,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "sdr-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 992,
+      "n_queries": 1000,
+      "margin": 0.0002444794517941773,
+      "winner_retention": 0.922606348991394,
+      "accuracy": 0.992,
+      "k": 160,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 987,
+      "n_queries": 1000,
+      "margin": 0.0005482168635353446,
+      "winner_retention": 0.9793500900268555,
+      "accuracy": 0.987,
+      "k": 160,
+      "beta": 1000.0,
+      "condition": "spike-stdp",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 510,
+      "n_queries": 1000,
+      "accuracy": 0.51,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 22,
+      "n_queries": 1000,
+      "accuracy": 0.022,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 3022,
+      "n_queries": 10000,
+      "accuracy": 0.3022,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "cortex",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 3023,
+      "n_queries": 10000,
+      "accuracy": 0.3023,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 224,
+      "n_queries": 10000,
+      "margin": 0.00010432429553475231,
+      "winner_retention": 0.9534369111061096,
+      "accuracy": 0.0224,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 164,
+      "n_queries": 10000,
+      "margin": 0.00040531466947868466,
+      "winner_retention": 0.9871073961257935,
+      "accuracy": 0.0164,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "sdr-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 9486,
+      "n_queries": 10000,
+      "margin": 0.00010414866119390354,
+      "winner_retention": 0.9564527273178101,
+      "accuracy": 0.9486,
+      "k": 640,
+      "beta": 1000.0,
+      "condition": "spike",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 9164,
+      "n_queries": 10000,
+      "margin": 0.0005722120986320078,
+      "winner_retention": 0.9793543815612793,
+      "accuracy": 0.9164,
+      "k": 160,
+      "beta": 1000000.0,
+      "condition": "spike-stdp",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 2667,
+      "n_queries": 10000,
+      "accuracy": 0.2667,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 170,
+      "n_queries": 10000,
+      "accuracy": 0.017,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 86,
+      "n_queries": 100,
+      "margin": 9.366098674945533e-05,
+      "winner_retention": 0.9897186756134033,
+      "accuracy": 0.86,
+      "k": 640,
+      "beta": 1000000.0,
+      "condition": "sdr",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 1,
+      "n_queries": 100,
+      "margin": 0.0003224891552235931,
+      "winner_retention": 0.9972500801086426,
+      "accuracy": 0.01,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "sdr-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "margin": 0.0008537484682165086,
+      "winner_retention": 0.9775000214576721,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "margin": 0.0014839988434687257,
+      "winner_retention": 0.9897499084472656,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "dense-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 0,
+      "n_queries": 100,
+      "accuracy": 0.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 100,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 592,
+      "n_queries": 1000,
+      "margin": 9.076261630980298e-05,
+      "winner_retention": 0.9901921153068542,
+      "accuracy": 0.592,
+      "k": 640,
+      "beta": 1000000.0,
+      "condition": "sdr",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 17,
+      "n_queries": 1000,
+      "margin": 0.00026075844652950764,
+      "winner_retention": 0.9969936609268188,
+      "accuracy": 0.017,
+      "k": 160,
+      "beta": 1000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 987,
+      "n_queries": 1000,
+      "margin": 0.000790109857916832,
+      "winner_retention": 0.9785750508308411,
+      "accuracy": 0.987,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 984,
+      "n_queries": 1000,
+      "margin": 0.001450608135201037,
+      "winner_retention": 0.9875750541687012,
+      "accuracy": 0.984,
+      "k": 40,
+      "beta": 1000.0,
+      "condition": "spike-stdp",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 17,
+      "n_queries": 1000,
+      "accuracy": 0.017,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 1000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 3564,
+      "n_queries": 10000,
+      "margin": 9.254928590962663e-05,
+      "winner_retention": 0.9902076125144958,
+      "accuracy": 0.3564,
+      "k": 640,
+      "beta": 100000.0,
+      "condition": "sdr",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 122,
+      "n_queries": 10000,
+      "margin": 0.0002604690089356154,
+      "winner_retention": 0.9984851479530334,
+      "accuracy": 0.0122,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 9387,
+      "n_queries": 10000,
+      "margin": 0.00010024737275671214,
+      "winner_retention": 0.9906783103942871,
+      "accuracy": 0.9387,
+      "k": 640,
+      "beta": 1000000.0,
+      "condition": "spike",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 9238,
+      "n_queries": 10000,
+      "margin": 0.000957548210863024,
+      "winner_retention": 0.99691241979599,
+      "accuracy": 0.9238,
+      "k": 160,
+      "beta": 100000.0,
+      "condition": "spike-stdp",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 163,
+      "n_queries": 10000,
+      "accuracy": 0.0163,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 10000,
+      "cue_noise": 0.02,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 72,
+      "n_queries": 100,
+      "accuracy": 0.72,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "cortex",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 72,
+      "n_queries": 100,
+      "accuracy": 0.72,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 13,
+      "n_queries": 100,
+      "margin": 0.00010917790496023372,
+      "winner_retention": 0.952625036239624,
+      "accuracy": 0.13,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 0,
+      "n_queries": 100,
+      "margin": 0.00025867699878290296,
+      "winner_retention": 0.9872500896453857,
+      "accuracy": 0.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "sdr-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 100,
+      "n_queries": 100,
+      "margin": 0.0007143550901673734,
+      "winner_retention": 0.9052500128746033,
+      "accuracy": 1.0,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 98,
+      "n_queries": 100,
+      "margin": 0.0013518366031348705,
+      "winner_retention": 0.9427499175071716,
+      "accuracy": 0.98,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "spike-stdp",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 68,
+      "n_queries": 100,
+      "accuracy": 0.68,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 1,
+      "n_queries": 100,
+      "accuracy": 0.01,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 100,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 508,
+      "n_queries": 1000,
+      "accuracy": 0.508,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "cortex",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 507,
+      "n_queries": 1000,
+      "accuracy": 0.507,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 38,
+      "n_queries": 1000,
+      "margin": 9.481272718403488e-05,
+      "winner_retention": 0.9530780911445618,
+      "accuracy": 0.038,
+      "k": 640,
+      "beta": 10000.0,
+      "condition": "sdr",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 14,
+      "n_queries": 1000,
+      "margin": 0.00028317421674728394,
+      "winner_retention": 0.9923000335693359,
+      "accuracy": 0.014,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "sdr-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 998,
+      "n_queries": 1000,
+      "margin": 0.0002295406156918034,
+      "winner_retention": 0.9233249425888062,
+      "accuracy": 0.998,
+      "k": 160,
+      "beta": 100000.0,
+      "condition": "spike",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 916,
+      "n_queries": 1000,
+      "margin": 0.001495874603278935,
+      "winner_retention": 0.9455749988555908,
+      "accuracy": 0.916,
+      "k": 40,
+      "beta": 1000.0,
+      "condition": "spike-stdp",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 458,
+      "n_queries": 1000,
+      "accuracy": 0.458,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 20,
+      "n_queries": 1000,
+      "accuracy": 0.02,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 1000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 2726,
+      "n_queries": 10000,
+      "accuracy": 0.2726,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "cortex",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 2728,
+      "n_queries": 10000,
+      "accuracy": 0.2728,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "dict",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 208,
+      "n_queries": 10000,
+      "margin": 9.157934255199507e-05,
+      "winner_retention": 0.9532523155212402,
+      "accuracy": 0.0208,
+      "k": 640,
+      "beta": 1000000.0,
+      "condition": "sdr",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 148,
+      "n_queries": 10000,
+      "margin": 0.000282395223621279,
+      "winner_retention": 0.9909701347351074,
+      "accuracy": 0.0148,
+      "k": 40,
+      "beta": 100.0,
+      "condition": "sdr-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 9352,
+      "n_queries": 10000,
+      "margin": 0.00023194827372208238,
+      "winner_retention": 0.9229312539100647,
+      "accuracy": 0.9352,
+      "k": 160,
+      "beta": 100.0,
+      "condition": "spike",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 7600,
+      "n_queries": 10000,
+      "margin": 0.0014487308217212558,
+      "winner_retention": 0.9452974796295166,
+      "accuracy": 0.76,
+      "k": 40,
+      "beta": 100000.0,
+      "condition": "spike-stdp",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "n_correct": 2388,
+      "n_queries": 10000,
+      "accuracy": 0.2388,
+      "k": 40,
+      "beta": 1000000.0,
+      "condition": "dense-hebb",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "n_correct": 140,
+      "n_queries": 10000,
+      "accuracy": 0.014,
+      "k": 40,
+      "beta": 0.0,
+      "condition": "none",
+      "n_facts": 10000,
+      "cue_noise": 0.1,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    }
+  ],
+  "sec": 7307.0
+}
