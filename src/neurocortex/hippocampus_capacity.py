@@ -8,11 +8,16 @@
 下回る状況（溢れが必ず発生する）を作った上で、溢れた際に何を残すかの
 戦略を比較する。
 
-  unbounded            … 容量無制限（統制1の前提確認、参考上限）
-  fifo                 … 古いタスクのサンプルから機械的に破棄する（統制1、最弱ベースライン）
-  uniform-compress     … 重要度を見ず、全タスクを均等にタスクあたりのサンプル数で間引く（統制3）
-  importance-weighted  … 対角フィッシャー情報量（ステップ10のEWC実装を踏襲）に基づき、
-                          重要度に応じて各タスクの保持サンプル数を配分する（本設計）
+  unbounded                       … 容量無制限（統制1の前提確認、参考上限）
+  fifo                            … 古いタスクのサンプルから機械的に破棄する（統制1、最弱ベースライン）
+  uniform-compress                … 重要度を見ず、全タスクを均等にタスクあたりのサンプル数で間引く（統制3）
+  importance-weighted             … 対角フィッシャー情報量（ステップ10のEWC実装を踏襲）に基づき、
+                                     重要度に応じて各タスクの保持サンプル数を配分する（ステップ12の本設計。
+                                     フィッシャー崩壊により逆転して負けた — 12.6.33節参照）
+  importance-weighted-fisher-decay … 上と同じフィッシャー情報量だが、`weight_decay`でロジット発散を
+                                     抑え、フィッシャー崩壊を防いだ版（ステップ13の本設計a、12.6.34節）
+  importance-weighted-loss-based   … フィッシャー情報量を使わず、タスク収束直後の予測損失を重要度
+                                     スコアとする版（ステップ13の本設計b、12.6.34節）
 
 ##### 実装時に発覚した問題（統制1の前提が崩れていた）
 
@@ -42,7 +47,11 @@ import torch.nn.functional as F
 from .basal_ganglia_core import ParitySpec, make_batch
 from .hippocampus_replay import Model, make_model
 
-CONDITIONS = ("unbounded", "fifo", "uniform-compress", "importance-weighted")
+CONDITIONS = ("unbounded", "fifo", "uniform-compress", "importance-weighted",
+             "importance-weighted-fisher-decay", "importance-weighted-loss-based")
+IMPORTANCE_WEIGHTED_CONDITIONS = (
+    "importance-weighted", "importance-weighted-fisher-decay", "importance-weighted-loss-based",
+)
 
 Segment = tuple[torch.Tensor, torch.Tensor]
 Buffer = "OrderedDict[int, Segment]"
@@ -98,12 +107,32 @@ def _fisher_diagonal_for_task(model: Model, spec: ParitySpec, task_idx: int, n_t
 
 def task_importance(model: Model, spec: ParitySpec, task_idx: int, n_tasks: int, n_batches: int,
                     batch_size: int, generator: torch.Generator) -> float:
-    """タスク収束時点の重要度スカラー値（対角フィッシャー情報量の全パラメータ平均）。"""
+    """タスク収束時点の重要度スカラー値（対角フィッシャー情報量の全パラメータ平均）。
+    収束済みタスクではほぼ0に潰れる（12.6.33節参照）。
+    """
     fisher = _fisher_diagonal_for_task(model, spec, task_idx, n_tasks, n_batches, batch_size,
                                        generator)
     total = sum(f.sum().item() for f in fisher)
     count = sum(f.numel() for f in fisher)
     return total / count
+
+
+@torch.no_grad()
+def task_importance_loss_based(model: Model, spec: ParitySpec, task_idx: int, n_tasks: int,
+                               n_batches: int, batch_size: int,
+                               generator: torch.Generator) -> float:
+    """タスク収束時点の重要度スカラー値（予測損失の平均、フィッシャー情報量を使わない代替指標）。
+
+    損失は収束済みでも0に潰れきらない（交差エントロピーは正解確率が1に近づくほど
+    小さくなるが、対角フィッシャー情報量のように勾配の二乗として0に急減しない）。
+    損失が大きい＝現時点でうまく再現できていない＝保護の優先度が高い、とみなす。
+    """
+    total_loss = 0.0
+    for _ in range(n_batches):
+        bits, labels = _task_batch(spec, task_idx, n_tasks, batch_size, generator)
+        loss = F.cross_entropy(model(bits), labels)
+        total_loss += float(loss)
+    return total_loss / n_batches
 
 
 def _segment_len(seg: Segment) -> int:
@@ -181,11 +210,17 @@ def evict_importance_weighted(buffer: Buffer, importances: dict[int, float], cap
 
 
 def train_with_replay(model: Model, spec: ParitySpec, task_idx: int, n_tasks: int, buffer: Buffer,
-                      steps: int, batch_size: int, lr: float, generator: torch.Generator) -> None:
+                      steps: int, batch_size: int, lr: float, generator: torch.Generator,
+                      weight_decay: float = 0.0) -> None:
     """新タスクのデータに、バッファ中の全保持タスクのサンプルを混ぜて学習する。
     バッファが空（最初のタスク）の場合は新タスクのデータのみで学習する。
+
+    `weight_decay`は`importance-weighted-fisher-decay`条件のみで使う。ステップ10の
+    EWC事前学習と同じ理由（交差エントロピーで収束するとロジットが発散し、対角
+    フィッシャー情報量がほぼ0に潰れる — 12.6.29節・12.6.33節）で、ロジットの発散を
+    抑えてフィッシャー情報量を意味のある大きさに保つための対策。
     """
-    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     segments = [seg for seg in buffer.values() if _segment_len(seg) > 0]
     for _ in range(steps):
         bits_new, labels_new = _task_batch(spec, task_idx, n_tasks, batch_size, generator)
@@ -221,9 +256,12 @@ class RunResult:
 def run_condition(condition: str, task_specs: list[ParitySpec], hidden_dim: int, capacity: int,
                   snapshot_size: int, task_steps: int, batch_size: int, lr: float,
                   fisher_batches: int, fisher_batch_size: int, eval_n: int,
-                  generator: torch.Generator) -> RunResult:
+                  generator: torch.Generator, fisher_decay_weight_decay: float = 0.01) -> RunResult:
     """1条件・1シードぶんの実行。タスク1..Nを順に学習し、最終モデルで旧タスク
     （タスク1..N-1）の保持率を測定する。
+
+    `fisher_decay_weight_decay`は`importance-weighted-fisher-decay`条件でのみ使う
+    （12.6.34節、ステップ13の本設計a）。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -234,12 +272,18 @@ def run_condition(condition: str, task_specs: list[ParitySpec], hidden_dim: int,
     buffer: Buffer = OrderedDict()
     importances: dict[int, float] = {}
 
-    for t, spec in enumerate(task_specs):
-        train_with_replay(model, spec, t, n_tasks, buffer, task_steps, batch_size, lr, generator)
+    weight_decay = fisher_decay_weight_decay if condition == "importance-weighted-fisher-decay" else 0.0
 
-        if condition == "importance-weighted":
+    for t, spec in enumerate(task_specs):
+        train_with_replay(model, spec, t, n_tasks, buffer, task_steps, batch_size, lr, generator,
+                          weight_decay=weight_decay)
+
+        if condition in ("importance-weighted", "importance-weighted-fisher-decay"):
             importances[t] = task_importance(model, spec, t, n_tasks, fisher_batches,
                                               fisher_batch_size, generator)
+        elif condition == "importance-weighted-loss-based":
+            importances[t] = task_importance_loss_based(model, spec, t, n_tasks, fisher_batches,
+                                                         fisher_batch_size, generator)
 
         buffer[t] = snapshot_task(spec, t, n_tasks, snapshot_size, generator)
 
@@ -249,7 +293,7 @@ def run_condition(condition: str, task_specs: list[ParitySpec], hidden_dim: int,
             buffer = evict_fifo(buffer, capacity)
         elif condition == "uniform-compress":
             buffer = evict_uniform(buffer, capacity, generator)
-        elif condition == "importance-weighted":
+        elif condition in IMPORTANCE_WEIGHTED_CONDITIONS:
             buffer = evict_importance_weighted(buffer, importances, capacity, generator)
             importances = {t: v for t, v in importances.items() if t in buffer}
 
