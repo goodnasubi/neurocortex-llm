@@ -25,6 +25,7 @@ from neurocortex.basal_ganglia_core import (  # noqa: E402
     make_batch,
     pretrain_backbone,
     run_condition,
+    supervised_capacity_check,
 )
 
 
@@ -191,6 +192,45 @@ def test_all_conditions_share_the_same_head_architecture() -> None:
         head = ActorCritic(hidden_dim)
         shapes.add(tuple(tuple(p.shape) for p in head.parameters()))
     assert len(shapes) == 1
+
+
+# --- 段階A: 教師あり容量チェック（12.6.26節・ステップ9） -------------------------
+
+def test_supervised_capacity_check_returns_valid_accuracy() -> None:
+    spec = ParitySpec(n_inputs=8, relevant=(0, 1))
+    g = torch.Generator().manual_seed(0)
+    acc = supervised_capacity_check("random-frozen", spec, hidden_dim=32, steps=50,
+                                    batch_size=32, lr=0.05, generator=g)
+    assert 0.0 <= acc <= 1.0
+
+
+def test_supervised_capacity_check_random_frozen_does_not_move_backbone() -> None:
+    """段階Aの前提: random-frozenの容量チェックはバックボーンを一切更新しないこと。"""
+    spec = ParitySpec(n_inputs=8, relevant=(0, 1))
+    # Backboneの初期化はグローバルなtorch RNGを使うため、呼び出し前に毎回
+    # torch.manual_seedを揃えることで、同じシードなら結果が完全に再現する
+    # （＝隠れた状態を引きずっていない）ことを確認する。
+    torch.manual_seed(0)
+    g1 = torch.Generator().manual_seed(1)
+    acc1 = supervised_capacity_check("random-frozen", spec, hidden_dim=16, steps=100,
+                                     batch_size=32, lr=0.05, generator=g1)
+    torch.manual_seed(0)
+    g2 = torch.Generator().manual_seed(1)
+    acc2 = supervised_capacity_check("random-frozen", spec, hidden_dim=16, steps=100,
+                                     batch_size=32, lr=0.05, generator=g2)
+    assert acc1 == pytest.approx(acc2)
+
+
+def test_supervised_capacity_check_trainable_backbone_solves_task_even_at_small_width() -> None:
+    """健全性: rl-only（バックボーンごと教師あり学習可能）は、幅が狭くてもXORを解けること
+    （容量のボトルネックはrandom-frozen特有であることの確認）。
+    """
+    torch.manual_seed(0)
+    spec = ParitySpec(n_inputs=8, relevant=(0, 1))
+    g = torch.Generator().manual_seed(0)
+    acc = supervised_capacity_check("rl-only", spec, hidden_dim=8, steps=500,
+                                    batch_size=64, lr=0.05, generator=g)
+    assert acc > 0.9
 
 
 def test_evaluate_returns_accuracy_in_valid_range() -> None:

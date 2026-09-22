@@ -120,6 +120,38 @@ def evaluate(backbone: Backbone, head: ActorCritic, spec: ParitySpec, n_eval: in
     return float((pred == labels).float().mean())
 
 
+def supervised_capacity_check(condition: str, spec: ParitySpec, hidden_dim: int, steps: int,
+                              batch_size: int, lr: float, generator: torch.Generator) -> float:
+    """RLを使わず教師あり勾配降下で、`condition`のバックボーン構成が到達できる正解率の
+    上限を測る（12.6.26節・ステップ9の段階A）。
+
+    `random-frozen`はバックボーンを凍結したまま線形ヘッドだけを学習し、それ以外の
+    条件はバックボーンごと学習する（capacity上限の確認という段階Aの目的上、
+    `pretrained`・`rl-only`はバックボーンが可塑的なので原理的にボトルネックに
+    ならない。ボトルネックの有無を確認する対象は実質`random-frozen`のみ）。
+    """
+    backbone = Backbone(spec.n_inputs, hidden_dim)
+    if condition == "random-frozen":
+        for p in backbone.parameters():
+            p.requires_grad_(False)
+    head = nn.Linear(hidden_dim, 2)
+    params = list(head.parameters())
+    if condition != "random-frozen":
+        params += list(backbone.parameters())
+    opt = torch.optim.Adam(params, lr=lr)
+    for _ in range(steps):
+        bits, labels = make_batch(spec, batch_size, generator)
+        logits = head(backbone(bits))
+        loss = F.cross_entropy(logits, labels)
+        opt.zero_grad(set_to_none=True)
+        loss.backward()
+        opt.step()
+    bits, labels = make_batch(spec, 2000, generator)
+    with torch.no_grad():
+        acc = float((head(backbone(bits)).argmax(-1) == labels).float().mean())
+    return acc
+
+
 def run_condition(condition: str, spec: ParitySpec, hidden_dim: int, pretrain_steps: int,
                   pretrain_batch: int, pretrain_lr: float, rl_steps: int, rl_batch: int,
                   rl_lr: float, eval_every: int, eval_batch: int,
