@@ -146,7 +146,7 @@ def test_hippocampus_leaves_the_cortex_frozen() -> None:
     prompts, objects = make_fact_batch(spec, 16, torch.Generator().manual_seed(0))
 
     class _Args:
-        n_units, sep_seed, cue_noise = 128, 0, 0.0
+        n_units, sep_seed, cue_noise, tap = 128, 0, 0.0, "ln_f"
 
     row = run_condition(model, spec, prompts, objects, "sdr", _Args(),
                         beta=50.0, gain=16.0, k=8, sep_seed=0)

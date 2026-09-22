@@ -1,0 +1,4501 @@
+{
+  "説明": "ステップ1 海馬モジュールの想起精度曲線（タップ位置: block0.attn）",
+  "条件": {
+    "counts": [
+      1,
+      10,
+      100,
+      1000,
+      10000
+    ],
+    "seeds": 5,
+    "conditions": [
+      "sdr",
+      "dense",
+      "cortex",
+      "dict",
+      "sdr-dict",
+      "none"
+    ],
+    "n_prefix": 8,
+    "n_suffix": 4096,
+    "n_object": 64,
+    "d_model": 192,
+    "n_layers": 3,
+    "n_heads": 4,
+    "n_units": 2048,
+    "ks": [
+      40,
+      160,
+      640
+    ],
+    "betas": [
+      100.0,
+      1000.0,
+      10000.0,
+      100000.0,
+      1000000.0
+    ],
+    "gains": [
+      4.0,
+      16.0,
+      64.0
+    ],
+    "cue_noise": 0.1,
+    "min_queries": 500,
+    "tap": "block0.attn",
+    "sep_seed": 0,
+    "train_steps": 400,
+    "lr": 0.003,
+    "batch_size": 64,
+    "out": "results/hippocampus/recall_curve_block0attn_noise0.1.json"
+  },
+  "chance": 0.015625,
+  "summary": {
+    "sdr": {
+      "1": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "10": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "100": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "1000": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "10000": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "dense": {
+      "1": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "10": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "100": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "1000": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "10000": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "cortex": {
+      "1": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "10": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "100": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "1000": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "10000": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "dict": {
+      "1": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "10": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "100": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "1000": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "10000": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "sdr-dict": {
+      "1": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "10": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "100": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "1000": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "10000": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "none": {
+      "1": {
+        "mean": 0.014000000432133675,
+        "std": 0.004195235203951597,
+        "min": 0.009999999776482582,
+        "max": 0.019999999552965164
+      },
+      "10": {
+        "mean": 0.013599999248981476,
+        "std": 0.0051224990747869015,
+        "min": 0.006000000052154064,
+        "max": 0.019999999552965164
+      },
+      "100": {
+        "mean": 0.014800000004470348,
+        "std": 0.006997141987085342,
+        "min": 0.004000000189989805,
+        "max": 0.024000000208616257
+      },
+      "1000": {
+        "mean": 0.01380000077188015,
+        "std": 0.0033704598899930716,
+        "min": 0.009999999776482582,
+        "max": 0.019999999552965164
+      },
+      "10000": {
+        "mean": 0.01671999879181385,
+        "std": 0.0005306598613969982,
+        "min": 0.016100000590085983,
+        "max": 0.017500000074505806
+      }
+    }
+  },
+  "rows": [
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999916691780091,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999990468025207,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999990468025207,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999990468025207,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999916691780091,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 0.018,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 9,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999916732311249,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999916732311249,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 0.01,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 5,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.9999919295310974,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.9999919295310974,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 0.018,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 9,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999920129776001,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999920129776001,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 0.013,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 13,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999920725822449,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 0,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999920725822449,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 0.0175,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 175,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 0,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999919748306274,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999990468025207,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999990468025207,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999990468025207,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999919748306274,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 0.02,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 10,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999926960468293,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999926960468293,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 0.014,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 7,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.9999929189682006,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.9999929189682006,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 0.004,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 2,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999924302101135,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999924302101135,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 0.014,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 14,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999924898147583,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 1,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999924898147583,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 0.0162,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 162,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 1,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999928503036499,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.999999047279358,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999990468025207,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999990468025207,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999928503036499,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 0.01,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 5,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999929857254028,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999929857254028,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 0.02,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 10,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999993371963501,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999993371963501,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 0.018,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 9,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999932050704956,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999932050704956,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 0.01,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 10,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999929666519165,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 2,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999929666519165,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 0.0161,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 161,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 2,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999915864467621,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.999999047279358,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.999999047279358,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.999999047279358,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999915864467621,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 0.012,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 6,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999920952320099,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999920952320099,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 0.006,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 3,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.9999915719032287,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.9999915719032287,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 0.024,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 12,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999919533729553,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999919533729553,
+      "beta": 0.0,
+      "gain": 4.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 0.02,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 20,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999918937683105,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 3,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999918937683105,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 0.0171,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 171,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 3,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999926748275757,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999990465641022,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999990465641022,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999990465641022,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 1.0,
+      "n_stored": 1,
+      "mean_gate": 0.9999926748275757,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 1,
+      "accuracy": 0.01,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 5,
+      "n_queries": 500,
+      "n_reps": 500,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999924063682556,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999990463256836,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 1.0,
+      "n_stored": 10,
+      "mean_gate": 0.9999924063682556,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 10,
+      "accuracy": 0.018,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 9,
+      "n_queries": 500,
+      "n_reps": 50,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.9999927401542663,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.999998927116394,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 1.0,
+      "n_stored": 100,
+      "mean_gate": 0.9999927401542663,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 500,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 100,
+      "accuracy": 0.01,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 5,
+      "n_queries": 500,
+      "n_reps": 5,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999926686286926,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999990463256836,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 1.0,
+      "n_stored": 1000,
+      "mean_gate": 0.9999926686286926,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 1000,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 1000,
+      "accuracy": 0.012,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 12,
+      "n_queries": 1000,
+      "n_reps": 1,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999923706054688,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "dense",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "cortex",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 100.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 4,
+      "beta_grid": [
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "dict",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999991059303284,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40
+      ]
+    },
+    {
+      "condition": "sdr-dict",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 1.0,
+      "n_stored": 10000,
+      "mean_gate": 0.9999923706054688,
+      "beta": 0.0,
+      "gain": 16.0,
+      "k": 40,
+      "n_correct": 10000,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        4.0,
+        16.0,
+        64.0
+      ],
+      "k_grid": [
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "condition": "none",
+      "cue_noise": 0.1,
+      "n_facts": 10000,
+      "accuracy": 0.0167,
+      "n_stored": 0,
+      "mean_gate": 0.0,
+      "beta": 0.0,
+      "gain": 0.0,
+      "k": 40,
+      "n_correct": 167,
+      "n_queries": 10000,
+      "n_reps": 1,
+      "seed": 4,
+      "beta_grid": [
+        0.0
+      ],
+      "gain_grid": [
+        0.0
+      ],
+      "k_grid": [
+        40
+      ]
+    }
+  ],
+  "sec": 2357.8
+}

@@ -73,11 +73,17 @@ def build_backbone(spec: FactSpec, d_model: int, n_layers: int, n_heads: int,
 
 
 @torch.no_grad()
-def encode_keys(model: SpikingLM, prompts: torch.Tensor, chunk: int = 1024) -> torch.Tensor:
-    """`[接頭][接尾][関係]` の最終位置の表現 ln_f(x) を取り出す。"""
+def encode_keys(model: SpikingLM, prompts: torch.Tensor, chunk: int = 1024,
+                tap: str = "ln_f") -> torch.Tensor:
+    """`[接頭][接尾][関係]` の最終位置の表現をタップ位置 `tap` から取り出す。
+
+    既定の `"ln_f"` は12.6.4〜12.6.7節で使っていた出力ヘッド直前の表現。
+    `"block0.attn"` は12.6.8節で採用した新タップ（最初のALIFスパイク層）。
+    候補の全体は `SpikingLM.encode_taps` を参照。
+    """
     out = []
     for i in range(0, prompts.shape[0], chunk):
-        out.append(model.encode(prompts[i : i + chunk])[:, -1])
+        out.append(model.encode_taps(prompts[i : i + chunk])[tap][:, -1])
     return torch.cat(out)
 
 
@@ -93,7 +99,7 @@ def run_condition(model: SpikingLM, spec: FactSpec, prompts: torch.Tensor,
     （6.1節のCA3は「断片的な手がかり」からの復元を役割としている）。
     """
     if h is None:
-        h = encode_keys(model, prompts)  # [N, d_model] 皮質表現
+        h = encode_keys(model, prompts, tap=args.tap)  # [N, d_model]
     if h_query is None:
         h_query = h
     d_model = h.shape[-1]
@@ -167,6 +173,10 @@ def main() -> None:
                     help="想起時の手がかりに加えるガウス雑音の相対強度")
     ap.add_argument("--min-queries", type=int, default=500,
                     help="1点あたりの最低クエリ数。Nが小さいとき試行を繰り返す")
+    # 12.6.8節の再設計。"ln_f" は12.6.4〜12.6.7節で使っていた出力ヘッド直前の表現、
+    # "block0.attn" は学習に対して崩壊しないことが確認された新タップ。
+    ap.add_argument("--tap", default="ln_f",
+                    help='キーを取り出すタップ位置（SpikingLM.encode_taps のキー）')
     ap.add_argument("--sep-seed", type=int, default=0)
     ap.add_argument("--train-steps", type=int, default=400)
     ap.add_argument("--lr", type=float, default=3e-3)
@@ -189,7 +199,7 @@ def main() -> None:
             batches = []
             for _ in range(n_rep):
                 prompts, objects = make_fact_batch(spec, n, g)
-                hw = encode_keys(model, prompts)
+                hw = encode_keys(model, prompts, tap=args.tap)
                 if args.cue_noise > 0.0:
                     # 成分あたりの典型的な大きさに比例させた雑音（表現のスケールに依存しない）
                     scale = args.cue_noise * hw.norm(dim=-1, keepdim=True) / hw.shape[-1] ** 0.5
@@ -241,7 +251,7 @@ def main() -> None:
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps({
-        "説明": "ステップ1 海馬モジュールの想起精度曲線（12.6.4節）",
+        "説明": f"ステップ1 海馬モジュールの想起精度曲線（タップ位置: {args.tap}）",
         "条件": vars(args) | {"out": str(args.out)},
         "chance": spec.chance,
         "summary": summary,
