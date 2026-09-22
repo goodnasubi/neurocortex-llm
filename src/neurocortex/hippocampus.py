@@ -450,7 +450,8 @@ def fit_hebbian(sep: PatternSeparator, x: torch.Tensor, epochs: int = 5,
 def fit_stdp(sep: PatternSeparator, spikes: torch.Tensor, epochs: int = 5,
              a_plus: float = 0.01, a_minus: float = 0.008, tau: float = 0.9,
              batch_size: int = 256, generator: torch.Generator | None = None,
-             callback: "Callable[[int, PatternSeparator], None] | None" = None) -> dict:
+             callback: "Callable[[int, PatternSeparator], None] | None" = None,
+             raw_update_callback: "Callable[[int, float], None] | None" = None) -> dict:
     """ペア型STDP（8.1節の指数窓）。時間軸はトークン位置そのもの（A案）。
 
     前シナプス入力は皮質バックボーンの二値スパイク列 `spikes` [N, T, d]、
@@ -461,6 +462,10 @@ def fit_stdp(sep: PatternSeparator, spikes: torch.Tensor, epochs: int = 5,
         dW += a_plus * s_post^T @ trace_pre - a_minus * trace_post^T @ s_pre
 
     第1項が「前が先に発火 → 増強」、第2項が「後が先 → 抑圧」に対応する。
+
+    `raw_update_callback`（epoch, raw_norm）は`callback`とは独立の軽量な追加引数で、
+    485行目付近の正規化前の生の更新量`scale * dw / b`のフロベニウスノルムを
+    epoch内バッチ合計で累積してepoch末に通知する（STDPアルゴリズム自体は変更しない）。
     """
     if sep.mode == "identity":
         raise ValueError("identity には学習する重みがない")
@@ -468,6 +473,7 @@ def fit_stdp(sep: PatternSeparator, spikes: torch.Tensor, epochs: int = 5,
     for ep in range(epochs):
         perm = torch.randperm(n, generator=generator)
         scale = 1.0 - ep / max(1, epochs)
+        raw_update_norm_sum = 0.0
         for i in range(0, n, batch_size):
             sb = spikes[perm[i : i + batch_size]]  # [b, T, d]
             b = sb.shape[0]
@@ -482,10 +488,15 @@ def fit_stdp(sep: PatternSeparator, spikes: torch.Tensor, epochs: int = 5,
                 tr_pre = tau * tr_pre + s_pre
                 tr_post = tau * tr_post + s_post
                 dw += a_plus * (s_post.T @ tr_pre) - a_minus * (tr_post.T @ s_pre)
-            sep.weight += scale * dw / b
+            raw_update = scale * dw / b
+            if raw_update_callback is not None:
+                raw_update_norm_sum += float(raw_update.norm())
+            sep.weight += raw_update
             sep.weight.copy_(_l2_normalize(sep.weight))
         if callback is not None:
             callback(ep, sep)
+        if raw_update_callback is not None:
+            raw_update_callback(ep, raw_update_norm_sum)
     return {"rule": "stdp", "epochs": epochs, "a_plus": a_plus,
             "a_minus": a_minus, "tau": tau, "n_samples": n}
 
