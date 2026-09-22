@@ -1,0 +1,67 @@
+{
+  "説明": "ステップ5 グリア層: 偏り反転後、aux-lossのみ凍結した状態での再収束比較（主張a）とBCM対proportionalの再収束速度比較（主張b）（12.6.17節）",
+  "条件": {
+    "seeds": 5,
+    "conditions": [
+      "aux-loss",
+      "proportional",
+      "bcm"
+    ],
+    "n_experts": 6,
+    "batch_size": 64,
+    "noise_scale": 1.0,
+    "bias_scale": 2.0,
+    "n_steps": 400,
+    "flip_step": 200,
+    "lr_aux": 3.0,
+    "lr_local": 0.5,
+    "alpha": 1.0,
+    "beta": 0.1,
+    "converge_window": 20,
+    "converge_threshold": 0.03,
+    "out": "results/glia/bcm_vs_proportional.json"
+  },
+  "control1_ok": true,
+  "summary": {
+    "aux-loss": {
+      "pre_flip_final_imbalance_mean": 0.02299642004072666,
+      "post_flip_final_imbalance_mean": 0.6337190866470337,
+      "recover_steps_mean": 200.0,
+      "recover_steps_std": 0.0,
+      "recover_steps_per_seed": [
+        200,
+        200,
+        200,
+        200,
+        200
+      ]
+    },
+    "proportional": {
+      "pre_flip_final_imbalance_mean": 0.013802084140479565,
+      "post_flip_final_imbalance_mean": 0.013055012561380863,
+      "recover_steps_mean": 68.4000015258789,
+      "recover_steps_std": 24.0049991607666,
+      "recover_steps_per_seed": [
+        100,
+        36,
+        64,
+        51,
+        91
+      ]
+    },
+    "bcm": {
+      "pre_flip_final_imbalance_mean": 0.019886068999767303,
+      "post_flip_final_imbalance_mean": 0.048489585518836975,
+      "recover_steps_mean": 182.60000610351562,
+      "recover_steps_std": 34.79999923706055,
+      "recover_steps_per_seed": [
+        200,
+        113,
+        200,
+        200,
+        200
+      ]
+    }
+  },
+  "sec": 1.4
+}
