@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Callable
 
 import numpy as np
 import torch
@@ -448,7 +449,8 @@ def fit_hebbian(sep: PatternSeparator, x: torch.Tensor, epochs: int = 5,
 @torch.no_grad()
 def fit_stdp(sep: PatternSeparator, spikes: torch.Tensor, epochs: int = 5,
              a_plus: float = 0.01, a_minus: float = 0.008, tau: float = 0.9,
-             batch_size: int = 256, generator: torch.Generator | None = None) -> dict:
+             batch_size: int = 256, generator: torch.Generator | None = None,
+             callback: "Callable[[int, PatternSeparator], None] | None" = None) -> dict:
     """ペア型STDP（8.1節の指数窓）。時間軸はトークン位置そのもの（A案）。
 
     前シナプス入力は皮質バックボーンの二値スパイク列 `spikes` [N, T, d]、
@@ -482,6 +484,8 @@ def fit_stdp(sep: PatternSeparator, spikes: torch.Tensor, epochs: int = 5,
                 dw += a_plus * (s_post.T @ tr_pre) - a_minus * (tr_post.T @ s_pre)
             sep.weight += scale * dw / b
             sep.weight.copy_(_l2_normalize(sep.weight))
+        if callback is not None:
+            callback(ep, sep)
     return {"rule": "stdp", "epochs": epochs, "a_plus": a_plus,
             "a_minus": a_minus, "tau": tau, "n_samples": n}
 

@@ -1,0 +1,26 @@
+seed=0 mult=  0.1 diverged=False final_norm=45.2547 n_unique=2048/2048 (27.9s)
+seed=0 mult=    1 diverged=False final_norm=45.2547 n_unique=2048/2048 (31.0s)
+seed=0 mult=    3 diverged=False final_norm=45.2542 n_unique=2048/2048 (31.7s)
+seed=0 mult=   10 diverged=False final_norm=45.2545 n_unique=2010/2048 (103.8s)
+seed=1 mult=  0.1 diverged=False final_norm=45.2547 n_unique=2048/2048 (33.3s)
+seed=1 mult=    1 diverged=False final_norm=45.2547 n_unique=2048/2048 (33.9s)
+seed=1 mult=    3 diverged=False final_norm=45.2542 n_unique=2047/2048 (34.4s)
+seed=1 mult=   10 diverged=False final_norm=45.2545 n_unique=2010/2048 (186.0s)
+seed=2 mult=  0.1 diverged=False final_norm=45.2548 n_unique=2048/2048 (53.8s)
+seed=2 mult=    1 diverged=False final_norm=45.2546 n_unique=2048/2048 (55.0s)
+seed=2 mult=    3 diverged=False final_norm=45.2540 n_unique=2048/2048 (54.2s)
+seed=2 mult=   10 diverged=False final_norm=45.2544 n_unique=2020/2048 (138.1s)
+seed=3 mult=  0.1 diverged=False final_norm=45.2547 n_unique=2048/2048 (34.4s)
+seed=3 mult=    1 diverged=False final_norm=45.2546 n_unique=2048/2048 (36.1s)
+seed=3 mult=    3 diverged=False final_norm=45.2545 n_unique=2027/2048 (34.5s)
+seed=3 mult=   10 diverged=False final_norm=45.2545 n_unique=2016/2048 (98.5s)
+seed=4 mult=  0.1 diverged=False final_norm=45.2547 n_unique=2048/2048 (33.1s)
+seed=4 mult=    1 diverged=False final_norm=45.2547 n_unique=2048/2048 (33.8s)
+seed=4 mult=    3 diverged=False final_norm=45.2542 n_unique=2048/2048 (34.3s)
+seed=4 mult=   10 diverged=False final_norm=45.2544 n_unique=2021/2048 (75.4s)
+
+èëÇ´èoÇµ: results\stdp_stability\stability.json
+mult=  0.1  diverged=0/5  early_rate=0.00001  late_rate=0.00001  n_unique(final)=2048.0/2048  max_cos(final)=0.6527
+mult=    1  diverged=0/5  early_rate=0.00002  late_rate=0.00002  n_unique(final)=2048.0/2048  max_cos(final)=0.9381
+mult=    3  diverged=0/5  early_rate=0.00004  late_rate=0.00001  n_unique(final)=2043.6/2048  max_cos(final)=1.0000
+mult=   10  diverged=0/5  early_rate=0.00004  late_rate=0.00001  n_unique(final)=2015.4/2048  max_cos(final)=1.0000

@@ -1,0 +1,4286 @@
+{
+  "説明": "STDPパターン分離層の学習安定性検証（12.6.60節の設計、ステップ26）",
+  "条件": {
+    "seeds": 5,
+    "n_units": 2048,
+    "k": 40,
+    "n_train": 20000,
+    "epochs": 20,
+    "a_plus": 0.01,
+    "a_minus": 0.008,
+    "tau": 0.9,
+    "n_prefix": 8,
+    "n_suffix": 4096,
+    "n_object": 64,
+    "d_model": 192,
+    "train_steps": 400,
+    "multipliers": [
+      0.1,
+      1.0,
+      3.0,
+      10.0
+    ],
+    "out": "results\\stdp_stability\\stability.json"
+  },
+  "summary": {
+    "0.1": {
+      "n_seeds": 5,
+      "n_diverged": 0,
+      "diverged_fraction": 0.0,
+      "early_rate_mean": 7.171630386437755e-06,
+      "late_rate_mean": 6.48498553346144e-06,
+      "final_n_unique_mean": 2048.0,
+      "final_max_pairwise_cos_mean": 0.6526575088500977
+    },
+    "1.0": {
+      "n_seeds": 5,
+      "n_diverged": 0,
+      "diverged_fraction": 0.0,
+      "early_rate_mean": 1.8005372112384066e-05,
+      "late_rate_mean": 1.697540210443549e-05,
+      "final_n_unique_mean": 2048.0,
+      "final_max_pairwise_cos_mean": 0.9380534291267395
+    },
+    "3.0": {
+      "n_seeds": 5,
+      "n_diverged": 0,
+      "diverged_fraction": 0.0,
+      "early_rate_mean": 3.5247801861260086e-05,
+      "late_rate_mean": 1.411438006471144e-05,
+      "final_n_unique_mean": 2043.5999755859375,
+      "final_max_pairwise_cos_mean": 0.9999977350234985
+    },
+    "10.0": {
+      "n_seeds": 5,
+      "n_diverged": 0,
+      "diverged_fraction": 0.0,
+      "early_rate_mean": 3.9520266000181437e-05,
+      "late_rate_mean": 1.010894811770413e-05,
+      "final_n_unique_mean": 2015.4000244140625,
+      "final_max_pairwise_cos_mean": 1.000000238418579
+    }
+  },
+  "rows": [
+    {
+      "seed": 0,
+      "multiplier": 0.1,
+      "a_plus": 0.001,
+      "a_minus": 0.0008,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.25474548339844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 8.068753959378228e-05,
+          "max_pairwise_cos": 0.35069411993026733,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.25474166870117,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.00032750717946328223,
+          "max_pairwise_cos": 0.39660924673080444,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.254737854003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0006901457090862095,
+          "max_pairwise_cos": 0.4456823170185089,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.254737854003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0011453545885160565,
+          "max_pairwise_cos": 0.47776949405670166,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.25474166870117,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0016747573390603065,
+          "max_pairwise_cos": 0.49519816040992737,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.25473403930664,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0022585096303373575,
+          "max_pairwise_cos": 0.5228566527366638,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.254730224609375,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.002875937381759286,
+          "max_pairwise_cos": 0.5455999970436096,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25471496582031,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0035154568031430244,
+          "max_pairwise_cos": 0.5718989968299866,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.25471496582031,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.004164054058492184,
+          "max_pairwise_cos": 0.5866706371307373,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.25472640991211,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.004804592113941908,
+          "max_pairwise_cos": 0.5911855697631836,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.254737854003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.005428871139883995,
+          "max_pairwise_cos": 0.5935064554214478,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.25473403930664,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.006026557646691799,
+          "max_pairwise_cos": 0.5935123562812805,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.2547721862793,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.006581285502761602,
+          "max_pairwise_cos": 0.5935461521148682,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.2547492980957,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.007078561931848526,
+          "max_pairwise_cos": 0.5936729311943054,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.25473403930664,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.007518967613577843,
+          "max_pairwise_cos": 0.5937885046005249,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.25474548339844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.007899200543761253,
+          "max_pairwise_cos": 0.5938558578491211,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.2547492980957,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008211048319935799,
+          "max_pairwise_cos": 0.593902051448822,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.2547492980957,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008448736742138863,
+          "max_pairwise_cos": 0.5939381122589111,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.2547607421875,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.00860932283103466,
+          "max_pairwise_cos": 0.5939618945121765,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.25474548339844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008690251037478447,
+          "max_pairwise_cos": 0.5939719080924988,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        }
+      ],
+      "sec": 27.9
+    },
+    {
+      "seed": 0,
+      "multiplier": 1.0,
+      "a_plus": 0.01,
+      "a_minus": 0.008,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.25470733642578,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.007746653165668249,
+          "max_pairwise_cos": 0.6077796220779419,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.25468826293945,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.028051460161805153,
+          "max_pairwise_cos": 0.7050321102142334,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.25468063354492,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.05811038985848427,
+          "max_pairwise_cos": 0.7771335244178772,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.254703521728516,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.09589516371488571,
+          "max_pairwise_cos": 0.8237773776054382,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.25471115112305,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.13942623138427734,
+          "max_pairwise_cos": 0.8246522545814514,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.25476837158203,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.18662981688976288,
+          "max_pairwise_cos": 0.8256353735923767,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25472640991211,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.23633557558059692,
+          "max_pairwise_cos": 0.8391191959381104,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25471878051758,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.2866397202014923,
+          "max_pairwise_cos": 0.8437751531600952,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.25470733642578,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.3359687626361847,
+          "max_pairwise_cos": 0.8828291296958923,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.2547492980957,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.37936195731163025,
+          "max_pairwise_cos": 0.8881101012229919,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.254737854003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.41204991936683655,
+          "max_pairwise_cos": 0.9717842936515808,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.254730224609375,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.4397987127304077,
+          "max_pairwise_cos": 0.9765852093696594,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.254730224609375,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.4630002975463867,
+          "max_pairwise_cos": 0.9772651195526123,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.25471496582031,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.48328688740730286,
+          "max_pairwise_cos": 0.9774060845375061,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.254676818847656,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5001549124717712,
+          "max_pairwise_cos": 0.9774391651153564,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.254737854003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5139991641044617,
+          "max_pairwise_cos": 0.9774470925331116,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.25471115112305,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5246397852897644,
+          "max_pairwise_cos": 0.9774556756019592,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.254695892333984,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5325927734375,
+          "max_pairwise_cos": 0.977463960647583,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.25468444824219,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.537919819355011,
+          "max_pairwise_cos": 0.9774705171585083,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.254703521728516,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5404902696609497,
+          "max_pairwise_cos": 0.977473258972168,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        }
+      ],
+      "sec": 31.0
+    },
+    {
+      "seed": 0,
+      "multiplier": 3.0,
+      "a_plus": 0.03,
+      "a_minus": 0.024,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.25471115112305,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.055784616619348526,
+          "max_pairwise_cos": 0.7978848814964294,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.254703521728516,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.19858844578266144,
+          "max_pairwise_cos": 0.8776097297668457,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.25467300415039,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.4041600227355957,
+          "max_pairwise_cos": 0.8881034255027771,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.25465393066406,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.6194568276405334,
+          "max_pairwise_cos": 0.9471870064735413,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.254608154296875,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.7057672142982483,
+          "max_pairwise_cos": 0.9900332093238831,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.25457763671875,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.7723572254180908,
+          "max_pairwise_cos": 0.9957543015480042,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25456237792969,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8276689648628235,
+          "max_pairwise_cos": 0.9985594749450684,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.2545166015625,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8689509034156799,
+          "max_pairwise_cos": 0.9995456337928772,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.254486083984375,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8940539956092834,
+          "max_pairwise_cos": 0.999899685382843,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.25444030761719,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9067527651786804,
+          "max_pairwise_cos": 0.9999446868896484,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.25438690185547,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9172073602676392,
+          "max_pairwise_cos": 0.9999488592147827,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.254356384277344,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9248301386833191,
+          "max_pairwise_cos": 0.9999638795852661,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.25432586669922,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.930922269821167,
+          "max_pairwise_cos": 0.9999681711196899,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.2542839050293,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9355646371841431,
+          "max_pairwise_cos": 0.999955415725708,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.254249572753906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9388757348060608,
+          "max_pairwise_cos": 0.9999793171882629,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.25420379638672,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9417086243629456,
+          "max_pairwise_cos": 0.9999827742576599,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.25422668457031,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9436556100845337,
+          "max_pairwise_cos": 0.9999832510948181,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.25419616699219,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9449741840362549,
+          "max_pairwise_cos": 0.9999880194664001,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.25419616699219,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9459331631660461,
+          "max_pairwise_cos": 0.9999880194664001,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.25419998168945,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9463817477226257,
+          "max_pairwise_cos": 0.9999880194664001,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        }
+      ],
+      "sec": 31.7
+    },
+    {
+      "seed": 0,
+      "multiplier": 10.0,
+      "a_plus": 0.1,
+      "a_minus": 0.08,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.25468444824219,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.3032185435295105,
+          "max_pairwise_cos": 0.9595136046409607,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.25455093383789,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8842108845710754,
+          "max_pairwise_cos": 0.9996764659881592,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.25453186035156,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9008789658546448,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2035,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.2545166015625,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9039704203605652,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2023,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.25453567504883,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9045701622962952,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2014,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.254539489746094,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9055178165435791,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2013,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.2545280456543,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9061291813850403,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2012,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25452423095703,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9066056609153748,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2011,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.25453186035156,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9066727757453918,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2011,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.254539489746094,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9065818190574646,
+          "max_pairwise_cos": 0.9999999403953552,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.2545280456543,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9066640734672546,
+          "max_pairwise_cos": 1.0,
+          "n_unique_rows": 2011,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.254520416259766,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9067347645759583,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.254520416259766,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9067932367324829,
+          "max_pairwise_cos": 1.0,
+          "n_unique_rows": 2011,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.254520416259766,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9067850708961487,
+          "max_pairwise_cos": 1.0,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.2545166015625,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9068488478660583,
+          "max_pairwise_cos": 1.0,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.25453186035156,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.90681391954422,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.254512786865234,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9068281054496765,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.254520416259766,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9068321585655212,
+          "max_pairwise_cos": 1.0,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.254512786865234,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9068606495857239,
+          "max_pairwise_cos": 1.0,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.25450897216797,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9068285226821899,
+          "max_pairwise_cos": 1.0,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        }
+      ],
+      "sec": 103.8
+    },
+    {
+      "seed": 1,
+      "multiplier": 0.1,
+      "a_plus": 0.001,
+      "a_minus": 0.0008,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.2547492980957,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.00015766049909871072,
+          "max_pairwise_cos": 0.34951287508010864,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.25475311279297,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.00040757880196906626,
+          "max_pairwise_cos": 0.36097630858421326,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.254737854003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0007704414892941713,
+          "max_pairwise_cos": 0.42535465955734253,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.25472640991211,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0012282272800803185,
+          "max_pairwise_cos": 0.481539249420166,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.254737854003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0017588244518265128,
+          "max_pairwise_cos": 0.5619402527809143,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.25474166870117,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.002336839446797967,
+          "max_pairwise_cos": 0.6550010442733765,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25475311279297,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0029635124374181032,
+          "max_pairwise_cos": 0.6752829551696777,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25474548339844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.003614909015595913,
+          "max_pairwise_cos": 0.6866744160652161,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.2547492980957,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.004277409985661507,
+          "max_pairwise_cos": 0.6870200037956238,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.25473403930664,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.00492853345349431,
+          "max_pairwise_cos": 0.687025785446167,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.25477600097656,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.005556039046496153,
+          "max_pairwise_cos": 0.6870985627174377,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.254730224609375,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0061540440656244755,
+          "max_pairwise_cos": 0.6871029138565063,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.25474166870117,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.006705760024487972,
+          "max_pairwise_cos": 0.6871705055236816,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.254737854003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.007207589223980904,
+          "max_pairwise_cos": 0.687175989151001,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.254722595214844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0076563009060919285,
+          "max_pairwise_cos": 0.6896545886993408,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.25473403930664,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008041913621127605,
+          "max_pairwise_cos": 0.6903087496757507,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.254737854003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008354448713362217,
+          "max_pairwise_cos": 0.6920138597488403,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.25473403930664,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.00859547033905983,
+          "max_pairwise_cos": 0.6932687759399414,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.25473403930664,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.00875802244991064,
+          "max_pairwise_cos": 0.6938886046409607,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.25472640991211,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008839704096317291,
+          "max_pairwise_cos": 0.6940668225288391,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        }
+      ],
+      "sec": 33.3
+    },
+    {
+      "seed": 1,
+      "multiplier": 1.0,
+      "a_plus": 0.01,
+      "a_minus": 0.008,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.25471878051758,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.007691475562751293,
+          "max_pairwise_cos": 0.6717308163642883,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.254703521728516,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.026779241859912872,
+          "max_pairwise_cos": 0.7419079542160034,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.254703521728516,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.054915785789489746,
+          "max_pairwise_cos": 0.7736847400665283,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.25469207763672,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0902922973036766,
+          "max_pairwise_cos": 0.7920569777488708,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.25470733642578,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.13131804764270782,
+          "max_pairwise_cos": 0.7922752499580383,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.25467300415039,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.17602594196796417,
+          "max_pairwise_cos": 0.8297631144523621,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25471115112305,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.22311191260814667,
+          "max_pairwise_cos": 0.8682313561439514,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25464630126953,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.2712995409965515,
+          "max_pairwise_cos": 0.8703595995903015,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.2546501159668,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.3198961615562439,
+          "max_pairwise_cos": 0.8703595995903015,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.25467300415039,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.36696434020996094,
+          "max_pairwise_cos": 0.8703595995903015,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.25467300415039,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.4120129346847534,
+          "max_pairwise_cos": 0.8704367876052856,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.25464630126953,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.45391497015953064,
+          "max_pairwise_cos": 0.8717469573020935,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.25466537475586,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.49187374114990234,
+          "max_pairwise_cos": 0.8717469573020935,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.25465774536133,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5242490172386169,
+          "max_pairwise_cos": 0.8836262822151184,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.254661560058594,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.548334538936615,
+          "max_pairwise_cos": 0.9044048190116882,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.25466537475586,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5650456547737122,
+          "max_pairwise_cos": 0.9309439063072205,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.25469970703125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.576686441898346,
+          "max_pairwise_cos": 0.9394730925559998,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.25467300415039,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5844986438751221,
+          "max_pairwise_cos": 0.9538586735725403,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.25468444824219,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5896310806274414,
+          "max_pairwise_cos": 0.9587805867195129,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.25466537475586,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5920230746269226,
+          "max_pairwise_cos": 0.9600265622138977,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        }
+      ],
+      "sec": 33.9
+    },
+    {
+      "seed": 1,
+      "multiplier": 3.0,
+      "a_plus": 0.03,
+      "a_minus": 0.024,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.25468826293945,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.05011875182390213,
+          "max_pairwise_cos": 0.861674427986145,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.254669189453125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.17809289693832397,
+          "max_pairwise_cos": 0.8782943487167358,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.25464630126953,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.3634383976459503,
+          "max_pairwise_cos": 0.9126489162445068,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.2546501159668,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5874075293540955,
+          "max_pairwise_cos": 0.9126489162445068,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.254608154296875,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.7560603022575378,
+          "max_pairwise_cos": 0.9942948222160339,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.25455093383789,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.7972898483276367,
+          "max_pairwise_cos": 0.9999074339866638,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25450897216797,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8291675448417664,
+          "max_pairwise_cos": 0.9999991059303284,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25445556640625,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8538480401039124,
+          "max_pairwise_cos": 0.9999979734420776,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.25440216064453,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8743510246276855,
+          "max_pairwise_cos": 0.9999800324440002,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.25436019897461,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8912104368209839,
+          "max_pairwise_cos": 0.999983549118042,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.25429916381836,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9043523073196411,
+          "max_pairwise_cos": 0.9999977350234985,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.25425338745117,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9143033027648926,
+          "max_pairwise_cos": 0.9999994039535522,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.254215240478516,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9215827584266663,
+          "max_pairwise_cos": 0.9999971389770508,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.25420379638672,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.926197350025177,
+          "max_pairwise_cos": 0.9999970197677612,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.254180908203125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9295887351036072,
+          "max_pairwise_cos": 0.9999986886978149,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.25418472290039,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9318388104438782,
+          "max_pairwise_cos": 0.9999998211860657,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.25419616699219,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9331777095794678,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.25419235229492,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.934066653251648,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.254173278808594,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9345988035202026,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.254188537597656,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9348678588867188,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2047,
+          "n_units": 2048
+        }
+      ],
+      "sec": 34.4
+    },
+    {
+      "seed": 1,
+      "multiplier": 10.0,
+      "a_plus": 0.1,
+      "a_minus": 0.08,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.254581451416016,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.27110064029693604,
+          "max_pairwise_cos": 0.9778943657875061,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.25448989868164,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8967430591583252,
+          "max_pairwise_cos": 0.9908474683761597,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.25447463989258,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9100396037101746,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2014,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.25445556640625,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9104303121566772,
+          "max_pairwise_cos": 0.9999999403953552,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.25447463989258,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9105326533317566,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2009,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.254478454589844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9104161858558655,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25447082519531,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9104537963867188,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2009,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25448226928711,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9104395508766174,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2009,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.25445556640625,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9105226397514343,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2009,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.25446701049805,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9104241132736206,
+          "max_pairwise_cos": 1.0,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.25447463989258,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9104999899864197,
+          "max_pairwise_cos": 0.9999998807907104,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.254478454589844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9106621742248535,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2009,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.25447082519531,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9106204509735107,
+          "max_pairwise_cos": 0.9999998807907104,
+          "n_unique_rows": 2009,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.25446701049805,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9106571674346924,
+          "max_pairwise_cos": 1.0,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.254478454589844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9106254577636719,
+          "max_pairwise_cos": 0.9999998807907104,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.25447463989258,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.910671055316925,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.25447082519531,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9106544256210327,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.25447463989258,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9106493592262268,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.25447082519531,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9106597304344177,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.25448226928711,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9106619954109192,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2010,
+          "n_units": 2048
+        }
+      ],
+      "sec": 186.0
+    },
+    {
+      "seed": 2,
+      "multiplier": 0.1,
+      "a_plus": 0.001,
+      "a_minus": 0.0008,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.25474548339844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0001062544179148972,
+          "max_pairwise_cos": 0.36127713322639465,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.25474166870117,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.00036517210537567735,
+          "max_pairwise_cos": 0.5016925930976868,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.25474166870117,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0007648387691006064,
+          "max_pairwise_cos": 0.5939550399780273,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.25474166870117,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0012678145430982113,
+          "max_pairwise_cos": 0.613599419593811,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.254764556884766,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.001839029835537076,
+          "max_pairwise_cos": 0.613599419593811,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.25475311279297,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0024725846014916897,
+          "max_pairwise_cos": 0.613599419593811,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25474548339844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.003133876482024789,
+          "max_pairwise_cos": 0.613599419593811,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25474548339844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0038027698174118996,
+          "max_pairwise_cos": 0.613599419593811,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.254737854003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.004486388061195612,
+          "max_pairwise_cos": 0.6303919553756714,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.254737854003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.00516898836940527,
+          "max_pairwise_cos": 0.6303920149803162,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.25475311279297,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.005832950584590435,
+          "max_pairwise_cos": 0.6360872387886047,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.25474166870117,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.006460266653448343,
+          "max_pairwise_cos": 0.6466102004051208,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.254730224609375,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.007029281463474035,
+          "max_pairwise_cos": 0.6537553071975708,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.25476837158203,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.00753703573718667,
+          "max_pairwise_cos": 0.6582826375961304,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.25474166870117,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.007978631183505058,
+          "max_pairwise_cos": 0.6661493182182312,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.254764556884766,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.00835400354117155,
+          "max_pairwise_cos": 0.6692558526992798,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.2547607421875,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008661234751343727,
+          "max_pairwise_cos": 0.6746317744255066,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.2547607421875,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008897146210074425,
+          "max_pairwise_cos": 0.6785479784011841,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.2547607421875,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.009056298062205315,
+          "max_pairwise_cos": 0.6829010248184204,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.254756927490234,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0091366246342659,
+          "max_pairwise_cos": 0.6842895150184631,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        }
+      ],
+      "sec": 53.8
+    },
+    {
+      "seed": 2,
+      "multiplier": 1.0,
+      "a_plus": 0.01,
+      "a_minus": 0.008,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.254730224609375,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.007838551886379719,
+          "max_pairwise_cos": 0.7194473743438721,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.254730224609375,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0262045506387949,
+          "max_pairwise_cos": 0.8453949093818665,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.254722595214844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.052506595849990845,
+          "max_pairwise_cos": 0.8756474256515503,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.254669189453125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0854484885931015,
+          "max_pairwise_cos": 0.8816220164299011,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.25471115112305,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.12354261428117752,
+          "max_pairwise_cos": 0.88892662525177,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.25469970703125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.16555656492710114,
+          "max_pairwise_cos": 0.8902504444122314,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.254695892333984,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.20933657884597778,
+          "max_pairwise_cos": 0.890853762626648,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25466537475586,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.2542986571788788,
+          "max_pairwise_cos": 0.8919234871864319,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.254642486572266,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.29934850335121155,
+          "max_pairwise_cos": 0.8927054405212402,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.25464630126953,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.344061017036438,
+          "max_pairwise_cos": 0.8934414982795715,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.25463104248047,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.3855326473712921,
+          "max_pairwise_cos": 0.8940137028694153,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.25461959838867,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.42644330859184265,
+          "max_pairwise_cos": 0.8943486213684082,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.25461196899414,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.46373680233955383,
+          "max_pairwise_cos": 0.8943486213684082,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.25459671020508,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.49703317880630493,
+          "max_pairwise_cos": 0.8947643041610718,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.254634857177734,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5267775654792786,
+          "max_pairwise_cos": 0.8956396579742432,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.254615783691406,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5526219010353088,
+          "max_pairwise_cos": 0.8957993984222412,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.2546272277832,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5735915899276733,
+          "max_pairwise_cos": 0.8957993984222412,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.25462341308594,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.589573323726654,
+          "max_pairwise_cos": 0.8957993984222412,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.254600524902344,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.599903404712677,
+          "max_pairwise_cos": 0.8958199620246887,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.254615783691406,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.6048539280891418,
+          "max_pairwise_cos": 0.8958199620246887,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        }
+      ],
+      "sec": 55.0
+    },
+    {
+      "seed": 2,
+      "multiplier": 3.0,
+      "a_plus": 0.03,
+      "a_minus": 0.024,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.25471878051758,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0496092364192009,
+          "max_pairwise_cos": 0.9118404388427734,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.25463104248047,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.17483624815940857,
+          "max_pairwise_cos": 0.9196575284004211,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.254600524902344,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.3567003607749939,
+          "max_pairwise_cos": 0.9240056276321411,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.254539489746094,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5792447924613953,
+          "max_pairwise_cos": 0.9263306260108948,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.25454330444336,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8158596754074097,
+          "max_pairwise_cos": 0.9441460371017456,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.25450897216797,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8733441829681396,
+          "max_pairwise_cos": 0.9999998211860657,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25444412231445,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8909508585929871,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25440216064453,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.904795229434967,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.25434875488281,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9164466857910156,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.254310607910156,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9266116619110107,
+          "max_pairwise_cos": 1.0000004768371582,
+          "n_unique_rows": 2047,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.254249572753906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9346581697463989,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2046,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.25422668457031,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9413378834724426,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2047,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.254150390625,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9472190737724304,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.25417709350586,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9520635604858398,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.254119873046875,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9563849568367004,
+          "max_pairwise_cos": 1.0000004768371582,
+          "n_unique_rows": 2047,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.25407028198242,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9593221545219421,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.25406265258789,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9618211388587952,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.25404357910156,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9637289047241211,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.25402069091797,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.964867353439331,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.254005432128906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9655249118804932,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        }
+      ],
+      "sec": 54.2
+    },
+    {
+      "seed": 2,
+      "multiplier": 10.0,
+      "a_plus": 0.1,
+      "a_minus": 0.08,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.25462341308594,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.28957268595695496,
+          "max_pairwise_cos": 0.9837175607681274,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.25443649291992,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.940341591835022,
+          "max_pairwise_cos": 0.9982097148895264,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.254398345947266,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9492695331573486,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2031,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.25440216064453,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9495456218719482,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2023,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.254425048828125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9498704671859741,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2018,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.254425048828125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9499568343162537,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2016,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.2544059753418,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9498700499534607,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2020,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25442123413086,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9500018358230591,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2015,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.25440979003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9499356150627136,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2016,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.25442123413086,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9499901533126831,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2015,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.254417419433594,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9499372839927673,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2017,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.254425048828125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.950052797794342,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2019,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.25442886352539,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9501301050186157,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2015,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.25443649291992,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9500975012779236,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2017,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.25442123413086,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.950066864490509,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2017,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.25442123413086,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.950076162815094,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2017,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.254425048828125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9500270485877991,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2017,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.25440979003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.950006365776062,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2018,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.25442123413086,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.950045645236969,
+          "max_pairwise_cos": 1.0000004768371582,
+          "n_unique_rows": 2020,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.254417419433594,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9500306248664856,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2020,
+          "n_units": 2048
+        }
+      ],
+      "sec": 138.1
+    },
+    {
+      "seed": 3,
+      "multiplier": 0.1,
+      "a_plus": 0.001,
+      "a_minus": 0.0008,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.254730224609375,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.00021182710770517588,
+          "max_pairwise_cos": 0.3625433146953583,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.25473403930664,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0005192352691665292,
+          "max_pairwise_cos": 0.37188640236854553,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.254722595214844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0009847967885434628,
+          "max_pairwise_cos": 0.39659857749938965,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.25471496582031,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.001571911619976163,
+          "max_pairwise_cos": 0.4582795202732086,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.25471496582031,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0022471894044429064,
+          "max_pairwise_cos": 0.5145806074142456,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.254695892333984,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0029700184240937233,
+          "max_pairwise_cos": 0.5271214842796326,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25471115112305,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.003735572099685669,
+          "max_pairwise_cos": 0.5464539527893066,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.254730224609375,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.004532827064394951,
+          "max_pairwise_cos": 0.5707489848136902,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.25468826293945,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.005325715988874435,
+          "max_pairwise_cos": 0.6115627884864807,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.25471115112305,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.006083713844418526,
+          "max_pairwise_cos": 0.6473677754402161,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.254695892333984,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.00681053102016449,
+          "max_pairwise_cos": 0.6643441319465637,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.25471496582031,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.007505659479647875,
+          "max_pairwise_cos": 0.6773291230201721,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.25471878051758,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008158682845532894,
+          "max_pairwise_cos": 0.6877291202545166,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.25472640991211,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008752665482461452,
+          "max_pairwise_cos": 0.6934096217155457,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.25469970703125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.009262742474675179,
+          "max_pairwise_cos": 0.6961615085601807,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.25469970703125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.009696388617157936,
+          "max_pairwise_cos": 0.6975200176239014,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.25471496582031,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.010049693286418915,
+          "max_pairwise_cos": 0.6985106468200684,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.254703521728516,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.010318384505808353,
+          "max_pairwise_cos": 0.7016778588294983,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.25471115112305,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.01049942709505558,
+          "max_pairwise_cos": 0.7035377621650696,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.25471496582031,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.010590614750981331,
+          "max_pairwise_cos": 0.7043355703353882,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        }
+      ],
+      "sec": 34.4
+    },
+    {
+      "seed": 3,
+      "multiplier": 1.0,
+      "a_plus": 0.01,
+      "a_minus": 0.008,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.25471878051758,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008866950869560242,
+          "max_pairwise_cos": 0.7777536511421204,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.25471878051758,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.030048614367842674,
+          "max_pairwise_cos": 0.8363236784934998,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.25472640991211,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.061014801263809204,
+          "max_pairwise_cos": 0.8597217202186584,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.25474166870117,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.09955800324678421,
+          "max_pairwise_cos": 0.8597217202186584,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.25472640991211,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.14419208467006683,
+          "max_pairwise_cos": 0.8645805716514587,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.254676818847656,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.19300995767116547,
+          "max_pairwise_cos": 0.8653330206871033,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25468826293945,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.24377883970737457,
+          "max_pairwise_cos": 0.8680336475372314,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25469970703125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.2967124283313751,
+          "max_pairwise_cos": 0.8689674139022827,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.254634857177734,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.34936392307281494,
+          "max_pairwise_cos": 0.8689370155334473,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.25465393066406,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.40066295862197876,
+          "max_pairwise_cos": 0.869766891002655,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.254661560058594,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.4500597417354584,
+          "max_pairwise_cos": 0.8753176331520081,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.25467300415039,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.49659284949302673,
+          "max_pairwise_cos": 0.8760519623756409,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.2546501159668,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5395650267601013,
+          "max_pairwise_cos": 0.8796942234039307,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.2546501159668,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5781322121620178,
+          "max_pairwise_cos": 0.880072832107544,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.2546272277832,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.6118061542510986,
+          "max_pairwise_cos": 0.8801520466804504,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.25465774536133,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.6399195194244385,
+          "max_pairwise_cos": 0.8803508281707764,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.254608154296875,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.6623216271400452,
+          "max_pairwise_cos": 0.8836576342582703,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.25459289550781,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.6792287826538086,
+          "max_pairwise_cos": 0.8864403963088989,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.254608154296875,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.690525472164154,
+          "max_pairwise_cos": 0.8865683078765869,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.254600524902344,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.6959938406944275,
+          "max_pairwise_cos": 0.8865683078765869,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        }
+      ],
+      "sec": 36.1
+    },
+    {
+      "seed": 3,
+      "multiplier": 3.0,
+      "a_plus": 0.03,
+      "a_minus": 0.024,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.25470733642578,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.05584364011883736,
+          "max_pairwise_cos": 0.9027027487754822,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.2546501159668,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.1970912665128708,
+          "max_pairwise_cos": 0.9148039817810059,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.254638671875,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.4014922082424164,
+          "max_pairwise_cos": 0.9233270883560181,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.25456619262695,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.6477268934249878,
+          "max_pairwise_cos": 0.9238755702972412,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.254539489746094,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8413364291191101,
+          "max_pairwise_cos": 0.9931515455245972,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.254478454589844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8565309643745422,
+          "max_pairwise_cos": 0.9999967813491821,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25448226928711,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8602243661880493,
+          "max_pairwise_cos": 1.0000004768371582,
+          "n_unique_rows": 2047,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25447082519531,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8629006743431091,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2044,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.25448989868164,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.863978922367096,
+          "max_pairwise_cos": 1.0000004768371582,
+          "n_unique_rows": 2038,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.254478454589844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8649736642837524,
+          "max_pairwise_cos": 1.0000004768371582,
+          "n_unique_rows": 2028,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.25448226928711,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8656612038612366,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2026,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.25448989868164,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8661518096923828,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2027,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.25447463989258,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8668556213378906,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2027,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.25449752807617,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8674671649932861,
+          "max_pairwise_cos": 1.0000004768371582,
+          "n_unique_rows": 2032,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.25450897216797,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8675704598426819,
+          "max_pairwise_cos": 1.0000004768371582,
+          "n_unique_rows": 2027,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.2545051574707,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8675641417503357,
+          "max_pairwise_cos": 1.0000005960464478,
+          "n_unique_rows": 2022,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.25448989868164,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8675674200057983,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2023,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.25449752807617,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8676037788391113,
+          "max_pairwise_cos": 1.0000004768371582,
+          "n_unique_rows": 2026,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.25450897216797,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8677194714546204,
+          "max_pairwise_cos": 1.0000005960464478,
+          "n_unique_rows": 2028,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.25450897216797,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.867729902267456,
+          "max_pairwise_cos": 1.0000004768371582,
+          "n_unique_rows": 2027,
+          "n_units": 2048
+        }
+      ],
+      "sec": 34.5
+    },
+    {
+      "seed": 3,
+      "multiplier": 10.0,
+      "a_plus": 0.1,
+      "a_minus": 0.08,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.25459671020508,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.2892712950706482,
+          "max_pairwise_cos": 0.9852805733680725,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.25447463989258,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9345747828483582,
+          "max_pairwise_cos": 0.9976848363876343,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.25448226928711,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9414071440696716,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2022,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.254478454589844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9414206147193909,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2011,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.25447082519531,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9416059255599976,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2014,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.25445556640625,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9416502714157104,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2016,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25446319580078,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9415938258171082,
+          "max_pairwise_cos": 1.0000004768371582,
+          "n_unique_rows": 2023,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25447082519531,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9416109919548035,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2017,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.25446701049805,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9415753483772278,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2016,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.254451751708984,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9416269063949585,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2014,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.25448226928711,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9416075944900513,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2020,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.254478454589844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9417102336883545,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2019,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.25444412231445,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9415620565414429,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2017,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.25447082519531,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9416056871414185,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2019,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.25448226928711,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9417389631271362,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2016,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.25447463989258,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9417184591293335,
+          "max_pairwise_cos": 1.0000004768371582,
+          "n_unique_rows": 2015,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.25445556640625,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9417303204536438,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2016,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.254486083984375,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9418176412582397,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2016,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.254478454589844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9417913556098938,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2017,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.25447463989258,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9418002963066101,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2016,
+          "n_units": 2048
+        }
+      ],
+      "sec": 98.5
+    },
+    {
+      "seed": 4,
+      "multiplier": 0.1,
+      "a_plus": 0.001,
+      "a_minus": 0.0008,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.254695892333984,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 5.7050194300245494e-05,
+          "max_pairwise_cos": 0.3255486786365509,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.25470733642578,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0003257951175328344,
+          "max_pairwise_cos": 0.4717751443386078,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.25471115112305,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0007333101821132004,
+          "max_pairwise_cos": 0.47615379095077515,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.254703521728516,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0012483429163694382,
+          "max_pairwise_cos": 0.47615379095077515,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.25471115112305,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0018529666122049093,
+          "max_pairwise_cos": 0.47615379095077515,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.25471496582031,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0025271461345255375,
+          "max_pairwise_cos": 0.47615379095077515,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25469970703125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.003236656542867422,
+          "max_pairwise_cos": 0.47615379095077515,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25471878051758,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0039725829847157,
+          "max_pairwise_cos": 0.47615379095077515,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.25469970703125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.004719741642475128,
+          "max_pairwise_cos": 0.5013924241065979,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.25471496582031,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0054484219290316105,
+          "max_pairwise_cos": 0.5073383450508118,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.254722595214844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.006149718537926674,
+          "max_pairwise_cos": 0.5077639818191528,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.25471878051758,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.006821488030254841,
+          "max_pairwise_cos": 0.5077639818191528,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.25471496582031,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.007449174765497446,
+          "max_pairwise_cos": 0.5077639818191528,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.25471878051758,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008022869937121868,
+          "max_pairwise_cos": 0.5291190147399902,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.25471878051758,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008532403036952019,
+          "max_pairwise_cos": 0.5709509253501892,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.25469207763672,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008970851078629494,
+          "max_pairwise_cos": 0.5856974720954895,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.25471115112305,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0093283886089921,
+          "max_pairwise_cos": 0.5858566164970398,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.254695892333984,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.009598690085113049,
+          "max_pairwise_cos": 0.5863942503929138,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.254695892333984,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.009780428372323513,
+          "max_pairwise_cos": 0.5865281820297241,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.25469970703125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.009871617890894413,
+          "max_pairwise_cos": 0.586624026298523,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        }
+      ],
+      "sec": 33.1
+    },
+    {
+      "seed": 4,
+      "multiplier": 1.0,
+      "a_plus": 0.01,
+      "a_minus": 0.008,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.25469970703125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.008444929495453835,
+          "max_pairwise_cos": 0.6567409038543701,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.254703521728516,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.02981502190232277,
+          "max_pairwise_cos": 0.7754338979721069,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.25469970703125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.0609598271548748,
+          "max_pairwise_cos": 0.8222782611846924,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.254730224609375,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.10031142085790634,
+          "max_pairwise_cos": 0.8261240124702454,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.25471496582031,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.1459197849035263,
+          "max_pairwise_cos": 0.8265942931175232,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.25471878051758,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.19567078351974487,
+          "max_pairwise_cos": 0.8281869888305664,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25470733642578,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.24864311516284943,
+          "max_pairwise_cos": 0.8299631476402283,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.2547492980957,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.30308404564857483,
+          "max_pairwise_cos": 0.8369147181510925,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.25471878051758,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.3571998178958893,
+          "max_pairwise_cos": 0.839872419834137,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.25472640991211,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.4097808003425598,
+          "max_pairwise_cos": 0.8398820161819458,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.25471878051758,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.4600881338119507,
+          "max_pairwise_cos": 0.8398820161819458,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.254722595214844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5067300200462341,
+          "max_pairwise_cos": 0.8400353789329529,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.254722595214844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5472726225852966,
+          "max_pairwise_cos": 0.8504800796508789,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.25472640991211,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5780527591705322,
+          "max_pairwise_cos": 0.9322821497917175,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.25471115112305,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.5992472171783447,
+          "max_pairwise_cos": 0.950276792049408,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.25468063354492,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.6146626472473145,
+          "max_pairwise_cos": 0.9582391381263733,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.254676818847656,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.6253081560134888,
+          "max_pairwise_cos": 0.9639898538589478,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.254669189453125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.6329436898231506,
+          "max_pairwise_cos": 0.9674695730209351,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.25468826293945,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.637746274471283,
+          "max_pairwise_cos": 0.9695416688919067,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.25468444824219,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.6401193141937256,
+          "max_pairwise_cos": 0.9703790545463562,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        }
+      ],
+      "sec": 33.8
+    },
+    {
+      "seed": 4,
+      "multiplier": 3.0,
+      "a_plus": 0.03,
+      "a_minus": 0.024,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.25466537475586,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.056039709597826004,
+          "max_pairwise_cos": 0.8758084177970886,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.25468063354492,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.19955991208553314,
+          "max_pairwise_cos": 0.8796367049217224,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.25462341308594,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.4083700180053711,
+          "max_pairwise_cos": 0.8907315135002136,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.25461959838867,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.6583731770515442,
+          "max_pairwise_cos": 0.8949038982391357,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.25461959838867,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.7896322011947632,
+          "max_pairwise_cos": 0.9871876239776611,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.254539489746094,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8366748094558716,
+          "max_pairwise_cos": 0.9975770115852356,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.254486083984375,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8698776960372925,
+          "max_pairwise_cos": 0.9998319745063782,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.25444412231445,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.8956525921821594,
+          "max_pairwise_cos": 0.9999979734420776,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.25446701049805,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9150711894035339,
+          "max_pairwise_cos": 1.0,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.25440979003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9276207685470581,
+          "max_pairwise_cos": 0.9999806880950928,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.2543830871582,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.936909019947052,
+          "max_pairwise_cos": 0.9999376535415649,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.25436019897461,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9436529874801636,
+          "max_pairwise_cos": 0.9999361038208008,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.25431442260742,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9476146101951599,
+          "max_pairwise_cos": 0.9999839663505554,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.25429153442383,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9514715671539307,
+          "max_pairwise_cos": 0.9999777674674988,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.254249572753906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9545301795005798,
+          "max_pairwise_cos": 0.9999777674674988,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.254249572753906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9562041759490967,
+          "max_pairwise_cos": 0.9999777674674988,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.25423812866211,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9576447606086731,
+          "max_pairwise_cos": 0.9999962449073792,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.25422286987305,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9586186408996582,
+          "max_pairwise_cos": 0.9999986290931702,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.25420379638672,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9592095613479614,
+          "max_pairwise_cos": 0.9999993443489075,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.254234313964844,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9594821929931641,
+          "max_pairwise_cos": 0.9999996423721313,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        }
+      ],
+      "sec": 34.3
+    },
+    {
+      "seed": 4,
+      "multiplier": 10.0,
+      "a_plus": 0.1,
+      "a_minus": 0.08,
+      "tau": 0.9,
+      "diverged": false,
+      "epoch_records": [
+        {
+          "epoch": 0,
+          "frobenius_norm": 45.254642486572266,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.3296501636505127,
+          "max_pairwise_cos": 0.983092725276947,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 1,
+          "frobenius_norm": 45.25444030761719,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9173822402954102,
+          "max_pairwise_cos": 0.9996773600578308,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 2,
+          "frobenius_norm": 45.25442123413086,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9321757555007935,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2048,
+          "n_units": 2048
+        },
+        {
+          "epoch": 3,
+          "frobenius_norm": 45.25442123413086,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9361345171928406,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2037,
+          "n_units": 2048
+        },
+        {
+          "epoch": 4,
+          "frobenius_norm": 45.2544059753418,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9382132291793823,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2029,
+          "n_units": 2048
+        },
+        {
+          "epoch": 5,
+          "frobenius_norm": 45.25440979003906,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9398293495178223,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2020,
+          "n_units": 2048
+        },
+        {
+          "epoch": 6,
+          "frobenius_norm": 45.25441360473633,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9411294460296631,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2022,
+          "n_units": 2048
+        },
+        {
+          "epoch": 7,
+          "frobenius_norm": 45.2544059753418,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9417755007743835,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2018,
+          "n_units": 2048
+        },
+        {
+          "epoch": 8,
+          "frobenius_norm": 45.254425048828125,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9422411918640137,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2017,
+          "n_units": 2048
+        },
+        {
+          "epoch": 9,
+          "frobenius_norm": 45.254417419433594,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9425503611564636,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2020,
+          "n_units": 2048
+        },
+        {
+          "epoch": 10,
+          "frobenius_norm": 45.254398345947266,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9429712891578674,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2016,
+          "n_units": 2048
+        },
+        {
+          "epoch": 11,
+          "frobenius_norm": 45.25442123413086,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.943103551864624,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2018,
+          "n_units": 2048
+        },
+        {
+          "epoch": 12,
+          "frobenius_norm": 45.2544059753418,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9435262084007263,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2015,
+          "n_units": 2048
+        },
+        {
+          "epoch": 13,
+          "frobenius_norm": 45.2544059753418,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9436214566230774,
+          "max_pairwise_cos": 1.0000003576278687,
+          "n_unique_rows": 2012,
+          "n_units": 2048
+        },
+        {
+          "epoch": 14,
+          "frobenius_norm": 45.25441360473633,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9436905384063721,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2014,
+          "n_units": 2048
+        },
+        {
+          "epoch": 15,
+          "frobenius_norm": 45.254390716552734,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9436554312705994,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2015,
+          "n_units": 2048
+        },
+        {
+          "epoch": 16,
+          "frobenius_norm": 45.2544059753418,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9436430931091309,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2015,
+          "n_units": 2048
+        },
+        {
+          "epoch": 17,
+          "frobenius_norm": 45.254417419433594,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9436516761779785,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2017,
+          "n_units": 2048
+        },
+        {
+          "epoch": 18,
+          "frobenius_norm": 45.25440216064453,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.9437077641487122,
+          "max_pairwise_cos": 1.000000238418579,
+          "n_unique_rows": 2018,
+          "n_units": 2048
+        },
+        {
+          "epoch": 19,
+          "frobenius_norm": 45.254398345947266,
+          "has_nan": false,
+          "has_inf": false,
+          "mean_pairwise_cos": 0.943710446357727,
+          "max_pairwise_cos": 1.0000001192092896,
+          "n_unique_rows": 2021,
+          "n_units": 2048
+        }
+      ],
+      "sec": 75.4
+    }
+  ],
+  "sec": 1369.3
+}
