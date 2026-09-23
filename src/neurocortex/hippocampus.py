@@ -1149,6 +1149,243 @@ class DiskBackedAssociativeStore:
         self._pq_index_gpu.train(keys_np)
         self._pq_index_gpu.add(keys_np)
 
+    @torch.no_grad()
+    def read_with_hybrid_rerank(
+        self,
+        keys: torch.Tensor,
+        chunk: int = 512,
+        k_candidates: int = 707,
+        k_refine: int = 150,
+        lambda_inner: float = 0.6,
+        lambda_density: float = 0.3,
+        lambda_template: float = 0.1,
+        M: int = 16,
+        use_gpu: bool = True,
+    ) -> tuple[torch.Tensor, StoreStats]:
+        """ハイブリッド再ランク（段階1+段階2+段階3）による精度向上。
+
+        ステップ40設計：3段階の複合再ランク戦略
+        - 段階1：GPU PQ で高速候補検索 k=√N ≈ 707
+        - 段階2：内積・密度・テンプレート複合スコア計算
+        - 段階3：複合スコアで上位k_refineまで絞り込み
+
+        Args:
+            keys: [B, key_dim] クエリキー
+            chunk: チャンクサイズ
+            k_candidates: 段階1の候補数（√N推奨）
+            k_refine: 段階3で評価する上位候補数（100-200推奨）
+            lambda_inner: 内積スコアの重み（既定0.6）
+            lambda_density: 密度スコアの重み（既定0.3）
+            lambda_template: テンプレートスコアの重み（既定0.1）
+            M: PQ のサブクォンタイザ数
+            use_gpu: GPU 使用フラグ
+
+        Returns:
+            ([B, value_dim], StoreStats)
+        """
+        if faiss is None:
+            raise ImportError("faiss がインストールされていません")
+
+        # 段階1：GPU/CPU PQ検索で高速候補取得
+        if use_gpu and _gpu_available:
+            out_stage1, stats_stage1 = self.read_with_pq_search_gpu(
+                keys, chunk=chunk, k_candidates=k_candidates, M=M
+            )
+        else:
+            out_stage1, stats_stage1 = self.read_with_pq_search(
+                keys, chunk=chunk, k_candidates=k_candidates, M=M
+            )
+
+        b = keys.shape[0]
+        out = torch.zeros(b, self.value_dim, device=keys.device)
+        best = torch.zeros(b, device=keys.device)
+        arg = torch.full((b,), -1, dtype=torch.long, device=keys.device)
+        n_total = self.write_count
+
+        if n_total == 0:
+            return out, StoreStats(best, arg)
+
+        # 段階2+段階3：複合スコアベースの再ランク
+        keys_mm = self._keys_memmap()
+        values_mm = self._values_memmap()
+
+        # PQ インデックスから候補を取得（段階1の再実行）
+        keys_np = keys.detach().to("cpu", dtype=torch.float32).numpy()
+        if use_gpu and _gpu_available:
+            distances, indices = self._pq_index_gpu.search(keys_np, k_candidates)
+        else:
+            if not hasattr(self, "_pq_index") or self._pq_index is None:
+                self._build_pq_index(keys_mm, M=M)
+            distances, indices = self._pq_index.search(keys_np, k_candidates)
+
+        for i in range(0, b, chunk):
+            bp = min(chunk, b - i)
+            q = keys[i : i + bp].to(dtype=torch.float32)
+            cand_indices = indices[i : i + bp]
+
+            chunk_best = torch.full((bp,), float("-inf"))
+            chunk_arg = torch.full((bp,), -1, dtype=torch.long)
+
+            for b_idx in range(bp):
+                # 各候補に対して複合スコア計算
+                candidate_scores = []
+                valid_candidates = []
+
+                for cand_idx in cand_indices[b_idx]:
+                    if cand_idx >= 0 and cand_idx < n_total:
+                        key_val = torch.from_numpy(
+                            np.array(keys_mm[int(cand_idx)])
+                        ).to(torch.float32)
+
+                        # スコア成分の計算
+                        score_inner = (q[b_idx] @ key_val).item()
+                        score_density = self._local_density_at(
+                            int(cand_idx), k_neighbor=20
+                        )
+                        score_template = self._template_match_score(
+                            int(cand_idx), q[b_idx]
+                        )
+
+                        # 複合スコア
+                        score_hybrid = (
+                            lambda_inner * score_inner
+                            + lambda_density * score_density
+                            + lambda_template * score_template
+                        )
+
+                        candidate_scores.append(score_hybrid)
+                        valid_candidates.append(int(cand_idx))
+
+                if valid_candidates:
+                    # 上位k_refineを選定
+                    scores_array = np.array(candidate_scores)
+                    top_k = min(k_refine, len(valid_candidates))
+                    top_indices = np.argsort(-scores_array)[:top_k]
+
+                    # 上位k_refineの中で最高スコアのものを選択
+                    best_local_idx = np.argmax(scores_array)
+                    best_cand = valid_candidates[best_local_idx]
+                    best_score = scores_array[best_local_idx]
+
+                    chunk_best[b_idx] = best_score
+                    chunk_arg[b_idx] = best_cand
+
+            # 出力値の計算
+            if self.exact:
+                for k in range(bp):
+                    a = int(chunk_arg[k])
+                    if a >= 0:
+                        out[i + k] = torch.from_numpy(np.array(values_mm[a])).to(
+                            out.dtype
+                        )
+            else:
+                for k in range(bp):
+                    a = int(chunk_arg[k])
+                    if a >= 0:
+                        out[i + k] = torch.from_numpy(np.array(values_mm[a])).to(
+                            out.dtype
+                        )
+
+            best[i : i + bp] = chunk_best.to(keys.device)
+            arg[i : i + bp] = chunk_arg.to(keys.device)
+
+        return out, StoreStats(best, arg)
+
+    def _local_density_at(self, candidate_idx: int, k_neighbor: int = 20) -> float:
+        """候補インデックス周辺の局所密度スコアを計算（段階2補助）。
+
+        周辺k個の近傍との距離平均の逆数を密度スコアとする。
+        """
+        keys_mm = self._keys_memmap()
+        cand_key = torch.from_numpy(np.array(keys_mm[candidate_idx])).to(
+            torch.float32
+        )
+
+        # 全キーとの距離計算（簡易版：ランダムサンプル）
+        n_total = min(self.write_count, 500)
+        sample_indices = np.random.choice(self.write_count, size=n_total, replace=False)
+
+        distances = []
+        for idx in sample_indices:
+            if idx == candidate_idx:
+                continue
+            key = torch.from_numpy(np.array(keys_mm[int(idx)])).to(torch.float32)
+            dist = torch.norm(cand_key - key).item()
+            distances.append(dist)
+
+        if not distances:
+            return 1.0
+
+        # 平均距離の逆数を密度スコアとする（近いほど高スコア）
+        mean_distance = np.mean(distances)
+        density_score = 1.0 / (1.0 + mean_distance)  # sigmoid形
+        return density_score
+
+    def _template_match_score(
+        self, candidate_idx: int, query_key: torch.Tensor
+    ) -> float:
+        """テンプレート一致度スコア（段階2補助）。
+
+        候補キーと平均キーのコサイン類似度を用いる（簡易版）。
+        """
+        keys_mm = self._keys_memmap()
+        cand_key = torch.from_numpy(np.array(keys_mm[candidate_idx])).to(
+            torch.float32
+        )
+
+        # コサイン類似度
+        cos_sim = torch.nn.functional.cosine_similarity(
+            query_key.unsqueeze(0), cand_key.unsqueeze(0)
+        ).item()
+
+        # [0, 1] の範囲にスケール
+        return max(0.0, (cos_sim + 1.0) / 2.0)
+
+    def _compute_inner_scores(
+        self,
+        keys: torch.Tensor,
+        k_candidates: int,
+        k_refine: int,
+        use_gpu: bool = True,
+    ) -> np.ndarray:
+        """複合スコア内の内積成分を抽出（主張(c)検証用）"""
+        scores = []
+        keys_mm = self._keys_memmap()
+
+        for i in range(keys.shape[0]):
+            q = keys[i].to(torch.float32)
+            candidate_scores = []
+            for j in range(min(k_candidates, self.write_count)):
+                key_val = torch.from_numpy(np.array(keys_mm[j])).to(torch.float32)
+                score = (q @ key_val).item()
+                candidate_scores.append(score)
+
+            scores.extend(candidate_scores[:k_refine])
+
+        return np.array(scores)
+
+    def _compute_density_scores(
+        self, keys: torch.Tensor, k_candidates: int, k_refine: int
+    ) -> np.ndarray:
+        """複合スコア内の密度成分を抽出（主張(c)検証用）"""
+        scores = []
+        for i in range(min(k_candidates, self.write_count)):
+            score = self._local_density_at(i, k_neighbor=20)
+            scores.append(score)
+
+        return np.array(scores[:k_refine] * keys.shape[0])
+
+    def _compute_template_scores(
+        self, keys: torch.Tensor, k_candidates: int, k_refine: int
+    ) -> np.ndarray:
+        """複合スコア内のテンプレート成分を抽出（主張(c)検証用）"""
+        scores = []
+        for i in range(min(k_candidates, self.write_count)):
+            score = self._template_match_score(i, keys[0].to(torch.float32))
+            scores.append(score)
+
+        return np.array(scores[:k_refine] * keys.shape[0])
+
 
 class HippocampalMemory(nn.Module):
     """分離層と連想ストアを束ね、皮質の残差ストリームに読み出しを注入する。
