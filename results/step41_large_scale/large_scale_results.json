@@ -1,85 +1,172 @@
 {
-  "timestamp": 1790178701.2153645,
+  "timestamp": 1790180995.4813323,
+  "use_gpu": false,
+  "cpu_speed_targets_ms": {
+    "500000": 4000.0,
+    "1000000": 7000.0
+  },
+  "gpu_speed_targets_ms": {
+    "500000": 400.0,
+    "1000000": 700.0
+  },
   "configs": [
     {
       "N": 100000,
+      "actual_store_count": 100000,
+      "n_test": 100,
       "k_candidates": 316,
       "k_refine": 150,
-      "write_time_ms": 4177.232980728149,
+      "write_time_s": 2.216764211654663,
       "stage1": {
         "times_ms": [
-          34996.69933319092,
-          3037.428855895996,
-          2728.078842163086
+          22017.901182174683,
+          2331.510066986084,
+          2352.9305458068848
         ],
-        "median_ms": 3037.428855895996
+        "median_ms": 2352.9305458068848
       },
       "hybrid_rerank": {
         "times_ms": [
-          3566.5628910064697,
-          5104.183197021484,
-          5476.8548011779785
+          2647.449731826782,
+          3738.6419773101807,
+          2371.210813522339
         ],
-        "median_ms": 5104.183197021484,
-        "overhead_pct": 68.04288887667877
+        "median_ms": 2647.449731826782,
+        "overhead_pct": 12.517121958604124
       },
-      "requirement_check": {
-        "speed_ok_500k": true,
-        "speed_ok_1m": true
+      "accuracy": {
+        "top1_hybrid": 1.0,
+        "top1_stage1_pq_only": 1.0,
+        "target": 0.92,
+        "ok": true
+      },
+      "score_breakdown": {
+        "n_samples": 100,
+        "inner_mean": 769.6884155273438,
+        "inner_std": 42.7593994140625,
+        "density_mean": 0.024850940331816673,
+        "density_std": 0.0003337996604386717,
+        "template_mean": 1.0,
+        "template_std": 3.371747681057968e-08,
+        "inner_contrib_pct": 99.97673727816154,
+        "density_contrib_pct": 0.001613975137567235,
+        "template_contrib_pct": 0.02164874670088925
+      },
+      "score_contribution_check": {
+        "inner_density_target_pct": 95.0,
+        "template_max_pct": 5.0,
+        "ok": true
+      },
+      "speed_check": {
+        "use_gpu": false,
+        "target_ms": null,
+        "ok": null
       }
     },
     {
       "N": 500000,
-      "k_candidates": 316,
+      "actual_store_count": 500000,
+      "n_test": 100,
+      "k_candidates": 707,
       "k_refine": 150,
-      "write_time_ms": 4329.9548625946045,
+      "write_time_s": 12.360679864883423,
       "stage1": {
         "times_ms": [
-          36290.210247039795,
-          3223.332643508911,
-          3657.836675643921
+          40915.96817970276,
+          4564.532279968262,
+          4272.1123695373535
         ],
-        "median_ms": 3657.836675643921
+        "median_ms": 4564.532279968262
       },
       "hybrid_rerank": {
         "times_ms": [
-          4734.174728393555,
-          5766.229629516602,
-          6975.3148555755615
+          5188.071012496948,
+          5228.557825088501,
+          5147.799491882324
         ],
-        "median_ms": 5766.229629516602,
-        "overhead_pct": 57.640434519989114
+        "median_ms": 5188.071012496948,
+        "overhead_pct": 13.660517535720487
       },
-      "requirement_check": {
-        "speed_ok_500k": false,
-        "speed_ok_1m": true
+      "accuracy": {
+        "top1_hybrid": 1.0,
+        "top1_stage1_pq_only": 1.0,
+        "target": 0.92,
+        "ok": true
+      },
+      "score_breakdown": {
+        "n_samples": 100,
+        "inner_mean": 775.9576416015625,
+        "inner_std": 43.266258239746094,
+        "density_mean": 0.024816088378429413,
+        "density_std": 0.0003421052824705839,
+        "template_mean": 1.0,
+        "template_std": 3.4755181843593164e-08,
+        "inner_contrib_pct": 99.97692742694784,
+        "density_contrib_pct": 0.001598693107596793,
+        "template_contrib_pct": 0.0214738799445713
+      },
+      "score_contribution_check": {
+        "inner_density_target_pct": 95.0,
+        "template_max_pct": 5.0,
+        "ok": true
+      },
+      "speed_check": {
+        "use_gpu": false,
+        "target_ms": 4000.0,
+        "ok": false
       }
     },
     {
       "N": 1000000,
-      "k_candidates": 316,
+      "actual_store_count": 1000000,
+      "n_test": 100,
+      "k_candidates": 1000,
       "k_refine": 150,
-      "write_time_ms": 4154.679536819458,
+      "write_time_s": 25.998390436172485,
       "stage1": {
         "times_ms": [
-          36614.27068710327,
-          2892.395257949829,
-          3299.530506134033
+          63826.13158226013,
+          6135.987997055054,
+          6617.13981628418
         ],
-        "median_ms": 3299.530506134033
+        "median_ms": 6617.13981628418
       },
       "hybrid_rerank": {
         "times_ms": [
-          3737.9674911499023,
-          3482.6765060424805,
-          2703.6421298980713
+          8015.543222427368,
+          7729.611396789551,
+          8062.952756881714
         ],
-        "median_ms": 3482.6765060424805,
-        "overhead_pct": 5.55066848353023
+        "median_ms": 8015.543222427368,
+        "overhead_pct": 21.133049096255224
       },
-      "requirement_check": {
-        "speed_ok_500k": true,
-        "speed_ok_1m": false
+      "accuracy": {
+        "top1_hybrid": 1.0,
+        "top1_stage1_pq_only": 1.0,
+        "target": 0.92,
+        "ok": true
+      },
+      "score_breakdown": {
+        "n_samples": 100,
+        "inner_mean": 774.083251953125,
+        "inner_std": 37.96576690673828,
+        "density_mean": 0.024862688034772873,
+        "density_std": 0.00030095543479546905,
+        "template_mean": 1.0,
+        "template_std": 4.380029139383623e-08,
+        "inner_contrib_pct": 99.97686856261414,
+        "density_contrib_pct": 0.0016055725837589168,
+        "template_contrib_pct": 0.021525864802086406
+      },
+      "score_contribution_check": {
+        "inner_density_target_pct": 95.0,
+        "template_max_pct": 5.0,
+        "ok": true
+      },
+      "speed_check": {
+        "use_gpu": false,
+        "target_ms": 7000.0,
+        "ok": false
       }
     }
   ]

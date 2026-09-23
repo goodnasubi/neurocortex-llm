@@ -1161,7 +1161,8 @@ class DiskBackedAssociativeStore:
         lambda_template: float = 0.1,
         M: int = 16,
         use_gpu: bool = True,
-    ) -> tuple[torch.Tensor, StoreStats]:
+        return_score_breakdown: bool = False,
+    ):
         """ハイブリッド再ランク（段階1+段階2+段階3）による精度向上。
 
         ステップ40設計：3段階の複合再ランク戦略
@@ -1179,9 +1180,19 @@ class DiskBackedAssociativeStore:
             lambda_template: テンプレートスコアの重み（既定0.1）
             M: PQ のサブクォンタイザ数
             use_gpu: GPU 使用フラグ
+            return_score_breakdown: True の場合、選択された最良候補における
+                内積・密度・テンプレート各成分の寄与度（重み適用前の生スコア
+                平均・標準偏差、および重み適用後の複合スコアに対する寄与率）
+                を3つ目の戻り値として返す（主張(c)検証用）。既存の
+                `_compute_inner_scores` 等はPythonループで候補ごとに
+                memmapへ逐次アクセスするため大規模Nでは非現実的に遅く、
+                このモードは `read_with_hybrid_rerank` 内で既に計算済みの
+                ベクトル化スコアを再利用することで大規模Nでも実用的な
+                速度で成分別寄与度を計測できる。
 
         Returns:
-            ([B, value_dim], StoreStats)
+            return_score_breakdown=False: ([B, value_dim], StoreStats)
+            return_score_breakdown=True: ([B, value_dim], StoreStats, dict)
         """
         if faiss is None:
             raise ImportError("faiss がインストールされていません")
@@ -1203,6 +1214,16 @@ class DiskBackedAssociativeStore:
         n_total = self.write_count
 
         if n_total == 0:
+            if return_score_breakdown:
+                return out, StoreStats(best, arg), {
+                    "n_samples": 0,
+                    "inner_mean": 0.0, "inner_std": 0.0,
+                    "density_mean": 0.0, "density_std": 0.0,
+                    "template_mean": 0.0, "template_std": 0.0,
+                    "inner_contrib_pct": 0.0,
+                    "density_contrib_pct": 0.0,
+                    "template_contrib_pct": 0.0,
+                }
             return out, StoreStats(best, arg)
 
         # 段階2+段階3：複合スコアベースの再ランク
@@ -1230,6 +1251,10 @@ class DiskBackedAssociativeStore:
         density_sample_keys = torch.from_numpy(
             np.array(keys_mm[density_sample_idx])
         ).to(torch.float32)
+
+        sel_inner_scores = []
+        sel_density_scores = []
+        sel_template_scores = []
 
         for i in range(0, b, chunk):
             bp = min(chunk, b - i)
@@ -1279,6 +1304,22 @@ class DiskBackedAssociativeStore:
             #  出力インデックスの選定には影響しない。段階3の意図は将来の
             #  複数候補利用に備えた絞り込みであり、現状のAPIは最良1件のみ返す）
             chunk_best_full, chunk_arg_full = score_hybrid.max(dim=-1)
+
+            if return_score_breakdown:
+                sel_idx = chunk_arg_full  # [bp] 各クエリで選択された候補の列インデックス
+                row_idx = torch.arange(bp)
+                sel_valid = torch.from_numpy(valid_mask)[row_idx, sel_idx]
+                if sel_valid.any():
+                    sel_inner_scores.append(
+                        score_inner[row_idx, sel_idx][sel_valid].numpy()
+                    )
+                    sel_density_scores.append(
+                        score_density[row_idx, sel_idx][sel_valid].numpy()
+                    )
+                    sel_template_scores.append(
+                        score_template[row_idx, sel_idx][sel_valid].numpy()
+                    )
+
             chunk_arg = safe_indices[np.arange(bp), chunk_arg_full.numpy()]
             chunk_arg = torch.from_numpy(chunk_arg).to(torch.long)
             has_valid = valid_mask.any(axis=-1)
@@ -1309,6 +1350,49 @@ class DiskBackedAssociativeStore:
 
             best[i : i + bp] = chunk_best.to(keys.device)
             arg[i : i + bp] = chunk_arg.to(keys.device)
+
+        if return_score_breakdown:
+            if sel_inner_scores:
+                inner_arr = np.concatenate(sel_inner_scores)
+                density_arr = np.concatenate(sel_density_scores)
+                template_arr = np.concatenate(sel_template_scores)
+
+                inner_mean, inner_std = float(inner_arr.mean()), float(inner_arr.std())
+                density_mean, density_std = float(density_arr.mean()), float(density_arr.std())
+                template_mean, template_std = float(template_arr.mean()), float(template_arr.std())
+
+                # 重み適用後の各成分が複合スコアに占める寄与率（絶対値ベース）
+                w_inner = abs(lambda_inner * inner_mean)
+                w_density = abs(lambda_density * density_mean)
+                w_template = abs(lambda_template * template_mean)
+                w_total = w_inner + w_density + w_template
+                if w_total > 0:
+                    inner_pct = 100.0 * w_inner / w_total
+                    density_pct = 100.0 * w_density / w_total
+                    template_pct = 100.0 * w_template / w_total
+                else:
+                    inner_pct = density_pct = template_pct = 0.0
+
+                breakdown = {
+                    "n_samples": int(inner_arr.shape[0]),
+                    "inner_mean": inner_mean, "inner_std": inner_std,
+                    "density_mean": density_mean, "density_std": density_std,
+                    "template_mean": template_mean, "template_std": template_std,
+                    "inner_contrib_pct": inner_pct,
+                    "density_contrib_pct": density_pct,
+                    "template_contrib_pct": template_pct,
+                }
+            else:
+                breakdown = {
+                    "n_samples": 0,
+                    "inner_mean": 0.0, "inner_std": 0.0,
+                    "density_mean": 0.0, "density_std": 0.0,
+                    "template_mean": 0.0, "template_std": 0.0,
+                    "inner_contrib_pct": 0.0,
+                    "density_contrib_pct": 0.0,
+                    "template_contrib_pct": 0.0,
+                }
+            return out, StoreStats(best, arg), breakdown
 
         return out, StoreStats(best, arg)
 
