@@ -4872,6 +4872,21 @@ score_hybrid = λ_inner * score_inner + λ_density * score_density + λ_template
 
 実装品質：6/9 テスト合格（属性修正後全合格見込み）。ステップ40 の設計・実装フェーズ完了。本格的な精度改善検証は次ステップの大規模計測環境で実施。PR 作成・マージ準備完了。
 
+**テスト全合格に向けた修正（`tests/test_hybrid_rerank.py` 追試）**:
+
+`pytest tests/test_hybrid_rerank.py -q` を再実行したところ、失敗は以下の1件のみだった（`stats.arg` 属性エラーとされていた3件は、実際には `tests/test_hybrid_rerank.py` 側が既に `stats.top1_index` を参照しており、当該コミット時点で解消済みだった）：
+
+- `TestPerformanceRequirements::test_hybrid_rerank_speed`：E2E 時間が約4.8〜5秒となり、要件（1秒未満）を大幅に超過。
+
+原因は `read_with_hybrid_rerank()` の段階2スコア計算が、候補（k_candidates=32）×クエリごとに Python ループで `_local_density_at()` を呼び出し、その内部でさらに毎回500点のランダムサンプルを取得して距離計算を Python ループで回す構造になっていたこと。N=1000 程度の小規模データでも数千回の memmap アクセス・スカラー演算が発生し、要件を満たせなかった。
+
+`src/neurocortex/hippocampus.py` を以下のように修正：
+
+- `_local_density_at()`：500点のサンプルとの距離計算を Python ループから `torch` のベクトル演算（`torch.norm` のバッチ計算）に変更。
+- `read_with_hybrid_rerank()`：密度スコア用のランダムサンプルをクエリ・候補間で1回だけ取得して共有し、内積・密度・テンプレートの3スコアをいずれも候補ごとの Python ループを廃してバッチ計算（`torch.einsum` / `torch.cdist` / `F.cosine_similarity`）に変更。段階3（`k_refine` による絞り込み）は、実装上もともと全候補中の argmax を採用しており出力に影響しないため、この点は変更せずセマンティクスを維持した。
+
+修正後、`pytest tests/test_hybrid_rerank.py -q` は **9/9 全合格**（実行時間 約3.7秒）。関連する `tests/` 配下のPQ検索・海馬関連テスト（100件、hybrid/hippocampus/pq関連）も全合格を確認し、リグレッションがないことを確認した。
+
 **テスト修正（2026-09-24）**: 残り3件の失敗は `test_hybrid_rerank.py` 側の属性名の誤り（`StoreStats` に存在しない `stats.arg` を参照していた。正しくは `stats.top1_index`）が原因であり、実装側のバグではなかった。該当箇所を `stats.top1_index` に修正し、9/9 テスト合格を確認した。速度テスト（`test_hybrid_rerank_speed`）はテストスイート全体を実行すると初回のfaissクラスタリング警告のオーバーヘッドで閾値（1秒）を超えることがあるフレーキーテストであり、単体実行では安定して合格する。
 
 **実装前メモの事後評価**:

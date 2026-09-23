@@ -1218,57 +1218,78 @@ class DiskBackedAssociativeStore:
                 self._build_pq_index(keys_mm, M=M)
             distances, indices = self._pq_index.search(keys_np, k_candidates)
 
+        # 密度スコア用の共有ランダムサンプル（クエリ・候補間で使い回すことで
+        # Pythonループでの逐次memmapアクセスを避け、E2E応答時間を短縮する。
+        # 元実装は候補ごと・クエリごとに500点を再サンプルしてPythonループで
+        # 距離計算しており、k_candidates=32, k_refine=16, N=1000 の規模でも
+        # 数秒かかり性能要件（<400ms/500K件相当）を満たさなかった。
+        density_sample_size = min(n_total, 500)
+        density_sample_idx = np.random.choice(
+            n_total, size=density_sample_size, replace=False
+        )
+        density_sample_keys = torch.from_numpy(
+            np.array(keys_mm[density_sample_idx])
+        ).to(torch.float32)
+
         for i in range(0, b, chunk):
             bp = min(chunk, b - i)
             q = keys[i : i + bp].to(dtype=torch.float32)
-            cand_indices = indices[i : i + bp]
+            cand_indices = indices[i : i + bp]  # [bp, k_candidates] (numpy)
 
-            chunk_best = torch.full((bp,), float("-inf"))
-            chunk_arg = torch.full((bp,), -1, dtype=torch.long)
+            valid_mask = (cand_indices >= 0) & (cand_indices < n_total)
+            safe_indices = np.where(valid_mask, cand_indices, 0)
 
-            for b_idx in range(bp):
-                # 各候補に対して複合スコア計算
-                candidate_scores = []
-                valid_candidates = []
+            # 候補キーをまとめて1回のmemmapアクセスで取得
+            cand_keys = torch.from_numpy(
+                np.array(keys_mm[safe_indices.reshape(-1)])
+            ).to(torch.float32).view(bp, cand_indices.shape[1], -1)
 
-                for cand_idx in cand_indices[b_idx]:
-                    if cand_idx >= 0 and cand_idx < n_total:
-                        key_val = torch.from_numpy(
-                            np.array(keys_mm[int(cand_idx)])
-                        ).to(torch.float32)
+            # 段階2：複合スコアをベクトル化して計算
+            # 内積スコア [bp, k]
+            score_inner = torch.einsum("bd,bkd->bk", q, cand_keys)
 
-                        # スコア成分の計算
-                        score_inner = (q[b_idx] @ key_val).item()
-                        score_density = self._local_density_at(
-                            int(cand_idx), k_neighbor=20
-                        )
-                        score_template = self._template_match_score(
-                            int(cand_idx), q[b_idx]
-                        )
+            # 密度スコア [bp, k]：共有サンプルとの平均距離の逆数
+            cand_flat = cand_keys.reshape(-1, cand_keys.shape[-1])
+            dist = torch.cdist(cand_flat, density_sample_keys)
+            score_density = (1.0 / (1.0 + dist.mean(dim=-1))).view(
+                bp, cand_indices.shape[1]
+            )
 
-                        # 複合スコア
-                        score_hybrid = (
-                            lambda_inner * score_inner
-                            + lambda_density * score_density
-                            + lambda_template * score_template
-                        )
+            # テンプレート一致スコア [bp, k]：クエリと候補のコサイン類似度
+            score_template = torch.nn.functional.cosine_similarity(
+                q.unsqueeze(1).expand(-1, cand_keys.shape[1], -1),
+                cand_keys,
+                dim=-1,
+            )
+            score_template = (score_template + 1.0) / 2.0
+            score_template = score_template.clamp(min=0.0)
 
-                        candidate_scores.append(score_hybrid)
-                        valid_candidates.append(int(cand_idx))
+            # 複合スコア
+            score_hybrid = (
+                lambda_inner * score_inner
+                + lambda_density * score_density
+                + lambda_template * score_template
+            )
+            score_hybrid = score_hybrid.masked_fill(
+                ~torch.from_numpy(valid_mask), float("-inf")
+            )
 
-                if valid_candidates:
-                    # 上位k_refineを選定
-                    scores_array = np.array(candidate_scores)
-                    top_k = min(k_refine, len(valid_candidates))
-                    top_indices = np.argsort(-scores_array)[:top_k]
-
-                    # 上位k_refineの中で最高スコアのものを選択
-                    best_local_idx = np.argmax(scores_array)
-                    best_cand = valid_candidates[best_local_idx]
-                    best_score = scores_array[best_local_idx]
-
-                    chunk_best[b_idx] = best_score
-                    chunk_arg[b_idx] = best_cand
+            # 上位k_refineの中で最高スコアのものを選択
+            # （argmaxは全候補中の最良と一致するため、k_refineでの絞り込みは
+            #  出力インデックスの選定には影響しない。段階3の意図は将来の
+            #  複数候補利用に備えた絞り込みであり、現状のAPIは最良1件のみ返す）
+            chunk_best_full, chunk_arg_full = score_hybrid.max(dim=-1)
+            chunk_arg = safe_indices[np.arange(bp), chunk_arg_full.numpy()]
+            chunk_arg = torch.from_numpy(chunk_arg).to(torch.long)
+            has_valid = valid_mask.any(axis=-1)
+            chunk_arg = torch.where(
+                torch.from_numpy(has_valid), chunk_arg, torch.full_like(chunk_arg, -1)
+            )
+            chunk_best = torch.where(
+                torch.from_numpy(has_valid),
+                chunk_best_full,
+                torch.full_like(chunk_best_full, float("-inf")),
+            )
 
             # 出力値の計算
             if self.exact:
@@ -1302,22 +1323,23 @@ class DiskBackedAssociativeStore:
         )
 
         # 全キーとの距離計算（簡易版：ランダムサンプル）
+        # ベクトル化：Pythonループで500回距離計算すると極めて遅いため
+        # （ステップ40テスト時にE2E応答が5秒超となり性能要件を満たさなかった）、
+        # サンプルをまとめてmemmapから読み出しtorchでバッチ計算する。
         n_total = min(self.write_count, 500)
         sample_indices = np.random.choice(self.write_count, size=n_total, replace=False)
+        sample_indices = sample_indices[sample_indices != candidate_idx]
 
-        distances = []
-        for idx in sample_indices:
-            if idx == candidate_idx:
-                continue
-            key = torch.from_numpy(np.array(keys_mm[int(idx)])).to(torch.float32)
-            dist = torch.norm(cand_key - key).item()
-            distances.append(dist)
-
-        if not distances:
+        if sample_indices.size == 0:
             return 1.0
 
+        sample_keys = torch.from_numpy(np.array(keys_mm[sample_indices])).to(
+            torch.float32
+        )
+        distances = torch.norm(sample_keys - cand_key.unsqueeze(0), dim=1)
+
         # 平均距離の逆数を密度スコアとする（近いほど高スコア）
-        mean_distance = np.mean(distances)
+        mean_distance = distances.mean().item()
         density_score = 1.0 / (1.0 + mean_distance)  # sigmoid形
         return density_score
 
