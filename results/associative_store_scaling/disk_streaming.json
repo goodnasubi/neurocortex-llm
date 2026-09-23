@@ -1,0 +1,289 @@
+{
+  "説明": "ステップ32（海馬モジュールAssociativeStoreのディスクストリーミング実装, 12.6.72〜73節）: 全件RAM常駐方式(AssociativeStore, exact=True)とディスク常駐方式(DiskBackedAssociativeStore, exact=True)を、read壁時計時間・プロセスピークワーキングセットサイズ・read出力の一致で比較",
+  "条件": {
+    "seeds": 3,
+    "d_model": 64,
+    "value_dim": 64,
+    "n_list": [
+      100,
+      1000,
+      10000,
+      100000,
+      300000
+    ],
+    "out": "results\\associative_store_scaling\\disk_streaming.json",
+    "query_batch": 32,
+    "n_warmup": 1,
+    "n_measure": 5,
+    "disk_key_chunk": 4096,
+    "platform": "win32",
+    "peak_memory_metric": "Windows: GetProcessMemoryInfo.PeakWorkingSetSize (resource.getrusageの代替)"
+  },
+  "n_list": [
+    100,
+    1000,
+    10000,
+    100000,
+    300000
+  ],
+  "summary": {
+    "100": {
+      "ram_read_time_sec": {
+        "mean": 7.600003542999427e-05,
+        "std": 3.4967501435439834e-05,
+        "per_seed": [
+          5.470006726682186e-05,
+          0.00012530002277344465,
+          4.800001624971628e-05
+        ]
+      },
+      "disk_read_time_sec": {
+        "mean": 0.0021116333470369377,
+        "std": 1.8057420413201095e-05,
+        "per_seed": [
+          0.0021327000577002764,
+          0.0020885999547317624,
+          0.002113600028678775
+        ]
+      },
+      "ram_tensor_memory_bytes": {
+        "mean": 51200.0,
+        "std": 0.0,
+        "per_seed": [
+          51200.0,
+          51200.0,
+          51200.0
+        ]
+      },
+      "ram_peak_working_set_bytes": {
+        "mean": 1041749.3333333334,
+        "std": 1473256.03579313,
+        "per_seed": [
+          3125248.0,
+          0.0,
+          0.0
+        ]
+      },
+      "disk_peak_working_set_bytes": {
+        "mean": 296277.3333333333,
+        "std": 329319.98496025446,
+        "per_seed": [
+          761856.0,
+          53248.0,
+          73728.0
+        ]
+      },
+      "read_time_ratio_disk_over_ram": 27.784636350360934
+    },
+    "1000": {
+      "ram_read_time_sec": {
+        "mean": 0.00014450005255639553,
+        "std": 2.039623336017226e-06,
+        "per_seed": [
+          0.0001425000373274088,
+          0.00014730007387697697,
+          0.00014370004646480083
+        ]
+      },
+      "disk_read_time_sec": {
+        "mean": 0.002313433370242516,
+        "std": 2.6984276187077536e-05,
+        "per_seed": [
+          0.0022986000403761864,
+          0.0023513000924140215,
+          0.0022903999779373407
+        ]
+      },
+      "ram_tensor_memory_bytes": {
+        "mean": 512000.0,
+        "std": 0.0,
+        "per_seed": [
+          512000.0,
+          512000.0,
+          512000.0
+        ]
+      },
+      "ram_peak_working_set_bytes": {
+        "mean": 431445.3333333333,
+        "std": 610155.8418225808,
+        "per_seed": [
+          1294336.0,
+          0.0,
+          0.0
+        ]
+      },
+      "disk_peak_working_set_bytes": {
+        "mean": 212992.0,
+        "std": 292532.02629911597,
+        "per_seed": [
+          626688.0,
+          4096.0,
+          8192.0
+        ]
+      },
+      "read_time_ratio_disk_over_ram": 16.00991369425024
+    },
+    "10000": {
+      "ram_read_time_sec": {
+        "mean": 0.00027283331534514826,
+        "std": 4.98882149726501e-05,
+        "per_seed": [
+          0.00031160004436969757,
+          0.00020239991135895252,
+          0.00030449999030679464
+        ]
+      },
+      "disk_read_time_sec": {
+        "mean": 0.003760299955805143,
+        "std": 0.0009199564145695786,
+        "per_seed": [
+          0.0024710999568924308,
+          0.004556399886496365,
+          0.004253400024026632
+        ]
+      },
+      "ram_tensor_memory_bytes": {
+        "mean": 5120000.0,
+        "std": 0.0,
+        "per_seed": [
+          5120000.0,
+          5120000.0,
+          5120000.0
+        ]
+      },
+      "ram_peak_working_set_bytes": {
+        "mean": 3966293.3333333335,
+        "std": 5609185.824349991,
+        "per_seed": [
+          11898880.0,
+          0.0,
+          0.0
+        ]
+      },
+      "disk_peak_working_set_bytes": {
+        "mean": 1664341.3333333333,
+        "std": 2353734.0860181204,
+        "per_seed": [
+          4993024.0,
+          0.0,
+          0.0
+        ]
+      },
+      "read_time_ratio_disk_over_ram": 13.782407588487384
+    },
+    "100000": {
+      "ram_read_time_sec": {
+        "mean": 0.00229049997869879,
+        "std": 2.982960339578733e-05,
+        "per_seed": [
+          0.002279000007547438,
+          0.0023313999408856034,
+          0.0022610999876633286
+        ]
+      },
+      "disk_read_time_sec": {
+        "mean": 0.02643113338854164,
+        "std": 0.0005595187049405705,
+        "per_seed": [
+          0.027222100063227117,
+          0.026016400079242885,
+          0.026054900023154914
+        ]
+      },
+      "ram_tensor_memory_bytes": {
+        "mean": 51200000.0,
+        "std": 0.0,
+        "per_seed": [
+          51200000.0,
+          51200000.0,
+          51200000.0
+        ]
+      },
+      "ram_peak_working_set_bytes": {
+        "mean": 42831872.0,
+        "std": 60573414.28422842,
+        "per_seed": [
+          128495616.0,
+          0.0,
+          0.0
+        ]
+      },
+      "disk_peak_working_set_bytes": {
+        "mean": 2730.6666666666665,
+        "std": 3861.7458343201315,
+        "per_seed": [
+          8192.0,
+          0.0,
+          0.0
+        ]
+      },
+      "read_time_ratio_disk_over_ram": 11.539460220190396
+    },
+    "300000": {
+      "ram_read_time_sec": {
+        "mean": 0.00687256664969027,
+        "std": 0.0001672594790945631,
+        "per_seed": [
+          0.007037900038994849,
+          0.006936399964615703,
+          0.00664339994546026
+        ]
+      },
+      "disk_read_time_sec": {
+        "mean": 0.07810313332205017,
+        "std": 0.0033244429276181853,
+        "per_seed": [
+          0.07421250001061708,
+          0.07776259991806,
+          0.08233430003747344
+        ]
+      },
+      "ram_tensor_memory_bytes": {
+        "mean": 153600000.0,
+        "std": 0.0,
+        "per_seed": [
+          153600000.0,
+          153600000.0,
+          153600000.0
+        ]
+      },
+      "ram_peak_working_set_bytes": {
+        "mean": 79997610.66666667,
+        "std": 111394205.5911762,
+        "per_seed": [
+          237527040.0,
+          65536.0,
+          2400256.0
+        ]
+      },
+      "disk_peak_working_set_bytes": {
+        "mean": 15018.666666666666,
+        "std": 5108.609552075354,
+        "per_seed": [
+          8192.0,
+          20480.0,
+          16384.0
+        ]
+      },
+      "read_time_ratio_disk_over_ram": 11.364478120495214
+    }
+  },
+  "claim_a_disk_peak_working_set_loglog_slope": -0.5032430253214565,
+  "claim_a_disk_peak_ws_at_max_n_bytes": 15018.666666666666,
+  "claim_a_step22_ram_memory_at_n300k_bytes": 153595412.48,
+  "claim_a_ratio_to_step22（20%以下が合格）": 9.778069816129619e-05,
+  "claim_a_ratio_ok": true,
+  "claim_a_slope_ok（0.3以下が合格）": true,
+  "claim_a_ok": true,
+  "claim_b_accuracy_mismatches": [],
+  "claim_b_max_score_max_abs_diff（BLAS丸め誤差の実測上限）": 0.0,
+  "claim_b_ok（value・argがtorch.equalで完全一致）": true,
+  "claim_c_read_time_ratio_disk_over_ram（定量記録のみ）": {
+    "100": 27.784636350360934,
+    "1000": 16.00991369425024,
+    "10000": 13.782407588487384,
+    "100000": 11.539460220190396,
+    "300000": 11.364478120495214
+  },
+  "sec": 5.5
+}

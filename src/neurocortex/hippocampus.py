@@ -16,7 +16,9 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Callable
 
 import numpy as np
@@ -355,6 +357,147 @@ class AssociativeStore:
             arg[q_idx_t] = sel.to(keys.device)
             out[q_idx_t] = values_dev[sel].to(keys.device)
         return out, StoreStats(best, arg)
+
+
+class DiskBackedAssociativeStore:
+    """ステップ32（12.6.72節の設計）: `AssociativeStore`のディスク常駐版。
+
+    `AssociativeStore`の`write`・`read`のコード・挙動は一切変更しない
+    （既存クラスに触れず、独立クラスとして並置する）。土台は同じだが、
+    `_keys`・`_values`をRAM/GPU上のテンソルとして常時保持する代わりに、
+    `numpy.memmap`でディスク上のバイナリファイルに追記し、`read`時にのみ
+    必要な範囲（`key_chunk`件ずつ）だけをRAM上にストリームして読み込む。
+
+    正確性は`exact`モード（softmaxを使わない最良一致）でのみ厳密に
+    `AssociativeStore(exact=True)`と一致することを保証する。非exactモード
+    （softmax加重和）はチャンク単位の2パス方式で数学的に同一の値を計算するが、
+    浮動小数点の加算順序がPyTorchの単一`softmax`呼び出しと異なるため、
+    `torch.equal`によるビット完全一致までは保証しない（`torch.allclose`相当）。
+    """
+
+    def __init__(self, key_dim: int, value_dim: int, persist_dir: str | Path,
+                 beta: float = 50.0, exact: bool = False,
+                 key_chunk: int = 4096) -> None:
+        self.key_dim = key_dim
+        self.value_dim = value_dim
+        self.beta = beta
+        self.exact = exact
+        self.key_chunk = key_chunk
+        self._dir = Path(persist_dir)
+        self._dir.mkdir(parents=True, exist_ok=True)
+        self._keys_path = self._dir / "keys.f32.bin"
+        self._values_path = self._dir / "values.f32.bin"
+        self._meta_path = self._dir / "meta.json"
+        if self._meta_path.exists():
+            meta = json.loads(self._meta_path.read_text(encoding="utf-8"))
+            if meta["key_dim"] != key_dim or meta["value_dim"] != value_dim:
+                raise ValueError("既存の永続化ディレクトリと次元が一致しない")
+            self.write_count = meta["write_count"]
+        else:
+            self._keys_path.touch()
+            self._values_path.touch()
+            self.write_count = 0
+            self._save_meta()
+
+    def _save_meta(self) -> None:
+        self._meta_path.write_text(json.dumps({
+            "key_dim": self.key_dim, "value_dim": self.value_dim,
+            "write_count": self.write_count,
+        }), encoding="utf-8")
+
+    def __len__(self) -> int:
+        return self.write_count
+
+    @torch.no_grad()
+    def write(self, keys: torch.Tensor, values: torch.Tensor) -> None:
+        """追記する。`AssociativeStore.write`と同じ検証・正規化規則。ディスクに追記するのみ。"""
+        if keys.shape[0] != values.shape[0]:
+            raise ValueError("キーと値の件数が一致しない")
+        if keys.shape[-1] != self.key_dim or values.shape[-1] != self.value_dim:
+            raise ValueError("次元が一致しない")
+        keys_np = keys.detach().to("cpu", dtype=torch.float32).numpy()
+        values_np = _l2_normalize(values.detach()).to("cpu", dtype=torch.float32).numpy()
+        with open(self._keys_path, "ab") as f:
+            keys_np.tofile(f)
+        with open(self._values_path, "ab") as f:
+            values_np.tofile(f)
+        self.write_count += keys.shape[0]
+        self._save_meta()
+
+    def _keys_memmap(self) -> np.memmap:
+        return np.memmap(self._keys_path, dtype=np.float32, mode="r",
+                          shape=(self.write_count, self.key_dim))
+
+    def _values_memmap(self) -> np.memmap:
+        return np.memmap(self._values_path, dtype=np.float32, mode="r",
+                          shape=(self.write_count, self.value_dim))
+
+    @torch.no_grad()
+    def read(self, keys: torch.Tensor, chunk: int = 512) -> tuple[torch.Tensor, StoreStats]:
+        """[B, key_dim] → ([B, value_dim], 診断値)。`AssociativeStore.read`と同じ意味論。
+
+        ストア側（N件のキー・バリュー）を`self.key_chunk`件ずつディスクから
+        ストリームして処理するため、ピークメモリはNではなく`key_chunk`と
+        クエリのチャンクサイズに依存する。
+        """
+        b = keys.shape[0]
+        out = torch.zeros(b, self.value_dim, device=keys.device)
+        best = torch.zeros(b, device=keys.device)
+        arg = torch.full((b,), -1, dtype=torch.long, device=keys.device)
+        n_total = self.write_count
+        if n_total == 0:
+            return out, StoreStats(best, arg)
+
+        keys_mm = self._keys_memmap()
+        values_mm = self._values_memmap()
+        kc = self.key_chunk
+
+        for i in range(0, b, chunk):
+            q = keys[i : i + chunk].to(dtype=torch.float32)  # [b', key_dim]
+            bp = q.shape[0]
+            chunk_best = torch.full((bp,), float("-inf"))
+            chunk_arg = torch.full((bp,), -1, dtype=torch.long)
+            # パス1: 全ストアチャンクを走査し、最良一致（value/best/arg）を求める。
+            for j in range(0, n_total, kc):
+                store_keys = torch.from_numpy(np.array(keys_mm[j : j + kc]))
+                scores = q @ store_keys.T  # [b', c]
+                top = scores.max(dim=-1)
+                better = top.values > chunk_best
+                chunk_arg[better] = top.indices[better] + j
+                chunk_best[better] = top.values[better]
+
+            if self.exact:
+                # 最良一致1件の値だけをディスクから取り出す（追加のストリームは不要）。
+                for k in range(bp):
+                    a = int(chunk_arg[k])
+                    if a >= 0:
+                        out[i + k] = torch.from_numpy(np.array(values_mm[a])).to(out.dtype)
+            else:
+                # パス2: softmax(beta*scores)@values を数値的に安定な形（既知の最大値を
+                # 引いてから exp）でチャンクごとに累積する。
+                exp_sum = torch.zeros(bp, dtype=torch.float64)
+                weighted_val = torch.zeros(bp, self.value_dim, dtype=torch.float64)
+                for j in range(0, n_total, kc):
+                    store_keys = torch.from_numpy(np.array(keys_mm[j : j + kc]))
+                    store_values = torch.from_numpy(np.array(values_mm[j : j + kc])).to(torch.float64)
+                    scores = (q @ store_keys.T).to(torch.float64)  # [b', c]
+                    w = torch.exp(self.beta * (scores - chunk_best.to(torch.float64)[:, None]))
+                    exp_sum += w.sum(dim=-1)
+                    weighted_val += w @ store_values
+                v = (weighted_val / exp_sum.clamp_min(1e-300)[:, None]).to(out.dtype)
+                out[i : i + chunk] = v.to(keys.device)
+
+            best[i : i + chunk] = chunk_best.to(keys.device)
+            arg[i : i + chunk] = chunk_arg.to(keys.device)
+
+        return out, StoreStats(best, arg)
+
+    def clear(self) -> None:
+        """統制2「因果的除去」用。ディスク上のファイルを空にする。"""
+        self._keys_path.write_bytes(b"")
+        self._values_path.write_bytes(b"")
+        self.write_count = 0
+        self._save_meta()
 
 
 class HippocampalMemory(nn.Module):
