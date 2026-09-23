@@ -13,8 +13,31 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+import neurocortex.neurons as neurons_module  # noqa: E402
 from neurocortex.neurons import ALIFNeuron, NeuronConfig, StepActivation  # noqa: E402
 from neurocortex.surrogate import spike  # noqa: E402
+
+# 境界(edges)近傍除外マージン。100_001点グリッドの刻み幅(8/100_000 ≈ 8e-5)に対し
+# 12倍超の余裕を持たせ、グリッド近似誤差＋環境依存の浮動小数点丸め誤差の影響圏を
+# 確実に覆う（ステップ31, 12.6.70/71節）。
+_BOUNDARY_EXCLUSION_MARGIN = 1e-3
+
+
+def _sample_away_from_edges(
+    edges: torch.Tensor, n: int, low: float, high: float, margin: float
+) -> torch.Tensor:
+    """[low, high)の一様乱数をn点集める。ただしedgesのいずれかからmargin未満の点は除外し、
+    必要点数に達するまで補充する（ステップ31: 境界近傍除外方式）。
+    """
+    collected: list[torch.Tensor] = []
+    total = 0
+    while total < n:
+        batch = torch.empty(n).uniform_(low, high)
+        dist = (batch.unsqueeze(1) - edges.unsqueeze(0)).abs().min(dim=1).values
+        keep = batch[dist >= margin]
+        collected.append(keep)
+        total += keep.numel()
+    return torch.cat(collected)[:n]
 
 
 @pytest.fixture
@@ -81,10 +104,47 @@ def test_step_activation_equals_a_staircase_function(cfg: NeuronConfig) -> None:
     assert sorted(set(r.tolist())) == [i / cfg.n_steps for i in range(cfg.n_steps + 1)]
     assert (r[1:] - r[:-1] < 0).sum().item() == 0, "単調非減少であること"
     # 折れ目だけから組み立てた階段関数と、ランダム入力で厳密一致すること
+    # （境界近傍の点はグリッド近似誤差＋環境依存丸め誤差で偶発的に不一致となりうるため
+    #   あらかじめ除外する。ステップ31, 12.6.70/71節）
     edges = grid.flatten()[1:][(r[1:] - r[:-1]) > 0]
-    rnd = torch.empty(50_000).uniform_(-3.0, 5.0)
+    rnd = _sample_away_from_edges(
+        edges, n=50_000, low=-3.0, high=5.0, margin=_BOUNDARY_EXCLUSION_MARGIN
+    )
     rebuilt = torch.stack([(rnd >= e).float() for e in edges]).sum(0) / cfg.n_steps
     assert torch.equal(step(rnd.view(1, -1, 1)).flatten(), rebuilt)
+
+
+def test_step_activation_staircase_check_detects_boundary_mutation(
+    cfg: NeuronConfig, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """検出力確認（主張b, ステップ31）。
+
+    `StepActivation`の境界判定をグリッド1刻み分(8/100_000)だけ意図的にずらした変異体
+    に対し、上のテストと同じ比較ロジックが不一致を検出できることを確認する。
+    変異は`neurocortex.neurons.spike`をこのテスト関数内でのみ一時的にパッチすることで
+    与え、monkeypatchフィクスチャによりテスト終了時に自動的に元へ戻る。
+    `StepActivation`・`ALIFNeuron`等の本番実装ファイルは一切変更しない。
+    """
+    step = StepActivation(cfg)
+    grid = torch.linspace(-3.0, 5.0, 100_001).view(1, -1, 1)
+    r = step(grid).flatten()
+    edges = grid.flatten()[1:][(r[1:] - r[:-1]) > 0]
+    rnd = _sample_away_from_edges(
+        edges, n=50_000, low=-3.0, high=5.0, margin=_BOUNDARY_EXCLUSION_MARGIN
+    )
+    rebuilt = torch.stack([(rnd >= e).float() for e in edges]).sum(0) / cfg.n_steps
+
+    # 除外マージンより明確に大きいシフト幅（マージンの50倍）を与え、
+    # 境界近傍除外で偶然隠れることのない、確実に検出可能な変異とする。
+    shift = _BOUNDARY_EXCLUSION_MARGIN * 50
+    original_spike = neurons_module.spike
+
+    def shifted_spike(x: torch.Tensor, alpha: float = 2.0) -> torch.Tensor:
+        return original_spike(x - shift, alpha)
+
+    monkeypatch.setattr(neurons_module, "spike", shifted_spike)
+    mutant_out = StepActivation(cfg)(rnd.view(1, -1, 1)).flatten()
+    assert not torch.equal(mutant_out, rebuilt), "境界判定の変異が検出されなかった（検出力不足）"
 
 
 def test_plain_lif_reduces_to_quantized_relu() -> None:
