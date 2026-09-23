@@ -748,10 +748,11 @@ class DiskBackedAssociativeStore:
     def read_with_faiss_search(
         self, keys: torch.Tensor, chunk: int = 512, k_candidates: int = 10
     ) -> tuple[torch.Tensor, StoreStats]:
-        """faiss による候補絞り込みを用いた読み込み。
+        """faiss による候補絞り込みを用いた読み込み（バッチ最適化版）。
 
         全ストアキーに対する最近傍探索を faiss で実行し、上位 k_candidates を
-        取得した後、それらの候補のみを対象に従来の softmax 加重和を計算する。
+        取得した後、候補インデックスをソートしてバッチ読み込みすることで
+        memmap のシーケンシャルアクセスを実現。その後、softmax 加重和を計算する。
 
         Args:
             keys: [B, key_dim] クエリキー
@@ -778,43 +779,60 @@ class DiskBackedAssociativeStore:
 
         keys_np = keys.detach().to("cpu", dtype=torch.float32).numpy()
 
-        # faiss で候補キーのインデックスを検索。
         k_search = min(k_candidates, n_total)
         distances, indices = self._faiss_index.search(keys_np, k_search)
-        # indices: [B, k_search] の候補キーインデックス
 
         keys_mm = self._keys_memmap()
         values_mm = self._values_memmap()
-        kc = self.key_chunk
 
         for i in range(0, b, chunk):
-            q = keys[i : i + chunk].to(dtype=torch.float32)  # [b', key_dim]
+            q = keys[i : i + chunk].to(dtype=torch.float32)
             bp = q.shape[0]
-            cand_indices = indices[i : i + chunk]  # [b', k_search]
+            cand_indices = indices[i : i + chunk]
 
             chunk_best = torch.full((bp,), float("-inf"))
             chunk_arg = torch.full((bp,), -1, dtype=torch.long)
 
-            # パス1: 候補キーのみを対象に最良一致を求める。
+            all_candidates = set()
+            for b_idx in range(bp):
+                for c in cand_indices[b_idx]:
+                    if c >= 0 and c < n_total:
+                        all_candidates.add(int(c))
+
+            if not all_candidates:
+                best[i : i + chunk] = chunk_best.to(keys.device)
+                arg[i : i + chunk] = chunk_arg.to(keys.device)
+                continue
+
+            sorted_cand_list = np.sort(np.array(list(all_candidates)))
+            idx_to_pos = {int(c): pos for pos, c in enumerate(sorted_cand_list)}
+
+            cand_keys_batch = torch.from_numpy(
+                np.array([keys_mm[c] for c in sorted_cand_list])
+            ).to(torch.float32)
+            cand_vals_batch = torch.from_numpy(
+                np.array([values_mm[c] for c in sorted_cand_list])
+            ).to(torch.float64)
+
             for b_idx in range(bp):
                 candidates = set(cand_indices[b_idx].tolist())
                 for cand_idx in candidates:
                     if cand_idx >= 0 and cand_idx < n_total:
-                        # memmap から該当キーを取得。
-                        key_val = torch.from_numpy(np.array(keys_mm[cand_idx])).to(torch.float32)
+                        pos = idx_to_pos[int(cand_idx)]
+                        key_val = cand_keys_batch[pos]
                         score = q[b_idx] @ key_val
                         if score > chunk_best[b_idx]:
                             chunk_best[b_idx] = score
                             chunk_arg[b_idx] = cand_idx
 
             if self.exact:
-                # 最良一致1件の値だけをディスクから取り出す。
                 for k in range(bp):
                     a = int(chunk_arg[k])
                     if a >= 0:
-                        out[i + k] = torch.from_numpy(np.array(values_mm[a])).to(out.dtype)
+                        out[i + k] = torch.from_numpy(np.array(values_mm[a])).to(
+                            out.dtype
+                        )
             else:
-                # パス2: softmax(beta*scores)@values を累積（候補キー内）。
                 exp_sum = torch.zeros(bp, dtype=torch.float64)
                 weighted_val = torch.zeros(bp, self.value_dim, dtype=torch.float64)
 
@@ -822,9 +840,10 @@ class DiskBackedAssociativeStore:
                     candidates = set(cand_indices[b_idx].tolist())
                     for cand_idx in candidates:
                         if cand_idx >= 0 and cand_idx < n_total:
-                            key_val = torch.from_numpy(np.array(keys_mm[cand_idx])).to(torch.float64)
-                            val = torch.from_numpy(np.array(values_mm[cand_idx])).to(torch.float64)
-                            score = (q[b_idx].to(torch.float64) @ key_val)
+                            pos = idx_to_pos[int(cand_idx)]
+                            key_val = cand_keys_batch[pos].to(torch.float64)
+                            val = cand_vals_batch[pos]
+                            score = q[b_idx].to(torch.float64) @ key_val
                             w = torch.exp(self.beta * (score - chunk_best[b_idx]))
                             exp_sum[b_idx] += w.item()
                             weighted_val[b_idx] += w.item() * val
