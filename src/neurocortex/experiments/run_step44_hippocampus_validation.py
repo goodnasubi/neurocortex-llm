@@ -47,8 +47,8 @@ class Step442Config:
     backbone_model_id: str = "gpt2"  # GPT-2-small for small-scale validation
     batch_size: int = 32
     learning_rate: float = 1e-4
-    num_epochs: int = 10
-    num_seeds: int = 3
+    num_epochs: int = 2  # 簡略版（CPU テスト用）
+    num_seeds: int = 1   # 簡略版（CPU テスト用）
 
     # 海馬設定
     hippocampus_enabled_condition_b: bool = True
@@ -154,10 +154,8 @@ class LLMTrainer:
                         loss = outputs.loss if hasattr(outputs, 'loss') else outputs['loss']
             else:
                 # Generic forward
-                logits = self.model(input_ids=input_ids)
-                shift_logits = logits[..., :-1, :].contiguous()
-                shift_labels = labels[..., 1:].contiguous()
-                loss = self.loss_fn(shift_logits.view(-1, logits.size(-1)), shift_labels.view(-1))
+                outputs = self.model(input_ids=input_ids, labels=labels)
+                loss = outputs.loss if hasattr(outputs, 'loss') else outputs['loss']
 
             # Backward
             if loss is not None and not torch.isnan(loss):
@@ -252,8 +250,29 @@ def run_experiment(config: Step442Config, seed: int, condition: str) -> Dict:
     train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
 
-    # 簡単な dummy model
-    dummy_model = nn.Linear(50257, 50257)  # just for structure test
+    # 簡単な dummy model (LLM wrapper)
+    class DummyLLM(nn.Module):
+        def __init__(self, vocab_size=50257, hidden_dim=768):
+            super().__init__()
+            self.embedding = nn.Embedding(vocab_size, hidden_dim)
+            self.transformer = nn.Linear(hidden_dim, hidden_dim)
+            self.lm_head = nn.Linear(hidden_dim, vocab_size)
+
+        def forward(self, input_ids, labels=None):
+            hidden = self.embedding(input_ids)
+            hidden = self.transformer(hidden)
+            logits = self.lm_head(hidden)
+
+            loss = None
+            if labels is not None:
+                loss_fn = nn.CrossEntropyLoss()
+                shift_logits = logits[..., :-1, :].contiguous()
+                shift_labels = labels[..., 1:].contiguous()
+                loss = loss_fn(shift_logits.view(-1, logits.size(-1)), shift_labels.view(-1))
+
+            return type('Output', (), {'loss': loss, 'logits': logits})()
+
+    dummy_model = DummyLLM()
 
     trainer = LLMTrainer(dummy_model, config, condition=condition)
 
