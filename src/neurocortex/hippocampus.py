@@ -858,6 +858,151 @@ class DiskBackedAssociativeStore:
 
         return out, StoreStats(best, arg)
 
+    def _build_pq_index(
+        self, keys_np: np.ndarray, M: int = 16, nbits: int = 8
+    ) -> None:
+        """Product Quantization（PQ）インデックスを構築。
+
+        Args:
+            keys_np: [N, key_dim] キーベクトル（float32）
+            M: サブクォンタイザ数（次元分割粒度）
+            nbits: 各サブクォンタイザのビット幅（8bit = 256コードワード）
+        """
+        if faiss is None:
+            raise ImportError("faiss がインストールされていません")
+
+        d = keys_np.shape[1]
+        if d % M != 0:
+            raise ValueError(
+                f"key_dim ({d}) は M ({M}) で割り切れる必要があります"
+            )
+
+        # PQ インデックスを作成
+        self._pq_index = faiss.IndexPQ(d, M, nbits)
+        self._pq_index.train(keys_np.astype(np.float32))
+        self._pq_index.add(keys_np.astype(np.float32))
+        self._pq_M = M
+
+    @torch.no_grad()
+    def read_with_pq_search(
+        self, keys: torch.Tensor, chunk: int = 512, k_candidates: int = 10, M: int = 16
+    ) -> tuple[torch.Tensor, StoreStats]:
+        """Product Quantization（PQ）による候補絞り込みを用いた読み込み。
+
+        PQ インデックスで候補検索を高速化しつつ、インデックスメモリを削減。
+
+        Args:
+            keys: [B, key_dim] クエリキー
+            chunk: クエリのチャンクサイズ
+            k_candidates: PQ 検索で取得する候補数
+            M: PQ のサブクォンタイザ数
+
+        Returns:
+            ([B, value_dim], StoreStats) - 従来の read() と同じ
+        """
+        if faiss is None:
+            raise ImportError("faiss がインストールされていません")
+
+        # PQ インデックスが未構築の場合は構築
+        if not hasattr(self, "_pq_index") or self._pq_index is None:
+            keys_mm = self._keys_memmap()
+            self._build_pq_index(keys_mm, M=M)
+
+        b = keys.shape[0]
+        out = torch.zeros(b, self.value_dim, device=keys.device)
+        best = torch.zeros(b, device=keys.device)
+        arg = torch.full((b,), -1, dtype=torch.long, device=keys.device)
+        n_total = self.write_count
+
+        if n_total == 0:
+            return out, StoreStats(best, arg)
+
+        keys_np = keys.detach().to("cpu", dtype=torch.float32).numpy()
+
+        k_search = min(k_candidates, n_total)
+        # PQ インデックスで候補検索（距離ベース）
+        distances, indices = self._pq_index.search(keys_np, k_search)
+
+        keys_mm = self._keys_memmap()
+        values_mm = self._values_memmap()
+
+        for i in range(0, b, chunk):
+            q = keys[i : i + chunk].to(dtype=torch.float32)
+            bp = q.shape[0]
+            cand_indices = indices[i : i + chunk]
+
+            chunk_best = torch.full((bp,), float("-inf"))
+            chunk_arg = torch.full((bp,), -1, dtype=torch.long)
+
+            # 候補インデックスを集約・ソート
+            all_candidates = set()
+            for b_idx in range(bp):
+                for c in cand_indices[b_idx]:
+                    if c >= 0 and c < n_total:
+                        all_candidates.add(int(c))
+
+            if not all_candidates:
+                best[i : i + chunk] = chunk_best.to(keys.device)
+                arg[i : i + chunk] = chunk_arg.to(keys.device)
+                continue
+
+            sorted_cand_list = np.sort(np.array(list(all_candidates)))
+            idx_to_pos = {int(c): pos for pos, c in enumerate(sorted_cand_list)}
+
+            # バッチ読み込み
+            cand_keys_batch = torch.from_numpy(
+                np.array([keys_mm[c] for c in sorted_cand_list])
+            ).to(torch.float32)
+            cand_vals_batch = torch.from_numpy(
+                np.array([values_mm[c] for c in sorted_cand_list])
+            ).to(torch.float64)
+
+            # スコア計算
+            for b_idx in range(bp):
+                candidates = set(cand_indices[b_idx].tolist())
+                for cand_idx in candidates:
+                    if cand_idx >= 0 and cand_idx < n_total:
+                        pos = idx_to_pos[int(cand_idx)]
+                        key_val = cand_keys_batch[pos]
+                        score = q[b_idx] @ key_val
+                        if score > chunk_best[b_idx]:
+                            chunk_best[b_idx] = score
+                            chunk_arg[b_idx] = cand_idx
+
+            # 出力値の計算
+            if self.exact:
+                for k in range(bp):
+                    a = int(chunk_arg[k])
+                    if a >= 0:
+                        out[i + k] = torch.from_numpy(np.array(values_mm[a])).to(
+                            out.dtype
+                        )
+            else:
+                exp_sum = torch.zeros(bp, dtype=torch.float64)
+                weighted_val = torch.zeros(bp, self.value_dim, dtype=torch.float64)
+
+                for b_idx in range(bp):
+                    candidates = set(cand_indices[b_idx].tolist())
+                    for cand_idx in candidates:
+                        if cand_idx >= 0 and cand_idx < n_total:
+                            pos = idx_to_pos[int(cand_idx)]
+                            key_val = cand_keys_batch[pos].to(torch.float64)
+                            val = cand_vals_batch[pos]
+                            score = q[b_idx].to(torch.float64) @ key_val
+                            w = torch.exp(self.beta * (score - chunk_best[b_idx]))
+                            exp_sum[b_idx] += w.item()
+                            weighted_val[b_idx] += w.item() * val
+
+                for k in range(bp):
+                    if exp_sum[k] > 0:
+                        v = (weighted_val[k] / exp_sum[k]).to(out.dtype)
+                        out[i + k] = v.to(keys.device)
+
+            best[i : i + chunk] = chunk_best.to(keys.device)
+            arg[i : i + chunk] = chunk_arg.to(keys.device)
+
+        return out, StoreStats(best, arg)
+
 
 class HippocampalMemory(nn.Module):
     """分離層と連想ストアを束ね、皮質の残差ストリームに読み出しを注入する。
