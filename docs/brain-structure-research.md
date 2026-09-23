@@ -4499,6 +4499,70 @@ x86にはJetsonのような電力センサがないためスループットの�
 - `tests/test_pq_tradeoff_analysis.py`: 16 passed, 1 skipped ✓
 - 回帰テスト: ステップ36-37 の faiss_search テストは全合格 ✓
 
+#### 12.6.85 ステップ39（GPU faiss 統合による高速化・大規模測定）の設計
+
+**背景**: ステップ38で CPU IndexPQ の実装は成功したが、小規模N（1K-5K）ではコードブック訓練・インデックス生成のオーバーヘッドが支配的で、速度向上が確認できなかった。faiss は GPU（CUDA）を活用する IndexGPU・IndexIVF_GPU などの変種を提供しており、特に大規模 N（>100K）でのベクトル検索・量子化演算を高速化できる。
+
+**仮説**: faiss GPU 実装により、大規模データセット（N=100K-1M）での IndexPQ 構築・検索速度を 5-10倍高速化できる。メモリ圧縮率は CPU と同等に保ちながら、実用的な検索速度を達成できる。
+
+**目標**:
+- GPU faiss IndexPQ の統合実装
+- N=100K, 500K, 1M での速度測定
+- 壁時計時間で CPU 比 5倍以上の高速化
+- GPU メモリ効率の検証（VRAM 占有率 < 80%）
+- 精度維持（top-1 一致率 60% 以上）
+
+**対象コンポーネント**:
+- `DiskBackedAssociativeStore._build_pq_index_gpu()` (hippocampus.py、新規メソッド)
+- `DiskBackedAssociativeStore.read_with_pq_search_gpu()` (新規メソッド)
+- テスト: `tests/test_pq_gpu_scaling.py` (新規)
+- ベンチマーク: `scripts/benchmark_pq_gpu_vs_cpu.py` (新規)
+
+**設計のポイント**:
+
+1. **GPU/CPU の選択戦略**:
+   - GPU 利用可能時: IndexGPU_IVF_PQ またはシングル IndexPQ on GPU
+   - GPU 利用不可時: フォールバック to CPU IndexPQ
+   - インターフェース: 同一（`read_with_pq_search()` で自動選択）
+
+2. **大規模データセット対応**:
+   - N=100K-1M の範囲で段階的測定
+   - バッチサイズ調整（GPU メモリ制約）
+   - メモリマップとの組み合わせ（全データを GPU 乗せずディスク参照）
+
+3. **速度測定項目**:
+   ```
+   - インデックス構築時間（訓練・コードブック生成）
+   - 候補検索時間（k_candidates 取得）
+   - 精度（top-1, top-10 一致率）
+   - GPU/CPU メモリ占有率
+   - E2E 検索時間（クエリ → 値読み込み完了）
+   ```
+
+4. **精度・速度のトレードオフ再評価**:
+   - ステップ38で CPU での速度は参考値に下げたが、GPU では実用的な範囲に到達する期待
+   - 従来の再ランク戦略との組み合わせ（GPU での高速候補取得 + CPU での精度再計算）
+
+**リスク**:
+1. **GPU メモリ逼迫**: N が大きくなるとコードブック・インデックスサイズが GPU VRAM を超える可能性
+2. **faiss GPU バージョン依存**: CUDA 環境に応じた faiss-gpu インストール・互換性確保が必要
+3. **クラウド環境での GPU 利用**: 現在のクラウド環境に GPU がない場合、実装は可能だがテスト不可
+4. **PCIe 帯域幅**: GPU ↔ CPU メモリ間のデータ転送がボトルネックになる可能性（特に大規模バッチ）
+
+**検証基準**:
+- GPU IndexPQ 構築可能性（N=100K）テスト
+- 候補検索の CPU 比 5倍以上高速化（N=500K）
+- 精度維持（top-1 一致率 ≥60%）
+- GPU メモリ占有率 < 80%
+- E2E 検索速度の実測（CPU ブルートフォース 比）
+- ステップ36-38 テストスイートの回帰なし
+
+**計画**:
+1. Phase 1: GPU faiss インストール確認・簡易実装（N=100K）
+2. Phase 2: 大規模測定（N=100K, 500K, 1M）・ベンチマーク収集
+3. Phase 3: 精度検証・再ランク戦略の実装
+4. Phase 4: ステップ35-38 との統合検証
+
 ## 出典
 
 - [The Human Brain in Numbers: A Linearly Scaled-up Primate Brain (PMC)](https://pmc.ncbi.nlm.nih.gov/articles/PMC2776484/)
