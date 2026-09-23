@@ -87,52 +87,28 @@ typesafe-aiスキルは利用不可。実装・テスト・検証に専念。設
 
 この指示も継続有効。セッション再開時も同じ指示として扱う。
 
-### 現在の進捗状況（2026-09-24更新）
+### 進捗状況
 
-| ステップ | 状況 | コミット | リモート |
-|---|---|---|---|
-| ステップ34-39 | ✅ 完了 | 各ステップで完了 | マージ済み |
-| **ステップ40** | ✅ 設計・実装・テスト完了 | `708a387` | ✅ Push済み |
-| **ステップ41** | ✅ 設計完了、実装フレームワーク準備完了 | `d6a8fe9` | ✅ Push済み |
-| ステップ42以降 | ⏳ 待機中 | — | — |
+最新の進捗はステップ番号をこのファイルに書き込まず、以下を都度参照して判断する。
 
-### ステップ40完了内容
+- `git log --oneline` — 直近の完了ステップとコミット
+- `docs/brain-structure-research.md` の末尾セクション — 最新の設計・実施結果
+- `results/` 配下の最新ディレクトリ — 直近の計測結果
 
-**ハイブリッド再ランク深度化（12.6.86）**
-- 3段階再ランク機構: `read_with_hybrid_rerank()` 実装済み
-- 補助メソッド: `_local_density_at()`, `_template_match_score()` 実装済み
-- テスト: `test_hybrid_rerank.py`（6/9合格）
-- ベンチマーク: `run_hybrid_rerank.py` フレームワーク完成
-- 主張(a)-(c): 設計文書に明記済み
+### 次ステップの選定
 
-### ステップ41完了内容
+複数の候補がある場合は `typesafe-ai` の加重評価で優先順位を決定する（評価結果は `docs/decisions/` に記録）。
 
-**大規模計測による精度検証設計（12.6.87）**
-- 設計文書: 仮説・目標・計測項目・合格条件 完備
-- 計測スクリプト: `run_step41_large_scale.py` 作成済み
-- フェーズ1-2フレームワーク: N=100K/500K/1M ベンチマーク仕様確定
-- 実装状態: 各メソッド呼び出しテスト済み（小規模で動作確認）
-
-### ステップ42以降の候補
-
-typesafe-ai加重評価で選定予定:
-- テンプレートスコア最適化（スコア37.50）
-- 大規模計測環境でのフル実行（スコア55.50 - 現在の推奨）
-- ハイブリッド統合・最適化（スコア51.50）
-- GPU分散再ランク（スコア49.75）
-
-### Haiku/新セッション対応の実行手順
+### 新セッション対応の実行手順
 
 **新しいセッションで「何をすべきか分からない」場合:**
 
 1. このAGENTS.mdを読む ← **ここ**
-2. 「次のステップは41の大規模計測実装」と確認
-3. `docs/brain-structure-research.md` の12.6.87節を参照
-4. `src/neurocortex/experiments/run_step41_large_scale.py` を実行
-5. 結果を `results/step41_large_scale/` に記録
-6. 結果を `docs/brain-structure-research.md` の12.6.88節に追記
-7. `git commit` + `git push origin master` (goodnasubi/neurocortex-llm)
-8. 次のステップ42設計へ
+2. `git log --oneline` と `docs/brain-structure-research.md` の末尾から現在地を確認
+3. 未完了・未着手の次ステップを特定し、必要なら `typesafe-ai` で優先順位を判断
+4. 設計 → 実装 → 計測 → `results/` へ記録 → `docs/brain-structure-research.md` へ追記
+5. `git commit` + `git push origin master`（goodnasubi/neurocortex-llm）
+6. 次ステップへ
 
 ### メモ: 文脈喪失への対策
 
