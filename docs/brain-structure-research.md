@@ -5430,3 +5430,207 @@ score_hybrid = λ_inner * score_inner + λ_density * score_density + λ_template
 - PPL 改善が有意（t-test p < 0.05）で正値 → 44.3 へ（基底核・小脳統合）
 - 改善が無意 or 統計的に有意でない → 海馬設計の再検討、または 44.3 へ進みながら並行検証
 - 逆効果（PPL 悪化・有意）→ 海馬設計の問題特定、ハイパーパラメータ調整へ
+
+#### 12.6.97 ステップ44.2 実装完了（海馬モジュール検証フレームワーク）
+
+**実装内容**:
+
+`src/neurocortex/experiments/run_step44_hippocampus_validation.py`（約330行）
+
+1. **Step442Config**: 実験設定クラス
+   - データセット: WikiText-103 / OpenWebText（1GB相当）
+   - 学習: batch_size=32、lr=1e-4、10 epoch
+   - 評価: perplexity（val set）、hippocampus_loss
+   - リソース: GPU推奨（CPU では実行時間が長い）
+
+2. **DummyLLMDataset**: テスト用ダミーデータセット
+   - 実運用では datasets ライブラリで WikiText-103/OpenWebText をロード
+   - 構造検証用のダミー実装
+
+3. **LLMTrainer**: 学習・評価の統制フレームワーク
+   - 条件A（baseline）: バックボーンのみ
+   - 条件B（hippocampus）: バックボーン + hippocampus モジュール
+   - Loss: LM loss + hippocampus_loss × weight
+   - 統計記録: train_loss, val_perplexity, hippocampus_loss
+
+4. **run_experiment**: 単一 seed の実行
+   - Random seed 固定
+   - 学習 loop、epoch ごとの val 評価
+   - 結果ディクショナリ返却
+
+5. **main**: 複数 seed の実行・結果保存
+   - 条件A・B × 3 seed（計6回の学習実行）
+   - JSON 形式で結果保存（統計分析用）
+
+**テスト状況**:
+- コード構文: ✓ （import, 型注釈、torch 演算正当性確認）
+- 構造テスト: 待機（GPU 環境必須のため、実行は GPU 確保後）
+- 統計分析スクリプト: 後段（44.3 と並行で実装予定）
+
+**位置づけ**:
+ステップ44.2 実装フレームワーク完成。次は 44.3 で基底核・小脳モジュールを統合。
+
+#### 12.6.98 ステップ44.3 設計（基底核・小脳統合・全モジュール並行学習の安定性確認）
+
+**目的**:
+
+ステップ44.2で海馬モジュール単体の効果を検証した後、基底核・小脳モジュールを段階的に統合し、4モジュール全体の並行学習における安定性・相互作用を確認する。
+
+具体的には：
+1. 基底核（方策勾配）が token 予測の分布を有効に修正するか
+2. 小脳（誤差補正）が learning signal を適切に供給しているか
+3. 3モジュール同時学習でも gradient flow・loss の oscillation が安定しているか
+4. 各モジュール間の loss weight バランス（現: hippo 0.2, rl 0.2, cereb 0.1）が適切か
+
+**実装スコープ**:
+
+1. **段階的統合の実験設計（3段階）**
+   
+   - **Phase A: バックボーン + 海馬**（ステップ44.2の継続）
+   - **Phase B: バックボーン + 海馬 + 基底核**
+     - BasalGangliaHead の policy_logits を logits に混合（weight 0.1）
+     - アクター・クリティック損失を合成
+     - RL 損失重み: 0.2
+   
+   - **Phase C: 全4モジュール（バックボーン + 海馬 + 基底核 + 小脳）**
+     - CerebellumHead の誤差補正を logits に追加（weight 0.1）
+     - 小脳誤差補正損失を合成
+     - 3モジュール損失重み: hippo 0.2, rl 0.2, cereb 0.1
+     - total_loss = lm_loss + 0.2*hippo + 0.2*rl + 0.1*cereb
+
+2. **データセット・学習設定**
+   - データ: WikiText-103 1GB版（44.2と同一）
+   - シード: 3回
+   - エポック: 20（stability 傾向の長期観察）
+   - バッチサイズ: 32（44.2 同一）
+
+3. **評価指標**
+   
+   **LLM 性能**:
+   - val perplexity（各 Phase で比較）
+   - test perplexity（最終性能）
+   
+   **学習安定性**:
+   - loss curve: 各モジュール損失の epoch 推移
+   - gradient norm: 20 層全体の勾配ノルム（NaN 検出）
+   - loss oscillation: moving std over last 100 steps
+   
+   **モジュール間相互作用**:
+   - cosine similarity of gradients（ステップ42と同様）
+   - 各モジュール別の contribution ratio（gradient の相対大きさ）
+
+4. **計算リソース**
+   - GPU 1基: ~8-10時間（1GB × 20 epoch × 3 phase × 3 seed）
+   - バッチサイズ削減可能（GPU メモリ制約時）
+
+**マイルストーン**:
+- 44.3.1: Phase A（海馬）の 20 epoch 学習・評価
+- 44.3.2: Phase B（海馬 + 基底核）の学習・評価
+- 44.3.3: Phase C（全4モジュール）の学習・評価
+- 44.3.4: 3 Phase 間での perplexity・stability 比較、結論導出
+
+**期待される成果**:
+
+1. **段階的統合による効果測定**
+   - Phase A → B → C へ進む中で、各モジュール追加による perplexity/stability 変化を定量化
+   
+2. **モジュール間の調和**
+   - gradient cosine similarity が phase 進行に従い、モジュール間の「協調度」がどう変化するか観測
+   - 協調度が高まる (cosine 上昇) / 低下する (競合) の判定
+   
+3. **安定性指標の確立**
+   - loss oscillation, gradient norm の時系列パターン
+   - NaN/Inf 発生率の段階的変化
+   - 脳型モジュール統合の「安定可能性」の実証
+
+**リスク・制約**:
+- GPU 必須（CPU では実行不可能な時間スケール）
+- loss weight の最適化未実施（44.3 での固定値は暫定的）
+- RL損失の定義（TD誤差等）は実装で詳細化が必要
+
+**次ステップへの判定基準**:
+
+- Phase A → C へ進む中で perplexity が単調改善 → 44.4 へ（フル規模実験）
+- Phase B か C で perplexity 悪化 or loss 不安定 → 該当モジュール設計の再検討
+- 統計的有意性に達しない → loss weight 再調整を 44.4 の前処置として実施
+
+#### 12.6.99 ステップ44.4 設計（フル規模実験・性能評価）
+
+**目的**:
+
+ステップ44.3で確認した基底核・小脳統合による 安定性・相互作用の知見を踏まえ、実規模データセット（OpenWebText 50GB相当 または WikiText-103 全）での長期学習を実施し、脳型LMアーキテクチャの実用性能を測定する。
+
+**実装スコープ**:
+
+1. **データセット**
+   - 対象: OpenWebText full（最大 50GB） または WikiText-103 完全版
+   - トークン数: 約 100-200M tokens（1-2日の学習規模）
+   - 前処理: トークン化・バッチ化（HuggingFace datasets）
+   - train/val/test 分割: 90/5/5
+
+2. **学習設定**
+   - バッチサイズ: 64（GPU メモリ確保後に決定）
+   - エポック数: 3-5（大規模データのため少数で十分）
+   - 学習レート: 44.3 の結果に応じて微調整
+   - 最適化: AdamW（standard setting）
+   - スケジューラ: cosine annealing（warm-up + decay）
+
+3. **評価指標**
+   - test perplexity（44.3 のバックボーン単体、各段階的統合との比較）
+   - task-specific evaluation（必要に応じて downstream task）
+   - 計算コスト: token/sec, J/token（エネルギー効率）
+
+4. **計算リソース**
+   - GPU 2-4基（推奨: V100/A100 cluster）
+   - 実行時間: 48-72 時間（フル学習）
+
+**マイルストーン**:
+- 44.4.1: OpenWebText/WikiText ダウンロード・前処理完了
+- 44.4.2: 脳型LM（全4モジュール）の学習開始・checkpoint 定期保存
+- 44.4.3: 学習完了・test perplexity 計測
+- 44.4.4: baseline (Transformer LLM) との結果比較・可視化
+
+**期待される成果**:
+- 脳型LM vs 従来LLM の perplexity・学習曲線の定量比較
+- モジュール別の contribution measure（gradient寄与度等）
+- 神経生物学的妥当性 vs LLM 性能の trade-off 関係を実測で示唆する結果
+
+**リスク・制約**:
+- GPU リソース確保が critical
+- 大規模実験のため再実行は困難（結果の再現性確認が重要）
+- メモリ制約による中断リスク（checkpoint 戦略で軽減）
+
+#### 12.6.100 ステップ44.5 設計（結果分析・論文執筆準備）
+
+**目的**:
+
+ステップ44.1-44.4 で得られた全実験結果（小規模検証・段階的統合・フル規模実験）を統合分析し、脳型LM理念の検証結果を論文形式で整理する。
+
+**実装スコープ**:
+
+1. **結果統合・分析スクリプト**
+   - 44.1-44.4 の JSON 結果を統一フォーマットで集約
+   - perplexity・loss 曲線の可視化（matplotlib / plotly）
+   - 統計検定（paired t-test、Wilcoxon test）
+
+2. **論文執筆**
+   - セクション構成:
+     - 背景: 脳型LM研究の動機、神経生物学的妥当性
+     - 方法: 海馬・基底核・小脳モジュールの設計（ステップ44.1）
+     - 実験: 小規模検証、段階的統合、フル規模実験の設定・結果
+     - 結論: 脳型LMの実用性・課題・次の研究方向
+   - 図表: loss curve、perplexity bar chart、gradient cosine similarity heatmap など
+
+3. **補足資料**
+   - 実装の詳細（コード引用）
+   - ハイパーパラメータの感度分析
+   - ablation study（モジュール単体 vs 組み合わせ）
+   - 神経生物学的妥当性の定性評価
+
+**期待される成果**:
+- 脳型LMアーキテクチャの実環境での viability に関する実測ドキュメント
+- 海馬・基底核・小脳各モジュールの効果を定量化した論文素材
+- 次フェーズ（LLM 5B-7B 化、ニューロモーフィックハードウェア移植）への基礎資料
+
+**位置づけ**:
+ステップ44の完成。次は（a）実LLM 5B-7B への拡張、（b）ニューロモーフィックハードウェア統合検討、（c）実データ（言語処理タスク）での汎用性検証へ進む。
