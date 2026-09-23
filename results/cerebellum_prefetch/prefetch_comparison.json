@@ -1,0 +1,424 @@
+{
+  "説明": "ステップ34（小脳モジュールとの予測的プリフェッチ結合, 12.6.76〜77節）: プリフェッチなし(i)・ランダムプリフェッチ(ii)・予測的プリフェッチ(iii、頻度＋1次マルコフ連鎖ベース)を、Zipf偏りクエリ(A)・系列的局所性クエリ(B)の2種で比較。キャッシュ容量64チャンク固定",
+  "条件": {
+    "seeds": 1,
+    "d_model": 64,
+    "value_dim": 64,
+    "n_list": [
+      100,
+      10000,
+      300000
+    ],
+    "n_measure": 1,
+    "out": "results\\cerebellum_prefetch\\prefetch_comparison.json",
+    "cache_size": 64,
+    "n_warmup": 1,
+    "disk_key_chunk": 4096,
+    "markov_window_note": "頻度・遷移表は測定ごとにリセット（各回を独立試行として的中率・無駄プリフェッチ率を計測するため）",
+    "platform": "win32",
+    "peak_memory_metric": "Windows: GetProcessMemoryInfo.PeakWorkingSetSize（参考値、合格条件に含めない）"
+  },
+  "n_list": [
+    100,
+    10000,
+    300000
+  ],
+  "conditions": [
+    "i_none",
+    "ii_random",
+    "iii_predictive"
+  ],
+  "query_kinds": [
+    "zipf",
+    "sequential"
+  ],
+  "summary": {
+    "zipf": {
+      "100": {
+        "i_none_read_time_sec": {
+          "mean": 0.17815290007274598,
+          "std": 0.0,
+          "median": 0.17815290007274598,
+          "per_seed": [
+            0.17815290007274598
+          ]
+        },
+        "ii_random_read_time_sec": {
+          "mean": 0.2826934999320656,
+          "std": 0.0,
+          "median": 0.2826934999320656,
+          "per_seed": [
+            0.2826934999320656
+          ]
+        },
+        "ii_random_wasted_rate": {
+          "mean": 0.0,
+          "std": 0.0,
+          "median": 0.0,
+          "per_seed": [
+            0.0
+          ]
+        },
+        "ii_random_hit_rate": {
+          "mean": 1.0,
+          "std": 0.0,
+          "median": 1.0,
+          "per_seed": [
+            1.0
+          ]
+        },
+        "ii_random_read_time_reduction_vs_i_none": -0.5868026836309266,
+        "iii_predictive_read_time_sec": {
+          "mean": 0.14316259999759495,
+          "std": 0.0,
+          "median": 0.14316259999759495,
+          "per_seed": [
+            0.14316259999759495
+          ]
+        },
+        "iii_predictive_wasted_rate": {
+          "mean": 0.0,
+          "std": 0.0,
+          "median": 0.0,
+          "per_seed": [
+            0.0
+          ]
+        },
+        "iii_predictive_hit_rate": {
+          "mean": 1.0,
+          "std": 0.0,
+          "median": 1.0,
+          "per_seed": [
+            1.0
+          ]
+        },
+        "iii_predictive_read_time_reduction_vs_i_none": 0.19640600888822624,
+        "iii_predictive_read_time_reduction_vs_ii_random": 0.493576612012662
+      },
+      "10000": {
+        "i_none_read_time_sec": {
+          "mean": 0.7601982000051066,
+          "std": 0.0,
+          "median": 0.7601982000051066,
+          "per_seed": [
+            0.7601982000051066
+          ]
+        },
+        "ii_random_read_time_sec": {
+          "mean": 0.41216130007524043,
+          "std": 0.0,
+          "median": 0.41216130007524043,
+          "per_seed": [
+            0.41216130007524043
+          ]
+        },
+        "ii_random_wasted_rate": {
+          "mean": 0.6060606060606061,
+          "std": 0.0,
+          "median": 0.6060606060606061,
+          "per_seed": [
+            0.6060606060606061
+          ]
+        },
+        "ii_random_hit_rate": {
+          "mean": 0.3939393939393939,
+          "std": 0.0,
+          "median": 0.3939393939393939,
+          "per_seed": [
+            0.3939393939393939
+          ]
+        },
+        "ii_random_read_time_reduction_vs_i_none": 0.4578238937260418,
+        "iii_predictive_read_time_sec": {
+          "mean": 0.38828419998753816,
+          "std": 0.0,
+          "median": 0.38828419998753816,
+          "per_seed": [
+            0.38828419998753816
+          ]
+        },
+        "iii_predictive_wasted_rate": {
+          "mean": 0.45454545454545453,
+          "std": 0.0,
+          "median": 0.45454545454545453,
+          "per_seed": [
+            0.45454545454545453
+          ]
+        },
+        "iii_predictive_hit_rate": {
+          "mean": 0.5454545454545454,
+          "std": 0.0,
+          "median": 0.5454545454545454,
+          "per_seed": [
+            0.5454545454545454
+          ]
+        },
+        "iii_predictive_read_time_reduction_vs_i_none": 0.4892329395348083,
+        "iii_predictive_read_time_reduction_vs_ii_random": 0.057931445973563034
+      },
+      "300000": {
+        "i_none_read_time_sec": {
+          "mean": 83.88007139996625,
+          "std": 0.0,
+          "median": 83.88007139996625,
+          "per_seed": [
+            83.88007139996625
+          ]
+        },
+        "ii_random_read_time_sec": {
+          "mean": 85.28529070003424,
+          "std": 0.0,
+          "median": 85.28529070003424,
+          "per_seed": [
+            85.28529070003424
+          ]
+        },
+        "ii_random_wasted_rate": {
+          "mean": 0.9649122807017544,
+          "std": 0.0,
+          "median": 0.9649122807017544,
+          "per_seed": [
+            0.9649122807017544
+          ]
+        },
+        "ii_random_hit_rate": {
+          "mean": 0.03508771929824561,
+          "std": 0.0,
+          "median": 0.03508771929824561,
+          "per_seed": [
+            0.03508771929824561
+          ]
+        },
+        "ii_random_read_time_reduction_vs_i_none": -0.016752719407777672,
+        "iii_predictive_read_time_sec": {
+          "mean": 87.0861969999969,
+          "std": 0.0,
+          "median": 87.0861969999969,
+          "per_seed": [
+            87.0861969999969
+          ]
+        },
+        "iii_predictive_wasted_rate": {
+          "mean": 0.5789473684210527,
+          "std": 0.0,
+          "median": 0.5789473684210527,
+          "per_seed": [
+            0.5789473684210527
+          ]
+        },
+        "iii_predictive_hit_rate": {
+          "mean": 0.42105263157894735,
+          "std": 0.0,
+          "median": 0.42105263157894735,
+          "per_seed": [
+            0.42105263157894735
+          ]
+        },
+        "iii_predictive_read_time_reduction_vs_i_none": -0.038222733320562474,
+        "iii_predictive_read_time_reduction_vs_ii_random": -0.02111625914833093
+      }
+    },
+    "sequential": {
+      "100": {
+        "i_none_read_time_sec": {
+          "mean": 0.22725239989813417,
+          "std": 0.0,
+          "median": 0.22725239989813417,
+          "per_seed": [
+            0.22725239989813417
+          ]
+        },
+        "ii_random_read_time_sec": {
+          "mean": 0.36050960002467036,
+          "std": 0.0,
+          "median": 0.36050960002467036,
+          "per_seed": [
+            0.36050960002467036
+          ]
+        },
+        "ii_random_wasted_rate": {
+          "mean": 0.0,
+          "std": 0.0,
+          "median": 0.0,
+          "per_seed": [
+            0.0
+          ]
+        },
+        "ii_random_hit_rate": {
+          "mean": 1.0,
+          "std": 0.0,
+          "median": 1.0,
+          "per_seed": [
+            1.0
+          ]
+        },
+        "ii_random_read_time_reduction_vs_i_none": -0.5863841270159025,
+        "iii_predictive_read_time_sec": {
+          "mean": 0.29347120004240423,
+          "std": 0.0,
+          "median": 0.29347120004240423,
+          "per_seed": [
+            0.29347120004240423
+          ]
+        },
+        "iii_predictive_wasted_rate": {
+          "mean": 0.0,
+          "std": 0.0,
+          "median": 0.0,
+          "per_seed": [
+            0.0
+          ]
+        },
+        "iii_predictive_hit_rate": {
+          "mean": 1.0,
+          "std": 0.0,
+          "median": 1.0,
+          "per_seed": [
+            1.0
+          ]
+        },
+        "iii_predictive_read_time_reduction_vs_i_none": -0.2913887825781054,
+        "iii_predictive_read_time_reduction_vs_ii_random": 0.1859545487212506
+      },
+      "10000": {
+        "i_none_read_time_sec": {
+          "mean": 0.9455932999262586,
+          "std": 0.0,
+          "median": 0.9455932999262586,
+          "per_seed": [
+            0.9455932999262586
+          ]
+        },
+        "ii_random_read_time_sec": {
+          "mean": 0.400902200024575,
+          "std": 0.0,
+          "median": 0.400902200024575,
+          "per_seed": [
+            0.400902200024575
+          ]
+        },
+        "ii_random_wasted_rate": {
+          "mean": 0.6262626262626263,
+          "std": 0.0,
+          "median": 0.6262626262626263,
+          "per_seed": [
+            0.6262626262626263
+          ]
+        },
+        "ii_random_hit_rate": {
+          "mean": 0.37373737373737376,
+          "std": 0.0,
+          "median": 0.37373737373737376,
+          "per_seed": [
+            0.37373737373737376
+          ]
+        },
+        "ii_random_read_time_reduction_vs_i_none": 0.5760310483842905,
+        "iii_predictive_read_time_sec": {
+          "mean": 0.44990010000765324,
+          "std": 0.0,
+          "median": 0.44990010000765324,
+          "per_seed": [
+            0.44990010000765324
+          ]
+        },
+        "iii_predictive_wasted_rate": {
+          "mean": 0.5959595959595959,
+          "std": 0.0,
+          "median": 0.5959595959595959,
+          "per_seed": [
+            0.5959595959595959
+          ]
+        },
+        "iii_predictive_hit_rate": {
+          "mean": 0.40404040404040403,
+          "std": 0.0,
+          "median": 0.40404040404040403,
+          "per_seed": [
+            0.40404040404040403
+          ]
+        },
+        "iii_predictive_read_time_reduction_vs_i_none": 0.5242139511323332,
+        "iii_predictive_read_time_reduction_vs_ii_random": -0.12221908480441046
+      },
+      "300000": {
+        "i_none_read_time_sec": {
+          "mean": 85.31893080007285,
+          "std": 0.0,
+          "median": 85.31893080007285,
+          "per_seed": [
+            85.31893080007285
+          ]
+        },
+        "ii_random_read_time_sec": {
+          "mean": 86.61007650010288,
+          "std": 0.0,
+          "median": 86.61007650010288,
+          "per_seed": [
+            86.61007650010288
+          ]
+        },
+        "ii_random_wasted_rate": {
+          "mean": 0.9548872180451128,
+          "std": 0.0,
+          "median": 0.9548872180451128,
+          "per_seed": [
+            0.9548872180451128
+          ]
+        },
+        "ii_random_hit_rate": {
+          "mean": 0.045112781954887216,
+          "std": 0.0,
+          "median": 0.045112781954887216,
+          "per_seed": [
+            0.045112781954887216
+          ]
+        },
+        "ii_random_read_time_reduction_vs_i_none": -0.015133167843553563,
+        "iii_predictive_read_time_sec": {
+          "mean": 85.79233010008465,
+          "std": 0.0,
+          "median": 85.79233010008465,
+          "per_seed": [
+            85.79233010008465
+          ]
+        },
+        "iii_predictive_wasted_rate": {
+          "mean": 0.7293233082706767,
+          "std": 0.0,
+          "median": 0.7293233082706767,
+          "per_seed": [
+            0.7293233082706767
+          ]
+        },
+        "iii_predictive_hit_rate": {
+          "mean": 0.2706766917293233,
+          "std": 0.0,
+          "median": 0.2706766917293233,
+          "per_seed": [
+            0.2706766917293233
+          ]
+        },
+        "iii_predictive_read_time_reduction_vs_i_none": -0.005548584535372658,
+        "iii_predictive_read_time_reduction_vs_ii_random": 0.009441700470236292
+      }
+    }
+  },
+  "claim_a_query_kind": "sequential",
+  "claim_a_n": 300000,
+  "claim_a_cache_size": 64,
+  "claim_a_reduction_vs_i_none（20%以上が条件の一部）": -0.005548584535372658,
+  "claim_a_reduction_vs_ii_random（10%以上が条件の一部）": 0.009441700470236292,
+  "claim_a_ok": false,
+  "claim_a_zipf_reduction_vs_i_none（参考値、系列的局所性なし）": -0.038222733320562474,
+  "claim_a_zipf_reduction_vs_ii_random（参考値、系列的局所性なし）": -0.02111625914833093,
+  "claim_b_accuracy_mismatches": [],
+  "claim_b_ok（全条件・全N・全クエリ列・全シードでvalue・best・argがtorch.equal完全一致）": true,
+  "claim_c_query_kind": "sequential",
+  "claim_c_n": 300000,
+  "claim_c_predictive_wasted_rate_mean": 0.7293233082706767,
+  "claim_c_random_wasted_rate_mean": 0.9548872180451128,
+  "claim_c_diff_points（30ポイント以上低いことが条件）": 22.55639097744361,
+  "claim_c_ok": false,
+  "sec": 1038.4
+}

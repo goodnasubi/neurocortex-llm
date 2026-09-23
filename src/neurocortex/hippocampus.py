@@ -535,6 +535,32 @@ class DiskBackedAssociativeStore:
         self._chunk_cache.clear()
         self._save_meta()
 
+    # ------------------------------------------------------------------
+    # ステップ34（12.6.76節の設計）: 小脳モジュールとの予測的プリフェッチ結合。
+    # `read`・`_get_chunk`・`cache_size`・`_chunk_cache`のコード・挙動は
+    # 一切変更しない（追記のみ）。呼び出し側（`run_cerebellum_prefetch.py`）が
+    # 予測したチャンクIDを、実際の`read`呼び出しに先立って本メソッドで
+    # キャッシュへ先読みする。
+    # ------------------------------------------------------------------
+
+    def prefetch(self, chunk_id: int) -> None:
+        """チャンク`chunk_id`（0始まり、`key_chunk`件単位）をディスクから読み、
+        `read`時と同じキャッシュ機構（`_get_chunk`）経由でキャッシュへ載せる。
+
+        `cache_size<=0`では`_get_chunk`がキャッシュに触れないため、本メソッドは
+        ディスクI/Oを行うだけで実質的な効果を持たない（`read`側と挙動が揃う）。
+        `chunk_id`がストア範囲外の場合は何もしない。
+        """
+        n_total = self.write_count
+        if n_total == 0:
+            return
+        j = chunk_id * self.key_chunk
+        if j < 0 or j >= n_total:
+            return
+        keys_mm = self._keys_memmap()
+        values_mm = self._values_memmap()
+        self._get_chunk(keys_mm, values_mm, j, self.key_chunk)
+
 
 class HippocampalMemory(nn.Module):
     """分離層と連想ストアを束ね、皮質の残差ストリームに読み出しを注入する。
