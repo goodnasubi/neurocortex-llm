@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import json
+from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -377,12 +378,19 @@ class DiskBackedAssociativeStore:
 
     def __init__(self, key_dim: int, value_dim: int, persist_dir: str | Path,
                  beta: float = 50.0, exact: bool = False,
-                 key_chunk: int = 4096) -> None:
+                 key_chunk: int = 4096, cache_size: int = 0) -> None:
         self.key_dim = key_dim
         self.value_dim = value_dim
         self.beta = beta
         self.exact = exact
         self.key_chunk = key_chunk
+        self.cache_size = cache_size
+        # ステップ33（12.6.75節）: チャンク単位のLRUキャッシュ（キー: チャンク開始位置j、
+        # 値: (store_keys, store_values)）。cache_size=0では一切参照・更新されず、
+        # 既存（ステップ32）の経路と完全に同一のコードパスを通る。
+        self._chunk_cache: "OrderedDict[int, tuple[torch.Tensor, torch.Tensor]]" = OrderedDict()
+        self.cache_hits = 0
+        self.cache_misses = 0
         self._dir = Path(persist_dir)
         self._dir.mkdir(parents=True, exist_ok=True)
         self._keys_path = self._dir / "keys.f32.bin"
@@ -423,6 +431,33 @@ class DiskBackedAssociativeStore:
             values_np.tofile(f)
         self.write_count += keys.shape[0]
         self._save_meta()
+        # 追記により末尾チャンクの内容が変わりうるため、キャッシュを無効化する。
+        self._chunk_cache.clear()
+
+    def _get_chunk(self, keys_mm: np.memmap, values_mm: np.memmap,
+                    j: int, kc: int) -> tuple[torch.Tensor, torch.Tensor]:
+        """チャンク`(j, j+kc)`のキー・バリューを返す（ステップ33のLRUキャッシュ経由）。
+
+        `cache_size <= 0`の場合はキャッシュに一切触れず、ステップ32と同じ
+        `np.array(...)` の都度読み出しのみを行う。
+        """
+        if self.cache_size <= 0:
+            store_keys = torch.from_numpy(np.array(keys_mm[j: j + kc]))
+            store_values = torch.from_numpy(np.array(values_mm[j: j + kc]))
+            return store_keys, store_values
+        cached = self._chunk_cache.get(j)
+        if cached is not None:
+            self._chunk_cache.move_to_end(j)
+            self.cache_hits += 1
+            return cached
+        self.cache_misses += 1
+        store_keys = torch.from_numpy(np.array(keys_mm[j: j + kc]))
+        store_values = torch.from_numpy(np.array(values_mm[j: j + kc]))
+        self._chunk_cache[j] = (store_keys, store_values)
+        self._chunk_cache.move_to_end(j)
+        if len(self._chunk_cache) > self.cache_size:
+            self._chunk_cache.popitem(last=False)
+        return store_keys, store_values
 
     def _keys_memmap(self) -> np.memmap:
         return np.memmap(self._keys_path, dtype=np.float32, mode="r",
@@ -459,7 +494,7 @@ class DiskBackedAssociativeStore:
             chunk_arg = torch.full((bp,), -1, dtype=torch.long)
             # パス1: 全ストアチャンクを走査し、最良一致（value/best/arg）を求める。
             for j in range(0, n_total, kc):
-                store_keys = torch.from_numpy(np.array(keys_mm[j : j + kc]))
+                store_keys, _ = self._get_chunk(keys_mm, values_mm, j, kc)
                 scores = q @ store_keys.T  # [b', c]
                 top = scores.max(dim=-1)
                 better = top.values > chunk_best
@@ -478,8 +513,8 @@ class DiskBackedAssociativeStore:
                 exp_sum = torch.zeros(bp, dtype=torch.float64)
                 weighted_val = torch.zeros(bp, self.value_dim, dtype=torch.float64)
                 for j in range(0, n_total, kc):
-                    store_keys = torch.from_numpy(np.array(keys_mm[j : j + kc]))
-                    store_values = torch.from_numpy(np.array(values_mm[j : j + kc])).to(torch.float64)
+                    store_keys, store_values_f32 = self._get_chunk(keys_mm, values_mm, j, kc)
+                    store_values = store_values_f32.to(torch.float64)
                     scores = (q @ store_keys.T).to(torch.float64)  # [b', c]
                     w = torch.exp(self.beta * (scores - chunk_best.to(torch.float64)[:, None]))
                     exp_sum += w.sum(dim=-1)
@@ -497,6 +532,7 @@ class DiskBackedAssociativeStore:
         self._keys_path.write_bytes(b"")
         self._values_path.write_bytes(b"")
         self.write_count = 0
+        self._chunk_cache.clear()
         self._save_meta()
 
 
