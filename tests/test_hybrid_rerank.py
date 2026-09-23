@@ -63,9 +63,9 @@ class TestHybridRerankMethods:
         )
 
         assert out.shape == (10, 512)
-        assert stats.arg.shape == (10,)
+        assert stats.top1_index.shape == (10,)
         assert stats.max_score.shape == (10,)
-        assert (stats.arg >= -1).all() and (stats.arg < 1000).all()
+        assert (stats.top1_index >= -1).all() and (stats.top1_index < 1000).all()
 
     def test_hybrid_rerank_accuracy_improvement(self, populated_store):
         """精度が向上するか確認（主張a）
@@ -79,7 +79,7 @@ class TestHybridRerankMethods:
         out_stage1, stats_stage1 = populated_store.read_with_pq_search(
             test_keys, k_candidates=32
         )
-        stage1_coverage = (stats_stage1.arg >= 0).float().mean().item()
+        stage1_coverage = (stats_stage1.top1_index >= 0).float().mean().item()
 
         # 段階1+段階3（ハイブリッド再ランク）
         out_hybrid, stats_hybrid = populated_store.read_with_hybrid_rerank(
@@ -91,7 +91,7 @@ class TestHybridRerankMethods:
             lambda_template=0.1,
             use_gpu=False,
         )
-        hybrid_coverage = (stats_hybrid.arg >= 0).float().mean().item()
+        hybrid_coverage = (stats_hybrid.top1_index >= 0).float().mean().item()
 
         # ハイブリッド再ランクでカバレッジが維持されることを確認
         assert hybrid_coverage >= stage1_coverage - 0.05
@@ -206,7 +206,7 @@ class TestRegressionTests:
         )
 
         # アーギュメント（インデックス）が一致することを確認
-        match_rate = (stats_pq.arg == stats_hybrid.arg).float().mean().item()
+        match_rate = (stats_pq.top1_index == stats_hybrid.top1_index).float().mean().item()
         assert match_rate >= 0.95  # 95%以上一致
 
 
