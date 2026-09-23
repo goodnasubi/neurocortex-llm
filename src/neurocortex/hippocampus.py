@@ -528,3 +528,21 @@ def separation_diagnostics(sep: PatternSeparator, x: torch.Tensor,
     b = sep(x_noisy) != 0
     retention = (a & b).sum(dim=-1).float() / sep.k
     return {"margin": float(margin), "winner_retention": float(retention.mean())}
+
+
+@torch.no_grad()
+def max_pairwise_cosine(weight: torch.Tensor) -> float:
+    """重み行列の行ベクトル間の最大ペアワイズコサイン類似度（対角除く）。
+
+    ステップ26〜28（12.6.60〜65節）の`run_stdp_stability.degeneracy_stats`が
+    STDP縮退（少数ユニットへの重みベクトルの集中）の指標として使う
+    `max_pairwise_cos`の計算本体。ステップ29（12.6.66節）で`tests/spiking_audit.py`の
+    `warn_if_degenerate`からも同じロジックを再利用するため、計算の重複を避ける
+    共通ヘルパーとしてここに切り出す。
+    """
+    w = weight.detach()
+    m = w.shape[0]
+    wn = w / w.norm(dim=-1, keepdim=True).clamp_min(1e-8)
+    sims = wn @ wn.T
+    off_diag = sims - torch.eye(m) * 2.0  # 対角を確実に除外
+    return float(off_diag.max())

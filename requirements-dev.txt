@@ -1,0 +1,11 @@
+# CI（.github/workflows/tests.yml）とpre-commit（.pre-commit-config.yaml）が
+# 参照する依存関係の固定ファイル（ステップ29・12.6.66節）。
+#
+# 現行のWindows/ローカル環境で確認できたバージョン（torch 2.14.0+cpu, pytest
+# 9.1.1）を基準にしつつ、CI（ubuntu-latest, pip index）ではCPU版torchの
+# ホイールが同一バージョン番号で提供されない場合があるため、torchは
+# マイナーバージョン単位の下限指定に緩め、pytestは実際に確認したバージョンに
+# 近い範囲で固定する。numpyはhippocampus.py等がimportしているため明示する。
+torch>=2.4,<3.0
+numpy>=1.26,<3.0
+pytest>=8.0,<10.0

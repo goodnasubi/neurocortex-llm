@@ -23,9 +23,12 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import Callable
 
 import torch
+
+from neurocortex.hippocampus import max_pairwise_cosine
 
 
 def assert_not_permutation_invariant(
@@ -86,3 +89,29 @@ def assert_membrane_ablation_degrades(
         "時間ダイナミクスが実際にタスク性能へ寄与していない可能性がある"
     )
     return baseline, ablated
+
+
+def warn_if_degenerate(weight: torch.Tensor, threshold: float = 0.99) -> float:
+    """STDP縮退（ステップ26〜28・12.6.60〜65節）の警告専用監査（ステップ29・12.6.66節）。
+
+    `weight`（例: `PatternSeparator.weight`）の行ベクトル間の最大ペアワイズ
+    コサイン類似度（`hippocampus.max_pairwise_cosine`と同一ロジック）を計算し、
+    `threshold`を超えていれば`UserWarning`を発する。ステップ28で対策(a)(b)が
+    いずれも「縮退を消せない」という結果に終わったため、本関数は**失敗させない**
+    （`assert`を一切行わない）。常に計算値を返し、呼び出し側がpytestを失敗させるか
+    どうかは呼び出し側の責任とする。
+
+    しきい値0.99は、ステップ27・28で確定した4点（0.1倍・1倍・3倍・10倍）の
+    `max_pairwise_cos`（それぞれ概ね低値・0.9381・0.99998・1.000000）のうち、
+    既定点（1倍）と3倍点の間に位置するよう選んだ暫定値である。中間倍率
+    （1.5倍・2倍等）での挙動は未検証（12.6.66節の実施前メモを参照）。
+    """
+    max_cos = max_pairwise_cosine(weight)
+    if max_cos >= threshold:
+        warnings.warn(
+            f"STDP縮退の疑い: max_pairwise_cos={max_cos:.6f} が"
+            f"しきい値{threshold}以上です（対策なし・警告専用監査）。",
+            UserWarning,
+            stacklevel=2,
+        )
+    return max_cos

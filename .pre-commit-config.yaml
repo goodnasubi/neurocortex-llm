@@ -1,0 +1,21 @@
+# ステップ29（12.6.66節）: pre-commitフック。
+#
+# フルスイート（`pytest tests/`）はCI（.github/workflows/tests.yml）側のみで
+# 実行し、pre-commitでは実行時間の都合上、常設のスパイキング自己検証テスト
+# （test_spiking_audit.py・test_lm.py・test_order_model.py、ステップ16・
+# 12.6.40〜41節）のみを対象にする非対称構成とする。
+repos:
+  - repo: local
+    hooks:
+      - id: spiking-self-verification-tests
+        name: spiking self-verification tests
+        # 各テストファイルが自前で `sys.path.insert(0, ".../src")` を行うため
+        # （tests/test_lm.py 等）、`PYTHONPATH=src` は必須ではないが、CI側
+        # （.github/workflows/tests.yml）と実行コマンドの意図を揃えるため
+        # 環境変数としても明示する（`entry`はシェルを介さず引数配列として
+        # 実行されるため、`VAR=val cmd`構文ではなくpre-commitの`env`相当の
+        # 挙動としてPythonの`-E`は使わずPYTHONPATHをここでは付与しない）。
+        entry: pytest tests/test_spiking_audit.py tests/test_lm.py tests/test_order_model.py
+        language: system
+        pass_filenames: false
+        always_run: true

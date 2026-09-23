@@ -20,7 +20,7 @@ from pathlib import Path
 
 import torch
 
-from ..hippocampus import HippocampalMemory, fit_stdp
+from ..hippocampus import HippocampalMemory, fit_stdp, max_pairwise_cosine
 from ..tasks import FactSpec, make_fact_batch
 from .run_hippocampus import build_backbone
 from .run_hippocampus_stdp import encode_spikes
@@ -42,9 +42,8 @@ def degeneracy_stats(weight: torch.Tensor) -> dict:
     m = w.shape[0]
     wn = w / w.norm(dim=-1, keepdim=True).clamp_min(1e-8)
     sims = wn @ wn.T
-    off_diag = sims - torch.eye(m) * 2.0  # 対角を確実に除外
     mean_cos = float(sims[~torch.eye(m, dtype=torch.bool)].mean())
-    max_cos = float(off_diag.max())
+    max_cos = max_pairwise_cosine(w)  # steps 26-28: 共通ヘルパー（hippocampus.py）に委譲
     rounded = torch.round(wn * 1e4) / 1e4
     n_unique = int(len({tuple(row.tolist()) for row in rounded}))
     return {
