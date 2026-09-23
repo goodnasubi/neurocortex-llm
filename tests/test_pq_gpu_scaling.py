@@ -56,6 +56,9 @@ def test_pq_gpu_index_buildable(N: int):
             assert hasattr(store, "_pq_index_gpu") or hasattr(store, "_pq_index")
         except Exception as e:
             pytest.fail(f"N={N}: GPU/CPU PQ構築失敗 - {e}")
+        # Windows ではmemmapがファイルハンドルを保持するため、明示的に解放する
+        del keys_mm
+        del store
 
 
 @pytest.mark.parametrize("N", [100000])

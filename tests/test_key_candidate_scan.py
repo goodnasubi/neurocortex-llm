@@ -59,14 +59,17 @@ def test_read_with_key_candidates_exact_match(N: int, seed: int, exact: bool):
 
         # アテンション重みを実スコアから計算（候補集合内にargmaxが確実に含まれるようにする）
         keys_mm = store._keys_memmap()
+        values_mm = store._values_memmap()
         query_keys_f32 = query_keys.to(dtype=torch.float32)
         all_scores = []
         for j in range(0, N, store.key_chunk):
-            store_keys, _ = store._get_chunk(keys_mm, store._values_memmap(), j, store.key_chunk)
+            store_keys, _ = store._get_chunk(keys_mm, values_mm, j, store.key_chunk)
             scores = query_keys_f32 @ store_keys.T
             all_scores.append(scores)
         all_scores_tensor = torch.cat(all_scores, dim=-1)
         attention_weights = torch.softmax(all_scores_tensor, dim=-1)
+        # Windows ではmemmapがファイルハンドルを保持するため、明示的に解放する
+        del keys_mm, values_mm
 
         # read_with_key_candidates() で候補絞り込み版を実行
         values_cand, stats_cand = store.read_with_key_candidates(query_keys, attention_weights)
@@ -78,6 +81,7 @@ def test_read_with_key_candidates_exact_match(N: int, seed: int, exact: bool):
             f"N={N}, seed={seed}, exact={exact}: max_score が一致しない"
         assert torch.equal(stats_ref.top1_index, stats_cand.top1_index), \
             f"N={N}, seed={seed}, exact={exact}: top1_index が一致しない"
+        del store
 
 
 @pytest.mark.parametrize("N", [1000, 5000, 10000, 100000])
@@ -120,14 +124,16 @@ def test_key_candidate_coverage(N: int, seed: int):
 
         # アテンション重みを実スコアから計算
         keys_mm = store._keys_memmap()
+        values_mm = store._values_memmap()
         query_keys_f32 = query_keys.to(dtype=torch.float32)
         all_scores = []
         for j in range(0, N, store.key_chunk):
-            store_keys, _ = store._get_chunk(keys_mm, store._values_memmap(), j, store.key_chunk)
+            store_keys, _ = store._get_chunk(keys_mm, values_mm, j, store.key_chunk)
             scores = query_keys_f32 @ store_keys.T
             all_scores.append(scores)
         all_scores_tensor = torch.cat(all_scores, dim=-1)
         attention_weights = torch.softmax(all_scores_tensor, dim=-1)
+        del keys_mm, values_mm
 
         # 候補サイズ: sqrt(N)
         k_candidate = max(1, int(N**0.5))
@@ -145,6 +151,7 @@ def test_key_candidate_coverage(N: int, seed: int):
         # 少なくとも 50% 以上のカバレッジを期待
         assert coverage_rate >= 50, \
             f"N={N}, seed={seed}: カバレッジ率 {coverage_rate:.1f}% (閾値: 50%)"
+        del store
 
 
 if __name__ == "__main__":
