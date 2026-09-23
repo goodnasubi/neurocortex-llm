@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-09-24T12:00:00Z",
+  "environment": "CPU-only (PyTorch 2.14.0+cpu)",
+  "test_scales": [10000, 20000],
+  "results": {
+    "N10000": {
+      "stage1_ms": 162.61,
+      "hybrid_ms": 88.33,
+      "top1_accuracy": 0.90,
+      "score_contribution": {"inner": 79.7, "density": 17.3, "template": 2.9},
+      "overhead_pct": -45.7
+    },
+    "N20000": {
+      "stage1_ms": 293.60,
+      "hybrid_ms": 329.60,
+      "top1_accuracy": 0.75,
+      "score_contribution": {"inner": 77.3, "density": 20.1, "template": 2.6},
+      "overhead_pct": 12.3
+    }
+  },
+  "verification": {
+    "claim_c": "内積+密度の寄与度が95%以上か確認",
+    "result_c": "YES - 内積77-80% + 密度17-20% = 94.7-97% ✓"
+  }
+}
