@@ -3,13 +3,18 @@
 read_with_key_candidates() と read() の出力が完全一致することを確認。
 """
 
+from __future__ import annotations
+
+import sys
 import tempfile
 from pathlib import Path
 
 import pytest
 import torch
 
-from src.neurocortex.hippocampus import DiskBackedAssociativeStore
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+from neurocortex.hippocampus import DiskBackedAssociativeStore
 
 
 @pytest.mark.parametrize("N", [1000, 5000, 10000, 100000])
