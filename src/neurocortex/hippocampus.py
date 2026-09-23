@@ -44,6 +44,22 @@ def _l2_normalize(x: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
     return x / x.norm(dim=-1, keepdim=True).clamp_min(eps)
 
 
+def _row_zscore(x: torch.Tensor, mask: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
+    """[..., k] を最終次元方向・行ごとに、`mask`で有効な要素だけを使ってz-score正規化する。
+
+    12.6.89節（ステップ41再検証）: `read_with_hybrid_rerank`の複合スコアで、
+    スケールの異なる内積・密度・テンプレート各成分を合成前に比較可能な
+    スケールへ揃えるために使う。無効要素（マスク外）は0を返す。
+    """
+    mask_f = mask.to(x.dtype)
+    cnt = mask_f.sum(dim=-1, keepdim=True).clamp_min(1.0)
+    mean = (x * mask_f).sum(dim=-1, keepdim=True) / cnt
+    var = ((x - mean) ** 2 * mask_f).sum(dim=-1, keepdim=True) / cnt
+    std = var.clamp_min(eps ** 2).sqrt()
+    z = (x - mean) / std
+    return z.masked_fill(~mask, 0.0)
+
+
 class PatternSeparator(nn.Module):
     """歯状回（DG）に対応するパターン分離層（6.1節）。
 
@@ -1289,15 +1305,29 @@ class DiskBackedAssociativeStore:
             score_template = (score_template + 1.0) / 2.0
             score_template = score_template.clamp(min=0.0)
 
-            # 複合スコア
+            valid_mask_t = torch.from_numpy(valid_mask)
+
+            # 12.6.89節で判明した欠陥1の修正：内積スコアはキーが未正規化のため
+            # 数百オーダーになりうる一方、密度・テンプレートスコアは[0, 1]程度に
+            # 収まっており、正規化なしで重み付け合成すると内積単独に退化する
+            # （λによる重み付けが事実上機能しない）。そこで3成分を合成前に
+            # クエリ（行）ごとの有効候補内でz-score正規化する。min-maxではなく
+            # z-scoreを選ぶ理由は、候補集合内の分布の「広がり」に対して相対的な
+            # 押し出し度合いを揃えられるため（min-maxは外れ値1点に全体スケールが
+            # 引きずられやすい）。行ごと（クエリごと）に正規化するのは、
+            # 候補集合の絶対スケール自体がクエリやNに依存して変動するためで、
+            # 全体1回の正規化では依然としてクエリ間のスケール差が残ってしまう。
+            z_inner = _row_zscore(score_inner, valid_mask_t)
+            z_density = _row_zscore(score_density, valid_mask_t)
+            z_template = _row_zscore(score_template, valid_mask_t)
+
+            # 複合スコア（正規化後の3成分をλで重み付け合成）
             score_hybrid = (
-                lambda_inner * score_inner
-                + lambda_density * score_density
-                + lambda_template * score_template
+                lambda_inner * z_inner
+                + lambda_density * z_density
+                + lambda_template * z_template
             )
-            score_hybrid = score_hybrid.masked_fill(
-                ~torch.from_numpy(valid_mask), float("-inf")
-            )
+            score_hybrid = score_hybrid.masked_fill(~valid_mask_t, float("-inf"))
 
             # 上位k_refineの中で最高スコアのものを選択
             # （argmaxは全候補中の最良と一致するため、k_refineでの絞り込みは
@@ -1308,16 +1338,19 @@ class DiskBackedAssociativeStore:
             if return_score_breakdown:
                 sel_idx = chunk_arg_full  # [bp] 各クエリで選択された候補の列インデックス
                 row_idx = torch.arange(bp)
-                sel_valid = torch.from_numpy(valid_mask)[row_idx, sel_idx]
+                sel_valid = valid_mask_t[row_idx, sel_idx]
                 if sel_valid.any():
+                    # 寄与度は実際に合成に使われた正規化後（z-score）のスコアで
+                    # 集計する。生スコアのままでは内積成分のスケールが桁違いに
+                    # 大きく、寄与度計算自体が旧来の欠陥を再現してしまうため。
                     sel_inner_scores.append(
-                        score_inner[row_idx, sel_idx][sel_valid].numpy()
+                        z_inner[row_idx, sel_idx][sel_valid].numpy()
                     )
                     sel_density_scores.append(
-                        score_density[row_idx, sel_idx][sel_valid].numpy()
+                        z_density[row_idx, sel_idx][sel_valid].numpy()
                     )
                     sel_template_scores.append(
-                        score_template[row_idx, sel_idx][sel_valid].numpy()
+                        z_template[row_idx, sel_idx][sel_valid].numpy()
                     )
 
             chunk_arg = safe_indices[np.arange(bp), chunk_arg_full.numpy()]
@@ -1361,10 +1394,13 @@ class DiskBackedAssociativeStore:
                 density_mean, density_std = float(density_arr.mean()), float(density_arr.std())
                 template_mean, template_std = float(template_arr.mean()), float(template_arr.std())
 
-                # 重み適用後の各成分が複合スコアに占める寄与率（絶対値ベース）
-                w_inner = abs(lambda_inner * inner_mean)
-                w_density = abs(lambda_density * density_mean)
-                w_template = abs(lambda_template * template_mean)
+                # 重み適用後の各成分が複合スコアに占める寄与率。z-score正規化後は
+                # 各サンプルの符号が±に散らばり得るため、mean()を先に取ると
+                # 打ち消し合って過小評価される。よってサンプルごとの絶対値の
+                # 平均（mean(|lambda*z|)）を寄与度の代表値として使う。
+                w_inner = float(np.abs(lambda_inner * inner_arr).mean())
+                w_density = float(np.abs(lambda_density * density_arr).mean())
+                w_template = float(np.abs(lambda_template * template_arr).mean())
                 w_total = w_inner + w_density + w_template
                 if w_total > 0:
                     inner_pct = 100.0 * w_inner / w_total

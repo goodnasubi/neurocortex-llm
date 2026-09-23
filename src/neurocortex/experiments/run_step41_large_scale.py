@@ -71,19 +71,30 @@ def _write_full_store(store: DiskBackedAssociativeStore, N: int, key_dim: int,
 
 
 def _build_labeled_queries(store: DiskBackedAssociativeStore, n_test: int,
-                            seed: int = 1) -> tuple[torch.Tensor, np.ndarray]:
-    """書き込み済みキーの一部をそのままクエリに使い、Top-1が既知になるテストセットを作る。
+                            seed: int = 1, noise_std_ratio: float = 0.15
+                            ) -> tuple[torch.Tensor, np.ndarray]:
+    """書き込み済みキーにノイズを加えたクエリで、非自明なTop-1一致テストセットを作る。
 
-    キーは連続空間からのランダムサンプル（正規分布）であり、高次元では異なる書き込み
-    キー同士がクエリと同点になる確率は無視できるため、クエリに使ったキーのインデックス
-    自体が正解Top-1ラベルとなる。
+    12.6.89節で判明した欠陥2の修正: 従来は「書き込んだキーをそのままクエリに
+    使う」自己参照構成だったため、段階1（PQ単体）でも100%一致してしまい、
+    ハイブリッド再ランクの上乗せ効果を測れていなかった。ここでは各キーに
+    `noise_std_ratio * ||key||` 程度のガウスノイズを加えたクエリを使い、
+    「最近傍が元のキーに一致するか」を正解ラベルとする（最近傍探索の
+    非自明なベンチマークとして標準的な構成）。キーは連続空間からのランダム
+    サンプル（正規分布）であり、ノイズを加えても高次元では他の書き込み済み
+    キーの方が近くなる確率は無視できるほど小さいため、元のインデックスを
+    正解Top-1ラベルとしてよい。
     """
     rng = np.random.default_rng(seed)
     true_idx = rng.choice(store.write_count, size=n_test, replace=False)
-    keys_mm = store._keys_memmap()
-    query_keys = torch.from_numpy(np.array(keys_mm[np.sort(true_idx)])).to(torch.float32)
-    # np.sort したので true_idx もソート済みに揃える
     true_idx_sorted = np.sort(true_idx)
+    keys_mm = store._keys_memmap()
+    orig_keys = torch.from_numpy(np.array(keys_mm[true_idx_sorted])).to(torch.float32)
+
+    g = torch.Generator().manual_seed(seed + 1)
+    key_norm = orig_keys.norm(dim=-1, keepdim=True)
+    noise = torch.randn(orig_keys.shape, generator=g) * (key_norm * noise_std_ratio)
+    query_keys = orig_keys + noise
     return query_keys, true_idx_sorted
 
 
@@ -144,8 +155,13 @@ def run_large_scale_benchmark(
         print(f"  書き込み完了: {store.write_count:,} 件, {t_write:.1f}秒"
               f"（{write_stats['n_batches']} バッチ）")
 
-        # 正解ラベル付きテストセット（書き込み済みキーそのものをクエリに使用）
-        test_keys, true_idx = _build_labeled_queries(store, n_test, seed=123)
+        # 正解ラベル付きテストセット（12.6.89節: 自己参照を避けるため、書き込み済み
+        # キーにノイズを加えたクエリを使う。noise_std_ratio=0.125はN=20,000での
+        # 事前較正でPQ単体のTop-1一致率が概ね85%前後になるよう選んだ値
+        # （ステップ40設計時の想定「k=√N近似では87.5%程度」に近い難度）。
+        test_keys, true_idx = _build_labeled_queries(
+            store, n_test, seed=123, noise_std_ratio=0.125
+        )
 
         k_cand = int(np.sqrt(store.write_count))
         print(f"\n段階1（PQ検索）: k_cand={k_cand}")
