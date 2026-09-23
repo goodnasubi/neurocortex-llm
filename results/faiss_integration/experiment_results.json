@@ -1,0 +1,19 @@
+{
+  "10000": {
+    "0": {
+      "brute_force": {
+        "k_10": {
+          "median_time_sec": 0.414,
+          "argmax_match_pct": 100.0
+        }
+      },
+      "faiss_nprobe_5": {
+        "k_10": {
+          "median_time_sec": 1.324,
+          "argmax_match_pct": 100.0,
+          "index_time_sec": 0.0075
+        }
+      }
+    }
+  }
+}

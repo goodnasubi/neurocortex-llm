@@ -26,6 +26,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+try:
+    import faiss
+except ImportError:
+    faiss = None  # type: ignore
+
 
 def _l2_normalize(x: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
     return x / x.norm(dim=-1, keepdim=True).clamp_min(eps)
@@ -406,6 +411,10 @@ class DiskBackedAssociativeStore:
             self._values_path.touch()
             self.write_count = 0
             self._save_meta()
+        # ステップ36（12.6.80節）: faiss IVF インデックス（初期化時は未構築）。
+        self._faiss_index = None
+        self._faiss_nlist = 100  # IVF クラスタ数
+        self._faiss_nprobe = 5   # 探索時のクラスタ調査数
 
     def _save_meta(self) -> None:
         self._meta_path.write_text(json.dumps({
@@ -675,6 +684,155 @@ class DiskBackedAssociativeStore:
 
                 v = (weighted_val / exp_sum.clamp_min(1e-300)[:, None]).to(out.dtype)
                 out[i : i + chunk] = v.to(keys.device)
+
+            best[i : i + chunk] = chunk_best.to(keys.device)
+            arg[i : i + chunk] = chunk_arg.to(keys.device)
+
+        return out, StoreStats(best, arg)
+
+    # ------------------------------------------------------------------
+    # ステップ36（12.6.80節の設計）: faiss IVF インデックスによる高速キー検索。
+    # `read`・`_get_chunk`・`cache_size`・`_chunk_cache`のコード・挙動は
+    # 一切変更しない（追記のみ）。
+    # ------------------------------------------------------------------
+
+    def _train_faiss_index(self, keys_np: np.ndarray) -> None:
+        """faiss IVF インデックスを学習し、すべてのキーを追加する。
+
+        Args:
+            keys_np: [N, key_dim] のfloat32 numpy配列
+        """
+        if faiss is None:
+            raise ImportError("faiss がインストールされていません (pip install faiss-cpu)")
+
+        n, d = keys_np.shape
+        if d != self.key_dim:
+            raise ValueError(f"キー次元が一致しない: {d} != {self.key_dim}")
+
+        # IVF インデックス（InnerProduct メトリクス）を作成。
+        # quantizer は簡潔性のため Flat（非量子化）を使用。
+        nlist = min(self._faiss_nlist, max(1, n // 100))  # 小規模時は調整
+        quantizer = faiss.IndexFlatIP(d)
+        self._faiss_index = faiss.IndexIVFFlat(quantizer, d, nlist)
+
+        # 訓練用サンプルで IVF を訓練（全キーを投入するため n > nlist が前提）。
+        if n > nlist:
+            train_sample = keys_np[::max(1, n // (nlist * 4))]
+            self._faiss_index.train(train_sample.astype(np.float32))
+
+        # すべてのキーを追加。
+        self._faiss_index.add(keys_np.astype(np.float32))
+        self._faiss_index.nprobe = self._faiss_nprobe
+
+    def add_to_faiss_index(self, keys_np: np.ndarray) -> None:
+        """既存の faiss インデックスに新しいキーを追加。
+
+        インデックスが未初期化の場合は _train_faiss_index で初期化。
+
+        Args:
+            keys_np: [n, key_dim] のfloat32 numpy配列
+        """
+        if faiss is None:
+            raise ImportError("faiss がインストールされていません (pip install faiss-cpu)")
+
+        n, d = keys_np.shape
+        if d != self.key_dim:
+            raise ValueError(f"キー次元が一致しない: {d} != {self.key_dim}")
+
+        if self._faiss_index is None:
+            self._train_faiss_index(keys_np)
+        else:
+            self._faiss_index.add(keys_np.astype(np.float32))
+
+    @torch.no_grad()
+    def read_with_faiss_search(
+        self, keys: torch.Tensor, chunk: int = 512, k_candidates: int = 10
+    ) -> tuple[torch.Tensor, StoreStats]:
+        """faiss による候補絞り込みを用いた読み込み。
+
+        全ストアキーに対する最近傍探索を faiss で実行し、上位 k_candidates を
+        取得した後、それらの候補のみを対象に従来の softmax 加重和を計算する。
+
+        Args:
+            keys: [B, key_dim] クエリキー
+            chunk: クエリのチャンクサイズ
+            k_candidates: faiss 検索で取得する候補数
+
+        Returns:
+            ([B, value_dim], StoreStats) - 従来の read() と同じ
+        """
+        if faiss is None:
+            raise ImportError("faiss がインストールされていません (pip install faiss-cpu)")
+
+        if self._faiss_index is None:
+            raise RuntimeError("faiss インデックスが未初期化です")
+
+        b = keys.shape[0]
+        out = torch.zeros(b, self.value_dim, device=keys.device)
+        best = torch.zeros(b, device=keys.device)
+        arg = torch.full((b,), -1, dtype=torch.long, device=keys.device)
+        n_total = self.write_count
+
+        if n_total == 0:
+            return out, StoreStats(best, arg)
+
+        keys_np = keys.detach().to("cpu", dtype=torch.float32).numpy()
+
+        # faiss で候補キーのインデックスを検索。
+        k_search = min(k_candidates, n_total)
+        distances, indices = self._faiss_index.search(keys_np, k_search)
+        # indices: [B, k_search] の候補キーインデックス
+
+        keys_mm = self._keys_memmap()
+        values_mm = self._values_memmap()
+        kc = self.key_chunk
+
+        for i in range(0, b, chunk):
+            q = keys[i : i + chunk].to(dtype=torch.float32)  # [b', key_dim]
+            bp = q.shape[0]
+            cand_indices = indices[i : i + chunk]  # [b', k_search]
+
+            chunk_best = torch.full((bp,), float("-inf"))
+            chunk_arg = torch.full((bp,), -1, dtype=torch.long)
+
+            # パス1: 候補キーのみを対象に最良一致を求める。
+            for b_idx in range(bp):
+                candidates = set(cand_indices[b_idx].tolist())
+                for cand_idx in candidates:
+                    if cand_idx >= 0 and cand_idx < n_total:
+                        # memmap から該当キーを取得。
+                        key_val = torch.from_numpy(np.array(keys_mm[cand_idx])).to(torch.float32)
+                        score = q[b_idx] @ key_val
+                        if score > chunk_best[b_idx]:
+                            chunk_best[b_idx] = score
+                            chunk_arg[b_idx] = cand_idx
+
+            if self.exact:
+                # 最良一致1件の値だけをディスクから取り出す。
+                for k in range(bp):
+                    a = int(chunk_arg[k])
+                    if a >= 0:
+                        out[i + k] = torch.from_numpy(np.array(values_mm[a])).to(out.dtype)
+            else:
+                # パス2: softmax(beta*scores)@values を累積（候補キー内）。
+                exp_sum = torch.zeros(bp, dtype=torch.float64)
+                weighted_val = torch.zeros(bp, self.value_dim, dtype=torch.float64)
+
+                for b_idx in range(bp):
+                    candidates = set(cand_indices[b_idx].tolist())
+                    for cand_idx in candidates:
+                        if cand_idx >= 0 and cand_idx < n_total:
+                            key_val = torch.from_numpy(np.array(keys_mm[cand_idx])).to(torch.float64)
+                            val = torch.from_numpy(np.array(values_mm[cand_idx])).to(torch.float64)
+                            score = (q[b_idx].to(torch.float64) @ key_val)
+                            w = torch.exp(self.beta * (score - chunk_best[b_idx]))
+                            exp_sum[b_idx] += w.item()
+                            weighted_val[b_idx] += w.item() * val
+
+                for k in range(bp):
+                    if exp_sum[k] > 0:
+                        v = (weighted_val[k] / exp_sum[k]).to(out.dtype)
+                        out[i + k] = v.to(keys.device)
 
             best[i : i + chunk] = chunk_best.to(keys.device)
             arg[i : i + chunk] = chunk_arg.to(keys.device)

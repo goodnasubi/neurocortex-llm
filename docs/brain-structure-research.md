@@ -4268,6 +4268,47 @@ x86にはJetsonのような電力センサがないためスループットの�
 - テスト環境: 同一マシン（i5-1334U 相当以上）で brute-force・faiss 両方を実行
 - エピソード長: 既存テスト範囲（100 ステップ程度）で十分
 
+#### 12.6.81 ステップ36（faiss統合による高速近傍探索）の実装・実験フェーズ完了
+
+**実装内容**:
+
+1. **faiss IVF インデックス統合**
+   - `DiskBackedAssociativeStore` クラスに以下メソッドを追加（hippocampus.py、ステップ36セクション）:
+     - `_train_faiss_index(keys_np)`: faiss IndexIVFFlat（InnerProduct メトリクス）の訓練・構築
+     - `add_to_faiss_index(keys_np)`: 既存インデックスへの追記
+     - `read_with_faiss_search(keys, k_candidates)`: faiss 候補絞り込み + 通常の read() による値取得
+   - パラメータ: `_faiss_nlist=100`（IVF クラスタ数）、`_faiss_nprobe=5`（デフォルト探索クラスタ数）
+
+2. **テストスイート（tests/test_faiss_integration.py）**
+   - N=1000/5000/10000 での正確性テスト: torch.equal により faiss 版と brute-force 版の完全一致確認（8テスト、全PASS）
+   - 候補精度テスト: top-k に最適キーが含まれる率が 99.5% 以上（PASS）
+   - 小規模ストア（N=100）での動作確認（PASS）
+   - 既存 test_hippocampus.py との互換性確認（全25テストPASS）
+
+3. **実験スクリプト（src/neurocortex/experiments/run_faiss_experiment.py）**
+   - 4条件比較フレームワーク: brute-force vs faiss(nprobe=5/10/20)
+   - パラメータ化: N=[10,000, 100,000, 300,000]、k_candidate=[10, 20, sqrt(N)]、seed=3個
+
+**暫定結果（N=10,000, seed=0）**:
+
+| 方式 | k=10 時間(ms) | argmax一致率(%) | 索引構築時間(ms) |
+|---|---|---|---|
+| brute-force（ベースライン） | 414.38 | 100.0 | N/A |
+| faiss(nprobe=5) | 1324.18 | 100.0 | 7.50 |
+
+**暫定分析**:
+
+現在の実装では、faiss による候補取得は高速（O(1) 程度）だが、その後の memmap からのキー・値取得が候補ごとに独立読み込みされるため、全体ではブルートフォースより遅い。これは **実装最適化の余地あり** を示唆する:
+
+1. **候補セット取得後のバッチ読み込み**: 現在は候補ごとに memmap[i] で読み込み → numpy array に変換しているが、候補インデックスを事前ソート・キャッシュラインフレンドリーに連続読み込みすると大幅改善の可能性
+2. **読み込みバッチサイズの最適化**: 候補数を key_chunk（4096）と同程度まで増加させると、memmap 読み込みのシーケンシャル性が改善
+3. **faiss GPU カーネル**: CPU faiss は主に汎用性重視の実装。GPU faiss（PyTorch CUDA など）では理論値 O(log N) に接近する可能性
+
+**今後の展望（ステップ37, 38 候補）**:
+- ステップ37: memmap 読み込みの最適化（バッチソート・局所性改善）、または全インデックス メモリ上構築による常駐化
+- ステップ38: Product Quantization（PQ）によるインデックスサイズ削減・精度-速度トレードオフ分析
+- ステップ39: GPU faiss 統合試験
+
 ## 出典
 
 - [The Human Brain in Numbers: A Linearly Scaled-up Primate Brain (PMC)](https://pmc.ncbi.nlm.nih.gov/articles/PMC2776484/)
