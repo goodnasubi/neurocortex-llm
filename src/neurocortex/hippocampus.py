@@ -561,6 +561,126 @@ class DiskBackedAssociativeStore:
         values_mm = self._values_memmap()
         self._get_chunk(keys_mm, values_mm, j, self.key_chunk)
 
+    # ------------------------------------------------------------------
+    # ステップ35（12.6.78節の設計）: キー単位走査への見直し（方式B: 固定k件）。
+    # `read`・`_get_chunk`・`cache_size`・`_chunk_cache`のコード・挙動は
+    # 一切変更しない（追記のみ）。
+    # ------------------------------------------------------------------
+
+    def _get_key_candidates(self, attention_weights: torch.Tensor, k: int) -> list[int]:
+        """アテンション重み分布から上位k個の候補キーを抽出。
+
+        Args:
+            attention_weights: [n_keys] の確率分布またはスコア（通常は softmax 計算結果）
+            k: 候補数（通常は sqrt(n_keys)）
+
+        Returns:
+            上位k個のキーインデックスリスト
+        """
+        if k >= len(attention_weights):
+            return list(range(len(attention_weights)))
+        _, top_indices = torch.topk(attention_weights, k=k, dim=-1)
+        return top_indices.cpu().tolist()
+
+    @torch.no_grad()
+    def read_with_key_candidates(
+        self, keys: torch.Tensor, attention_weights: torch.Tensor, chunk: int = 512,
+        k_candidate: int | None = None
+    ) -> tuple[torch.Tensor, StoreStats]:
+        """キー候補絞り込みを使用した読み込み（方式B: 固定k件）。
+
+        attention_weights から上位k件の候補キーを抽出し、
+        その候補キーのみを対象に従来と同じ read() を実行する。
+
+        Args:
+            keys: [B, key_dim] クエリキー
+            attention_weights: [B, n_stored_keys] アテンション重み分布
+            chunk: クエリのチャンクサイズ
+            k_candidate: 候補サイズ（None の場合は sqrt(n_total)）
+
+        Returns:
+            ([B, value_dim], StoreStats) - 従来の read() と同じ
+        """
+        b = keys.shape[0]
+        out = torch.zeros(b, self.value_dim, device=keys.device)
+        best = torch.zeros(b, device=keys.device)
+        arg = torch.full((b,), -1, dtype=torch.long, device=keys.device)
+        n_total = self.write_count
+        if n_total == 0:
+            return out, StoreStats(best, arg)
+
+        keys_mm = self._keys_memmap()
+        values_mm = self._values_memmap()
+        kc = self.key_chunk
+
+        # 候補サイズのデフォルト設定
+        if k_candidate is None:
+            k_candidate = max(1, int(n_total**0.5))
+
+        for i in range(0, b, chunk):
+            q = keys[i : i + chunk].to(dtype=torch.float32)  # [b', key_dim]
+            attn = attention_weights[i : i + chunk]  # [b', n_stored_keys]
+            bp = q.shape[0]
+            chunk_best = torch.full((bp,), float("-inf"))
+            chunk_arg = torch.full((bp,), -1, dtype=torch.long)
+
+            # 各バッチごとに候補キーを抽出し、セット化
+            candidate_sets = [
+                set(self._get_key_candidates(attn[k], k_candidate)) for k in range(bp)
+            ]
+
+            # パス1: 全ストアを走査し、候補内に限定して最良一致を求める。
+            for j in range(0, n_total, kc):
+                store_keys, _ = self._get_chunk(keys_mm, values_mm, j, kc)
+                scores = q @ store_keys.T  # [b', kc]
+
+                # バッチごとに処理
+                for k in range(bp):
+                    candidate_set = candidate_sets[k]
+                    # チャンク内のインデックスをチェック
+                    actual_chunk_size = min(kc, n_total - j)
+                    for local_idx in range(actual_chunk_size):
+                        global_idx = j + local_idx
+                        if global_idx in candidate_set:
+                            score = scores[k, local_idx].item()
+                            if score > chunk_best[k]:
+                                chunk_best[k] = score
+                                chunk_arg[k] = global_idx
+
+            if self.exact:
+                # 最良一致1件の値だけをディスクから取り出す。
+                for k in range(bp):
+                    a = int(chunk_arg[k])
+                    if a >= 0:
+                        out[i + k] = torch.from_numpy(np.array(values_mm[a])).to(out.dtype)
+            else:
+                # パス2: softmax(beta*scores)@values を累積。候補キーのみを対象。
+                exp_sum = torch.zeros(bp, dtype=torch.float64)
+                weighted_val = torch.zeros(bp, self.value_dim, dtype=torch.float64)
+                for j in range(0, n_total, kc):
+                    store_keys, store_values_f32 = self._get_chunk(keys_mm, values_mm, j, kc)
+                    store_values = store_values_f32.to(torch.float64)
+                    scores = (q @ store_keys.T).to(torch.float64)  # [b', kc]
+                    actual_chunk_size = min(kc, n_total - j)
+
+                    for k in range(bp):
+                        candidate_set = candidate_sets[k]
+                        for local_idx in range(actual_chunk_size):
+                            global_idx = j + local_idx
+                            if global_idx in candidate_set:
+                                score = scores[k, local_idx]
+                                w = torch.exp(self.beta * (score - chunk_best[k]))
+                                exp_sum[k] += w.item()
+                                weighted_val[k] += w.item() * store_values[local_idx]
+
+                v = (weighted_val / exp_sum.clamp_min(1e-300)[:, None]).to(out.dtype)
+                out[i : i + chunk] = v.to(keys.device)
+
+            best[i : i + chunk] = chunk_best.to(keys.device)
+            arg[i : i + chunk] = chunk_arg.to(keys.device)
+
+        return out, StoreStats(best, arg)
+
 
 class HippocampalMemory(nn.Module):
     """分離層と連想ストアを束ね、皮質の残差ストリームに読み出しを注入する。
