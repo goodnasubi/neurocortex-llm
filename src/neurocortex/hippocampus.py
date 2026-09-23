@@ -451,7 +451,8 @@ def fit_stdp(sep: PatternSeparator, spikes: torch.Tensor, epochs: int = 5,
              a_plus: float = 0.01, a_minus: float = 0.008, tau: float = 0.9,
              batch_size: int = 256, generator: torch.Generator | None = None,
              callback: "Callable[[int, PatternSeparator], None] | None" = None,
-             raw_update_callback: "Callable[[int, float], None] | None" = None) -> dict:
+             raw_update_callback: "Callable[[int, float], None] | None" = None,
+             weight_decay: float = 0.0) -> dict:
     """ペア型STDP（8.1節の指数窓）。時間軸はトークン位置そのもの（A案）。
 
     前シナプス入力は皮質バックボーンの二値スパイク列 `spikes` [N, T, d]、
@@ -466,6 +467,11 @@ def fit_stdp(sep: PatternSeparator, spikes: torch.Tensor, epochs: int = 5,
     `raw_update_callback`（epoch, raw_norm）は`callback`とは独立の軽量な追加引数で、
     485行目付近の正規化前の生の更新量`scale * dw / b`のフロベニウスノルムを
     epoch内バッチ合計で累積してepoch末に通知する（STDPアルゴリズム自体は変更しない）。
+
+    `weight_decay`（既定0.0、ステップ28で追加）は`callback`・`raw_update_callback`と
+    同じ非侵襲的な拡張点で、正規化前の生の更新量に対して明示的なL2減衰
+    `raw_update -= weight_decay * sep.weight`を適用する（正規化より前）。
+    STDPのdw計算式自体（490行目）は変更しない。既定値0.0では従来と完全に同一の挙動。
     """
     if sep.mode == "identity":
         raise ValueError("identity には学習する重みがない")
@@ -489,6 +495,8 @@ def fit_stdp(sep: PatternSeparator, spikes: torch.Tensor, epochs: int = 5,
                 tr_post = tau * tr_post + s_post
                 dw += a_plus * (s_post.T @ tr_pre) - a_minus * (tr_post.T @ s_pre)
             raw_update = scale * dw / b
+            if weight_decay != 0.0:
+                raw_update = raw_update - weight_decay * sep.weight
             if raw_update_callback is not None:
                 raw_update_norm_sum += float(raw_update.norm())
             sep.weight += raw_update
