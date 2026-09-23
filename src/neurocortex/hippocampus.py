@@ -1255,18 +1255,11 @@ class DiskBackedAssociativeStore:
                 self._build_pq_index(keys_mm, M=M)
             distances, indices = self._pq_index.search(keys_np, k_candidates)
 
-        # 密度スコア用の共有ランダムサンプル（クエリ・候補間で使い回すことで
-        # Pythonループでの逐次memmapアクセスを避け、E2E応答時間を短縮する。
-        # 元実装は候補ごと・クエリごとに500点を再サンプルしてPythonループで
-        # 距離計算しており、k_candidates=32, k_refine=16, N=1000 の規模でも
-        # 数秒かかり性能要件（<400ms/500K件相当）を満たさなかった。
-        density_sample_size = min(n_total, 500)
-        density_sample_idx = np.random.choice(
-            n_total, size=density_sample_size, replace=False
-        )
-        density_sample_keys = torch.from_numpy(
-            np.array(keys_mm[density_sample_idx])
-        ).to(torch.float32)
+        # 12.6.90節（ステップ41再設計）: テンプレートスコア用のクラスタ典型例
+        # （プロトタイプ重心）をあらかじめ用意する。詳細は
+        # `_ensure_template_centroids`・`_template_match_score`のdocstring参照。
+        self._ensure_template_centroids()
+        centroids = self._template_centroids  # [nc, d]
 
         sel_inner_scores = []
         sel_density_scores = []
@@ -1284,28 +1277,56 @@ class DiskBackedAssociativeStore:
             cand_keys = torch.from_numpy(
                 np.array(keys_mm[safe_indices.reshape(-1)])
             ).to(torch.float32).view(bp, cand_indices.shape[1], -1)
-
-            # 段階2：複合スコアをベクトル化して計算
-            # 内積スコア [bp, k]
-            score_inner = torch.einsum("bd,bkd->bk", q, cand_keys)
-
-            # 密度スコア [bp, k]：共有サンプルとの平均距離の逆数
-            cand_flat = cand_keys.reshape(-1, cand_keys.shape[-1])
-            dist = torch.cdist(cand_flat, density_sample_keys)
-            score_density = (1.0 / (1.0 + dist.mean(dim=-1))).view(
-                bp, cand_indices.shape[1]
-            )
-
-            # テンプレート一致スコア [bp, k]：クエリと候補のコサイン類似度
-            score_template = torch.nn.functional.cosine_similarity(
-                q.unsqueeze(1).expand(-1, cand_keys.shape[1], -1),
-                cand_keys,
-                dim=-1,
-            )
-            score_template = (score_template + 1.0) / 2.0
-            score_template = score_template.clamp(min=0.0)
-
             valid_mask_t = torch.from_numpy(valid_mask)
+
+            # 内積スコア（段階1候補全体） [bp, k_candidates]
+            score_inner_full = torch.einsum("bd,bkd->bk", q, cand_keys)
+            score_inner_full = score_inner_full.masked_fill(~valid_mask_t, float("-inf"))
+
+            # 段階3：内積スコア上位k_refine件に絞り込む（従来実装はk_refineを
+            # 事実上無視して全候補で複合スコアを取っており、docstringの
+            # 「段階3で上位k_refineまで絞り込み」と矛盾していた。本再設計では
+            # 実際に絞り込みを行い、その分だけ後続の密度・テンプレート計算量も
+            # 縮小する）。
+            k_ref = min(k_refine, cand_indices.shape[1])
+            top_inner_val, top_inner_idx = score_inner_full.topk(k_ref, dim=-1)
+            row_ar = torch.arange(bp).unsqueeze(-1)
+            cand_keys_r = cand_keys[row_ar, top_inner_idx]  # [bp, k_ref, d]
+            valid_mask_r = valid_mask_t[row_ar, top_inner_idx]  # [bp, k_ref]
+            safe_indices_r = safe_indices[
+                np.arange(bp)[:, None], top_inner_idx.numpy()
+            ]  # [bp, k_ref]
+            score_inner = top_inner_val.masked_fill(~valid_mask_r, 0.0)
+
+            # 密度スコア（12.6.90節で再設計）[bp, k_ref]：CA3のパターン補完
+            # （近傍点間の相互強化・アトラクタ的収束）に対応するクエリ依存指標。
+            # 「候補単体の周辺の固定密度」ではなく「同じクエリの他の上位候補群と
+            # どれだけ近接しているか」（候補間の相互一貫性）を測る。候補集合が
+            # クエリごとのPQ検索結果（かつ内積上位k_refineへの絞り込み）に依存
+            # するため、本質的にクエリ依存になり、内積スコア（クエリ×候補1点）
+            # とは異なる「候補×候補群」の情報を持つ。
+            pairwise = torch.einsum("bkd,bjd->bkj", cand_keys_r, cand_keys_r)
+            eye = torch.eye(k_ref, dtype=torch.bool).unsqueeze(0)
+            valid_pair = (
+                valid_mask_r.unsqueeze(1) & valid_mask_r.unsqueeze(2) & (~eye)
+            )
+            pair_cnt = valid_pair.sum(dim=-1).clamp_min(1)
+            score_density = (pairwise * valid_pair).sum(dim=-1) / pair_cnt
+            score_density = score_density.masked_fill(~valid_mask_r, 0.0)
+
+            # テンプレート一致スコア（12.6.90節で再設計）[bp, k_ref]：候補単体と
+            # クエリの類似度（内積スコアと事実上同一で冗長）ではなく、候補が
+            # 属するクラスタの典型例（プロトタイプ重心）とクエリとの整合性を
+            # 測る。候補個々のノイズを均した「プロトタイプ」経由でクエリと
+            # 照合するため、内積スコア（生の候補ベクトル×クエリ）とは異なる
+            # 情報を持ちながら、クエリ依存性は保たれる。
+            assign = torch.einsum("bkd,cd->bkc", cand_keys_r, centroids).argmax(dim=-1)
+            proto = centroids[assign]  # [bp, k_ref, d]
+            score_template = torch.nn.functional.cosine_similarity(
+                q.unsqueeze(1).expand(-1, k_ref, -1), proto, dim=-1
+            )
+            score_template = ((score_template + 1.0) / 2.0).clamp(min=0.0)
+            score_template = score_template.masked_fill(~valid_mask_r, 0.0)
 
             # 12.6.89節で判明した欠陥1の修正：内積スコアはキーが未正規化のため
             # 数百オーダーになりうる一方、密度・テンプレートスコアは[0, 1]程度に
@@ -1317,9 +1338,9 @@ class DiskBackedAssociativeStore:
             # 引きずられやすい）。行ごと（クエリごと）に正規化するのは、
             # 候補集合の絶対スケール自体がクエリやNに依存して変動するためで、
             # 全体1回の正規化では依然としてクエリ間のスケール差が残ってしまう。
-            z_inner = _row_zscore(score_inner, valid_mask_t)
-            z_density = _row_zscore(score_density, valid_mask_t)
-            z_template = _row_zscore(score_template, valid_mask_t)
+            z_inner = _row_zscore(score_inner, valid_mask_r)
+            z_density = _row_zscore(score_density, valid_mask_r)
+            z_template = _row_zscore(score_template, valid_mask_r)
 
             # 複合スコア（正規化後の3成分をλで重み付け合成）
             score_hybrid = (
@@ -1327,18 +1348,15 @@ class DiskBackedAssociativeStore:
                 + lambda_density * z_density
                 + lambda_template * z_template
             )
-            score_hybrid = score_hybrid.masked_fill(~valid_mask_t, float("-inf"))
+            score_hybrid = score_hybrid.masked_fill(~valid_mask_r, float("-inf"))
 
-            # 上位k_refineの中で最高スコアのものを選択
-            # （argmaxは全候補中の最良と一致するため、k_refineでの絞り込みは
-            #  出力インデックスの選定には影響しない。段階3の意図は将来の
-            #  複数候補利用に備えた絞り込みであり、現状のAPIは最良1件のみ返す）
+            # 絞り込んだk_ref件の中で最高スコアのものを選択
             chunk_best_full, chunk_arg_full = score_hybrid.max(dim=-1)
 
             if return_score_breakdown:
                 sel_idx = chunk_arg_full  # [bp] 各クエリで選択された候補の列インデックス
                 row_idx = torch.arange(bp)
-                sel_valid = valid_mask_t[row_idx, sel_idx]
+                sel_valid = valid_mask_r[row_idx, sel_idx]
                 if sel_valid.any():
                     # 寄与度は実際に合成に使われた正規化後（z-score）のスコアで
                     # 集計する。生スコアのままでは内積成分のスケールが桁違いに
@@ -1353,9 +1371,9 @@ class DiskBackedAssociativeStore:
                         z_template[row_idx, sel_idx][sel_valid].numpy()
                     )
 
-            chunk_arg = safe_indices[np.arange(bp), chunk_arg_full.numpy()]
+            chunk_arg = safe_indices_r[np.arange(bp), chunk_arg_full.numpy()]
             chunk_arg = torch.from_numpy(chunk_arg).to(torch.long)
-            has_valid = valid_mask.any(axis=-1)
+            has_valid = valid_mask_r.any(dim=-1).numpy()
             chunk_arg = torch.where(
                 torch.from_numpy(has_valid), chunk_arg, torch.full_like(chunk_arg, -1)
             )
@@ -1432,53 +1450,121 @@ class DiskBackedAssociativeStore:
 
         return out, StoreStats(best, arg)
 
-    def _local_density_at(self, candidate_idx: int, k_neighbor: int = 20) -> float:
-        """候補インデックス周辺の局所密度スコアを計算（段階2補助）。
+    def _local_density_at(
+        self,
+        candidate_idx: int,
+        k_neighbor: int = 20,
+        cohort_idx: "np.ndarray | None" = None,
+    ) -> float:
+        """候補インデックス周辺の密度スコアを計算（段階2補助、12.6.90節で再設計）。
 
-        周辺k個の近傍との距離平均の逆数を密度スコアとする。
+        12.6.89節で判明した欠陥1（性能未達の原因分析）: 旧実装は候補単体の
+        周辺（クエリに無関係な固定ランダムサンプル）との平均距離しか見ておらず、
+        実質的にクエリ非依存のノイズ項になっていた。海馬CA3のパターン補完
+        （recurrent dynamics、近傍点間の相互強化・アトラクタ的収束）に立ち返り、
+        「候補単体の孤立した局所密度」ではなく「**同じクエリに対する他の
+        上位候補群とどれだけ近接しているか**」（候補間の相互一貫性）に
+        変更する。`cohort_idx`（同じクエリの他候補インデックス集合）を渡すと
+        この本来の意味論（クエリ依存）になる。`read_with_hybrid_rerank`内の
+        実運用パスは本メソッドを呼ばず同一ロジックをベクトル化して使う
+        （ベクトル化の詳細は同メソッドのコメント参照）。本メソッド単体は
+        診断・テスト用のスカラー版で、`cohort_idx`省略時（純粋な単独呼び出し）
+        はストア全体からのランダムサンプルを暫定コホートとして使う。
         """
         keys_mm = self._keys_memmap()
         cand_key = torch.from_numpy(np.array(keys_mm[candidate_idx])).to(
             torch.float32
         )
+        if cohort_idx is None:
+            n_sample = min(self.write_count, max(k_neighbor, 1))
+            cohort_idx = np.random.choice(
+                self.write_count, size=n_sample, replace=False
+            )
+        cohort_idx = np.asarray(cohort_idx)
+        cohort_idx = cohort_idx[cohort_idx != candidate_idx]
 
-        # 全キーとの距離計算（簡易版：ランダムサンプル）
-        # ベクトル化：Pythonループで500回距離計算すると極めて遅いため
-        # （ステップ40テスト時にE2E応答が5秒超となり性能要件を満たさなかった）、
-        # サンプルをまとめてmemmapから読み出しtorchでバッチ計算する。
-        n_total = min(self.write_count, 500)
-        sample_indices = np.random.choice(self.write_count, size=n_total, replace=False)
-        sample_indices = sample_indices[sample_indices != candidate_idx]
-
-        if sample_indices.size == 0:
+        if cohort_idx.size == 0:
             return 1.0
 
-        sample_keys = torch.from_numpy(np.array(keys_mm[sample_indices])).to(
+        cohort_keys = torch.from_numpy(np.array(keys_mm[cohort_idx])).to(
             torch.float32
         )
-        distances = torch.norm(sample_keys - cand_key.unsqueeze(0), dim=1)
+        # キーはPatternSeparatorの出力でありL2正規化済みのため、内積は
+        # そのままコサイン類似度になる（相互一貫性＝候補群との平均近接度）。
+        sims = cohort_keys @ cand_key
+        mean_sim = sims.mean().item()
+        return float(max(0.0, min(1.0, (mean_sim + 1.0) / 2.0)))
 
-        # 平均距離の逆数を密度スコアとする（近いほど高スコア）
-        mean_distance = distances.mean().item()
-        density_score = 1.0 / (1.0 + mean_distance)  # sigmoid形
-        return density_score
+    def _ensure_template_centroids(
+        self, n_clusters: int = 64, n_iters: int = 5, seed: int = 0,
+        sample_size: int = 20000,
+    ) -> None:
+        """テンプレートスコア用のクラスタ典型例（プロトタイプ）重心を構築する。
+
+        12.6.90節（ステップ41再設計）: テンプレートスコアの旧実装は
+        「クエリと候補のコサイン類似度」そのものであり、内積スコアと本質的に
+        同一で冗長だった（内積の誤りを訂正する情報を持たない）。本設計では
+        候補が属するクラスタの典型例（プロトタイプ重心）とクエリとの整合性を
+        測る方式に変更する。そのための重心をキー空間全体（の粗いサンプル、
+        N特大時の計算量対策）へのk-means（球面k-means簡易版）で構築し、
+        `write_count`が変わらない限りキャッシュを再利用する。
+        """
+        n_total = self.write_count
+        nc = max(1, min(n_clusters, n_total))
+        cache_key = (nc, n_iters, seed, sample_size, n_total)
+        if getattr(self, "_template_cache_key", None) == cache_key:
+            return
+        keys_mm = self._keys_memmap()
+        rng = np.random.default_rng(seed)
+        if n_total > sample_size:
+            sample_idx = np.sort(rng.choice(n_total, size=sample_size, replace=False))
+        else:
+            sample_idx = np.arange(n_total)
+        sample_keys = torch.from_numpy(np.array(keys_mm[sample_idx])).to(torch.float32)
+
+        g = torch.Generator().manual_seed(seed)
+        perm = torch.randperm(sample_keys.shape[0], generator=g)[:nc]
+        centroids = sample_keys[perm].clone()
+        for _ in range(n_iters):
+            sims = sample_keys @ centroids.T
+            assign = sims.argmax(dim=1)
+            new_centroids = torch.zeros_like(centroids)
+            counts = torch.zeros(nc)
+            new_centroids.index_add_(0, assign, sample_keys)
+            counts.index_add_(0, assign, torch.ones(sample_keys.shape[0]))
+            empty = counts == 0
+            new_centroids = new_centroids / counts.clamp_min(1).unsqueeze(1)
+            norm = new_centroids.norm(dim=-1, keepdim=True).clamp_min(1e-8)
+            new_centroids = new_centroids / norm
+            new_centroids[empty] = centroids[empty]
+            centroids = new_centroids
+
+        self._template_centroids = centroids
+        self._template_cache_key = cache_key
 
     def _template_match_score(
         self, candidate_idx: int, query_key: torch.Tensor
     ) -> float:
-        """テンプレート一致度スコア（段階2補助）。
+        """テンプレート一致度スコア（段階2補助、12.6.90節で再設計）。
 
-        候補キーと平均キーのコサイン類似度を用いる（簡易版）。
+        旧実装（候補とクエリのコサイン類似度）は内積スコアと事実上同一で
+        冗長だったため、候補が属するクラスタの典型例（プロトタイプ重心、
+        `_ensure_template_centroids`参照）とクエリとの整合性を測る方式に
+        変更した。内積スコアが「生の候補ベクトル」を直接見るのに対し、
+        本スコアは近傍でならされたプロトタイプ経由でクエリと照合するため、
+        独立したデノイズ情報を持ちながらクエリ依存性は保たれる。
         """
+        self._ensure_template_centroids()
         keys_mm = self._keys_memmap()
         cand_key = torch.from_numpy(np.array(keys_mm[candidate_idx])).to(
             torch.float32
         )
+        centroids = self._template_centroids
+        assign = int((cand_key @ centroids.T).argmax())
+        centroid = centroids[assign]
 
-        # コサイン類似度
-        cos_sim = torch.nn.functional.cosine_similarity(
-            query_key.unsqueeze(0), cand_key.unsqueeze(0)
-        ).item()
+        q = _l2_normalize(query_key.to(torch.float32).unsqueeze(0)).squeeze(0)
+        cos_sim = float(q @ centroid)
 
         # [0, 1] の範囲にスケール
         return max(0.0, (cos_sim + 1.0) / 2.0)
@@ -1509,12 +1595,17 @@ class DiskBackedAssociativeStore:
     def _compute_density_scores(
         self, keys: torch.Tensor, k_candidates: int, k_refine: int
     ) -> np.ndarray:
-        """複合スコア内の密度成分を抽出（主張(c)検証用）"""
-        scores = []
-        for i in range(min(k_candidates, self.write_count)):
-            score = self._local_density_at(i, k_neighbor=20)
-            scores.append(score)
+        """複合スコア内の密度成分を抽出（主張(c)検証用、12.6.90節で再設計）。
 
+        密度スコアはクエリ依存（同一クエリの他候補群との相互一貫性）に
+        再設計されたため、診断用にも「候補群 = 先頭k_candidates件」を
+        共通コホートとして各候補へ渡す。
+        """
+        n = min(k_candidates, self.write_count)
+        cohort_all = np.arange(n)
+        scores = [
+            self._local_density_at(i, cohort_idx=cohort_all) for i in range(n)
+        ]
         return np.array(scores[:k_refine] * keys.shape[0])
 
     def _compute_template_scores(

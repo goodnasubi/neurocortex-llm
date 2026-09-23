@@ -1,5 +1,5 @@
 {
-  "timestamp": 1790182879.064078,
+  "timestamp": 1790186096.1512272,
   "use_gpu": false,
   "cpu_speed_targets_ms": {
     "500000": 4000.0,
@@ -16,23 +16,23 @@
       "n_test": 100,
       "k_candidates": 316,
       "k_refine": 150,
-      "write_time_s": 2.013472080230713,
+      "write_time_s": 2.0799400806427,
       "stage1": {
         "times_ms": [
-          21753.27777862549,
-          2175.3385066986084,
-          2162.1224880218506
+          21630.167722702026,
+          2234.2841625213623,
+          2194.5266723632812
         ],
-        "median_ms": 2175.3385066986084
+        "median_ms": 2234.2841625213623
       },
       "hybrid_rerank": {
         "times_ms": [
-          2451.7505168914795,
-          2572.603464126587,
-          2443.382501602173
+          2544.552803039551,
+          3110.2938652038574,
+          3000.659704208374
         ],
-        "median_ms": 2451.7505168914795,
-        "overhead_pct": 12.706620571543434
+        "median_ms": 3000.659704208374,
+        "overhead_pct": 34.30071942246443
       },
       "accuracy": {
         "top1_hybrid": 0.62,
@@ -42,20 +42,20 @@
       },
       "score_breakdown": {
         "n_samples": 100,
-        "inner_mean": 5.022800445556641,
-        "inner_std": 1.9628758430480957,
-        "density_mean": 0.416410356760025,
-        "density_std": 1.0762298107147217,
-        "template_mean": 5.074255466461182,
-        "template_std": 1.9170737266540527,
-        "inner_contrib_pct": 79.25496287470422,
-        "density_contrib_pct": 7.400559029272025,
-        "template_contrib_pct": 13.34447809602376
+        "inner_mean": 6.184807777404785,
+        "inner_std": 2.2897603511810303,
+        "density_mean": 3.355147361755371,
+        "density_std": 1.392587661743164,
+        "template_mean": 0.48582157492637634,
+        "template_std": 1.0580058097839355,
+        "inner_contrib_pct": 77.06917199013336,
+        "density_contrib_pct": 20.904321681185085,
+        "template_contrib_pct": 2.0265063286815623
       },
       "score_contribution_check": {
         "inner_density_target_pct": 95.0,
         "template_max_pct": 5.0,
-        "ok": false
+        "ok": true
       },
       "speed_check": {
         "use_gpu": false,
@@ -69,23 +69,23 @@
       "n_test": 100,
       "k_candidates": 707,
       "k_refine": 150,
-      "write_time_s": 12.523149251937866,
+      "write_time_s": 12.647124290466309,
       "stage1": {
         "times_ms": [
-          35569.78440284729,
-          4346.372365951538,
-          4152.334690093994
+          34488.903760910034,
+          4611.490488052368,
+          4321.540355682373
         ],
-        "median_ms": 4346.372365951538
+        "median_ms": 4611.490488052368
       },
       "hybrid_rerank": {
         "times_ms": [
-          5166.083097457886,
-          5159.827470779419,
-          5238.399267196655
+          5189.65220451355,
+          5081.159830093384,
+          4787.604570388794
         ],
-        "median_ms": 5166.083097457886,
-        "overhead_pct": 18.859652659486088
+        "median_ms": 5081.159830093384,
+        "overhead_pct": 10.184762242443165
       },
       "accuracy": {
         "top1_hybrid": 0.56,
@@ -95,20 +95,20 @@
       },
       "score_breakdown": {
         "n_samples": 100,
-        "inner_mean": 5.235645294189453,
-        "inner_std": 2.183216094970703,
-        "density_mean": 0.39735710620880127,
-        "density_std": 1.3355650901794434,
-        "template_mean": 5.272822856903076,
-        "template_std": 2.0946953296661377,
-        "inner_contrib_pct": 78.36500541025951,
-        "density_contrib_pct": 8.481418642197898,
-        "template_contrib_pct": 13.153575947542581
+        "inner_mean": 6.501070976257324,
+        "inner_std": 2.5774357318878174,
+        "density_mean": 3.627415180206299,
+        "density_std": 1.7169125080108643,
+        "template_mean": 0.27454841136932373,
+        "template_std": 0.9493429660797119,
+        "inner_contrib_pct": 76.9424522223898,
+        "density_contrib_pct": 21.46586861108973,
+        "template_contrib_pct": 1.591679166520465
       },
       "score_contribution_check": {
         "inner_density_target_pct": 95.0,
         "template_max_pct": 5.0,
-        "ok": false
+        "ok": true
       },
       "speed_check": {
         "use_gpu": false,
@@ -122,23 +122,23 @@
       "n_test": 100,
       "k_candidates": 1000,
       "k_refine": 150,
-      "write_time_s": 26.286945819854736,
+      "write_time_s": 27.0805504322052,
       "stage1": {
         "times_ms": [
-          56901.976346969604,
-          5777.961015701294,
-          6188.686847686768
+          60531.68559074402,
+          5819.366693496704,
+          6099.134683609009
         ],
-        "median_ms": 6188.686847686768
+        "median_ms": 6099.134683609009
       },
       "hybrid_rerank": {
         "times_ms": [
-          7811.28191947937,
-          7829.615116119385,
-          7649.443626403809
+          7618.623495101929,
+          6819.400072097778,
+          6952.283143997192
         ],
-        "median_ms": 7811.28191947937,
-        "overhead_pct": 26.21872962273253
+        "median_ms": 6952.283143997192,
+        "overhead_pct": 13.988024607506363
       },
       "accuracy": {
         "top1_hybrid": 0.45,
@@ -148,25 +148,25 @@
       },
       "score_breakdown": {
         "n_samples": 100,
-        "inner_mean": 4.805059909820557,
-        "inner_std": 2.1968278884887695,
-        "density_mean": 0.5362794399261475,
-        "density_std": 1.236579179763794,
-        "template_mean": 4.8612847328186035,
-        "template_std": 2.127978563308716,
-        "inner_contrib_pct": 78.02786280744067,
-        "density_contrib_pct": 8.815325358742458,
-        "template_contrib_pct": 13.156811833816867
+        "inner_mean": 6.028369903564453,
+        "inner_std": 2.58525013923645,
+        "density_mean": 3.569127082824707,
+        "density_std": 1.7533785104751587,
+        "template_mean": 0.4498679041862488,
+        "template_std": 1.0658506155014038,
+        "inner_contrib_pct": 75.62156413951936,
+        "density_contrib_pct": 22.3860683433204,
+        "template_contrib_pct": 1.9923675171602322
       },
       "score_contribution_check": {
         "inner_density_target_pct": 95.0,
         "template_max_pct": 5.0,
-        "ok": false
+        "ok": true
       },
       "speed_check": {
         "use_gpu": false,
         "target_ms": 7000.0,
-        "ok": false
+        "ok": true
       }
     }
   ]
