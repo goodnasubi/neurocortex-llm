@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 ステップ44.3: 段階的統合検証（Jetson Nano / ローカル GPU 版）
 
@@ -460,7 +461,7 @@ def main():
         json.dump(all_results, f, indent=2)
 
     logger.info(f"{'='*80}")
-    logger.info("STEP 44.3: Complete ✓")
+    logger.info("STEP 44.3: Complete OK")
     logger.info(f"{'='*80}")
 
 
