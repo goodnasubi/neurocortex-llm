@@ -54,10 +54,10 @@ class Step443Config:
     num_epochs: int = 3  # クイック検証
     num_seeds: int = 1   # Jetson での速度優先
 
-    # モジュール Loss 重み
-    hippocampus_loss_weight: float = 0.2
-    basal_ganglia_loss_weight: float = 0.2
-    cerebellum_loss_weight: float = 0.1
+    # モジュール Loss 重み（最適化版：重み付けを大幅削減）
+    hippocampus_loss_weight: float = 0.05  # 0.2 → 0.05
+    basal_ganglia_loss_weight: float = 0.05  # 0.2 → 0.05
+    cerebellum_loss_weight: float = 0.02  # 0.1 → 0.02
 
     # リソース
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
