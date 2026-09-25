@@ -1,6 +1,6 @@
-# ステップ44.2 Colab 実験投入ガイド
+# ステップ44.4 Colab フル規模実験ガイド
 
-**目的**: Google Colab Pro で WikiText-103 データを使用したフル規模実験（48-72時間）を実行
+**目的**: Google Colab Pro で WikiText-103 全データを使用した Phase A/B/C 段階的統合実験（48-72時間）を実行
 
 ---
 
