@@ -74,6 +74,7 @@ class Step444Config:
     # None なら HuggingFace の WikiText-103 と GPT-2 トークナイザーを使う
     data_dir: Optional[str] = None
     max_vocab: Optional[int] = None  # 単語語彙の上限（頻度上位。残りは <unk>）
+    token_cache_dir: str = "results/step44_full_scale_experiment/token_cache"
 
     # 学習設定（フル規模）
     batch_size: int = 32
@@ -143,31 +144,21 @@ def load_local_wikitext(data_dir: str, max_vocab: Optional[int]) -> Tuple[Dict[s
     return ids, len(vocab)
 
 
-class WikiText103Dataset(Dataset):
-    """WikiText-103 実データセット"""
-
-    def __init__(self, texts: List[str], tokenizer, max_length: int = 256):
-        self.max_length = max_length
-        self.tokenizer = tokenizer
-
-        # トークン化
-        self.encodings = tokenizer(
-            texts,
-            truncation=True,
-            max_length=max_length,
-            padding=True,
-            return_tensors="pt"
-        )
-
-    def __len__(self):
-        return len(self.encodings['input_ids'])
-
-    def __getitem__(self, idx):
-        return {
-            'input_ids': self.encodings['input_ids'][idx],
-            'labels': self.encodings['input_ids'][idx].masked_fill(self.encodings['attention_mask'][idx] == 0, -100),
-            'attention_mask': self.encodings['attention_mask'][idx]
-        }
+def tokenize_stream(texts: List[str], split: str, config: 'Step444Config') -> torch.Tensor:
+    """行を連結して GPT-2 BPE でトークン化した1本の ID 列を返す。結果はキャッシュする。"""
+    cache = Path(config.token_cache_dir) / f"{config.dataset_config}_{split}_gpt2.pt"
+    if cache.exists():
+        return torch.load(cache)
+    from transformers import GPT2TokenizerFast
+    tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
+    ids: List[int] = []
+    for i in range(0, len(texts), 10000):
+        ids.extend(tokenizer(''.join(texts[i:i + 10000]))['input_ids'])
+    out = torch.tensor(ids, dtype=torch.long)
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(out, cache)
+    logger.info(f"Tokenized {split}: {len(out):,} tokens -> {cache}")
+    return out
 
 
 class HippocampusHead(nn.Module):
@@ -517,13 +508,10 @@ def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
         train_texts = [t for t in load_dataset(config.dataset_name, config.dataset_config, split='train')['text'] if t.strip()]
         val_texts = [t for t in load_dataset(config.dataset_name, config.dataset_config, split='validation')['text'] if t.strip()]
 
-        from transformers import GPT2Tokenizer
-        tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-        tokenizer.pad_token = tokenizer.eos_token
         vocab_size = config.vocab_size
-
-        train_dataset = WikiText103Dataset(train_texts, tokenizer, max_length=config.max_seq_length)
-        val_dataset = WikiText103Dataset(val_texts, tokenizer, max_length=config.max_seq_length)
+        # 行ごとにパディングすると計算の多くがパディングに使われるため、文章を連結して区切る
+        train_dataset = WordChunkDataset(tokenize_stream(train_texts, 'train', config), config.max_seq_length)
+        val_dataset = WordChunkDataset(tokenize_stream(val_texts, 'validation', config), config.max_seq_length)
 
     val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
 
@@ -657,6 +645,9 @@ def main(argv: Optional[List[str]] = None):
     parser.add_argument('--max-seq-length', type=int, default=None)
     parser.add_argument('--epochs', type=int, default=None)
     parser.add_argument('--lr', type=float, default=None)
+    parser.add_argument('--batch-size', type=int, default=None)
+    parser.add_argument('--grad-accum', type=int, default=None)
+    parser.add_argument('--token-cache-dir', default=None)
     parser.add_argument('--max-hours', type=float, default=None,
                         help='この時間を超えたらチェックポイントを保存して正常終了する（Kaggle の実行時間上限対策）')
     args = parser.parse_args(argv)
@@ -692,20 +683,25 @@ def main(argv: Optional[List[str]] = None):
 
 
 def _run_phases(args, deadline: Optional[float]) -> None:
-    for phase in args.phases:
-        config = Step444Config(phase=phase, deadline=deadline)
-        for arg, field in [('data_dir', 'data_dir'), ('max_vocab', 'max_vocab'), ('hidden_size', 'hidden_size'),
-                           ('num_layers', 'num_layers'), ('nhead', 'nhead'), ('max_seq_length', 'max_seq_length'),
-                           ('epochs', 'num_epochs'), ('lr', 'learning_rate')]:
-            if getattr(args, arg) is not None:
-                setattr(config, field, getattr(args, arg))
-        if args.results_dir:
-            config.results_dir = args.results_dir
-        config.checkpoint_dir = args.checkpoint_dir or str(Path(config.results_dir) / 'checkpoints')
-        output_dir = Path(config.results_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
+    # シードごとに A→B→C の順で回す（途中で打ち切っても、同じシードの A/B/C の組が揃うように）
+    seeds = args.seeds if args.seeds is not None else list(range(Step444Config().num_seeds))
+    for seed in seeds:
+        for phase in args.phases:
+            config = Step444Config(phase=phase, deadline=deadline)
+            for arg, field in [('data_dir', 'data_dir'), ('max_vocab', 'max_vocab'), ('hidden_size', 'hidden_size'),
+                               ('num_layers', 'num_layers'), ('nhead', 'nhead'),
+                               ('max_seq_length', 'max_seq_length'), ('epochs', 'num_epochs'),
+                               ('lr', 'learning_rate'), ('batch_size', 'batch_size'),
+                               ('grad_accum', 'gradient_accumulation_steps'),
+                               ('token_cache_dir', 'token_cache_dir')]:
+                if getattr(args, arg) is not None:
+                    setattr(config, field, getattr(args, arg))
+            if args.results_dir:
+                config.results_dir = args.results_dir
+            config.checkpoint_dir = args.checkpoint_dir or str(Path(config.results_dir) / 'checkpoints')
+            output_dir = Path(config.results_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
 
-        for seed in (args.seeds if args.seeds is not None else range(config.num_seeds)):
             run_file = output_dir / f'phase{phase}_seed{seed}.json'
             if run_file.exists():
                 logger.info(f"Skip Phase {phase} seed {seed}: {run_file} exists")
@@ -715,7 +711,7 @@ def _run_phases(args, deadline: Optional[float]) -> None:
             with open(run_file, 'w') as f:
                 json.dump(result, f, indent=2)
             logger.info(f"Saved: {run_file}")
-            # 完了した実行のチェックポイント（数GB）は不要なので消す（Kaggle の出力容量対策）
+            # 完了した実行のチェックポイント（数GB）は不要なので消す
             (Path(config.checkpoint_dir) / f"phase{phase}_seed{seed}.pt").unlink(missing_ok=True)
 
 
