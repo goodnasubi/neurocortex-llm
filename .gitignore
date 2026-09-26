@@ -3,5 +3,9 @@ __pycache__/
 .pytest_cache/
 .venv/
 results/weights/
+results/step44_optimized_validation/
+results/step44_parameter_sweep/
+results/step44_full_scale_experiment/
 *.npz
 rust/target/
+commit_step44_validation_results.sh

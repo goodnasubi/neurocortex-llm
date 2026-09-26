@@ -18,7 +18,9 @@
 
 import sys
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent))
+# Colab環境では __file__ が未定義なので条件付き実行
+if '__file__' in globals():
+    sys.path.insert(0, str(Path(__file__).parent))
 
 import json
 import logging
