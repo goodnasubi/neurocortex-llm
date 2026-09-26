@@ -5,3 +5,4 @@ __pycache__/
 results/weights/
 *.npz
 rust/target/
+commit_step44_validation_results.sh
