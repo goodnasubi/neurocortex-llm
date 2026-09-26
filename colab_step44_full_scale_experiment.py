@@ -23,6 +23,7 @@ if '__file__' in globals():
     sys.path.insert(0, str(Path(__file__).parent))
 
 import json
+import time
 import logging
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Tuple
@@ -87,6 +88,8 @@ class Step444Config:
     # チェックポイント（Colab のセッション切れ対策。Google Drive 上のパスを推奨）
     checkpoint_dir: str = "results/step44_full_scale_experiment/checkpoints"
     checkpoint_every_steps: int = 2000
+    # 実行時間の上限（time.time() の値）。超えたらチェックポイントを保存して TimeBudgetExceeded を送出する
+    deadline: Optional[float] = None
 
     def __post_init__(self):
         # Phase に応じた有効化制御
@@ -439,6 +442,10 @@ class FullScaleTrainer:
         }
 
 
+class TimeBudgetExceeded(Exception):
+    """実行時間の上限に達し、チェックポイントを保存して中断したことを表す。"""
+
+
 def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
     """Run full-scale experiment for single phase and seed"""
 
@@ -509,10 +516,13 @@ def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
             if hasattr(pbar, 'set_postfix'):
                 pbar.set_postfix({'loss': f'{loss:.4f}'})
             # 勾配累積の途中で保存すると再開時に累積分が失われるため、optimizer step 直後のみ保存する
-            if (batch_idx + 1) % config.checkpoint_every_steps == 0 \
-                    and trainer.step_count % config.gradient_accumulation_steps == 0:
-                save_checkpoint(ckpt_path, trainer, results,
-                                {'epoch': epoch, 'batch_idx': batch_idx + 1, 'epoch_losses': epoch_losses})
+            if trainer.step_count % config.gradient_accumulation_steps == 0:
+                out_of_time = config.deadline is not None and time.time() >= config.deadline
+                if out_of_time or (batch_idx + 1) % config.checkpoint_every_steps == 0:
+                    save_checkpoint(ckpt_path, trainer, results,
+                                    {'epoch': epoch, 'batch_idx': batch_idx + 1, 'epoch_losses': epoch_losses})
+                if out_of_time:
+                    raise TimeBudgetExceeded(f"Phase {config.phase} seed {seed}: epoch {epoch+1}, batch {batch_idx+1}")
 
         avg_train_loss = float(np.mean(epoch_losses))
         trainer.train_losses.append(avg_train_loss)
@@ -580,6 +590,8 @@ def main(argv: Optional[List[str]] = None):
     parser.add_argument('--seeds', nargs='+', type=int, default=None)
     parser.add_argument('--results-dir', default=None)
     parser.add_argument('--checkpoint-dir', default=None)
+    parser.add_argument('--max-hours', type=float, default=None,
+                        help='この時間を超えたらチェックポイントを保存して正常終了する（Kaggle の実行時間上限対策）')
     args = parser.parse_args(argv)
 
     logging.basicConfig(
@@ -591,8 +603,30 @@ def main(argv: Optional[List[str]] = None):
     logger.info("STEP 44.4: Full-Scale Experiment (WikiText-103 × Phase A/B/C)")
     logger.info(f"{'='*80}")
 
+    deadline = time.time() + args.max_hours * 3600 if args.max_hours else None
+    try:
+        _run_phases(args, deadline)
+    except TimeBudgetExceeded as e:
+        logger.info(f"時間の上限に達したため中断しました（{e}）。同じコマンドを再実行すると続きから再開します。")
+
+    # 完了済みの実行をまとめる（未完了の組み合わせは含まれない）
+    results_dir = Path(args.results_dir or Step444Config().results_dir)
+    summary: Dict[str, Dict] = {}
+    for f in sorted(results_dir.glob('phase*_seed*.json')):
+        r = json.loads(f.read_text())
+        ppls = summary.setdefault(r['phase'], {'final_val_ppl': {}})['final_val_ppl']
+        ppls[str(r['seed'])] = r['val_ppls'][-1]
+    for ph in summary.values():
+        v = list(ph['final_val_ppl'].values())
+        ph['mean'], ph['std'], ph['n'] = float(np.mean(v)), float(np.std(v)), len(v)
+    results_dir.mkdir(parents=True, exist_ok=True)
+    (results_dir / 'summary.json').write_text(json.dumps(summary, indent=2))
+    logger.info(f"Summary: {json.dumps(summary)}")
+
+
+def _run_phases(args, deadline: Optional[float]) -> None:
     for phase in args.phases:
-        config = Step444Config(phase=phase)
+        config = Step444Config(phase=phase, deadline=deadline)
         if args.results_dir:
             config.results_dir = args.results_dir
         config.checkpoint_dir = args.checkpoint_dir or str(Path(config.results_dir) / 'checkpoints')
@@ -609,19 +643,8 @@ def main(argv: Optional[List[str]] = None):
             with open(run_file, 'w') as f:
                 json.dump(result, f, indent=2)
             logger.info(f"Saved: {run_file}")
-
-    # 完了済みの実行をまとめる（未完了の組み合わせは含まれない）
-    results_dir = Path(args.results_dir or Step444Config().results_dir)
-    summary: Dict[str, Dict] = {}
-    for f in sorted(results_dir.glob('phase*_seed*.json')):
-        r = json.loads(f.read_text())
-        ppls = summary.setdefault(r['phase'], {'final_val_ppl': {}})['final_val_ppl']
-        ppls[str(r['seed'])] = r['val_ppls'][-1]
-    for ph in summary.values():
-        v = list(ph['final_val_ppl'].values())
-        ph['mean'], ph['std'], ph['n'] = float(np.mean(v)), float(np.std(v)), len(v)
-    (results_dir / 'summary.json').write_text(json.dumps(summary, indent=2))
-    logger.info(f"Summary: {json.dumps(summary)}")
+            # 完了した実行のチェックポイント（数GB）は不要なので消す（Kaggle の出力容量対策）
+            (Path(config.checkpoint_dir) / f"phase{phase}_seed{seed}.pt").unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
