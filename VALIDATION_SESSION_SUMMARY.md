@@ -210,3 +210,9 @@ Else:
 **Validation Status**: ⏳ In progress  
 **Estimated Completion**: 2026-09-26 06:00-06:15 UTC  
 **Next Session**: Will focus on results analysis and decision execution
+
+---
+
+## 追記（2026-09-26）: 本検証は無効、再検証済み
+
+上記の検証は一様乱数トークンと `exp(重み付き損失和)` 指標のため言語モデル性能を測っておらず、「+71.51% / +24.17% 劣化」は項の追加による算術差だった。修正後の再検証結果と原因分析は `docs/brain-structure-research.md`「ステップ44.3 REV 検証の無効判定と再検証」を参照。

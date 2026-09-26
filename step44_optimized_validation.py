@@ -17,6 +17,7 @@
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent / 'src'))
 
 import json
 import logging
@@ -28,6 +29,8 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from torch.optim import AdamW
+
+from neurocortex.data import load_corpus
 
 logger = logging.getLogger(__name__)
 
@@ -46,11 +49,11 @@ class OptimizedValidationConfig:
     num_train_samples: int = 500
     num_val_samples: int = 100
     seq_length: int = 128
-    vocab_size: int = 50257
+    vocab_size: int = 0  # コーパスから決定
 
     # 学習設定
     batch_size: int = 8
-    learning_rate: float = 5e-5
+    learning_rate: float = 1e-3
     num_epochs: int = 5
     num_seeds: int = 3  # 統計的妥当性のため 3 seeds
 
@@ -75,22 +78,19 @@ class OptimizedValidationConfig:
             self.cerebellum_enabled = True
 
 
-class DummyLLMDataset(Dataset):
-    """小規模検証用ダミーデータセット"""
+class CorpusDataset(Dataset):
+    """合成英文コーパス（neurocortex.data）から切り出した文字列。一様乱数トークンは学習可能な構造を持たないため使わない。"""
 
-    def __init__(self, num_samples: int, seq_length: int, vocab_size: int, seed: int = 42):
+    def __init__(self, source: torch.Tensor, num_samples: int, seq_length: int, seed: int = 42):
         self.num_samples = num_samples
         self.seq_length = seq_length
-        self.vocab_size = vocab_size
 
-        # 再現性のため seed で固定
-        np.random.seed(seed)
-        torch.manual_seed(seed)
+        g = torch.Generator().manual_seed(seed)
+        starts = torch.randint(0, len(source) - seq_length, (num_samples,), generator=g)
 
-        # データセット生成
         self.data = []
-        for _ in range(num_samples):
-            input_ids = torch.randint(0, vocab_size, (seq_length,))
+        for i in starts.tolist():
+            input_ids = source[i:i + seq_length].clone()
             self.data.append({
                 'input_ids': input_ids,
                 'labels': input_ids.clone(),
@@ -230,7 +230,9 @@ class BrainInspiredLLMPhase(nn.Module):
             self.cerebellum = CerebellumHead(self.hidden_size, config.vocab_size)
 
     def forward(self, input_ids: torch.Tensor, labels: Optional[torch.Tensor] = None) -> Dict:
-        hidden = self.backbone(input_ids)
+        seq_len = input_ids.size(1)
+        causal_mask = nn.Transformer.generate_square_subsequent_mask(seq_len, device=input_ids.device)
+        hidden = self.backbone[1](self.backbone[0](input_ids), src_mask=causal_mask, is_causal=True)
 
         total_loss = 0.0
         outputs = {'loss': 0.0}
@@ -239,6 +241,7 @@ class BrainInspiredLLMPhase(nn.Module):
             hippo_out = self.hippocampus(hidden, labels)
             if hippo_out['loss'] is not None:
                 total_loss += self.config.hippocampus_loss_weight * hippo_out['loss']
+            outputs['hippocampus_ce'] = hippo_out['loss']
             outputs['hippocampus_loss'] = hippo_out['loss'].item() if hippo_out['loss'] is not None else 0.0
 
         if self.config.basal_ganglia_enabled:
@@ -287,8 +290,12 @@ class OptimizedTrainer:
         return {'train_loss': total_loss / len(train_loader)}
 
     def evaluate(self, val_loader: DataLoader) -> float:
+        """全フェーズ共通の海馬ヘッドの非重み付き次トークンCEからPPLを返す。
+
+        重み付き損失の和は有効ヘッド数で項が増えるためフェーズ間比較に使えない。
+        """
         self.model.eval()
-        total_loss = 0.0
+        total_ce = 0.0
 
         with torch.no_grad():
             for batch in val_loader:
@@ -296,13 +303,9 @@ class OptimizedTrainer:
                 labels = batch['labels'].to(self.config.device)
 
                 outputs = self.model(input_ids, labels)
-                loss = outputs['loss']
-                total_loss += loss.item()
+                total_ce += outputs['hippocampus_ce'].item()
 
-        avg_loss = total_loss / len(val_loader)
-        # PPL = exp(loss) for consistency with parameter sweep metrics
-        ppl = np.exp(avg_loss)
-        return ppl
+        return float(np.exp(total_ce / len(val_loader)))
 
 
 def run_phase_validation(config: OptimizedValidationConfig, seed: int) -> Dict:
@@ -318,8 +321,10 @@ def run_phase_validation(config: OptimizedValidationConfig, seed: int) -> Dict:
         torch.cuda.manual_seed(seed)
 
     # Dataset & DataLoader
-    train_dataset = DummyLLMDataset(config.num_train_samples, config.seq_length, config.vocab_size, seed=seed)
-    val_dataset = DummyLLMDataset(config.num_val_samples, config.seq_length, config.vocab_size, seed=seed+1000)
+    corpus = load_corpus(seed=0)
+    config.vocab_size = corpus.vocab_size
+    train_dataset = CorpusDataset(corpus.train, config.num_train_samples, config.seq_length, seed=seed)
+    val_dataset = CorpusDataset(corpus.val, config.num_val_samples, config.seq_length, seed=seed + 1000)
 
     train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
