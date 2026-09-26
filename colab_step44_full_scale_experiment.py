@@ -27,7 +27,11 @@ import logging
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Tuple
 import numpy as np
-from tqdm import tqdm
+try:
+    from tqdm import tqdm
+except ImportError:
+    def tqdm(iterable, *args, **kwargs):
+        return iterable
 
 import torch
 import torch.nn as nn
@@ -112,7 +116,7 @@ class WikiText103Dataset(Dataset):
     def __getitem__(self, idx):
         return {
             'input_ids': self.encodings['input_ids'][idx],
-            'labels': self.encodings['input_ids'][idx],
+            'labels': self.encodings['input_ids'][idx].masked_fill(self.encodings['attention_mask'][idx] == 0, -100),
             'attention_mask': self.encodings['attention_mask'][idx]
         }
 
@@ -225,7 +229,7 @@ class CerebellumHead(nn.Module):
 class BrainInspiredLLMFullScale(nn.Module):
     """フル規模実験用 Brain-Inspired LLM"""
 
-    def __init__(self, config: Step444Config, vocab_size: int = 50257, hidden_size: int = 768):
+    def __init__(self, config: Step444Config, vocab_size: int = 50257, hidden_size: int = 768, num_layers: int = 12):
         super().__init__()
         self.config = config
 
@@ -241,7 +245,7 @@ class BrainInspiredLLMFullScale(nn.Module):
                 dim_feedforward=3072,
                 batch_first=True,
                 dropout=0.1
-            ) for _ in range(12)
+            ) for _ in range(num_layers)
         ])
 
         self.lm_head = nn.Linear(hidden_size, vocab_size)
@@ -268,14 +272,17 @@ class BrainInspiredLLMFullScale(nn.Module):
         if attention_mask is None:
             attention_mask = torch.ones_like(input_ids)
 
+        causal_mask = nn.Transformer.generate_square_subsequent_mask(seq_len, device=input_ids.device)
         for layer in self.transformer_layers:
-            hidden = layer(hidden, src_key_padding_mask=~attention_mask.bool())
+            hidden = layer(hidden, src_mask=causal_mask, is_causal=True,
+                           src_key_padding_mask=~attention_mask.bool())
 
         backbone_logits = self.lm_head(hidden)
 
         # Initialize losses
         losses = {'backbone_loss': 0.0}
         total_loss = 0.0
+        backbone_ce = None
 
         # Backbone loss
         if labels is not None:
@@ -285,6 +292,7 @@ class BrainInspiredLLMFullScale(nn.Module):
             backbone_loss = loss_fn(shift_logits.view(-1, backbone_logits.size(-1)), shift_labels.view(-1))
             losses['backbone_loss'] = backbone_loss.item()
             total_loss = backbone_loss
+            backbone_ce = backbone_loss
 
         # Phase A: Hippocampus
         if self.config.hippocampus_enabled and self.hippocampus is not None:
@@ -313,6 +321,7 @@ class BrainInspiredLLMFullScale(nn.Module):
         return {
             'logits': backbone_logits,
             'loss': total_loss,
+            'backbone_ce': backbone_ce,
             'losses': losses,
             'hidden_states': hidden
         }
@@ -341,8 +350,6 @@ class FullScaleTrainer:
         labels = batch['labels'].to(self.device)
         attention_mask = batch.get('attention_mask', torch.ones_like(input_ids))
         attention_mask = attention_mask.to(self.device)
-
-        self.optimizer.zero_grad()
 
         if self.config.fp16 and self.scaler:
             with autocast():
@@ -378,11 +385,17 @@ class FullScaleTrainer:
         self.step_count += 1
         return loss.item() * self.config.gradient_accumulation_steps
 
-    def evaluate(self, eval_loader: DataLoader) -> float:
-        """Evaluate on validation set"""
+    def evaluate(self, eval_loader: DataLoader) -> Dict:
+        """全フェーズ共通の backbone lm_head の非重み付き次トークン CE と PPL を返す。
+
+        学習損失 total_loss は有効ヘッド数で項が増えるため、フェーズ間比較に使わない。
+        各ヘッドの非重み付き CE は参考値として記録する。
+        """
         self.model.eval()
-        total_loss = 0.0
-        count = 0
+        total_ce = 0.0
+        total_tokens = 0
+        head_sums: Dict[str, float] = {}
+        head_counts: Dict[str, int] = {}
 
         with torch.no_grad():
             for batch in tqdm(eval_loader, desc="Eval", leave=False):
@@ -405,12 +418,22 @@ class FullScaleTrainer:
                         attention_mask=attention_mask
                     )
 
-                loss = outputs['loss']
-                total_loss += loss.item()
-                count += 1
+                n_tokens = int((labels[..., 1:] != -100).sum().item())
+                if n_tokens == 0:
+                    continue
+                total_ce += outputs['backbone_ce'].item() * n_tokens
+                total_tokens += n_tokens
+                for name, value in outputs['losses'].items():
+                    if name != 'backbone_loss':
+                        head_sums[name] = head_sums.get(name, 0.0) + value * n_tokens
+                        head_counts[name] = head_counts.get(name, 0) + n_tokens
 
-        avg_loss = total_loss / max(count, 1)
-        return avg_loss
+        val_ce = total_ce / max(total_tokens, 1)
+        return {
+            'val_ce': val_ce,
+            'val_ppl': float(np.exp(val_ce)),
+            'head_ce': {k: head_sums[k] / max(head_counts[k], 1) for k in head_sums},
+        }
 
 
 def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
@@ -425,27 +448,12 @@ def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
 
-    # Load WikiText-103 dataset
-    if HAS_DATASETS:
-        logger.info("Loading WikiText-103...")
-        try:
-            dataset = load_dataset('wikitext', 'wikitext-103-v1', split='train')
-            texts = [item['text'] for item in dataset if len(item['text']) > 0]
-        except Exception as e:
-            logger.error(f"WikiText-103 load failed: {e}")
-            logger.info("Using dummy dataset as fallback...")
-            texts = ["This is a dummy text."] * 10000
-    else:
-        logger.warning("datasets library not available, using dummy data")
-        texts = ["This is a dummy text."] * 10000
-
-    # Split dataset
-    n_samples = len(texts)
-    n_train = int(n_samples * 0.8)
-    n_val = int(n_samples * 0.1)
-
-    train_texts = texts[:n_train]
-    val_texts = texts[n_train:n_train+n_val]
+    # Load WikiText-103 dataset（ダミーデータへの切り替えは結果を無意味にするため行わない）
+    if not HAS_DATASETS:
+        raise RuntimeError("datasets ライブラリが必要です: pip install datasets")
+    logger.info("Loading WikiText-103...")
+    train_texts = [t for t in load_dataset(config.dataset_name, config.dataset_config, split='train')['text'] if t.strip()]
+    val_texts = [t for t in load_dataset(config.dataset_name, config.dataset_config, split='validation')['text'] if t.strip()]
 
     # Create datasets
     from transformers import GPT2Tokenizer
@@ -465,8 +473,11 @@ def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
     results = {
         'phase': config.phase,
         'seed': seed,
+        'metric': 'backbone lm_head の非重み付き次トークン CE（全フェーズ共通）',
         'train_losses': [],
-        'val_losses': []
+        'val_losses': [],
+        'val_ppls': [],
+        'val_head_ce': [],
     }
 
     # Training
@@ -479,18 +490,21 @@ def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
         for batch_idx, batch in pbar:
             loss = trainer.train_step(batch)
             epoch_losses.append(loss)
-            pbar.set_postfix({'loss': f'{loss:.4f}'})
+            if hasattr(pbar, 'set_postfix'):
+                pbar.set_postfix({'loss': f'{loss:.4f}'})
 
-        avg_train_loss = np.mean(epoch_losses)
+        avg_train_loss = float(np.mean(epoch_losses))
         trainer.train_losses.append(avg_train_loss)
         results['train_losses'].append(avg_train_loss)
 
         # Evaluate
-        avg_val_loss = trainer.evaluate(val_loader)
-        trainer.val_losses.append(avg_val_loss)
-        results['val_losses'].append(avg_val_loss)
+        ev = trainer.evaluate(val_loader)
+        trainer.val_losses.append(ev['val_ce'])
+        results['val_losses'].append(ev['val_ce'])
+        results['val_ppls'].append(ev['val_ppl'])
+        results['val_head_ce'].append(ev['head_ce'])
 
-        logger.info(f"Epoch {epoch+1} | Train: {avg_train_loss:.4f} | Val: {avg_val_loss:.4f}")
+        logger.info(f"Epoch {epoch+1} | Train(total): {avg_train_loss:.4f} | Val CE: {ev['val_ce']:.4f} | Val PPL: {ev['val_ppl']:.2f}")
 
     return results
 
