@@ -6,4 +6,3 @@ results/weights/
 *.npz
 rust/target/
 commit_step44_validation_results.sh
-results/step44_optimized_validation/

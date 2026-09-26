@@ -1,0 +1,18 @@
+{
+  "status": "\u274c NO IMPROVEMENT",
+  "recommendation": "\u30d1\u30e9\u30e1\u30fc\u30bf\u8abf\u6574\u306e\u518d\u691c\u8a0e\u304c\u5fc5\u8981",
+  "improvements": {
+    "phase_a_to_b_pct": 165.6,
+    "phase_b_to_c_pct": 25.02,
+    "phase_a_to_b_improved": false,
+    "phase_b_to_c_improved": false
+  },
+  "predictions_vs_measurements": {
+    "a_to_b_prediction": -3.65,
+    "a_to_b_measurement": 165.6,
+    "b_to_c_prediction": -4.87,
+    "b_to_c_measurement": 25.02
+  },
+  "exit_code": 2,
+  "notes": "\u6700\u9069\u640d\u5931\u91cd\u307f\u3092\u9069\u7528\u3057\u305f\u306b\u3082\u304b\u304b\u308f\u3089\u305a\u3001\u30d1\u30d5\u30a9\u30fc\u30de\u30f3\u30b9\u304c\u5927\u5e45\u306b\u60aa\u5316\u3002\u30d1\u30e9\u30e1\u30fc\u30bf\u30b9\u30a4\u30fc\u30d7\u307e\u305f\u306f\u691c\u8a3c\u30ed\u30b8\u30c3\u30af\u306b\u554f\u984c\u306e\u53ef\u80fd\u6027\u304c\u3042\u308b\u3002"
+}
