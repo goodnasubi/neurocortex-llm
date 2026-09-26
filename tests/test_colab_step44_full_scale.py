@@ -69,3 +69,39 @@ def test_gradient_accumulation_keeps_gradients():
     g1 = m.lm_head.weight.grad.clone()
     tr.train_step(b)
     assert torch.allclose(m.lm_head.weight.grad, 2 * g1, atol=1e-6)
+
+
+def test_checkpoint_resume_matches_uninterrupted(tmp_path):
+    from colab_step44_full_scale_experiment import load_checkpoint, save_checkpoint
+
+    def deterministic(m):
+        for mod in m.modules():
+            if isinstance(mod, torch.nn.Dropout):
+                mod.p = 0.0
+            if isinstance(mod, torch.nn.MultiheadAttention):
+                mod.dropout = 0.0
+        return m
+
+    b = _batches()[0]
+    cfg, m = _model("B")
+    ref = FullScaleTrainer(deterministic(m), cfg)
+    for _ in range(4):
+        ref.train_step(b)
+
+    cfg, m = _model("B")
+    tr = FullScaleTrainer(deterministic(m), cfg)
+    for _ in range(2):
+        tr.train_step(b)
+    path = tmp_path / "ckpt.pt"
+    save_checkpoint(path, tr, {"val_ppls": [1.0]}, {"epoch": 0, "batch_idx": 2, "epoch_losses": [0.5]})
+
+    cfg, m = _model("B")
+    m.lm_head.weight.data.zero_()
+    resumed = FullScaleTrainer(deterministic(m), cfg)
+    results = {}
+    state = load_checkpoint(path, resumed, results)
+    assert state["batch_idx"] == 2 and results["val_ppls"] == [1.0]
+    for _ in range(2):
+        resumed.train_step(b)
+    for p1, p2 in zip(ref.model.parameters(), resumed.model.parameters()):
+        assert torch.allclose(p1, p2, atol=1e-6)
