@@ -60,7 +60,7 @@ class Step444Config:
     cerebellum_enabled: bool = False  # Phase C で有効
 
     # データセット（WikiText-103 実データ）
-    dataset_name: str = "wikitext"
+    dataset_name: str = "Salesforce/wikitext"
     dataset_config: str = "wikitext-103-v1"
     max_seq_length: int = 256  # Colab T4 メモリ対応
     vocab_size: int = 50257
