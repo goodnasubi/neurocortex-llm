@@ -84,6 +84,9 @@ class Step444Config:
 
     # 出力
     results_dir: str = "results/step44_full_scale_experiment"
+    # チェックポイント（Colab のセッション切れ対策。Google Drive 上のパスを推奨）
+    checkpoint_dir: str = "results/step44_full_scale_experiment/checkpoints"
+    checkpoint_every_steps: int = 2000
 
     def __post_init__(self):
         # Phase に応じた有効化制御
@@ -463,7 +466,6 @@ def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
     train_dataset = WikiText103Dataset(train_texts, tokenizer, max_length=config.max_seq_length)
     val_dataset = WikiText103Dataset(val_texts, tokenizer, max_length=config.max_seq_length)
 
-    train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
 
     # Model & Trainer
@@ -480,18 +482,37 @@ def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
         'val_head_ce': [],
     }
 
+    # 途中再開
+    ckpt_path = Path(config.checkpoint_dir) / f"phase{config.phase}_seed{seed}.pt"
+    state = {'epoch': 0, 'batch_idx': 0, 'epoch_losses': []}
+    if ckpt_path.exists():
+        state = load_checkpoint(ckpt_path, trainer, results)
+        logger.info(f"Resumed from {ckpt_path}: epoch {state['epoch']+1}, batch {state['batch_idx']}")
+
     # Training
-    for epoch in range(config.num_epochs):
+    for epoch in range(state['epoch'], config.num_epochs):
         logger.info(f"Epoch {epoch+1}/{config.num_epochs}")
 
-        epoch_losses = []
+        # 再開時に同じ順序でバッチを飛ばせるよう、エポックごとのシャッフルをシードで固定する
+        g = torch.Generator().manual_seed(seed * 1000 + epoch)
+        train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True, generator=g)
+        resuming = epoch == state['epoch']
+        start_batch = state['batch_idx'] if resuming else 0
+        epoch_losses = list(state['epoch_losses']) if resuming else []
         pbar = tqdm(enumerate(train_loader), total=len(train_loader), desc=f"Train Phase {config.phase}")
 
         for batch_idx, batch in pbar:
+            if batch_idx < start_batch:
+                continue
             loss = trainer.train_step(batch)
             epoch_losses.append(loss)
             if hasattr(pbar, 'set_postfix'):
                 pbar.set_postfix({'loss': f'{loss:.4f}'})
+            # 勾配累積の途中で保存すると再開時に累積分が失われるため、optimizer step 直後のみ保存する
+            if (batch_idx + 1) % config.checkpoint_every_steps == 0 \
+                    and trainer.step_count % config.gradient_accumulation_steps == 0:
+                save_checkpoint(ckpt_path, trainer, results,
+                                {'epoch': epoch, 'batch_idx': batch_idx + 1, 'epoch_losses': epoch_losses})
 
         avg_train_loss = float(np.mean(epoch_losses))
         trainer.train_losses.append(avg_train_loss)
@@ -505,55 +526,102 @@ def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
         results['val_head_ce'].append(ev['head_ce'])
 
         logger.info(f"Epoch {epoch+1} | Train(total): {avg_train_loss:.4f} | Val CE: {ev['val_ce']:.4f} | Val PPL: {ev['val_ppl']:.2f}")
+        save_checkpoint(ckpt_path, trainer, results, {'epoch': epoch + 1, 'batch_idx': 0, 'epoch_losses': []})
 
     return results
 
 
-def main():
-    """ステップ44.4 フル規模実験実行"""
+def save_checkpoint(path: Path, trainer: 'FullScaleTrainer', results: Dict, state: Dict) -> None:
+    """一時ファイルに書いてから置き換える（書き込み中のセッション切れで壊れないように）。"""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix('.tmp')
+    torch.save({
+        'model': trainer.model.state_dict(),
+        'optimizer': trainer.optimizer.state_dict(),
+        'scaler': trainer.scaler.state_dict() if trainer.scaler else None,
+        'step_count': trainer.step_count,
+        'train_losses': trainer.train_losses,
+        'val_losses': trainer.val_losses,
+        'results': results,
+        'state': state,
+        'torch_rng': torch.get_rng_state(),
+        'cuda_rng': torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+    }, tmp)
+    tmp.replace(path)
+
+
+def load_checkpoint(path: Path, trainer: 'FullScaleTrainer', results: Dict) -> Dict:
+    ckpt = torch.load(path, map_location=trainer.device, weights_only=False)
+    trainer.model.load_state_dict(ckpt['model'])
+    trainer.optimizer.load_state_dict(ckpt['optimizer'])
+    if trainer.scaler and ckpt['scaler']:
+        trainer.scaler.load_state_dict(ckpt['scaler'])
+    trainer.step_count = ckpt['step_count']
+    trainer.train_losses = ckpt['train_losses']
+    trainer.val_losses = ckpt['val_losses']
+    results.update(ckpt['results'])
+    torch.set_rng_state(ckpt['torch_rng'])
+    if ckpt['cuda_rng'] is not None and torch.cuda.is_available():
+        torch.cuda.set_rng_state_all(ckpt['cuda_rng'])
+    return ckpt['state']
+
+
+def main(argv: Optional[List[str]] = None):
+    """ステップ44.4 フル規模実験実行。
+
+    Colab のセッション切れに備え、(phase, seed) ごとに結果を保存し、完了済みは飛ばす。
+    途中で切れた実行はチェックポイントから再開する。複数セッションに分けて実行できる:
+        python colab_step44_full_scale_experiment.py --phases A --seeds 0 \
+            --results-dir /content/drive/MyDrive/step44 --checkpoint-dir /content/drive/MyDrive/step44/ckpt
+    """
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--phases', nargs='+', default=['A', 'B', 'C'], choices=['A', 'B', 'C'])
+    parser.add_argument('--seeds', nargs='+', type=int, default=None)
+    parser.add_argument('--results-dir', default=None)
+    parser.add_argument('--checkpoint-dir', default=None)
+    args = parser.parse_args(argv)
 
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-    logger = logging.getLogger(__name__)
 
     logger.info(f"{'='*80}")
     logger.info("STEP 44.4: Full-Scale Experiment (WikiText-103 × Phase A/B/C)")
     logger.info(f"{'='*80}")
 
-    # 各フェーズを順序実行
-    phases = ['A', 'B', 'C']
-    all_results = {}
-
-    for phase in phases:
+    for phase in args.phases:
         config = Step444Config(phase=phase)
-        logger.info(f"\n>>> Starting Phase {phase}")
-
+        if args.results_dir:
+            config.results_dir = args.results_dir
+        config.checkpoint_dir = args.checkpoint_dir or str(Path(config.results_dir) / 'checkpoints')
         output_dir = Path(config.results_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        phase_results = []
-        for seed in range(config.num_seeds):
+        for seed in (args.seeds if args.seeds is not None else range(config.num_seeds)):
+            run_file = output_dir / f'phase{phase}_seed{seed}.json'
+            if run_file.exists():
+                logger.info(f"Skip Phase {phase} seed {seed}: {run_file} exists")
+                continue
             result = run_full_scale_experiment(config, seed)
-            phase_results.append(result)
+            result['config'] = asdict(config)
+            with open(run_file, 'w') as f:
+                json.dump(result, f, indent=2)
+            logger.info(f"Saved: {run_file}")
 
-        all_results[phase] = phase_results
-
-        # 中間結果保存
-        phase_file = output_dir / f'step44_full_scale_{phase}_results.json'
-        with open(phase_file, 'w') as f:
-            json.dump(phase_results, f, indent=2)
-        logger.info(f"Phase {phase} results saved: {phase_file}")
-
-    # 最終結果保存
-    final_file = Path(config.results_dir) / 'step44_full_scale_results.json'
-    with open(final_file, 'w') as f:
-        json.dump(all_results, f, indent=2)
-
-    logger.info(f"{'='*80}")
-    logger.info("STEP 44.4: Complete OK")
-    logger.info(f"{'='*80}")
+    # 完了済みの実行をまとめる（未完了の組み合わせは含まれない）
+    results_dir = Path(args.results_dir or Step444Config().results_dir)
+    summary: Dict[str, Dict] = {}
+    for f in sorted(results_dir.glob('phase*_seed*.json')):
+        r = json.loads(f.read_text())
+        ppls = summary.setdefault(r['phase'], {'final_val_ppl': {}})['final_val_ppl']
+        ppls[str(r['seed'])] = r['val_ppls'][-1]
+    for ph in summary.values():
+        v = list(ph['final_val_ppl'].values())
+        ph['mean'], ph['std'], ph['n'] = float(np.mean(v)), float(np.std(v)), len(v)
+    (results_dir / 'summary.json').write_text(json.dumps(summary, indent=2))
+    logger.info(f"Summary: {json.dumps(summary)}")
 
 
 if __name__ == "__main__":
