@@ -62,6 +62,11 @@ class OptimizedValidationConfig:
     basal_ganglia_loss_weight: float = 0.05
     cerebellum_loss_weight: float = 0.02
 
+    # 基底核 critic: legacy(0.01·value.mean) / none / td(TD(0)) / td_rpe(TD(0)+RPE変調アクター)
+    #   / td_sg, td_rpe_sg（critic 入力で勾配停止）
+    bg_critic_mode: str = "legacy"  # 採用候補は td_sg（docs/decisions/2026-09-26-step44-bg-critic-fix.md）
+    bg_gamma: float = 0.9
+
     # リソース
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
     fp16: bool = True if torch.cuda.is_available() else False
@@ -140,8 +145,11 @@ class HippocampusHead(nn.Module):
 class BasalGangliaHead(nn.Module):
     """基底核モジュール（Actor-Critic）"""
 
-    def __init__(self, hidden_size: int, vocab_size: int):
+    def __init__(self, hidden_size: int, vocab_size: int, mode: str = "legacy", gamma: float = 0.9):
         super().__init__()
+        assert mode in ("legacy", "none", "td", "td_rpe", "td_sg", "td_rpe_sg"), mode
+        self.mode = mode
+        self.gamma = gamma
         self.critic = nn.Sequential(
             nn.Linear(hidden_size, hidden_size // 2),
             nn.ReLU(),
@@ -156,16 +164,37 @@ class BasalGangliaHead(nn.Module):
     def forward(self, hidden_states: torch.Tensor, labels: Optional[torch.Tensor] = None) -> Dict:
         batch_size, seq_len, hidden_size = hidden_states.shape
 
-        value = self.critic(hidden_states)
+        # *_sg: 価値学習は皮質→線条体シナプスでのみ起こり、皮質（バックボーン）へ誤差を逆伝播しない
+        critic_in = hidden_states.detach() if self.mode.endswith("_sg") else hidden_states
+        value = self.critic(critic_in)
         logits = self.actor(hidden_states)
 
         loss = None
         if labels is not None:
-            loss_fn = nn.CrossEntropyLoss()
-            shift_logits = logits[..., :-1, :].contiguous()
-            shift_labels = labels[..., 1:].contiguous()
-            loss = loss_fn(shift_logits.view(-1, logits.size(-1)), shift_labels.view(-1))
-            loss = loss + 0.01 * value.mean()
+            shift_logits = logits[..., :-1, :]
+            shift_labels = labels[..., 1:]
+            ce_tok = nn.functional.cross_entropy(
+                shift_logits.reshape(-1, logits.size(-1)), shift_labels.reshape(-1), reduction="none"
+            ).view(shift_labels.shape)
+            if self.mode == "legacy":
+                loss = ce_tok.mean() + 0.01 * value.mean()
+            elif self.mode == "none":
+                loss = ce_tok.mean()
+            else:
+                # 腹側線条体: 報酬 r_t = -CE_t に対する TD(0) 価値学習（6.2節）
+                v = value[..., :-1, 0]
+                v_next = torch.cat([value[..., 1:-1, 0], torch.zeros_like(v[..., :1])], dim=-1)
+                target = (-ce_tok + self.gamma * v_next).detach()
+                delta = target - v
+                critic_loss = delta.pow(2).mean()
+                if self.mode in ("td", "td_sg"):
+                    actor_loss = ce_tok.mean()
+                else:
+                    # ドーパミン（RPE）による可塑性ゲーティング: |δ| が大きい位置ほど学習率を上げる（平均1に正規化）
+                    gate = delta.detach().abs()
+                    gate = gate / (gate.mean() + 1e-8)
+                    actor_loss = (gate * ce_tok).mean()
+                loss = actor_loss + critic_loss
 
         return {
             'logits': logits,
@@ -225,7 +254,8 @@ class BrainInspiredLLMPhase(nn.Module):
         if config.hippocampus_enabled:
             self.hippocampus = HippocampusHead(self.hidden_size, config.vocab_size)
         if config.basal_ganglia_enabled:
-            self.basal_ganglia = BasalGangliaHead(self.hidden_size, config.vocab_size)
+            self.basal_ganglia = BasalGangliaHead(self.hidden_size, config.vocab_size,
+                                                  mode=config.bg_critic_mode, gamma=config.bg_gamma)
         if config.cerebellum_enabled:
             self.cerebellum = CerebellumHead(self.hidden_size, config.vocab_size)
 
