@@ -1,0 +1,589 @@
+{
+  "all_results": [
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.005,
+      "phase_a": 11.4147,
+      "phase_b": 11.829991415301123,
+      "phase_c": 11.82144356988288,
+      "degradation": 0.40674356988288096
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.01,
+      "phase_a": 11.4147,
+      "phase_b": 11.845088853810068,
+      "phase_c": 11.803222985640803,
+      "degradation": 0.3885229856408028
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.015,
+      "phase_a": 11.4147,
+      "phase_b": 11.756904662527667,
+      "phase_c": 11.44315630430508,
+      "degradation": 0.02845630430508095
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.02,
+      "phase_a": 11.4147,
+      "phase_b": 11.938241281550738,
+      "phase_c": 11.35896347291529,
+      "degradation": -0.055736527084709664
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.005,
+      "phase_a": 11.4147,
+      "phase_b": 11.540252561406504,
+      "phase_c": 11.717466004358595,
+      "degradation": 0.30276600435859535
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.01,
+      "phase_a": 11.4147,
+      "phase_b": 11.540858230718753,
+      "phase_c": 11.432287024642973,
+      "degradation": 0.017587024642972793
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.015,
+      "phase_a": 11.4147,
+      "phase_b": 11.611396227156602,
+      "phase_c": 11.10318197553422,
+      "degradation": -0.31151802446578003
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.02,
+      "phase_a": 11.4147,
+      "phase_b": 11.414708216748696,
+      "phase_c": 11.053931247075901,
+      "degradation": -0.3607687529240984
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.005,
+      "phase_a": 11.4147,
+      "phase_b": 11.292796887966556,
+      "phase_c": 11.522574733259527,
+      "degradation": 0.10787473325952668
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.01,
+      "phase_a": 11.4147,
+      "phase_b": 11.303277592447877,
+      "phase_c": 11.16556962986647,
+      "degradation": -0.24913037013353012
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.015,
+      "phase_a": 11.4147,
+      "phase_b": 11.540644876892154,
+      "phase_c": 11.099872369951346,
+      "degradation": -0.31482763004865433
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.02,
+      "phase_a": 11.4147,
+      "phase_b": 11.400832820468791,
+      "phase_c": 10.795625181378654,
+      "degradation": -0.6190748186213462
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.005,
+      "phase_a": 11.4147,
+      "phase_b": 10.953401727547481,
+      "phase_c": 11.158122258970984,
+      "degradation": -0.256577741029016
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.01,
+      "phase_a": 11.4147,
+      "phase_b": 10.89274064225777,
+      "phase_c": 11.000249801834567,
+      "degradation": -0.41445019816543294
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.015,
+      "phase_a": 11.4147,
+      "phase_b": 10.94777613100812,
+      "phase_c": 10.749160625020671,
+      "degradation": -0.6655393749793284
+    },
+    {
+      "hippocampus": 0.01,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.02,
+      "phase_a": 11.4147,
+      "phase_b": 10.947669338777061,
+      "phase_c": 10.779207818450892,
+      "degradation": -0.6354921815491075
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.005,
+      "phase_a": 11.299399999999999,
+      "phase_b": 11.682410277526206,
+      "phase_c": 11.631178907104408,
+      "degradation": 0.33177890710440927
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.01,
+      "phase_a": 11.299399999999999,
+      "phase_b": 11.766014491210319,
+      "phase_c": 11.430515635002896,
+      "degradation": 0.1311156350028977
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.015,
+      "phase_a": 11.299399999999999,
+      "phase_b": 11.704646359500474,
+      "phase_c": 11.17228298761202,
+      "degradation": -0.1271170123879788
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.02,
+      "phase_a": 11.299399999999999,
+      "phase_b": 11.550941395110156,
+      "phase_c": 11.20358612358691,
+      "degradation": -0.09581387641308936
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.005,
+      "phase_a": 11.299399999999999,
+      "phase_b": 11.56448665799954,
+      "phase_c": 11.582026828118995,
+      "degradation": 0.2826268281189961
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.01,
+      "phase_a": 11.299399999999999,
+      "phase_b": 11.479075171761176,
+      "phase_c": 11.350429630441068,
+      "degradation": 0.051029630441069784
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.015,
+      "phase_a": 11.299399999999999,
+      "phase_b": 11.342787800963256,
+      "phase_c": 11.124205579160527,
+      "degradation": -0.17519442083947112
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.02,
+      "phase_a": 11.299399999999999,
+      "phase_b": 11.44457612290402,
+      "phase_c": 11.117552222621889,
+      "degradation": -0.18184777737810975
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.005,
+      "phase_a": 11.299399999999999,
+      "phase_b": 11.331881828956847,
+      "phase_c": 11.216525984463726,
+      "degradation": -0.08287401553627305
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.01,
+      "phase_a": 11.299399999999999,
+      "phase_b": 11.32992839693948,
+      "phase_c": 11.169971771958366,
+      "degradation": -0.12942822804163256
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.015,
+      "phase_a": 11.299399999999999,
+      "phase_b": 11.229827799969405,
+      "phase_c": 11.085297628884085,
+      "degradation": -0.21410237111591357
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.02,
+      "phase_a": 11.299399999999999,
+      "phase_b": 11.400619952249595,
+      "phase_c": 10.932908011911618,
+      "degradation": -0.3664919880883808
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.005,
+      "phase_a": 11.299399999999999,
+      "phase_b": 10.827358247677738,
+      "phase_c": 11.017788762414877,
+      "degradation": -0.2816112375851212
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.01,
+      "phase_a": 11.299399999999999,
+      "phase_b": 10.944406343140358,
+      "phase_c": 10.961914512712234,
+      "degradation": -0.33748548728776484
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.015,
+      "phase_a": 11.299399999999999,
+      "phase_b": 10.863362576215472,
+      "phase_c": 10.661444102333617,
+      "degradation": -0.6379558976663819
+    },
+    {
+      "hippocampus": 0.02,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.02,
+      "phase_a": 11.299399999999999,
+      "phase_b": 10.800646502599399,
+      "phase_c": 10.37603933759193,
+      "degradation": -0.9233606624080686
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.005,
+      "phase_a": 11.184099999999999,
+      "phase_b": 11.66845258223942,
+      "phase_c": 11.77425400285708,
+      "degradation": 0.5901540028570817
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.01,
+      "phase_a": 11.184099999999999,
+      "phase_b": 11.579998987841966,
+      "phase_c": 11.554633289789201,
+      "degradation": 0.3705332897892024
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.015,
+      "phase_a": 11.184099999999999,
+      "phase_b": 11.623363602504762,
+      "phase_c": 11.205418024539487,
+      "degradation": 0.021318024539487723
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.02,
+      "phase_a": 11.184099999999999,
+      "phase_b": 11.623339560550841,
+      "phase_c": 11.239383656646595,
+      "degradation": 0.05528365664659596
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.005,
+      "phase_a": 11.184099999999999,
+      "phase_b": 11.390497396089003,
+      "phase_c": 11.6230343655814,
+      "degradation": 0.4389343655814013
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.01,
+      "phase_a": 11.184099999999999,
+      "phase_b": 11.132105489591025,
+      "phase_c": 11.36441025043752,
+      "degradation": 0.1803102504375218
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.015,
+      "phase_a": 11.184099999999999,
+      "phase_b": 11.402784706823816,
+      "phase_c": 11.067969264953412,
+      "degradation": -0.11613073504658722
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.02,
+      "phase_a": 11.184099999999999,
+      "phase_b": 11.403256077653548,
+      "phase_c": 10.714763108539909,
+      "degradation": -0.46933689146008994
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.005,
+      "phase_a": 11.184099999999999,
+      "phase_b": 11.178992811216249,
+      "phase_c": 11.330221257151173,
+      "degradation": 0.14612125715117408
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.01,
+      "phase_a": 11.184099999999999,
+      "phase_b": 11.348749404474152,
+      "phase_c": 11.058332978172634,
+      "degradation": -0.12576702182736454
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.015,
+      "phase_a": 11.184099999999999,
+      "phase_b": 11.120110639710681,
+      "phase_c": 10.875634295641545,
+      "degradation": -0.3084657043584542
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.02,
+      "phase_a": 11.184099999999999,
+      "phase_b": 11.292500211770207,
+      "phase_c": 10.774335110965966,
+      "degradation": -0.4097648890340331
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.005,
+      "phase_a": 11.184099999999999,
+      "phase_b": 10.761743979623297,
+      "phase_c": 11.001716743311334,
+      "degradation": -0.18238325668866473
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.01,
+      "phase_a": 11.184099999999999,
+      "phase_b": 10.824427754934804,
+      "phase_c": 10.862904499053288,
+      "degradation": -0.3211955009467111
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.015,
+      "phase_a": 11.184099999999999,
+      "phase_b": 10.744514690612267,
+      "phase_c": 10.548923785340222,
+      "degradation": -0.6351762146597775
+    },
+    {
+      "hippocampus": 0.03,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.02,
+      "phase_a": 11.184099999999999,
+      "phase_b": 10.775509184686786,
+      "phase_c": 10.250988505186786,
+      "degradation": -0.9331114948132129
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.005,
+      "phase_a": 10.953499999999998,
+      "phase_b": 11.423692027706457,
+      "phase_c": 11.468095527217988,
+      "degradation": 0.5145955272179901
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.01,
+      "phase_a": 10.953499999999998,
+      "phase_b": 11.394591345664246,
+      "phase_c": 11.234181286662484,
+      "degradation": 0.28068128666248526
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.015,
+      "phase_a": 10.953499999999998,
+      "phase_b": 11.252542925794957,
+      "phase_c": 11.031225467723463,
+      "degradation": 0.07772546772346445
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.01,
+      "cerebellum": 0.02,
+      "phase_a": 10.953499999999998,
+      "phase_b": 11.359808548347322,
+      "phase_c": 10.808712273077836,
+      "degradation": -0.14478772692216246
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.005,
+      "phase_a": 10.953499999999998,
+      "phase_b": 11.1848314288334,
+      "phase_c": 11.310335085681453,
+      "degradation": 0.35683508568145506
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.01,
+      "phase_a": 10.953499999999998,
+      "phase_b": 11.389578590121053,
+      "phase_c": 11.103037781283183,
+      "degradation": 0.1495377812831844
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.015,
+      "phase_a": 10.953499999999998,
+      "phase_b": 11.226715039072277,
+      "phase_c": 10.893785408423382,
+      "degradation": -0.05971459157661663
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.02,
+      "cerebellum": 0.02,
+      "phase_a": 10.953499999999998,
+      "phase_b": 11.009082878470096,
+      "phase_c": 10.714228612455075,
+      "degradation": -0.23927138754492283
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.005,
+      "phase_a": 10.953499999999998,
+      "phase_b": 11.013863020994103,
+      "phase_c": 11.344194211248528,
+      "degradation": 0.39069421124852965
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.01,
+      "phase_a": 10.953499999999998,
+      "phase_b": 10.988603903521888,
+      "phase_c": 10.94367473423336,
+      "degradation": -0.009825265766638225
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.015,
+      "phase_a": 10.953499999999998,
+      "phase_b": 11.004368823029475,
+      "phase_c": 10.612302196238044,
+      "degradation": -0.3411978037619541
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.03,
+      "cerebellum": 0.02,
+      "phase_a": 10.953499999999998,
+      "phase_b": 11.122122281451501,
+      "phase_c": 10.620013303268676,
+      "degradation": -0.33348669673132214
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.005,
+      "phase_a": 10.953499999999998,
+      "phase_b": 10.700703194704305,
+      "phase_c": 10.662811254520525,
+      "degradation": -0.2906887454794731
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.01,
+      "phase_a": 10.953499999999998,
+      "phase_b": 10.761879431093611,
+      "phase_c": 10.42921489372077,
+      "degradation": -0.524285106279228
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.015,
+      "phase_a": 10.953499999999998,
+      "phase_b": 10.680285709380028,
+      "phase_c": 10.604095562580996,
+      "degradation": -0.3494044374190022
+    },
+    {
+      "hippocampus": 0.05,
+      "basal_ganglia": 0.05,
+      "cerebellum": 0.02,
+      "phase_a": 10.953499999999998,
+      "phase_b": 10.522546367486932,
+      "phase_c": 10.14407022703972,
+      "degradation": -0.8094297729602786
+    }
+  ],
+  "best_config": {
+    "hippocampus": 0.03,
+    "basal_ganglia": 0.05,
+    "cerebellum": 0.02,
+    "phase_a": 11.184099999999999,
+    "phase_b": 10.775509184686786,
+    "phase_c": 10.250988505186786,
+    "degradation": -0.9331114948132129
+  }
+}
