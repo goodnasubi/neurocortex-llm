@@ -105,3 +105,16 @@ def test_checkpoint_resume_matches_uninterrupted(tmp_path):
         resumed.train_step(b)
     for p1, p2 in zip(ref.model.parameters(), resumed.model.parameters()):
         assert torch.allclose(p1, p2, atol=1e-6)
+
+
+def test_local_wikitext_word_level(tmp_path):
+    from colab_step44_full_scale_experiment import WordChunkDataset, load_local_wikitext
+    (tmp_path / "train.txt").write_text(" a b a\n c a <unk>\n")
+    (tmp_path / "valid.txt").write_text(" a z\n")
+    (tmp_path / "test.txt").write_text(" b\n")
+    ids, v = load_local_wikitext(str(tmp_path), max_vocab=3)
+    assert v == 3  # <unk>, a, <eos>（b・c は語彙外）
+    assert ids["train"].tolist() == [1, 0, 1, 2, 0, 1, 0, 2]
+    assert ids["valid"].tolist() == [1, 0, 2]
+    ds = WordChunkDataset(ids["train"], 3)
+    assert len(ds) == 2 and ds[1]["input_ids"].tolist() == [2, 0, 1]

@@ -65,6 +65,16 @@ class Step444Config:
     max_seq_length: int = 256  # Colab T4 メモリ対応
     vocab_size: int = 50257
 
+    # モデル規模（既定は GPT-2 small 相当）
+    hidden_size: int = 768
+    num_layers: int = 12
+    nhead: int = 12
+
+    # ローカルの WikiText（pytorch/examples 形式の train/valid/test.txt）を単語単位で使う場合のディレクトリ。
+    # None なら HuggingFace の WikiText-103 と GPT-2 トークナイザーを使う
+    data_dir: Optional[str] = None
+    max_vocab: Optional[int] = None  # 単語語彙の上限（頻度上位。残りは <unk>）
+
     # 学習設定（フル規模）
     batch_size: int = 32
     learning_rate: float = 5e-5
@@ -98,6 +108,39 @@ class Step444Config:
         elif self.phase == "C":
             self.basal_ganglia_enabled = True
             self.cerebellum_enabled = True
+
+
+class WordChunkDataset(Dataset):
+    """単語 ID 列を長さ max_length の重ならない区間に切る（パディングなし）。"""
+
+    def __init__(self, ids: torch.Tensor, max_length: int):
+        n = (len(ids) // max_length) * max_length
+        self.chunks = ids[:n].view(-1, max_length)
+
+    def __len__(self):
+        return len(self.chunks)
+
+    def __getitem__(self, idx):
+        x = self.chunks[idx]
+        return {'input_ids': x, 'labels': x, 'attention_mask': torch.ones_like(x)}
+
+
+def load_local_wikitext(data_dir: str, max_vocab: Optional[int]) -> Tuple[Dict[str, torch.Tensor], int]:
+    """pytorch/examples の word_language_model と同じ単語分割（空白区切り＋行末に <eos>）。語彙は train から作る。"""
+    from collections import Counter
+    splits = {}
+    for name in ('train', 'valid', 'test'):
+        words = []
+        for line in (Path(data_dir) / f'{name}.txt').read_text(encoding='utf-8').splitlines():
+            words.extend(line.split() + ['<eos>'])
+        splits[name] = words
+    counts = Counter(splits['train'])
+    vocab = ['<unk>'] + [w for w, _ in counts.most_common() if w != '<unk>']
+    if max_vocab:
+        vocab = vocab[:max_vocab]
+    stoi = {w: i for i, w in enumerate(vocab)}
+    ids = {k: torch.tensor([stoi.get(w, 0) for w in v], dtype=torch.long) for k, v in splits.items()}
+    return ids, len(vocab)
 
 
 class WikiText103Dataset(Dataset):
@@ -235,7 +278,8 @@ class CerebellumHead(nn.Module):
 class BrainInspiredLLMFullScale(nn.Module):
     """フル規模実験用 Brain-Inspired LLM"""
 
-    def __init__(self, config: Step444Config, vocab_size: int = 50257, hidden_size: int = 768, num_layers: int = 12):
+    def __init__(self, config: Step444Config, vocab_size: int = 50257, hidden_size: int = 768, num_layers: int = 12,
+                 nhead: int = 12):
         super().__init__()
         self.config = config
 
@@ -247,8 +291,8 @@ class BrainInspiredLLMFullScale(nn.Module):
         self.transformer_layers = nn.ModuleList([
             nn.TransformerEncoderLayer(
                 d_model=hidden_size,
-                nhead=12,
-                dim_feedforward=3072,
+                nhead=nhead,
+                dim_feedforward=4 * hidden_size,
                 batch_first=True,
                 dropout=0.1
             ) for _ in range(num_layers)
@@ -458,25 +502,34 @@ def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
 
-    # Load WikiText-103 dataset（ダミーデータへの切り替えは結果を無意味にするため行わない）
-    if not HAS_DATASETS:
-        raise RuntimeError("datasets ライブラリが必要です: pip install datasets")
-    logger.info("Loading WikiText-103...")
-    train_texts = [t for t in load_dataset(config.dataset_name, config.dataset_config, split='train')['text'] if t.strip()]
-    val_texts = [t for t in load_dataset(config.dataset_name, config.dataset_config, split='validation')['text'] if t.strip()]
+    test_dataset = None
+    if config.data_dir:
+        logger.info(f"Loading local WikiText (word-level) from {config.data_dir}...")
+        ids, vocab_size = load_local_wikitext(config.data_dir, config.max_vocab)
+        train_dataset = WordChunkDataset(ids['train'], config.max_seq_length)
+        val_dataset = WordChunkDataset(ids['valid'], config.max_seq_length)
+        test_dataset = WordChunkDataset(ids['test'], config.max_seq_length)
+    else:
+        # Load WikiText-103 dataset（ダミーデータへの切り替えは結果を無意味にするため行わない）
+        if not HAS_DATASETS:
+            raise RuntimeError("datasets ライブラリが必要です: pip install datasets")
+        logger.info("Loading WikiText-103...")
+        train_texts = [t for t in load_dataset(config.dataset_name, config.dataset_config, split='train')['text'] if t.strip()]
+        val_texts = [t for t in load_dataset(config.dataset_name, config.dataset_config, split='validation')['text'] if t.strip()]
 
-    # Create datasets
-    from transformers import GPT2Tokenizer
-    tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-    tokenizer.pad_token = tokenizer.eos_token
+        from transformers import GPT2Tokenizer
+        tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+        tokenizer.pad_token = tokenizer.eos_token
+        vocab_size = config.vocab_size
 
-    train_dataset = WikiText103Dataset(train_texts, tokenizer, max_length=config.max_seq_length)
-    val_dataset = WikiText103Dataset(val_texts, tokenizer, max_length=config.max_seq_length)
+        train_dataset = WikiText103Dataset(train_texts, tokenizer, max_length=config.max_seq_length)
+        val_dataset = WikiText103Dataset(val_texts, tokenizer, max_length=config.max_seq_length)
 
     val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
 
     # Model & Trainer
-    model = BrainInspiredLLMFullScale(config)
+    model = BrainInspiredLLMFullScale(config, vocab_size=vocab_size, hidden_size=config.hidden_size,
+                                      num_layers=config.num_layers, nhead=config.nhead)
     trainer = FullScaleTrainer(model, config)
 
     results = {
@@ -538,6 +591,11 @@ def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
         logger.info(f"Epoch {epoch+1} | Train(total): {avg_train_loss:.4f} | Val CE: {ev['val_ce']:.4f} | Val PPL: {ev['val_ppl']:.2f}")
         save_checkpoint(ckpt_path, trainer, results, {'epoch': epoch + 1, 'batch_idx': 0, 'epoch_losses': []})
 
+    if test_dataset is not None:
+        ev = trainer.evaluate(DataLoader(test_dataset, batch_size=config.batch_size, shuffle=False))
+        results['test_ce'], results['test_ppl'] = ev['val_ce'], ev['val_ppl']
+        logger.info(f"Test CE: {ev['val_ce']:.4f} | Test PPL: {ev['val_ppl']:.2f}")
+
     return results
 
 
@@ -590,6 +648,15 @@ def main(argv: Optional[List[str]] = None):
     parser.add_argument('--seeds', nargs='+', type=int, default=None)
     parser.add_argument('--results-dir', default=None)
     parser.add_argument('--checkpoint-dir', default=None)
+    parser.add_argument('--data-dir', default=None,
+                        help='ローカルの WikiText（train/valid/test.txt）を単語単位で使う')
+    parser.add_argument('--max-vocab', type=int, default=None)
+    parser.add_argument('--hidden-size', type=int, default=None)
+    parser.add_argument('--num-layers', type=int, default=None)
+    parser.add_argument('--nhead', type=int, default=None)
+    parser.add_argument('--max-seq-length', type=int, default=None)
+    parser.add_argument('--epochs', type=int, default=None)
+    parser.add_argument('--lr', type=float, default=None)
     parser.add_argument('--max-hours', type=float, default=None,
                         help='この時間を超えたらチェックポイントを保存して正常終了する（Kaggle の実行時間上限対策）')
     args = parser.parse_args(argv)
@@ -627,6 +694,11 @@ def main(argv: Optional[List[str]] = None):
 def _run_phases(args, deadline: Optional[float]) -> None:
     for phase in args.phases:
         config = Step444Config(phase=phase, deadline=deadline)
+        for arg, field in [('data_dir', 'data_dir'), ('max_vocab', 'max_vocab'), ('hidden_size', 'hidden_size'),
+                           ('num_layers', 'num_layers'), ('nhead', 'nhead'), ('max_seq_length', 'max_seq_length'),
+                           ('epochs', 'num_epochs'), ('lr', 'learning_rate')]:
+            if getattr(args, arg) is not None:
+                setattr(config, field, getattr(args, arg))
         if args.results_dir:
             config.results_dir = args.results_dir
         config.checkpoint_dir = args.checkpoint_dir or str(Path(config.results_dir) / 'checkpoints')
