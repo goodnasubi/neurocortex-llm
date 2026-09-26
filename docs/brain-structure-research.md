@@ -6178,3 +6178,54 @@ score_hybrid = λ_inner * score_inner + λ_density * score_density + λ_template
    - Methods / Results 執筆
    - Phase 別 perplexity の有意性判定
    - 判定基準に基づき、ステップ44.5.1 or 44.5.2 を選定
+
+## ステップ44.4 実験実行完了（2026-09-26）
+
+### 44.4 フル規模実験結果
+
+**実験設定**:
+- Dataset: WikiText-103 (103M tokens)
+- Phases: A (Backbone+Hippocampus), B (+Basal Ganglia), C (+Cerebellum)
+- Seeds: 0, 1, 2 (3回独立実行)
+- Epochs: 10
+- Loss weights (optimized): hippocampus=0.05, basal_ganglia=0.05, cerebellum=0.02
+
+**実験結果**:
+
+| Phase | Mean Test PPL | Std Dev | vs Prev | Improvement |
+|---|---|---|---|---|
+| A | 11.3585 | 0.0625 | - | - |
+| B | 11.9288 | 0.2884 | +0.5703 | +5.02% |
+| C | 12.2072 | 0.1593 | +0.2784 | +2.33% |
+
+**統計分析**:
+- Phase A vs B: t=-2.7330, p=0.0523, Cohen's d=2.73 (borderline, p≈0.05)
+- Phase B vs C: t=-1.1949, p=0.2981, Cohen's d=1.19 (not significant)
+
+**成果物**:
+- ✅ results/step44_full_scale_experiment/ (experiment data)
+- ✅ results/step44_figures/figure2_perplexity_comparison.png
+- ✅ results/step44_figures/figure5_statistical_significance.png
+
+### 44.4 実験の解釈
+
+**所見**:
+1. Phase B（Basal Ganglia追加）: PPL が +5% 増加。p-value が 0.0523 で境界線上（p<0.05 の基準をわずかに超過）
+2. Phase C（Cerebellum追加）: PPL が +2.3% 増加。p=0.298 で有意でない
+3. 全体傾向: Loss weight 最適化にもかかわらず、module 追加による性能悪化が観察される
+
+**考察**:
+- WikiText-103 フル規模データでも、ステップ44.3.1（小規模データ）と同様の傾向：module loss が training loss を支配
+- Loss weight さらに削減（現在0.05 → 0.01-0.02）が必要な可能性
+- あるいは module 間の相互作用（interference）が本質的な設計課題の可能性
+
+### ステップ44.5 判定
+
+**仮説検証結果**:
+- ❌ Hypothesis 1 (BG module 機能): NO（p>0.05, かつ PPL 劣化）
+- ❌ Hypothesis 2 (Cerebellum 機能): NO（p>0.05, かつ PPL 劣化）
+
+**推奨アクション**:
+- ステップ44.5.2 実施: Loss weight の追加削減、または Module design の見直し
+- 小規模実験（ステップ44.3 相当）でパラメータ掃引を実施し、最適値を確定してから フル規模再実験
+
