@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 import torch
 
-from src.neurocortex.hippocampus import DiskBackedAssociativeStore
+from neurocortex.hippocampus import DiskBackedAssociativeStore
 
 
 @pytest.fixture

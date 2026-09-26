@@ -14,8 +14,8 @@
 import pytest
 import torch
 
-from src.neurocortex.basal_ganglia_core import ParitySpec
-from src.neurocortex.multi_learning_rule_4way import (
+from neurocortex.basal_ganglia_core import ParitySpec
+from neurocortex.multi_learning_rule_4way import (
     CONDITIONS, RunResult, run_condition, _extract_base_and_stdp_flag, _active_modules
 )
 
