@@ -1,0 +1,43 @@
+{
+  "results": {
+    "A": {
+      "test_perplexity": [
+        11.4428,
+        11.339,
+        11.2935
+      ],
+      "mean_test_ppl": 11.3585,
+      "std_test_ppl": 0.0625
+    },
+    "B": {
+      "test_perplexity": [
+        12.1529,
+        11.5216,
+        12.112
+      ],
+      "mean_test_ppl": 11.9288,
+      "std_test_ppl": 0.2884
+    },
+    "C": {
+      "test_perplexity": [
+        12.3174,
+        11.9819,
+        12.3224
+      ],
+      "mean_test_ppl": 12.2072,
+      "std_test_ppl": 0.1593
+    }
+  },
+  "statistical_analysis": {
+    "phase_A_vs_B": {
+      "t_statistic": -2.733253679263387,
+      "p_value": 0.05226739814962323,
+      "cohens_d": 2.733253679263387
+    },
+    "phase_B_vs_C": {
+      "t_statistic": -1.194783665902402,
+      "p_value": 0.29817037552023734,
+      "cohens_d": 1.1947836659024018
+    }
+  }
+}
