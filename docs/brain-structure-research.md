@@ -6042,3 +6042,139 @@ score_hybrid = λ_inner * score_inner + λ_density * score_density + λ_template
 - arXiv preprint（査読前）
 - 学会投稿候補: ICLR 2027、NeurIPS 2027
 - 神経生物学的妥当性と LLM 性能の novel な結合実証
+
+## ステップ44.5 実装開始（2026-09-26）
+
+### 44.5 Phase 1: 論文骨子作成（即座）
+
+**成果物**: `step44_paper_outline.md` 作成完了
+
+**内容**:
+1. **論文構造全体**:
+   - Introduction: 神経生物学的 gap、研究課題、contributions
+   - Related Work: 脳型 NN、memory-augmented models、強化学習、小脳学習
+   - Methods: architecture 詳細、3 phase ablation、evaluation metrics
+   - Experiments: ステップ44.1-44.4 全結果サマリ
+   - Discussion: findings、limitations、future work
+   - Conclusion: 研究インパクト
+
+2. **結果集計テンプレート**:
+   - 3 phase × 3 seeds の perplexity 結果構造
+   - Statistical analysis 框（t-test, Cohen's d）
+   - Module contribution breakdown
+
+### 44.5 Phase 2: 実験結果の統計分析（ステップ44.4 完了後、1 週間）
+
+**実施内容**:
+1. Colab から結果ダウンロード
+2. `analyze_step44_results.py` 実行（以下をセットで実施）:
+   - Paired t-test（Phase A vs B, B vs C）
+   - Cohen's d 効果量計算
+   - Variance 比較（Levene's test）
+   - Perplexity 曲線の可視化
+
+3. Module contribution 分析:
+   - 各 phase での loss weight の実際の寄与度（total loss に対する %）
+   - Gradient norm の epoch 推移（learning stability 確認）
+
+4. Figures 作成:
+   - Figure 1: Architecture diagram（3 modules の spatial layout）
+   - Figure 2: Perplexity comparison（3 phases、3 seeds、error bar）
+   - Figure 3: Loss curves per phase（epoch-wise training dynamics）
+   - Figure 4: Module contribution breakdown（stacked bar chart）
+
+### 44.5 Phase 3: 論文執筆（Phase 2 と並行、1-2 週間）
+
+**Section ごとの担当**:
+
+1. **Methods** (3-4 days):
+   - Section 3.1: Architecture 詳細（module ごと）→ step44_paper_outline.md から転記
+   - Section 3.2-3.4: Training / Experiment design → 確定
+
+2. **Results** (2-3 days):
+   - Section 4.1-4.3: Prior steps (44.1-44.3) サマリ → docs から抽出
+   - Section 4.4: Full-scale experiment (44.4) 結果 → Phase 2 output を埋め込み
+
+3. **Discussion & Conclusion** (2-3 days):
+   - Findings summary
+   - Comparison with SpikingBrain、従来 Transformer
+   - Limitations & future work
+   - Impact statement
+
+### 44.5 実行フロー（ガント図）
+
+```
+[即座]論文骨子作成 ────────────────────┐
+                                       ↓
+[48-72h 待機中] 結果集計テンプレート準備 ────┐
+                                         ↓
+[実験完了後] Colab 結果ダウンロード ─────────────┐
+                 ↓                             ↓
+            統計分析 ────────────────────→ Figure 作成
+                 ↓                             ↓
+            Methods 執筆 ──────────────→ Results/Discussion 執筆
+                                         ↓
+                                    Paper Draft 完成
+                                         ↓
+                                    References 追加・校正
+                                         ↓
+                                    arXiv preprint 投稿準備
+```
+
+### 44.5 判定基準（実験結果に基づく）
+
+```
+【仮説検証】
+1. Phase A vs Phase B: Perplexity 改善有意？
+   → YES: BG module の reward prediction が機能 → 期待通り
+   → NO: BG module loss が adversarial に機能 → 設計修正（ステップ44.5.2）
+
+2. Phase B vs Phase C: Perplexity 改善有意？
+   → YES: Cerebellum の error correction が機能 → 期待通り
+   → NO: Cerebellum module が干渉 → 設計修正
+
+3. 計算コスト vs 性能の trade-off:
+   → Cost < 1.5× baseline: 実用的 → ステップ44.5.1（拡張）推奨
+   → Cost ≥ 1.5× baseline: 軽量化必要 → Module weight / Architecture 最適化
+
+【次ステップ判定】
+- 全 hypothesis が YES: ステップ44.5.1（5B-7B LLM への拡張）へ進行
+- 1-2 個 NO: ステップ44.5.2（設計修正・再実験）実施
+- 3個以上 NO: 根本的な設計再考が必要（research direction 見直し）
+```
+
+### 44.5.1 オプション: 5B-7B LLM への拡張
+
+**前提**: ステップ44.4 で全 hypothesis が YES の場合のみ実施
+
+**内容**:
+- より大規模な backbone（256d → 512d or 1024d）での module 統合
+- Memory/compute トレードオフ評価
+- Downstream task での性能評価
+
+**リソース**: Google Colab Pro with A100（32GB GPU）
+
+### 次アクション（優先順）
+
+1. **即座**（今セッション）:
+   - ✅ ステップ44.4-44.5 詳細設計を docs に記録
+   - ✅ 論文骨子 (`step44_paper_outline.md`) 作成
+   - ✅ Colab 実験投入スクリプト確認（構文OK）
+   - ✅ commit & push
+
+2. **Colab セッション確保後**（ユーザーが手動実行）:
+   - colab_step44_full_scale_experiment.py を Colab にアップロード
+   - WikiText-103 ダウンロード・トークン化
+   - フル実験投入（3 seed × 3 phase × 10 epoch）
+
+3. **待機中（48-72h）**:
+   - ステップ44.5 論文骨子のレビュー・refine
+   - 計算コスト・エネルギー効率の理論値計算
+   - 結果集計テンプレートの最終確認
+
+4. **実験完了後**（優先度順）:
+   - analyze_step44_results.py で統計分析
+   - Figures 作成（matplotlib）
+   - Methods / Results 執筆
+   - Phase 別 perplexity の有意性判定
+   - 判定基準に基づき、ステップ44.5.1 or 44.5.2 を選定
