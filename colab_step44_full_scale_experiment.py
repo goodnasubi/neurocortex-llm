@@ -23,6 +23,7 @@ if '__file__' in globals():
     sys.path.insert(0, str(Path(__file__).parent))
 
 import json
+import time
 import logging
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Tuple
@@ -59,10 +60,21 @@ class Step444Config:
     cerebellum_enabled: bool = False  # Phase C で有効
 
     # データセット（WikiText-103 実データ）
-    dataset_name: str = "wikitext"
+    dataset_name: str = "Salesforce/wikitext"
     dataset_config: str = "wikitext-103-v1"
     max_seq_length: int = 256  # Colab T4 メモリ対応
     vocab_size: int = 50257
+
+    # モデル規模（既定は GPT-2 small 相当）
+    hidden_size: int = 768
+    num_layers: int = 12
+    nhead: int = 12
+
+    # ローカルの WikiText（pytorch/examples 形式の train/valid/test.txt）を単語単位で使う場合のディレクトリ。
+    # None なら HuggingFace の WikiText-103 と GPT-2 トークナイザーを使う
+    data_dir: Optional[str] = None
+    max_vocab: Optional[int] = None  # 単語語彙の上限（頻度上位。残りは <unk>）
+    token_cache_dir: str = "results/step44_full_scale_experiment/token_cache"
 
     # 学習設定（フル規模）
     batch_size: int = 32
@@ -87,6 +99,8 @@ class Step444Config:
     # チェックポイント（Colab のセッション切れ対策。Google Drive 上のパスを推奨）
     checkpoint_dir: str = "results/step44_full_scale_experiment/checkpoints"
     checkpoint_every_steps: int = 2000
+    # 実行時間の上限（time.time() の値）。超えたらチェックポイントを保存して TimeBudgetExceeded を送出する
+    deadline: Optional[float] = None
 
     def __post_init__(self):
         # Phase に応じた有効化制御
@@ -97,31 +111,54 @@ class Step444Config:
             self.cerebellum_enabled = True
 
 
-class WikiText103Dataset(Dataset):
-    """WikiText-103 実データセット"""
+class WordChunkDataset(Dataset):
+    """単語 ID 列を長さ max_length の重ならない区間に切る（パディングなし）。"""
 
-    def __init__(self, texts: List[str], tokenizer, max_length: int = 256):
-        self.max_length = max_length
-        self.tokenizer = tokenizer
-
-        # トークン化
-        self.encodings = tokenizer(
-            texts,
-            truncation=True,
-            max_length=max_length,
-            padding=True,
-            return_tensors="pt"
-        )
+    def __init__(self, ids: torch.Tensor, max_length: int):
+        n = (len(ids) // max_length) * max_length
+        self.chunks = ids[:n].view(-1, max_length)
 
     def __len__(self):
-        return len(self.encodings['input_ids'])
+        return len(self.chunks)
 
     def __getitem__(self, idx):
-        return {
-            'input_ids': self.encodings['input_ids'][idx],
-            'labels': self.encodings['input_ids'][idx].masked_fill(self.encodings['attention_mask'][idx] == 0, -100),
-            'attention_mask': self.encodings['attention_mask'][idx]
-        }
+        x = self.chunks[idx]
+        return {'input_ids': x, 'labels': x, 'attention_mask': torch.ones_like(x)}
+
+
+def load_local_wikitext(data_dir: str, max_vocab: Optional[int]) -> Tuple[Dict[str, torch.Tensor], int]:
+    """pytorch/examples の word_language_model と同じ単語分割（空白区切り＋行末に <eos>）。語彙は train から作る。"""
+    from collections import Counter
+    splits = {}
+    for name in ('train', 'valid', 'test'):
+        words = []
+        for line in (Path(data_dir) / f'{name}.txt').read_text(encoding='utf-8').splitlines():
+            words.extend(line.split() + ['<eos>'])
+        splits[name] = words
+    counts = Counter(splits['train'])
+    vocab = ['<unk>'] + [w for w, _ in counts.most_common() if w != '<unk>']
+    if max_vocab:
+        vocab = vocab[:max_vocab]
+    stoi = {w: i for i, w in enumerate(vocab)}
+    ids = {k: torch.tensor([stoi.get(w, 0) for w in v], dtype=torch.long) for k, v in splits.items()}
+    return ids, len(vocab)
+
+
+def tokenize_stream(texts: List[str], split: str, config: 'Step444Config') -> torch.Tensor:
+    """行を連結して GPT-2 BPE でトークン化した1本の ID 列を返す。結果はキャッシュする。"""
+    cache = Path(config.token_cache_dir) / f"{config.dataset_config}_{split}_gpt2.pt"
+    if cache.exists():
+        return torch.load(cache)
+    from transformers import GPT2TokenizerFast
+    tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
+    ids: List[int] = []
+    for i in range(0, len(texts), 10000):
+        ids.extend(tokenizer(''.join(texts[i:i + 10000]))['input_ids'])
+    out = torch.tensor(ids, dtype=torch.long)
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(out, cache)
+    logger.info(f"Tokenized {split}: {len(out):,} tokens -> {cache}")
+    return out
 
 
 class HippocampusHead(nn.Module):
@@ -232,7 +269,8 @@ class CerebellumHead(nn.Module):
 class BrainInspiredLLMFullScale(nn.Module):
     """フル規模実験用 Brain-Inspired LLM"""
 
-    def __init__(self, config: Step444Config, vocab_size: int = 50257, hidden_size: int = 768, num_layers: int = 12):
+    def __init__(self, config: Step444Config, vocab_size: int = 50257, hidden_size: int = 768, num_layers: int = 12,
+                 nhead: int = 12):
         super().__init__()
         self.config = config
 
@@ -244,8 +282,8 @@ class BrainInspiredLLMFullScale(nn.Module):
         self.transformer_layers = nn.ModuleList([
             nn.TransformerEncoderLayer(
                 d_model=hidden_size,
-                nhead=12,
-                dim_feedforward=3072,
+                nhead=nhead,
+                dim_feedforward=4 * hidden_size,
                 batch_first=True,
                 dropout=0.1
             ) for _ in range(num_layers)
@@ -439,6 +477,10 @@ class FullScaleTrainer:
         }
 
 
+class TimeBudgetExceeded(Exception):
+    """実行時間の上限に達し、チェックポイントを保存して中断したことを表す。"""
+
+
 def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
     """Run full-scale experiment for single phase and seed"""
 
@@ -451,25 +493,31 @@ def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
 
-    # Load WikiText-103 dataset（ダミーデータへの切り替えは結果を無意味にするため行わない）
-    if not HAS_DATASETS:
-        raise RuntimeError("datasets ライブラリが必要です: pip install datasets")
-    logger.info("Loading WikiText-103...")
-    train_texts = [t for t in load_dataset(config.dataset_name, config.dataset_config, split='train')['text'] if t.strip()]
-    val_texts = [t for t in load_dataset(config.dataset_name, config.dataset_config, split='validation')['text'] if t.strip()]
+    test_dataset = None
+    if config.data_dir:
+        logger.info(f"Loading local WikiText (word-level) from {config.data_dir}...")
+        ids, vocab_size = load_local_wikitext(config.data_dir, config.max_vocab)
+        train_dataset = WordChunkDataset(ids['train'], config.max_seq_length)
+        val_dataset = WordChunkDataset(ids['valid'], config.max_seq_length)
+        test_dataset = WordChunkDataset(ids['test'], config.max_seq_length)
+    else:
+        # Load WikiText-103 dataset（ダミーデータへの切り替えは結果を無意味にするため行わない）
+        if not HAS_DATASETS:
+            raise RuntimeError("datasets ライブラリが必要です: pip install datasets")
+        logger.info("Loading WikiText-103...")
+        train_texts = [t for t in load_dataset(config.dataset_name, config.dataset_config, split='train')['text'] if t.strip()]
+        val_texts = [t for t in load_dataset(config.dataset_name, config.dataset_config, split='validation')['text'] if t.strip()]
 
-    # Create datasets
-    from transformers import GPT2Tokenizer
-    tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-    tokenizer.pad_token = tokenizer.eos_token
-
-    train_dataset = WikiText103Dataset(train_texts, tokenizer, max_length=config.max_seq_length)
-    val_dataset = WikiText103Dataset(val_texts, tokenizer, max_length=config.max_seq_length)
+        vocab_size = config.vocab_size
+        # 行ごとにパディングすると計算の多くがパディングに使われるため、文章を連結して区切る
+        train_dataset = WordChunkDataset(tokenize_stream(train_texts, 'train', config), config.max_seq_length)
+        val_dataset = WordChunkDataset(tokenize_stream(val_texts, 'validation', config), config.max_seq_length)
 
     val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
 
     # Model & Trainer
-    model = BrainInspiredLLMFullScale(config)
+    model = BrainInspiredLLMFullScale(config, vocab_size=vocab_size, hidden_size=config.hidden_size,
+                                      num_layers=config.num_layers, nhead=config.nhead)
     trainer = FullScaleTrainer(model, config)
 
     results = {
@@ -509,10 +557,13 @@ def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
             if hasattr(pbar, 'set_postfix'):
                 pbar.set_postfix({'loss': f'{loss:.4f}'})
             # 勾配累積の途中で保存すると再開時に累積分が失われるため、optimizer step 直後のみ保存する
-            if (batch_idx + 1) % config.checkpoint_every_steps == 0 \
-                    and trainer.step_count % config.gradient_accumulation_steps == 0:
-                save_checkpoint(ckpt_path, trainer, results,
-                                {'epoch': epoch, 'batch_idx': batch_idx + 1, 'epoch_losses': epoch_losses})
+            if trainer.step_count % config.gradient_accumulation_steps == 0:
+                out_of_time = config.deadline is not None and time.time() >= config.deadline
+                if out_of_time or (batch_idx + 1) % config.checkpoint_every_steps == 0:
+                    save_checkpoint(ckpt_path, trainer, results,
+                                    {'epoch': epoch, 'batch_idx': batch_idx + 1, 'epoch_losses': epoch_losses})
+                if out_of_time:
+                    raise TimeBudgetExceeded(f"Phase {config.phase} seed {seed}: epoch {epoch+1}, batch {batch_idx+1}")
 
         avg_train_loss = float(np.mean(epoch_losses))
         trainer.train_losses.append(avg_train_loss)
@@ -527,6 +578,11 @@ def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
 
         logger.info(f"Epoch {epoch+1} | Train(total): {avg_train_loss:.4f} | Val CE: {ev['val_ce']:.4f} | Val PPL: {ev['val_ppl']:.2f}")
         save_checkpoint(ckpt_path, trainer, results, {'epoch': epoch + 1, 'batch_idx': 0, 'epoch_losses': []})
+
+    if test_dataset is not None:
+        ev = trainer.evaluate(DataLoader(test_dataset, batch_size=config.batch_size, shuffle=False))
+        results['test_ce'], results['test_ppl'] = ev['val_ce'], ev['val_ppl']
+        logger.info(f"Test CE: {ev['val_ce']:.4f} | Test PPL: {ev['val_ppl']:.2f}")
 
     return results
 
@@ -580,6 +636,20 @@ def main(argv: Optional[List[str]] = None):
     parser.add_argument('--seeds', nargs='+', type=int, default=None)
     parser.add_argument('--results-dir', default=None)
     parser.add_argument('--checkpoint-dir', default=None)
+    parser.add_argument('--data-dir', default=None,
+                        help='ローカルの WikiText（train/valid/test.txt）を単語単位で使う')
+    parser.add_argument('--max-vocab', type=int, default=None)
+    parser.add_argument('--hidden-size', type=int, default=None)
+    parser.add_argument('--num-layers', type=int, default=None)
+    parser.add_argument('--nhead', type=int, default=None)
+    parser.add_argument('--max-seq-length', type=int, default=None)
+    parser.add_argument('--epochs', type=int, default=None)
+    parser.add_argument('--lr', type=float, default=None)
+    parser.add_argument('--batch-size', type=int, default=None)
+    parser.add_argument('--grad-accum', type=int, default=None)
+    parser.add_argument('--token-cache-dir', default=None)
+    parser.add_argument('--max-hours', type=float, default=None,
+                        help='この時間を超えたらチェックポイントを保存して正常終了する（Kaggle の実行時間上限対策）')
     args = parser.parse_args(argv)
 
     logging.basicConfig(
@@ -591,24 +661,11 @@ def main(argv: Optional[List[str]] = None):
     logger.info("STEP 44.4: Full-Scale Experiment (WikiText-103 × Phase A/B/C)")
     logger.info(f"{'='*80}")
 
-    for phase in args.phases:
-        config = Step444Config(phase=phase)
-        if args.results_dir:
-            config.results_dir = args.results_dir
-        config.checkpoint_dir = args.checkpoint_dir or str(Path(config.results_dir) / 'checkpoints')
-        output_dir = Path(config.results_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        for seed in (args.seeds if args.seeds is not None else range(config.num_seeds)):
-            run_file = output_dir / f'phase{phase}_seed{seed}.json'
-            if run_file.exists():
-                logger.info(f"Skip Phase {phase} seed {seed}: {run_file} exists")
-                continue
-            result = run_full_scale_experiment(config, seed)
-            result['config'] = asdict(config)
-            with open(run_file, 'w') as f:
-                json.dump(result, f, indent=2)
-            logger.info(f"Saved: {run_file}")
+    deadline = time.time() + args.max_hours * 3600 if args.max_hours else None
+    try:
+        _run_phases(args, deadline)
+    except TimeBudgetExceeded as e:
+        logger.info(f"時間の上限に達したため中断しました（{e}）。同じコマンドを再実行すると続きから再開します。")
 
     # 完了済みの実行をまとめる（未完了の組み合わせは含まれない）
     results_dir = Path(args.results_dir or Step444Config().results_dir)
@@ -620,8 +677,42 @@ def main(argv: Optional[List[str]] = None):
     for ph in summary.values():
         v = list(ph['final_val_ppl'].values())
         ph['mean'], ph['std'], ph['n'] = float(np.mean(v)), float(np.std(v)), len(v)
+    results_dir.mkdir(parents=True, exist_ok=True)
     (results_dir / 'summary.json').write_text(json.dumps(summary, indent=2))
     logger.info(f"Summary: {json.dumps(summary)}")
+
+
+def _run_phases(args, deadline: Optional[float]) -> None:
+    # シードごとに A→B→C の順で回す（途中で打ち切っても、同じシードの A/B/C の組が揃うように）
+    seeds = args.seeds if args.seeds is not None else list(range(Step444Config().num_seeds))
+    for seed in seeds:
+        for phase in args.phases:
+            config = Step444Config(phase=phase, deadline=deadline)
+            for arg, field in [('data_dir', 'data_dir'), ('max_vocab', 'max_vocab'), ('hidden_size', 'hidden_size'),
+                               ('num_layers', 'num_layers'), ('nhead', 'nhead'),
+                               ('max_seq_length', 'max_seq_length'), ('epochs', 'num_epochs'),
+                               ('lr', 'learning_rate'), ('batch_size', 'batch_size'),
+                               ('grad_accum', 'gradient_accumulation_steps'),
+                               ('token_cache_dir', 'token_cache_dir')]:
+                if getattr(args, arg) is not None:
+                    setattr(config, field, getattr(args, arg))
+            if args.results_dir:
+                config.results_dir = args.results_dir
+            config.checkpoint_dir = args.checkpoint_dir or str(Path(config.results_dir) / 'checkpoints')
+            output_dir = Path(config.results_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+            run_file = output_dir / f'phase{phase}_seed{seed}.json'
+            if run_file.exists():
+                logger.info(f"Skip Phase {phase} seed {seed}: {run_file} exists")
+                continue
+            result = run_full_scale_experiment(config, seed)
+            result['config'] = asdict(config)
+            with open(run_file, 'w') as f:
+                json.dump(result, f, indent=2)
+            logger.info(f"Saved: {run_file}")
+            # 完了した実行のチェックポイント（数GB）は不要なので消す
+            (Path(config.checkpoint_dir) / f"phase{phase}_seed{seed}.pt").unlink(missing_ok=True)
 
 
 if __name__ == "__main__":

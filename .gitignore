@@ -9,3 +9,6 @@ results/step44_full_scale_experiment/
 *.npz
 rust/target/
 commit_step44_validation_results.sh
+data/
+results/step44_reduced_scale/checkpoints/
+results/step44_full_scale_rerun/checkpoints/
