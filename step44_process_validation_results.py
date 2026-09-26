@@ -49,28 +49,28 @@ def main():
     print(f"  Cerebellum: {best_config['cerebellum']:.2f}")
     print()
 
-    print("【小規模検証結果（最終 validation loss）】")
+    print("【小規模検証結果（最終 validation PPL）】")
     summary = optimized['phase_summaries']
 
     results = {}
     for phase in ['A', 'B', 'C']:
-        mean_loss = summary[phase]['mean_final_val_loss']
-        std_loss = summary[phase]['std_final_val_loss']
-        results[phase] = (mean_loss, std_loss)
-        print(f"  Phase {phase}: {mean_loss:.4f} ± {std_loss:.4f}")
+        mean_ppl = summary[phase]['mean_final_val_ppl']
+        std_ppl = summary[phase]['std_final_val_ppl']
+        results[phase] = (mean_ppl, std_ppl)
+        print(f"  Phase {phase}: {mean_ppl:.4f} ± {std_ppl:.4f}")
 
     print()
-    print("【改善分析】")
+    print("【改善分析 (PPL)】")
 
-    a_loss, a_std = results['A']
-    b_loss, b_std = results['B']
-    c_loss, c_std = results['C']
+    a_ppl, a_std = results['A']
+    b_ppl, b_std = results['B']
+    c_ppl, c_std = results['C']
 
-    a_to_b_change = b_loss - a_loss
-    a_to_b_pct = 100 * a_to_b_change / a_loss
+    a_to_b_change = b_ppl - a_ppl
+    a_to_b_pct = 100 * a_to_b_change / a_ppl
 
-    b_to_c_change = c_loss - b_loss
-    b_to_c_pct = 100 * b_to_c_change / b_loss
+    b_to_c_change = c_ppl - b_ppl
+    b_to_c_pct = 100 * b_to_c_change / b_ppl
 
     print(f"  Phase A→B: {a_to_b_pct:+.2f}% (Δ = {a_to_b_change:+.4f})")
     print(f"  Phase B→C: {b_to_c_pct:+.2f}% (Δ = {b_to_c_change:+.4f})")

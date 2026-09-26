@@ -299,7 +299,10 @@ class OptimizedTrainer:
                 loss = outputs['loss']
                 total_loss += loss.item()
 
-        return total_loss / len(val_loader)
+        avg_loss = total_loss / len(val_loader)
+        # PPL = exp(loss) for consistency with parameter sweep metrics
+        ppl = np.exp(avg_loss)
+        return ppl
 
 
 def run_phase_validation(config: OptimizedValidationConfig, seed: int) -> Dict:
@@ -392,11 +395,11 @@ def main():
             json.dump(phase_results, f, indent=2)
         logger.info(f"Phase {phase} results saved: {phase_file}")
 
-        # 統計：平均 validation loss
-        val_losses = [r['val_losses'][-1] for r in phase_results]
-        mean_loss = np.mean(val_losses)
-        std_loss = np.std(val_losses)
-        logger.info(f"Phase {phase} | Mean final val loss: {mean_loss:.4f} ± {std_loss:.4f}")
+        # 統計：平均 validation PPL (parameter sweep との比較用)
+        val_ppls = [r['val_losses'][-1] for r in phase_results]
+        mean_ppl = np.mean(val_ppls)
+        std_ppl = np.std(val_ppls)
+        logger.info(f"Phase {phase} | Mean final val PPL: {mean_ppl:.4f} ± {std_ppl:.4f}")
 
     # 最終結果保存
     final_file = Path(config.results_dir) / 'step44_optimized_validation_summary.json'
@@ -406,11 +409,11 @@ def main():
     }
 
     for phase in phases:
-        val_losses = [r['val_losses'][-1] for r in all_results[phase]]
+        val_ppls = [r['val_losses'][-1] for r in all_results[phase]]
         summary['phase_summaries'][phase] = {
-            'mean_final_val_loss': float(np.mean(val_losses)),
-            'std_final_val_loss': float(np.std(val_losses)),
-            'raw_losses': val_losses
+            'mean_final_val_ppl': float(np.mean(val_ppls)),
+            'std_final_val_ppl': float(np.std(val_ppls)),
+            'raw_ppls': val_ppls
         }
 
     with open(final_file, 'w') as f:
@@ -421,11 +424,11 @@ def main():
     logger.info(f"Final summary saved: {final_file}")
     logger.info(f"{'='*80}")
 
-    # 改善確認
-    logger.info("\n=== Improvement Analysis ===")
+    # 改善確認 (PPL での比較)
+    logger.info("\n=== Improvement Analysis (PPL) ===")
     for phase in phases:
-        val_losses = [r['val_losses'][-1] for r in all_results[phase]]
-        logger.info(f"Phase {phase}: {np.mean(val_losses):.4f} ± {np.std(val_losses):.4f}")
+        val_ppls = [r['val_losses'][-1] for r in all_results[phase]]
+        logger.info(f"Phase {phase}: {np.mean(val_ppls):.4f} ± {np.std(val_ppls):.4f}")
 
 
 if __name__ == "__main__":
