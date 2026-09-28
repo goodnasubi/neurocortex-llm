@@ -87,7 +87,10 @@ def log(*a):
 
 
 def colab(*args, timeout=600):
-    r = subprocess.run(['colab', '--auth', 'oauth2', *args], capture_output=True, text=True, timeout=timeout)
+    try:
+        r = subprocess.run(['colab', '--auth', 'oauth2', *args], capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return 124, 'TIMEOUT'  # VM の応答待ちで固まっても、ドライバは落とさず次の周期で再試行する
     return r.returncode, r.stdout + r.stderr
 
 
@@ -109,8 +112,12 @@ def done_count():
 
 
 def session_alive():
-    rc, out = colab('sessions', timeout=120)
-    return rc == 0 and S in out
+    for _ in range(3):  # 一時的な失敗で VM を作り直さないよう、失敗時は再試行する
+        rc, out = colab('sessions', timeout=120)
+        if rc == 0:
+            return S in out
+        time.sleep(60)
+    return None
 
 
 def drive_mounted():
@@ -364,7 +371,10 @@ while done_count() < 9:
         st = poll() if kill_after_ckpt() else None
         if st and not st['alive']:
             reconnect(st); time.sleep(600); continue
-    if not session_alive():
+    alive_now = session_alive()
+    if alive_now is None:
+        log('sessions の取得に失敗。次の周期で再試行'); time.sleep(300); continue
+    if not alive_now:
         start_session()
         if not drive_mounted():
             # Drive から復元できないまま学習を始めると、実行中の (phase, seed) を最初からやり直してしまう
