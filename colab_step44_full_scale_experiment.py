@@ -633,9 +633,10 @@ def load_checkpoint(path: Path, trainer: 'FullScaleTrainer', results: Dict) -> D
     trainer.train_losses = ckpt['train_losses']
     trainer.val_losses = ckpt['val_losses']
     results.update(ckpt['results'])
-    torch.set_rng_state(ckpt['torch_rng'])
+    # map_location で GPU に載った乱数状態は CPU の ByteTensor に戻してから設定する
+    torch.set_rng_state(ckpt['torch_rng'].cpu())
     if ckpt['cuda_rng'] is not None and torch.cuda.is_available():
-        torch.cuda.set_rng_state_all(ckpt['cuda_rng'])
+        torch.cuda.set_rng_state_all([t.cpu() for t in ckpt['cuda_rng']])
     return ckpt['state']
 
 
