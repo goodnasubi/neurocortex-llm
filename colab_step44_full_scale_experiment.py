@@ -101,6 +101,9 @@ class Step444Config:
     checkpoint_every_steps: int = 2000
     # 実行時間の上限（time.time() の値）。超えたらチェックポイントを保存して TimeBudgetExceeded を送出する
     deadline: Optional[float] = None
+    # このファイルがあれば区切りで正常終了する（Colab の接続を張り直すため）。
+    # 中身が "epoch" ならエポック末（チェックポイント保存直後）、"run" なら (phase, seed) の完了直後に止める
+    stop_file: Optional[str] = None
 
     def __post_init__(self):
         # Phase に応じた有効化制御
@@ -481,6 +484,18 @@ class TimeBudgetExceeded(Exception):
     """実行時間の上限に達し、チェックポイントを保存して中断したことを表す。"""
 
 
+class StopRequested(TimeBudgetExceeded):
+    """停止ファイルにより、区切り（チェックポイント保存直後）で中断したことを表す。"""
+
+
+def stop_requested(stop_file: Optional[str], at: str) -> bool:
+    """停止ファイルが区切り at（"epoch" または "run"）での停止を求めているか。"epoch" 指定は run 完了時にも止まる。"""
+    if not stop_file or not Path(stop_file).exists():
+        return False
+    mode = Path(stop_file).read_text().strip() or 'run'
+    return mode == 'epoch' or (mode == 'run' and at == 'run')
+
+
 def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
     """Run full-scale experiment for single phase and seed"""
 
@@ -578,6 +593,8 @@ def run_full_scale_experiment(config: Step444Config, seed: int) -> Dict:
 
         logger.info(f"Epoch {epoch+1} | Train(total): {avg_train_loss:.4f} | Val CE: {ev['val_ce']:.4f} | Val PPL: {ev['val_ppl']:.2f}")
         save_checkpoint(ckpt_path, trainer, results, {'epoch': epoch + 1, 'batch_idx': 0, 'epoch_losses': []})
+        if epoch + 1 < config.num_epochs and stop_requested(config.stop_file, 'epoch'):
+            raise StopRequested(f"Phase {config.phase} seed {seed}: epoch {epoch+1} 終了時")
 
     if test_dataset is not None:
         ev = trainer.evaluate(DataLoader(test_dataset, batch_size=config.batch_size, shuffle=False))
@@ -650,6 +667,8 @@ def main(argv: Optional[List[str]] = None):
     parser.add_argument('--token-cache-dir', default=None)
     parser.add_argument('--max-hours', type=float, default=None,
                         help='この時間を超えたらチェックポイントを保存して正常終了する（Kaggle の実行時間上限対策）')
+    parser.add_argument('--stop-file', default=None,
+                        help='このファイルがあれば区切り（中身 epoch: エポック末 / run: 実行完了後）で正常終了する')
     args = parser.parse_args(argv)
 
     logging.basicConfig(
@@ -664,6 +683,8 @@ def main(argv: Optional[List[str]] = None):
     deadline = time.time() + args.max_hours * 3600 if args.max_hours else None
     try:
         _run_phases(args, deadline)
+    except StopRequested as e:
+        logger.info(f"STOPPED_AT_BREAKPOINT: 停止ファイルにより中断しました（{e}）。同じコマンドを再実行すると続きから再開します。")
     except TimeBudgetExceeded as e:
         logger.info(f"時間の上限に達したため中断しました（{e}）。同じコマンドを再実行すると続きから再開します。")
 
@@ -687,7 +708,7 @@ def _run_phases(args, deadline: Optional[float]) -> None:
     seeds = args.seeds if args.seeds is not None else list(range(Step444Config().num_seeds))
     for seed in seeds:
         for phase in args.phases:
-            config = Step444Config(phase=phase, deadline=deadline)
+            config = Step444Config(phase=phase, deadline=deadline, stop_file=args.stop_file)
             for arg, field in [('data_dir', 'data_dir'), ('max_vocab', 'max_vocab'), ('hidden_size', 'hidden_size'),
                                ('num_layers', 'num_layers'), ('nhead', 'nhead'),
                                ('max_seq_length', 'max_seq_length'), ('epochs', 'num_epochs'),
@@ -713,6 +734,8 @@ def _run_phases(args, deadline: Optional[float]) -> None:
             logger.info(f"Saved: {run_file}")
             # 完了した実行のチェックポイント（数GB）は不要なので消す
             (Path(config.checkpoint_dir) / f"phase{phase}_seed{seed}.pt").unlink(missing_ok=True)
+            if stop_requested(config.stop_file, 'run'):
+                raise StopRequested(f"Phase {phase} seed {seed} 完了後")
 
 
 if __name__ == "__main__":

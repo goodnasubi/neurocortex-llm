@@ -118,3 +118,14 @@ def test_local_wikitext_word_level(tmp_path):
     assert ids["valid"].tolist() == [1, 0, 2]
     ds = WordChunkDataset(ids["train"], 3)
     assert len(ds) == 2 and ds[1]["input_ids"].tolist() == [2, 0, 1]
+
+
+def test_stop_file_modes(tmp_path):
+    from colab_step44_full_scale_experiment import stop_requested
+
+    f = tmp_path / "STOP"
+    assert not stop_requested(None, "run") and not stop_requested(str(f), "epoch")
+    f.write_text("run\n")
+    assert stop_requested(str(f), "run") and not stop_requested(str(f), "epoch")
+    f.write_text("epoch")
+    assert stop_requested(str(f), "run") and stop_requested(str(f), "epoch")
