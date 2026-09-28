@@ -36,8 +36,39 @@ def mirror(src, dst):
     for n in os.listdir(dst):
         if n.endswith('.pt') and n not in names:
             os.remove(os.path.join(dst, n))
+def progress():
+    # 進捗（Drive の progress.txt）と学習ログの末尾（run_tail.log）を書き出す。スマホの Drive アプリで見られるように
+    import glob, re
+    raw = open('/content/step44/run.log', errors='replace').read() if os.path.exists('/content/step44/run.log') else ''
+    lines = [l for l in raw.replace('\r', '\n').splitlines() if l.strip()]
+    info = [l for l in lines if ' - INFO - ' in l and 'httpx' not in l]
+    bars = [l for l in lines if l.startswith('Train Phase')]
+    pid = open('/content/step44/pid').read().strip() if os.path.exists('/content/step44/pid') else ''
+    alive = bool(pid) and os.path.exists('/proc/' + pid) and open('/proc/' + pid + '/stat').read().split()[2] != 'Z'
+    run = [l for l in info if re.search(r'Phase [ABC] \| Seed \d', l)]
+    ep = [l for l in info if re.search(r'Epoch \d+/\d+$', l)]
+    ppl = [l for l in info if 'Val PPL' in l]
+    out = ['更新: ' + time.strftime('%%Y-%%m-%%d %%H:%%M:%%S UTC'),
+           '学習プロセス: ' + ('動作中' if alive else '停止'),
+           '完了: ' + ', '.join(sorted(os.path.basename(f) for f in glob.glob(SRC + '/phase*_seed*.json'))),
+           '実行中: ' + (run[-1].split(' - INFO - ')[-1] if run else '-'),
+           'エポック: ' + (ep[-1].split(' - INFO - ')[-1] if ep else '-'),
+           '進捗: ' + (bars[-1][:160] if bars else '-'),
+           '', 'この実行の Val PPL:'] + [l.split(' - INFO - ')[-1] for l in ppl[-4:]]
+    with open(DST + '/progress.txt.part', 'w') as f:
+        f.write('\n'.join(out) + '\n')
+    os.replace(DST + '/progress.txt.part', DST + '/progress.txt')
+    with open(DST + '/run_tail.log.part', 'w') as f:
+        f.write('\n'.join([l for l in lines if 'httpx' not in l and not l.startswith('Train Phase')][-150:] + bars[-1:]) + '\n')
+    os.replace(DST + '/run_tail.log.part', DST + '/run_tail.log')
+n = 0
 while True:
     if os.path.ismount('/content/drive'):
+        try:
+            os.makedirs(DST, exist_ok=True); progress()
+        except Exception as e:
+            print('progress error', e, flush=True)
+    if n %% 6 == 0 and os.path.ismount('/content/drive'):
         try:
             mirror(SRC, DST); mirror(SRC + '/checkpoints', DST + '/checkpoints')
             if os.path.isdir('/content/step44/token_cache'):
@@ -45,7 +76,8 @@ while True:
             print(time.strftime('%%H:%%M:%%S'), 'synced', flush=True)
         except Exception as e:
             print('sync error', e, flush=True)
-    time.sleep(1800)
+    n += 1
+    time.sleep(300)  # 進捗は5分ごと、結果とチェックポイントは30分ごと
 ''' % (VM, DRIVE)
 LOCAL.mkdir(parents=True, exist_ok=True); TMP.mkdir(exist_ok=True)
 
