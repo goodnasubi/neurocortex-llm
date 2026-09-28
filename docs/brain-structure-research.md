@@ -6498,3 +6498,4 @@ python colab_step44_full_scale_experiment.py --phases A B C --epochs 4 --batch-s
   - 現在の VM（07:35 作成）は、Phase B・seed0 を終えたあと、そのまま Phase C・seed0 に進む。12時間の上限（19:35 UTC 頃）で VM が切れるまで、30分ごとに結果・チェックポイント・トークン化済みデータを Drive（`MyDrive/neurocortex/step44`）へ写す。切れたときに失うのは最大約40分。
 - 再開手順（手動）: Colab のブラウザ画面で GPU（T4）のノートブックを作り、`tools/colab/step44_resume.py` の冒頭に書いたセルを実行する。Drive から復元して続きから学習し、開始から5時間を過ぎたら次のエポック末で止める（12時間以内）。止まったら、新しい接続で同じセルを再実行する。**前の VM が動いている間は実行しない**（Drive への書き込みが競合する）。
 - クラウドセッションが再び使えるようになったら、`tools/colab/colab_driver.py`（Colab CLI 経由の自動運用）と `tools/colab/colab_dm.py`（Drive 承認のポーリング）で自動運用に戻せる。結果 JSON は Drive にあるので、リポジトリの `results/step44_full_scale_rerun/` へ取り込む。
+- 2026-09-28 09:35: ユーザーの指示で、コンテナ側のドライバによる監視を再開した（停止ファイルを `run` に戻し、Phase B・seed0 の完了で張り直す運用に復帰）。手動再開の手順は、クラウドセッションが使えないときの予備として残す。
