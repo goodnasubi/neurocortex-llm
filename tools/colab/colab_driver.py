@@ -142,9 +142,13 @@ def session_age_h():
 
 
 def new_session():
-    rc, out = colab('new', '-s', S, '--gpu', 'T4', timeout=900)
-    SESSION_T0.write_text(str(time.time()))
-    log('new', rc, out.strip()[-200:])
+    for i in range(6):  # T4 の割り当てが Colab 側で一時的に断られる（Service Unavailable）ことがあるので、間を置いて再試行
+        rc, out = colab('new', '-s', S, '--gpu', 'T4', timeout=900)
+        SESSION_T0.write_text(str(time.time()))
+        log('new', rc, out.strip()[-200:])
+        if rc == 0 or session_alive():
+            break
+        time.sleep(60 * (i + 1))
     rc, out = vm_exec('''
 import subprocess, os
 R = '/content/neurocortex-llm'
