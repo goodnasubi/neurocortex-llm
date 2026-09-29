@@ -21,6 +21,7 @@ MARGIN_H = 1.0
 EPOCH_H_DEFAULT = 6.0  # 実測できないときのエポック所要時間（実測: B 約4.9時間、C 約5.7時間の見込み）
 SESSION_T0 = Path(__file__).parent / 'session_started'
 RECONNECT_NOW = Path(__file__).parent / 'RECONNECT_NOW'  # 置くと、次のチェックポイント保存直後に張り直す
+RESUME_NOW = Path(__file__).parent / 'RESUME_NOW'  # 承認待ちで VM を止めたあと、置くと VM を作り直す
 DRIVE = '/content/drive/MyDrive/neurocortex/step44'
 # VM 上で 30 分ごとに結果とチェックポイントを Drive へ複製する（.part に書いてから rename。完了済み実行の削除も反映）
 SYNC = r'''
@@ -240,6 +241,26 @@ subprocess.Popen(['python', '/content/step44/killer.py'], start_new_session=True
     log('kill: 30分待っても止まらない'); return False
 
 
+def wait_drive(tries=1):
+    """Drive がマウントされるまで承認を待つ。VM が失われたら False（呼び出し側で作り直す）。
+    承認待ちの間も VM は CU を消費するので、tries 回（1回約25分）待っても承認がなければ VM を止め、
+    ユーザーの準備ができた合図（RESUME_NOW）を待ってから False を返す（呼び出し側で VM を作り直し、新しい URL を出す）。"""
+    while not drive_mounted():
+        if session_alive() is False:
+            log('VM が失われた（承認待ちの間の切断など）。新しい VM を作り直す')
+            return False
+        if tries <= 0:
+            colab('stop', '-s', S, timeout=300)
+            log('APPROVAL_TIMEOUT: 承認がないため VM を止めて待機（CU 節約）。RESUME_NOW を置くと VM を作り直して新しい URL を出す')
+            while not RESUME_NOW.exists():
+                time.sleep(30)
+            RESUME_NOW.unlink()
+            return False
+        log('NEED_DRIVE_APPROVAL: 再開には Drive が必要。承認待ち（dm_auto.log の URL）')
+        mount_drive(); tries -= 1
+    return True
+
+
 def reconnect(st):
     """区切りで止まった VM を捨て、新しい VM で続きを始める。"""
     backup(st)
@@ -252,9 +273,8 @@ def reconnect(st):
     new_session()
     start_session_restore_only()  # 完了済みの結果 JSON を戻す（Drive 未マウントならチェックポイントは戻らない）
     if need_drive:
-        while not drive_mounted():
-            log('NEED_DRIVE_APPROVAL: エポック末からの再開には Drive が必要。承認待ち（dm_auto.log の URL）')
-            mount_drive()
+        if not wait_drive():
+            return
         start_session_restore_only()
         start_training()
     else:
@@ -379,8 +399,8 @@ while done_count() < 9:
         if not drive_mounted():
             # Drive から復元できないまま学習を始めると、実行中の (phase, seed) を最初からやり直してしまう
             log('NEED_DRIVE_APPROVAL: Drive 未マウントのため学習を開始しない。承認後に再試行する')
-            while not drive_mounted():
-                mount_drive()
+            if not wait_drive(tries=0):  # start_session で1回（約25分）待ち済み
+                continue
             start_session_restore_only()
         start_training(); last_backup = time.time(); time.sleep(600); continue
     st = poll()
