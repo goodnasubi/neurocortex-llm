@@ -15,6 +15,10 @@ Claude のクラウドセッションが使えないときの手動運用用。C
 - 30分ごとと終了時に、結果とチェックポイントを Drive へ写す。
 - Colab の接続は最長12時間。エポックは約5〜6時間かかるので、開始から --hours（既定5時間）を過ぎたら、
   次のエポック末で止める（12時間までに終わる見込み。実質1接続あたり約2エポック）。
+
+テスト用の上書き（既定は Colab 用のまま）: 環境変数 STEP44_DRIVE / STEP44_WORK でパスを変える
+（Drive のパスが /content/drive の外ならマウント確認を省く）。--sync-seconds で同期間隔、
+`--` の後ろの引数は学習スクリプトへそのまま渡す（後ろに付くので、同じ引数は既定値を上書きする）。
 """
 import argparse
 import os
@@ -23,8 +27,8 @@ import subprocess
 import threading
 import time
 
-DRIVE = '/content/drive/MyDrive/neurocortex/step44'
-WORK = '/content/step44'
+DRIVE = os.environ.get('STEP44_DRIVE', '/content/drive/MyDrive/neurocortex/step44')
+WORK = os.environ.get('STEP44_WORK', '/content/step44')
 RESULTS = WORK + '/results'
 CKPT = RESULTS + '/checkpoints'
 TOKENS = WORK + '/token_cache'
@@ -45,11 +49,20 @@ def copy_dir(src, dst, force=False):
             continue
         a, b = os.path.join(src, n), os.path.join(dst, n)
         if force or not os.path.exists(b) or os.path.getmtime(a) > os.path.getmtime(b):
-            shutil.copyfile(a, b + '.part')
+            # 更新時刻も写す（写した先が新しく見えて、次の同期で数GBを写し直さないように）
+            shutil.copy2(a, b + '.part')
             os.replace(b + '.part', b)
 
 
+SYNC_LOCK = threading.Lock()  # 定期同期と終了時の同期が同じ .part に同時に書かないように
+
+
 def save_to_drive(force=False):
+    with SYNC_LOCK:
+        _save_to_drive(force)
+
+
+def _save_to_drive(force):
     copy_dir(RESULTS, DRIVE, force)
     copy_dir(CKPT, DRIVE + '/checkpoints', force)
     copy_dir(TOKENS, DRIVE + '/token_cache')
@@ -65,9 +78,16 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--hours', type=float, default=5.0,
                     help='この時間を過ぎたら、次のエポック末で止める（12時間 − 余裕1時間 − エポック約6時間）')
+    ap.add_argument('--sync-seconds', type=float, default=1800, help='Drive へ写す間隔（秒）')
+    ap.add_argument('train_args', nargs=argparse.REMAINDER, help='`--` の後ろ: 学習スクリプトへ追加で渡す引数')
     args = ap.parse_args()
-    if not os.path.ismount('/content/drive'):
+    extra = args.train_args[1:] if args.train_args[:1] == ['--'] else args.train_args
+    if DRIVE.startswith('/content/drive/') and not os.path.ismount('/content/drive'):
         raise SystemExit('先に drive.mount("/content/drive") を実行してください')
+
+    # 初回（Drive がまだ空）でも一覧を出せるように作っておく
+    os.makedirs(CKPT, exist_ok=True)
+    os.makedirs(TOKENS, exist_ok=True)
 
     copy_dir(DRIVE, RESULTS, force=True)
     copy_dir(DRIVE + '/checkpoints', CKPT, force=True)
@@ -77,11 +97,11 @@ def main():
         os.remove(STOP)
 
     t0 = time.time()
-    p = subprocess.Popen(RUN, cwd=REPO)
+    p = subprocess.Popen(RUN + extra, cwd=REPO)
     stop = threading.Event()
 
     def background():
-        while not stop.wait(1800):
+        while not stop.wait(args.sync_seconds):
             if time.time() - t0 > args.hours * 3600 and not os.path.exists(STOP):
                 open(STOP, 'w').write('epoch')
                 print('次のエポック末で止めます', flush=True)
