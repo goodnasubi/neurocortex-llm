@@ -297,11 +297,11 @@ if os.path.ismount('/content/drive'):
             os.makedirs(V + sub, exist_ok=True)
             for n in os.listdir(D + sub):
                 if n.endswith(('.json', '.pt')):
-                    shutil.copyfile(f'{D}{sub}/{n}', f'{V}{sub}/{n}')
+                    shutil.copy2(f'{D}{sub}/{n}', f'{V}{sub}/{n}')
     if os.path.isdir(D + '/token_cache'):
         os.makedirs('/content/step44/token_cache', exist_ok=True)
         for n in os.listdir(D + '/token_cache'):
-            shutil.copyfile(f'{D}/token_cache/{n}', f'/content/step44/token_cache/{n}')
+            shutil.copy2(f'{D}/token_cache/{n}', f'/content/step44/token_cache/{n}')
     print('restored from drive', os.listdir(V), os.listdir(V + '/checkpoints'))
 else:
     print('drive not mounted')

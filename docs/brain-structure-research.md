@@ -6523,3 +6523,4 @@ python colab_step44_full_scale_experiment.py --phases A B C --epochs 4 --batch-s
 **手動再開スクリプト（`tools/colab/step44_resume.py`）の CPU 小設定テスト（2026-09-29）**
 - 仮 Drive・仮作業領域（`STEP44_DRIVE` / `STEP44_WORK`）と小さな単語 WikiText・小モデル（hidden 16・1層・3エポック）で実際に動かした（`tests/test_step44_resume.py`、約8秒）。確認: Drive に完了済み結果がある (phase, seed) は飛ばす／`--hours 0` で停止ファイル `epoch` が書かれ1エポック目の末で `STOPPED_AT_BREAKPOINT`、チェックポイントと結果が Drive へ写る／作業領域を消して再実行すると Drive から復元して2エポック目から再開し、結果がそろい完了した実行のチェックポイントが Drive から消える。
 - 見つけた不具合と修正: (1) Drive にチェックポイントが無い初回は `os.listdir` が作業ディレクトリ未作成で落ちる → 先に作る。(2) 複製で更新時刻が変わり、復元直後の定期同期で数GBのチェックポイントとトークン化済みデータを Drive へ写し直す → `copy2` で更新時刻を保つ。(3) 定期同期と終了時の同期が同じ `.part` に同時に書きうる → ロックで直列化。テスト用に同期間隔（`--sync-seconds`、既定1800秒）と学習スクリプトへの追加引数（`--` の後ろ）を足した。Colab 上の既定の挙動は変えていない。
+- ドライバの Drive → VM 復元も同じ理由（コピーで更新時刻が新しくなり、最初の同期で数GBを Drive へ送り直す）で `shutil.copy2` に変更した。
