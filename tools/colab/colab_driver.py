@@ -170,7 +170,7 @@ def set_stop(mode):
 
 def final_sync():
     # VM を捨てる前に、未完了の実行のチェックポイントを Drive へ確実に写す（サイズ一致で確認）
-    rc, out = vm_exec(SYNC.split('while True:')[0] + '''
+    code = SYNC.split('while True:')[0] + '''
 import json
 if not os.path.ismount('/content/drive'):
     print('SYNC_NG unmounted')
@@ -184,9 +184,27 @@ else:
     bad = [n for n in os.listdir(SRC + '/checkpoints') if n.endswith('.pt') and
            os.path.getsize(f'{SRC}/checkpoints/{n}') != os.path.getsize(f'{DST}/checkpoints/{n}')]
     print('SYNC_NG ' + json.dumps(bad) if bad else 'SYNC_OK')
-''', timeout=3600)
-    log('final-sync', rc, out.strip()[-200:])
-    return 'SYNC_OK' in out
+'''
+    # exec の応答待ちは約40秒で切れる（数GBの写しは終わらない）ので、VM 上で別プロセスとして走らせ、結果をファイルで確認する。
+    # 応答待ち切れのエラー表示には実行コードの文字列が出るので、目印（RESULT:・SYNC_OK）はコード中に同じ文字列が現れない形で出す。
+    R = '/content/step44/final_sync.out'
+    rc, out = vm_exec('''
+import subprocess, os
+for f in [%r, %r + '.done']:
+    if os.path.exists(f):
+        os.remove(f)
+open('/content/step44/final_sync.py', 'w').write(%r)
+subprocess.Popen('python /content/step44/final_sync.py > %s 2>&1; touch %s.done', shell=True, start_new_session=True); print('final-sync started')
+''' % (R, R, code, R, R))
+    log('final-sync start', rc, out.strip()[-100:])
+    for _ in range(120):
+        time.sleep(30)
+        rc, out = vm_exec("import os; print('RES' + 'ULT:' + open(%r).read() if os.path.exists(%r + '.done') else 'WAIT')" % (R, R))
+        if 'RESULT:' in out:
+            res = out.split('RESULT:', 1)[1]
+            log('final-sync', res.strip()[-200:])
+            return 'SYNC_OK' in [l.strip() for l in res.splitlines()]
+    log('final-sync: 60分待っても終わらない'); return False
 
 
 def kill_training():
