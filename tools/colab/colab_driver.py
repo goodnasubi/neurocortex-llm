@@ -128,9 +128,15 @@ def drive_mounted():
 
 def mount_drive():
     # 新しい VM では Drive の承認がやり直しになる。承認 URL は dm_auto.log に出る（ユーザーに渡す）
+    cmd = [os.path.expanduser('~/.local/share/uv/tools/google-colab-cli/bin/python'), str(Path(__file__).parent / 'colab_dm.py'),
+           '--auth', 'oauth2', 'drivemount', '-s', S]
     with open(Path(__file__).parent / 'dm_auto.log', 'w') as f:
-        rc = subprocess.run([os.path.expanduser('~/.local/share/uv/tools/google-colab-cli/bin/python'), str(Path(__file__).parent / 'colab_dm.py'),
-                             '--auth', 'oauth2', 'drivemount', '-s', S], stdout=f, stderr=subprocess.STDOUT, timeout=1800).returncode
+        rc = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=1800).returncode
+    if not drive_mounted():
+        # 承認後の1回目が 'mount failed' で終わり、すぐやり直すと再承認なしで通ることがある（09-29 に2回）。短い待ちで1回だけ再試行
+        with open(Path(__file__).parent / 'dm_retry.log', 'w') as f:
+            rc = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=900,
+                                env=dict(os.environ, DM_WAIT_SEC='120')).returncode
     log('drivemount', rc, 'mounted' if drive_mounted() else 'NOT MOUNTED（dm_auto.log の URL でユーザー承認が必要）')
 
 
