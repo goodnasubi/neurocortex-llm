@@ -377,6 +377,7 @@ else:
 
 last_backup = 0
 drive_retry = 0
+poll_fail = 0
 if session_alive():
     ensure_sync()
     if not SESSION_T0.exists():  # 現在の VM の作成時刻（driver.log の new）
@@ -409,7 +410,13 @@ while done_count() < 9:
         start_training(); last_backup = time.time(); time.sleep(600); continue
     st = poll()
     if st is None:
+        poll_fail += 1
+        if poll_fail >= 2:
+            # カーネルが固まると exec が全部タイムアウトする。学習は別セッションのプロセスなので、再起動しても止まらない
+            rc, out = colab('restart-kernel', '-s', S, timeout=300)
+            log('restart-kernel', rc, out.strip()[-100:]); poll_fail = 0
         time.sleep(300); continue
+    poll_fail = 0
     log('status', json.dumps(st, ensure_ascii=False)[-400:])
     if not st['alive']:
         backup(st)
