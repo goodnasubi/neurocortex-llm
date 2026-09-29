@@ -241,20 +241,26 @@ subprocess.Popen(['python', '/content/step44/killer.py'], start_new_session=True
     log('kill: 30分待っても止まらない'); return False
 
 
+def wait_user(reason):
+    """VM を作る前にユーザーの承認を得る（Drive 承認待ちで CU を浪費しないため）。
+    RESUME_NOW があれば消して続行。なければ理由を記録して終了する（終了がセッションへの通知になる）。"""
+    if RESUME_NOW.exists():
+        RESUME_NOW.unlink()
+        log('RESUME: ユーザーの承認を得たので VM を作成する')
+        return
+    log('WAIT_USER:', reason)
+    sys.exit(3)
+
+
 def wait_drive(tries=1):
-    """Drive がマウントされるまで承認を待つ。VM が失われたら False（呼び出し側で作り直す）。
-    承認待ちの間も VM は CU を消費するので、tries 回（1回約25分）待っても承認がなければ VM を止め、
-    ユーザーの準備ができた合図（RESUME_NOW）を待ってから False を返す（呼び出し側で VM を作り直し、新しい URL を出す）。"""
+    """Drive がマウントされるまで承認を待つ（1回約25分）。承認がなければ VM を止めて False を返す。"""
     while not drive_mounted():
         if session_alive() is False:
-            log('VM が失われた（承認待ちの間の切断など）。新しい VM を作り直す')
+            log('VM が失われた（承認待ちの間の切断など）')
             return False
         if tries <= 0:
             colab('stop', '-s', S, timeout=300)
-            log('APPROVAL_TIMEOUT: 承認がないため VM を止めて待機（CU 節約）。RESUME_NOW を置くと VM を作り直して新しい URL を出す')
-            while not RESUME_NOW.exists():
-                time.sleep(30)
-            RESUME_NOW.unlink()
+            log('APPROVAL_TIMEOUT: 承認がないため VM を止めた（CU 節約）')
             return False
         log('NEED_DRIVE_APPROVAL: 再開には Drive が必要。承認待ち（dm_auto.log の URL）')
         mount_drive(); tries -= 1
@@ -270,14 +276,11 @@ def reconnect(st):
         start_training(); return
     rc, out = colab('stop', '-s', S, timeout=300)
     log('reconnect: 旧 VM を停止', rc, f'age={session_age_h():.1f}h', 'need_drive', need_drive)
-    new_session()
-    start_session_restore_only()  # 完了済みの結果 JSON を戻す（Drive 未マウントならチェックポイントは戻らない）
     if need_drive:
-        if not wait_drive():
-            return
-        start_session_restore_only()
-        start_training()
-    else:
+        return  # Drive 承認が必要な VM は、ユーザーの承認を得てから作る（メインループの VM なしの処理へ）
+    new_session()
+    start_session_restore_only()  # 完了済みの結果 JSON を戻す
+    if True:
         start_training()  # 先に学習を始め、Drive（途中経過の退避用）はそのあとでマウントする
         mount_drive()
         if not drive_mounted():
@@ -395,6 +398,7 @@ while done_count() < 9:
     if alive_now is None:
         log('sessions の取得に失敗。次の周期で再試行'); time.sleep(300); continue
     if not alive_now:
+        wait_user('VM がない（エポック末で停止・承認待ちで停止・喪失のいずれか）。Drive 承認の準備ができたら VM を作成する')
         start_session()
         if not drive_mounted():
             # Drive から復元できないまま学習を始めると、実行中の (phase, seed) を最初からやり直してしまう
