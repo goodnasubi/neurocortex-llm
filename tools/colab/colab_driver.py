@@ -131,12 +131,18 @@ def mount_drive():
     cmd = [os.path.expanduser('~/.local/share/uv/tools/google-colab-cli/bin/python'), str(Path(__file__).parent / 'colab_dm.py'),
            '--auth', 'oauth2', 'drivemount', '-s', S]
     with open(Path(__file__).parent / 'dm_auto.log', 'w') as f:
-        rc = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=1800).returncode
+        try:
+            rc = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=1800).returncode
+        except subprocess.TimeoutExpired:  # 承認待ちが上限を超えて戻らないことがある（09-30 22:20〜22:50）。ドライバごと落とさない
+            rc = -1
     if not drive_mounted():
         # 承認後の1回目が 'mount failed' で終わり、すぐやり直すと再承認なしで通ることがある（09-29 に2回）。短い待ちで1回だけ再試行
         with open(Path(__file__).parent / 'dm_retry.log', 'w') as f:
-            rc = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=900,
-                                env=dict(os.environ, DM_WAIT_SEC='120')).returncode
+            try:
+                rc = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=900,
+                                    env=dict(os.environ, DM_WAIT_SEC='120')).returncode
+            except subprocess.TimeoutExpired:
+                rc = -1
     log('drivemount', rc, 'mounted' if drive_mounted() else 'NOT MOUNTED（dm_auto.log の URL でユーザー承認が必要）')
 
 
