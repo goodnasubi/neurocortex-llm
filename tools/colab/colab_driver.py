@@ -301,6 +301,30 @@ def wait_drive(tries=1):
     return True
 
 
+def flush_drive():
+    # Drive の FUSE は書き込みを手元のキャッシュに受けてから非同期に送る。サイズ一致の確認はキャッシュを読むだけなので、
+    # すぐ VM を止めると Drive 側は前の定期同期の版のまま残る（09-29 C0・10-02 B1 で、エポック末ではなく batch 56000 から再開）。
+    # 停止前に flush_and_unmount で送り切るのを待つ（カーネル内の別スレッドで走らせ、印のファイルで確認）。
+    M = '/content/step44/flush.done'
+    rc, out = vm_exec("""import threading, os
+from google.colab import drive
+if os.path.exists(%r): os.remove(%r)
+def _f():
+    try:
+        drive.flush_and_unmount(); r = 'ok'
+    except Exception as e:
+        r = 'ng ' + repr(e)
+    open(%r, 'w').write(r)
+threading.Thread(target=_f, daemon=True).start(); print('flush started')""" % (M, M, M))
+    log('flush start', rc, out.strip()[-120:])
+    for _ in range(60):
+        time.sleep(30)
+        rc, out = vm_exec("import os; print('FL' + 'AG:' + open(%r).read() if os.path.exists(%r) else 'WAIT')" % (M, M))
+        if 'FLAG:' in out:
+            log('flush', out.split('FLAG:', 1)[1].strip()[:200]); return
+    log('flush: 30分待っても終わらない（そのまま止める）')
+
+
 def reconnect(st):
     """区切りで止まった VM を捨て、新しい VM で続きを始める。"""
     backup(st)
@@ -308,6 +332,8 @@ def reconnect(st):
     if need_drive and not final_sync():
         log('Drive へ退避できないため、張り直さず同じ VM で続ける')
         start_training(); return
+    if need_drive:
+        flush_drive()
     rc, out = colab('stop', '-s', S, timeout=300)
     log('reconnect: 旧 VM を停止', rc, f'age={session_age_h():.1f}h', 'need_drive', need_drive)
     if need_drive:
