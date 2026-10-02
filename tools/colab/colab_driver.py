@@ -348,7 +348,11 @@ def reconnect(st):
 
 
 def start_session_restore_only():
-    rc, out = vm_exec('''
+    # Drive なしの VM では Drive からの復元は空振りなので飛ばす（10-02 11:51、この exec が接続切れで上限3600秒まで戻らなかった）
+    if not drive_mounted():
+        rc, out = 0, 'skip（Drive 未マウント）'
+    else:
+        rc, out = vm_exec('''
 import os, shutil
 D, V = %r, %r
 if os.path.ismount('/content/drive'):
