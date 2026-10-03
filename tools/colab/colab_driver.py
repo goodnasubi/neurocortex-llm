@@ -306,7 +306,7 @@ def flush_drive():
     # すぐ VM を止めると Drive 側は前の定期同期の版のまま残る（09-29 C0・10-02 B1 で、エポック末ではなく batch 56000 から再開）。
     # 停止前に flush_and_unmount で送り切るのを待つ（カーネル内の別スレッドで走らせ、印のファイルで確認）。
     M = '/content/step44/flush.done'
-    rc, out = vm_exec("""import threading, os
+    code = """import threading, os
 from google.colab import drive
 if os.path.exists(%r): os.remove(%r)
 def _f():
@@ -315,8 +315,12 @@ def _f():
     except Exception as e:
         r = 'ng ' + repr(e)
     open(%r, 'w').write(r)
-threading.Thread(target=_f, daemon=True).start(); print('flush started')""" % (M, M, M))
-    log('flush start', rc, out.strip()[-120:])
+threading.Thread(target=_f, daemon=True).start(); print('flush ' + 'started')""" % (M, M, M)
+    for _ in range(3):  # 起動の exec が届かずタイムアウトすることがある（10-03 13:21、スレッドは起動していなかった）。届くまで再送
+        rc, out = vm_exec(code, timeout=180)
+        log('flush start', rc, out.strip()[-120:])
+        if 'flush started' in out:
+            break
     for _ in range(60):
         time.sleep(30)
         rc, out = vm_exec("import os; print('FL' + 'AG:' + open(%r).read() if os.path.exists(%r) else 'WAIT')" % (M, M))
