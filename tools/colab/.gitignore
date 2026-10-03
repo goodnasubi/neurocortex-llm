@@ -1,0 +1,4 @@
+*.log
+session_started
+RECONNECT_NOW
+colab_tmp/

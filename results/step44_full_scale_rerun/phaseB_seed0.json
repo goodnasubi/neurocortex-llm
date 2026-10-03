@@ -1,0 +1,74 @@
+{
+  "phase": "B",
+  "seed": 0,
+  "metric": "backbone lm_head \u306e\u975e\u91cd\u307f\u4ed8\u304d\u6b21\u30c8\u30fc\u30af\u30f3 CE\uff08\u5168\u30d5\u30a7\u30fc\u30ba\u5171\u901a\uff09",
+  "train_losses": [
+    5.765686632371579,
+    4.752394534492028,
+    4.376250145013375,
+    4.156211369939573
+  ],
+  "val_losses": [
+    4.350984099986022,
+    3.9049465574748776,
+    3.6765066591569178,
+    3.539945295314097
+  ],
+  "val_ppls": [
+    77.55474700896899,
+    49.64742655743573,
+    39.50813733443354,
+    34.465033740440965
+  ],
+  "val_head_ce": [
+    {
+      "hippocampus_loss": 4.788847494372432,
+      "basal_ganglia_loss": 4.610880423827492
+    },
+    {
+      "hippocampus_loss": 4.323384144639721,
+      "basal_ganglia_loss": 4.150255249201325
+    },
+    {
+      "hippocampus_loss": 4.056694311428564,
+      "basal_ganglia_loss": 3.9054760493145086
+    },
+    {
+      "hippocampus_loss": 3.8877928946302345,
+      "basal_ganglia_loss": 3.7531065071185017
+    }
+  ],
+  "config": {
+    "phase": "B",
+    "hippocampus_enabled": true,
+    "basal_ganglia_enabled": true,
+    "cerebellum_enabled": false,
+    "dataset_name": "Salesforce/wikitext",
+    "dataset_config": "wikitext-103-v1",
+    "max_seq_length": 256,
+    "vocab_size": 50257,
+    "hidden_size": 768,
+    "num_layers": 12,
+    "nhead": 12,
+    "data_dir": null,
+    "max_vocab": null,
+    "token_cache_dir": "/content/step44/token_cache",
+    "batch_size": 8,
+    "learning_rate": 5e-05,
+    "num_epochs": 4,
+    "num_seeds": 3,
+    "gradient_accumulation_steps": 8,
+    "hippocampus_loss_weight": 0.05,
+    "basal_ganglia_loss_weight": 0.05,
+    "cerebellum_loss_weight": 0.02,
+    "device": "cuda",
+    "fp16": true,
+    "max_grad_norm": 1.0,
+    "eval_interval": 500,
+    "results_dir": "/content/step44/results",
+    "checkpoint_dir": "/content/step44/results/checkpoints",
+    "checkpoint_every_steps": 2000,
+    "deadline": 1791302467.299274,
+    "stop_file": "/content/step44/STOP"
+  }
+}
