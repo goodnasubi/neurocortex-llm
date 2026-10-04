@@ -1,0 +1,121 @@
+"""ステップ44.4 フル規模実験を、Colab のブラウザ画面から手動で再開するスクリプト。
+
+Claude のクラウドセッションが使えないときの手動運用用。Colab の新しいノートブック（GPU: T4）で、
+次の2セルを実行する（1セル目で Drive の承認画面が出る）。
+
+    from google.colab import drive; drive.mount('/content/drive')
+
+    !git clone -q -b master-m7kte3 https://github.com/goodnasubi/neurocortex-llm.git /content/neurocortex-llm || git -C /content/neurocortex-llm pull -q
+    !pip -q install datasets transformers
+    !python /content/neurocortex-llm/tools/colab/step44_resume.py
+
+やること:
+- Drive（MyDrive/neurocortex/step44）から、完了済みの結果・チェックポイント・トークン化済みデータを VM に戻す。
+- 学習を続きから再開する（完了済みの (phase, seed) は飛ばす）。
+- 30分ごとと終了時に、結果とチェックポイントを Drive へ写す。
+- Colab の接続は最長12時間。エポックは約5〜6時間かかるので、開始から --hours（既定5時間）を過ぎたら、
+  次のエポック末で止める（12時間までに終わる見込み。実質1接続あたり約2エポック）。
+
+テスト用の上書き（既定は Colab 用のまま）: 環境変数 STEP44_DRIVE / STEP44_WORK でパスを変える
+（Drive のパスが /content/drive の外ならマウント確認を省く）。--sync-seconds で同期間隔、
+`--` の後ろの引数は学習スクリプトへそのまま渡す（後ろに付くので、同じ引数は既定値を上書きする）。
+"""
+import argparse
+import os
+import shutil
+import subprocess
+import threading
+import time
+
+DRIVE = os.environ.get('STEP44_DRIVE', '/content/drive/MyDrive/neurocortex/step44')
+WORK = os.environ.get('STEP44_WORK', '/content/step44')
+RESULTS = WORK + '/results'
+CKPT = RESULTS + '/checkpoints'
+TOKENS = WORK + '/token_cache'
+STOP = WORK + '/STOP'
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+RUN = ['python', 'colab_step44_full_scale_experiment.py', '--phases', 'A', 'B', 'C', '--epochs', '4',
+       '--batch-size', '8', '--grad-accum', '8', '--max-hours', '200',
+       '--results-dir', RESULTS, '--checkpoint-dir', CKPT, '--token-cache-dir', TOKENS, '--stop-file', STOP]
+
+
+def copy_dir(src, dst, force=False):
+    """src の .json / .pt を dst へ写す（force でなければ新しいものだけ）。.part に書いてから置き換える。"""
+    if not os.path.isdir(src):
+        return
+    os.makedirs(dst, exist_ok=True)
+    for n in os.listdir(src):
+        if not n.endswith(('.json', '.pt')):
+            continue
+        a, b = os.path.join(src, n), os.path.join(dst, n)
+        if force or not os.path.exists(b) or os.path.getmtime(a) > os.path.getmtime(b):
+            # 更新時刻も写す（写した先が新しく見えて、次の同期で数GBを写し直さないように）
+            shutil.copy2(a, b + '.part')
+            os.replace(b + '.part', b)
+
+
+SYNC_LOCK = threading.Lock()  # 定期同期と終了時の同期が同じ .part に同時に書かないように
+
+
+def save_to_drive(force=False):
+    with SYNC_LOCK:
+        _save_to_drive(force)
+
+
+def _save_to_drive(force):
+    copy_dir(RESULTS, DRIVE, force)
+    copy_dir(CKPT, DRIVE + '/checkpoints', force)
+    copy_dir(TOKENS, DRIVE + '/token_cache')
+    # 完了した実行のチェックポイントは学習スクリプトが消すので、Drive 側も消す
+    if os.path.isdir(DRIVE + '/checkpoints'):
+        for n in os.listdir(DRIVE + '/checkpoints'):
+            if n.endswith('.pt') and not os.path.exists(os.path.join(CKPT, n)):
+                os.remove(os.path.join(DRIVE + '/checkpoints', n))
+    print(time.strftime('%H:%M:%S'), 'saved to Drive', flush=True)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--hours', type=float, default=5.0,
+                    help='この時間を過ぎたら、次のエポック末で止める（12時間 − 余裕1時間 − エポック約6時間）')
+    ap.add_argument('--sync-seconds', type=float, default=1800, help='Drive へ写す間隔（秒）')
+    ap.add_argument('train_args', nargs=argparse.REMAINDER, help='`--` の後ろ: 学習スクリプトへ追加で渡す引数')
+    args = ap.parse_args()
+    extra = args.train_args[1:] if args.train_args[:1] == ['--'] else args.train_args
+    if DRIVE.startswith('/content/drive/') and not os.path.ismount('/content/drive'):
+        raise SystemExit('先に drive.mount("/content/drive") を実行してください')
+
+    # 初回（Drive がまだ空）でも一覧を出せるように作っておく
+    os.makedirs(CKPT, exist_ok=True)
+    os.makedirs(TOKENS, exist_ok=True)
+
+    copy_dir(DRIVE, RESULTS, force=True)
+    copy_dir(DRIVE + '/checkpoints', CKPT, force=True)
+    copy_dir(DRIVE + '/token_cache', TOKENS, force=True)
+    print('restored:', sorted(os.listdir(RESULTS)), sorted(os.listdir(CKPT)), flush=True)
+    if os.path.exists(STOP):
+        os.remove(STOP)
+
+    t0 = time.time()
+    p = subprocess.Popen(RUN + extra, cwd=REPO)
+    stop = threading.Event()
+
+    def background():
+        while not stop.wait(args.sync_seconds):
+            if time.time() - t0 > args.hours * 3600 and not os.path.exists(STOP):
+                open(STOP, 'w').write('epoch')
+                print('次のエポック末で止めます', flush=True)
+            try:
+                save_to_drive()
+            except Exception as e:  # 同期の失敗で学習は止めない
+                print('save error', e, flush=True)
+
+    threading.Thread(target=background, daemon=True).start()
+    rc = p.wait()
+    stop.set()
+    save_to_drive(force=True)
+    print('終了コード', rc, '— 続きは、新しい接続でもう一度このスクリプトを実行してください', flush=True)
+
+
+if __name__ == '__main__':
+    main()
