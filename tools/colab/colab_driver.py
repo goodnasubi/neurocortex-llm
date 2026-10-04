@@ -161,15 +161,27 @@ def new_session():
         if rc == 0 or session_alive():
             break
         time.sleep(60 * (i + 1))
-    rc, out = vm_exec('''
+    # 初期設定（clone・pip）は VM 上の別プロセスで走らせ、結果ファイルを確認する。
+    # exec の応答待ちのまま 900 秒で切れ、repo がないまま学習開始に失敗したため（10-04 11:01）
+    code = '''
 import subprocess, os
 R = '/content/neurocortex-llm'
-if not os.path.exists(R):
-    subprocess.run(['git','clone','-q','-b','master-m7kte3','https://github.com/goodnasubi/neurocortex-llm.git',R],check=True)
-subprocess.run(['pip','install','-q','datasets','transformers'],check=True)
 os.makedirs('%s/checkpoints', exist_ok=True)
-print('setup ok')
-''' % VM, timeout=900)
+if not os.path.exists('/content/setup.started'):
+    open('/content/setup.started', 'w').close()
+    subprocess.Popen("(test -d %%s || git clone -q -b master-m7kte3 https://github.com/goodnasubi/neurocortex-llm.git %%s) && pip install -q datasets transformers && echo SETUP_OK > /content/setup.out || echo SETUP_NG > /content/setup.out" %% (R, R), shell=True, start_new_session=True)
+print('setup ' + 'started')
+''' % VM
+    for _ in range(3):
+        rc, out = vm_exec(code, timeout=180)
+        log('setup start', rc, out.strip()[-120:])
+        if 'setup started' in out:
+            break
+    for _ in range(40):
+        time.sleep(30)
+        rc, out = vm_exec("import os; f='/content/setup.out'; print(open(f).read().strip() if os.path.exists(f) else 'PEND' + 'ING')", timeout=120)
+        if 'SETUP_OK' in out or 'SETUP_NG' in out:
+            break
     log('setup', rc, out.strip()[-200:])
 
 
