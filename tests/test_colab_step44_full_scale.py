@@ -105,3 +105,47 @@ def test_checkpoint_resume_matches_uninterrupted(tmp_path):
         resumed.train_step(b)
     for p1, p2 in zip(ref.model.parameters(), resumed.model.parameters()):
         assert torch.allclose(p1, p2, atol=1e-6)
+
+
+def test_bg_critic_learns_and_stops_gradient():
+    from colab_step44_full_scale_experiment import BasalGangliaHead
+    torch.manual_seed(0)
+    head = BasalGangliaHead(H, V, mode="td_sg")
+    h = torch.randn(2, 10, H, requires_grad=True)
+    labels = torch.randint(0, V, (2, 10))
+    labels[0, 6:] = -100
+    out = head(h, labels)
+    # critic の損失だけでは皮質（入力）へ勾配が流れない
+    out["critic_loss"].backward()
+    assert h.grad is None or h.grad.abs().sum() == 0
+    assert head.critic[0].weight.grad.abs().sum() > 0
+
+    opt = torch.optim.Adam(head.critic.parameters(), lr=1e-2)
+    first = None
+    for _ in range(100):
+        opt.zero_grad()
+        c = head(h.detach(), labels)["critic_loss"]
+        c.backward()
+        opt.step()
+        first = first if first is not None else c.item()
+    assert c.item() < first * 0.5
+
+
+def test_bg_critic_ignores_padding():
+    from colab_step44_full_scale_experiment import BasalGangliaHead
+    torch.manual_seed(0)
+    head = BasalGangliaHead(H, V, mode="td_sg")
+    h = torch.randn(1, 10, H)
+    labels = torch.randint(0, V, (1, 10))
+    labels[0, 6:] = -100
+    a = head(h, labels)["critic_loss"]
+    h2 = h.clone()
+    h2[0, 7:] = torch.randn(3, H)  # パディング区間の隠れ状態を変えても損失は不変
+    b = head(h2, labels)["critic_loss"]
+    assert torch.allclose(a, b)
+
+
+def test_phase_b_trains_bg_critic():
+    cfg, m = _model("B")
+    out = m(**_batches()[0])
+    assert "bg_critic_loss" in out["losses"]

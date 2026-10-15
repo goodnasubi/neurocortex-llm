@@ -6314,3 +6314,12 @@ Phase B/C の学習損失は Epoch 3 以降で負になり、Epoch 5 で約 −0
 - 検証: 途中で中断して再開した学習が、中断なしの学習とパラメータ・val PPL ともに一致することを、単体テストと偽データでの通し実行で確認した。
 
 手順は `COLAB_STEP44_INSTRUCTIONS.md` に書き直した。
+
+### ステップ44.4 再実験前の補修（2026-10-15）
+
+Colab の計算資源を待つ間に、再実験の前提を整えた。
+
+1. **基底核 critic の移植**: `colab_step44_full_scale_experiment.py` の `BasalGangliaHead` に、採用済みの `td_sg`（報酬 r_t = −CE_t に対する TD(0)、critic 入力で勾配を止める。`docs/decisions/2026-09-26-step44-bg-critic-fix.md`）を移植した。これまでは critic が未学習で、基底核フェーズの検証になっていなかった。フル規模版ではパディング位置（label = −100）を報酬・TD 誤差から外し、次の位置が無効なら終端（v_next = 0）として扱う。設定は `bg_critic_mode`（既定 `td_sg`）と `bg_gamma`（0.9）。critic 損失は `losses['bg_critic_loss']` に記録する。評価指標（backbone の非重み付き CE）は変わらない。
+   テスト（`tests/test_colab_step44_full_scale.py` に3件追加、計8件が通過）: critic 損失が皮質へ逆伝播しないこと、critic が学習で損失を下げること、パディング区間の影響を受けないこと、Phase B で critic 損失が出力されること。
+2. **無効になった文書への撤回注記**: `METRIC_MISMATCH_ANALYSIS.md`・`SWEEP_PREDICTION_ANALYSIS.md`・`STEP44_CURRENT_STATUS.md`・`step44_paper_outline.md` の冒頭に注記を入れ、判断根拠から外した。
+3. **CPU 縮小予備実行**: `scripts/step44_cpu_smoke.py`（下に結果）。
