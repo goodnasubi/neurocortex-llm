@@ -1,0 +1,53 @@
+seed 0: ce=0.319 same=0.129 last=0.129/0.308 freq=0.176/0.311 markov=0.381/0.610 cerebellum=0.541/0.746 cerebellum_onehot=0.263/0.457
+  cap2_k1: none=4.63s/st1195/w0 last=4.69s/st1195/w0 freq=4.91s/st1093/w215 markov=4.98s/st1160/w548 cerebellum=4.90s/st1120/w418 cerebellum_onehot=5.39s/st1135/w635 markov_gated=4.76s/st1189/w73 cerebellum_gated=4.82s/st1159/w123 oracle=3.65s/st1194/w0
+  cap3_k2: none=4.37s/st1084/w0 last=4.46s/st981/w143 freq=4.48s/st931/w263 markov=5.03s/st1003/w694 cerebellum=4.83s/st978/w586 cerebellum_onehot=5.13s/st959/w702 markov_gated=4.49s/st1071/w41 cerebellum_gated=4.37s/st1047/w65 oracle=3.42s/st1082/w0
+  cap2_k1_io0.5: none=2.93s/st1195/w0 last=2.87s/st1195/w0 freq=2.78s/st1040/w265 markov=2.57s/st806/w649 cerebellum=2.76s/st728/w470 cerebellum_onehot=2.87s/st939/w712 markov_gated=2.84s/st1132/w78 cerebellum_gated=2.92s/st874/w132 oracle=2.00s/st171/w0
+  cap2_k1_io1: none=3.50s/st1195/w0 last=3.44s/st1195/w0 freq=3.70s/st1087/w230 markov=3.19s/st1106/w558 cerebellum=3.30s/st1069/w427 cerebellum_onehot=3.51s/st1105/w644 markov_gated=3.57s/st1179/w72 cerebellum_gated=3.45s/st1134/w126 oracle=2.39s/st1169/w0
+seed 1: ce=0.329 same=0.216 last=0.216/0.344 freq=0.136/0.287 markov=0.346/0.599 cerebellum=0.582/0.787 cerebellum_onehot=0.221/0.402
+  cap2_k1: none=4.38s/st1068/w0 last=4.38s/st1068/w0 freq=4.64s/st1033/w283 markov=4.55s/st1009/w475 cerebellum=4.51s/st1030/w365 cerebellum_onehot=4.93s/st1032/w566 markov_gated=4.42s/st1064/w26 cerebellum_gated=4.39s/st1057/w75 oracle=3.40s/st1066/w0
+  cap3_k2: none=4.01s/st884/w0 last=4.15s/st859/w177 freq=4.25s/st859/w352 markov=4.47s/st869/w561 cerebellum=4.52s/st875/w596 cerebellum_onehot=4.80s/st918/w702 markov_gated=3.97s/st884/w20 cerebellum_gated=4.00s/st881/w49 oracle=3.15s/st882/w0
+  cap2_k1_io0.5: none=2.67s/st1068/w0 last=2.74s/st1068/w0 freq=2.88s/st1007/w336 markov=2.52s/st748/w562 cerebellum=2.67s/st626/w409 cerebellum_onehot=2.83s/st846/w623 markov_gated=2.74s/st1012/w26 cerebellum_gated=2.76s/st838/w79 oracle=1.86s/st71/w0
+  cap2_k1_io1: none=3.29s/st1068/w0 last=3.32s/st1068/w0 freq=3.40s/st1030/w290 markov=3.16s/st961/w487 cerebellum=3.20s/st998/w369 cerebellum_onehot=3.39s/st1013/w578 markov_gated=3.37s/st1056/w26 cerebellum_gated=3.34s/st1039/w75 oracle=2.26s/st1034/w0
+seed 2: ce=0.320 same=0.151 last=0.151/0.265 freq=0.136/0.268 markov=0.271/0.483 cerebellum=0.580/0.782 cerebellum_onehot=0.146/0.324
+  cap2_k1: none=4.55s/st1143/w0 last=4.60s/st1143/w0 freq=5.06s/st1130/w350 markov=5.15s/st1149/w609 cerebellum=4.80s/st1091/w407 cerebellum_onehot=5.52s/st1116/w702 markov_gated=4.70s/st1144/w17 cerebellum_gated=4.75s/st1135/w112 oracle=3.59s/st1141/w0
+  cap3_k2: none=4.15s/st977/w0 last=4.46s/st970/w236 freq=4.62s/st960/w466 markov=5.18s/st991/w818 cerebellum=4.96s/st941/w635 cerebellum_onehot=5.25s/st961/w814 markov_gated=4.26s/st978/w13 cerebellum_gated=4.23s/st959/w70 oracle=3.27s/st976/w0
+  cap2_k1_io0.5: none=2.79s/st1143/w0 last=2.87s/st1143/w0 freq=2.80s/st1103/w392 markov=2.64s/st916/w664 cerebellum=2.63s/st685/w455 cerebellum_onehot=2.93s/st992/w784 markov_gated=2.87s/st1143/w19 cerebellum_gated=2.89s/st914/w117 oracle=1.81s/st49/w0
+  cap2_k1_io1: none=3.42s/st1143/w0 last=3.43s/st1143/w0 freq=3.58s/st1122/w357 markov=3.39s/st1120/w614 cerebellum=3.28s/st1048/w414 cerebellum_onehot=3.69s/st1098/w717 markov_gated=3.43s/st1145/w18 cerebellum_gated=3.47s/st1112/w113 oracle=2.32s/st1103/w0
+seed 3: ce=0.322 same=0.142 last=0.142/0.314 freq=0.148/0.284 markov=0.280/0.490 cerebellum=0.547/0.738 cerebellum_onehot=0.152/0.324
+  cap2_k1: none=4.69s/st1207/w0 last=4.75s/st1207/w0 freq=5.08s/st1120/w268 markov=5.24s/st1136/w686 cerebellum=4.84s/st1088/w393 cerebellum_onehot=5.54s/st1111/w691 markov_gated=4.74s/st1207/w23 cerebellum_gated=4.70s/st1176/w76 oracle=3.61s/st1202/w0
+  cap3_k2: none=4.37s/st1057/w0 last=4.63s/st973/w170 freq=4.71s/st980/w399 markov=5.23s/st999/w791 cerebellum=5.03s/st963/w637 cerebellum_onehot=5.31s/st966/w757 markov_gated=4.49s/st1058/w16 cerebellum_gated=4.46s/st1044/w48 oracle=3.47s/st1054/w0
+  cap2_k1_io0.5: none=2.85s/st1207/w0 last=2.89s/st1207/w0 freq=2.85s/st1055/w291 markov=2.76s/st924/w774 cerebellum=2.65s/st711/w452 cerebellum_onehot=2.97s/st1063/w801 markov_gated=2.87s/st1200/w24 cerebellum_gated=2.80s/st905/w84 oracle=1.83s/st23/w0
+  cap2_k1_io1: none=3.47s/st1207/w0 last=3.48s/st1207/w0 freq=3.37s/st1097/w268 markov=3.37s/st1102/w712 cerebellum=3.28s/st1079/w403 cerebellum_onehot=3.75s/st1099/w702 markov_gated=3.53s/st1205/w23 cerebellum_gated=3.54s/st1165/w76 oracle=2.37s/st1139/w0
+seed 4: ce=0.320 same=0.198 last=0.198/0.326 freq=0.137/0.280 markov=0.351/0.600 cerebellum=0.613/0.783 cerebellum_onehot=0.196/0.414
+  cap2_k1: none=4.43s/st1090/w0 last=4.46s/st1090/w0 freq=4.73s/st1054/w275 markov=4.74s/st1057/w508 cerebellum=4.48s/st1064/w326 cerebellum_onehot=5.01s/st1040/w608 markov_gated=4.49s/st1088/w24 cerebellum_gated=4.38s/st1085/w65 oracle=3.45s/st1089/w0
+  cap3_k2: none=4.17s/st987/w0 last=4.31s/st823/w150 freq=4.38s/st811/w251 markov=4.56s/st919/w618 cerebellum=4.47s/st896/w542 cerebellum_onehot=4.93s/st916/w708 markov_gated=4.21s/st977/w18 cerebellum_gated=4.20s/st964/w39 oracle=3.29s/st984/w0
+  cap2_k1_io0.5: none=2.69s/st1090/w0 last=2.73s/st1090/w0 freq=2.70s/st1010/w311 markov=2.48s/st777/w560 cerebellum=2.56s/st611/w360 cerebellum_onehot=2.84s/st858/w657 markov_gated=2.82s/st1070/w25 cerebellum_gated=2.74s/st778/w65 oracle=1.85s/st50/w0
+  cap2_k1_io1: none=3.26s/st1090/w0 last=3.38s/st1090/w0 freq=3.41s/st1042/w280 markov=3.17s/st995/w523 cerebellum=3.16s/st997/w333 cerebellum_onehot=3.53s/st1010/w624 markov_gated=3.39s/st1082/w24 cerebellum_gated=3.49s/st1064/w65 oracle=2.37s/st1034/w0
+{
+ "a_pass": true,
+ "a_margin_top1": 0.4055256907113389,
+ "b_pass": false,
+ "b_reduction_vs_none": -0.015730788046811606,
+ "b_wall_mean": {
+  "none": 4.537272982600098,
+  "last": 4.574345631000233,
+  "freq": 4.885212404399954,
+  "markov": 4.9325742800001535,
+  "cerebellum": 4.7066158000001455,
+  "cerebellum_onehot": 5.280086861600194,
+  "markov_gated": 4.623541347599985,
+  "cerebellum_gated": 4.608647862199905,
+  "oracle": 3.540541127000324
+ },
+ "参考_予測器時間を除く壁時計": {
+  "none": 4.537272982600098,
+  "last": 4.529258058992127,
+  "freq": 4.840746208391556,
+  "markov": 4.884105663201444,
+  "cerebellum": 4.44511446939141,
+  "cerebellum_onehot": 5.033327025020753,
+  "markov_gated": 4.530855049796991,
+  "cerebellum_gated": 4.330621768007495,
+  "oracle": 3.5323489386026266
+ }
+}
