@@ -1207,7 +1207,7 @@ class DiskBackedAssociativeStore:
                 このモードは `read_with_hybrid_rerank` 内で既に計算済みの
                 ベクトル化スコアを再利用することで大規模Nでも実用的な
                 速度で成分別寄与度を計測できる。
-            combine: 合成方式（12.6.116節）。"linear"（既定）は
+            combine: 合成方式（12.6.117節）。"linear"（既定）は
                 λ_inner·z_inner + λ_density·z_density + λ_template·z_template の
                 線形和。"gate" は、内積（z-score）が1位から`gate_margin`以内の
                 候補（僅差集合）だけを残し、その中を λ_density·z_density +
@@ -1357,7 +1357,7 @@ class DiskBackedAssociativeStore:
             z_template = _row_zscore(score_template, valid_mask_r)
 
             if combine == "gate":
-                # ゲート式合成（12.6.116節）: topkは降順なので列0が内積の1位。
+                # ゲート式合成（12.6.117節）: topkは降順なので列0が内積の1位。
                 # 内積で1位と僅差の候補だけを密度・テンプレートで判定する。
                 # 同点は内積で解消する（密度・テンプレートの重みが0なら内積の1位）。
                 tie = valid_mask_r & (z_inner >= z_inner[:, :1] - gate_margin)
