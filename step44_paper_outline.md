@@ -1,5 +1,8 @@
 # Brain-Inspired Large Language Models: Integrating Hippocampal, Cerebellar, and Basal Ganglia Computational Principles
 
+> **撤回注記（2026-10-15）**: 本文書が根拠とするステップ44.4 フル規模の数値（A 11.36 / B 11.93 / C 12.21 PPL 等）とパラメータスイープの結果は、実際の学習出力であることを確認できず、評価指標も不適切だった（`docs/brain-structure-research.md`「ステップ44.4 フル規模実験結果の真正性に関する注記」）。本文書の結論は判断根拠に使わない。修正済みスクリプト（因果マスク・指標修正・基底核 critic td_sg 移植済み）による Colab 再実験の結果で置き換える。
+
+
 ## Paper Outline & Research Framework
 
 **Status**: ステップ44.5 Phase 1 - 論文構成設計・結果集計テンプレート作成

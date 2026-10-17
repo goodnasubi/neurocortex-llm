@@ -59,7 +59,7 @@ class Step444Config:
     cerebellum_enabled: bool = False  # Phase C で有効
 
     # データセット（WikiText-103 実データ）
-    dataset_name: str = "wikitext"
+    dataset_name: str = "Salesforce/wikitext"  # 新しい datasets は名前空間必須
     dataset_config: str = "wikitext-103-v1"
     max_seq_length: int = 256  # Colab T4 メモリ対応
     vocab_size: int = 50257
@@ -75,6 +75,9 @@ class Step444Config:
     hippocampus_loss_weight: float = 0.05  # ステップ44.3.1 で最適化済み
     basal_ganglia_loss_weight: float = 0.05
     cerebellum_loss_weight: float = 0.02
+    # 基底核 critic: td_sg（採用, docs/decisions/2026-09-26-step44-bg-critic-fix.md）/ td / none
+    bg_critic_mode: str = "td_sg"
+    bg_gamma: float = 0.9
 
     # リソース
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
@@ -163,10 +166,18 @@ class HippocampusHead(nn.Module):
 
 
 class BasalGangliaHead(nn.Module):
-    """基底核モジュール（Actor-Critic）"""
+    """基底核モジュール（Actor-Critic）
 
-    def __init__(self, hidden_size: int, vocab_size: int):
+    critic は報酬 r_t = -CE_t に対する TD(0) で学習する（6.2節）。mode="td_sg" では critic 入力で
+    勾配を止め、価値学習を皮質→線条体シナプスに限る（docs/decisions/2026-09-26-step44-bg-critic-fix.md）。
+    パディング位置（label=-100）は報酬・TD 誤差の両方から除外する。
+    """
+
+    def __init__(self, hidden_size: int, vocab_size: int, mode: str = "td_sg", gamma: float = 0.9):
         super().__init__()
+        assert mode in ("td", "td_sg", "none"), mode
+        self.mode = mode
+        self.gamma = gamma
         self.critic = nn.Sequential(
             nn.Linear(hidden_size, hidden_size // 2),
             nn.ReLU(),
@@ -179,21 +190,36 @@ class BasalGangliaHead(nn.Module):
         )
 
     def forward(self, hidden_states: torch.Tensor, labels: Optional[torch.Tensor] = None) -> Dict:
-        batch_size, seq_len, hidden_size = hidden_states.shape
-
-        values = self.critic(hidden_states)
+        critic_in = hidden_states.detach() if self.mode == "td_sg" else hidden_states
+        values = self.critic(critic_in)
         policy_logits = self.actor(hidden_states)
 
         loss = None
+        critic_loss = None
         if labels is not None:
-            loss_fn = nn.CrossEntropyLoss()
-            shift_logits = policy_logits[..., :-1, :].contiguous()
-            shift_labels = labels[..., 1:].contiguous()
-            loss = loss_fn(shift_logits.view(-1, policy_logits.size(-1)), shift_labels.view(-1))
+            shift_logits = policy_logits[..., :-1, :]
+            shift_labels = labels[..., 1:]
+            valid = (shift_labels != -100).float()
+            n_valid = valid.sum().clamp_min(1.0)
+            ce_tok = nn.functional.cross_entropy(
+                shift_logits.reshape(-1, policy_logits.size(-1)), shift_labels.reshape(-1),
+                ignore_index=-100, reduction="none"
+            ).view(shift_labels.shape)
+            actor_loss = (ce_tok * valid).sum() / n_valid
+            loss = actor_loss
+            if self.mode != "none":
+                v = values[..., :-1, 0]
+                # 次位置が無効（系列末尾・パディング）なら終端として v_next=0
+                v_next = torch.cat([values[..., 1:-1, 0], torch.zeros_like(v[..., :1])], dim=-1)
+                next_valid = torch.cat([valid[..., 1:], torch.zeros_like(valid[..., :1])], dim=-1)
+                target = (-ce_tok + self.gamma * v_next * next_valid).detach()
+                critic_loss = (((target - v) ** 2) * valid).sum() / n_valid
+                loss = actor_loss + critic_loss
 
         return {
             'logits': policy_logits,
             'loss': loss,
+            'critic_loss': critic_loss,
             'values': values,
             'hidden_states': hidden_states
         }
@@ -255,7 +281,7 @@ class BrainInspiredLLMFullScale(nn.Module):
 
         # Brain modules
         self.hippocampus = HippocampusHead(hidden_size, vocab_size) if config.hippocampus_enabled else None
-        self.basal_ganglia = BasalGangliaHead(hidden_size, vocab_size) if config.basal_ganglia_enabled else None
+        self.basal_ganglia = BasalGangliaHead(hidden_size, vocab_size, config.bg_critic_mode, config.bg_gamma) if config.basal_ganglia_enabled else None
         self.cerebellum = CerebellumHead(hidden_size, vocab_size) if config.cerebellum_enabled else None
 
     def forward(
@@ -311,6 +337,8 @@ class BrainInspiredLLMFullScale(nn.Module):
             bg_loss = bg_out['loss']
             if bg_loss is not None:
                 losses['basal_ganglia_loss'] = bg_loss.item()
+                if bg_out['critic_loss'] is not None:
+                    losses['bg_critic_loss'] = bg_out['critic_loss'].item()
                 total_loss = total_loss + self.config.basal_ganglia_loss_weight * bg_loss
 
         # Phase C: Cerebellum
