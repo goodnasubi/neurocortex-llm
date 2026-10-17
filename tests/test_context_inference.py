@@ -171,4 +171,4 @@ def test_creation_dynamics():
     upd = [(1, s, 0, 0.01 if s < 20 else 0.5, 0.01 if s < 20 else 0.9) for s in range(60)]
     d = creation_dynamics(assign, trace, upd, [0, 1], window=10, after=20)
     assert abs(d["prev_drop_at_creation"] - 0.2) < 1e-9
-    assert d["grad_pre"] == 0.01 and d["upd_post"] == 0.9
+    assert d["grad_pre"] == pytest.approx(0.01) and d["upd_post"] == pytest.approx(0.9)
