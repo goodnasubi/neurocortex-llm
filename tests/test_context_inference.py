@@ -63,3 +63,11 @@ def test_flip_spec_disagreement_rate():
     assert abs((base != flipped).float().mean().item() - 0.25) < 0.03
     ref_bits, ref = make_batch(ParitySpec(8, (0, 1)), 4000, torch.Generator().manual_seed(0))
     assert torch.equal(ref_bits, bits) and torch.equal(ref, base)
+
+
+def test_transition_zero_matches_default_and_mixes_otherwise():
+    a = _run("inferred")
+    b = _run("inferred", transition_steps=0)
+    assert a["R"] == b["R"] and a["assign"] == b["assign"]
+    c = _run("oracle", transition_steps=3)
+    assert len(c["R"]) == 3
