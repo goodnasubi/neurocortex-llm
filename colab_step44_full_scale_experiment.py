@@ -23,6 +23,7 @@ if '__file__' in globals():
     sys.path.insert(0, str(Path(__file__).parent))
 
 import json
+import math
 import logging
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Tuple
@@ -78,6 +79,8 @@ class Step444Config:
     # 基底核 critic: td_sg（採用, docs/decisions/2026-09-26-step44-bg-critic-fix.md）/ td / none
     bg_critic_mode: str = "td_sg"
     bg_gamma: float = 0.9
+    bg_value_init: bool = False        # 収束対策の候補（既定は無効。12.7節）
+    bg_reward_baseline: str = "none"   # "none" / "ema"
 
     # リソース
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
@@ -171,18 +174,30 @@ class BasalGangliaHead(nn.Module):
     critic は報酬 r_t = -CE_t に対する TD(0) で学習する（6.2節）。mode="td_sg" では critic 入力で
     勾配を止め、価値学習を皮質→線条体シナプスに限る（docs/decisions/2026-09-26-step44-bg-critic-fix.md）。
     パディング位置（label=-100）は報酬・TD 誤差の両方から除外する。
+
+    収束対策（12.7節、比較は scripts/step44_bg_critic_convergence.py）:
+    - value_init=True: 価値出力の初期バイアスを −ln(V)/(1−γ)（初期 CE ≈ ln V のときの価値）にする。
+    - reward_baseline="ema": 報酬を r_t = −(CE_t − b) とする平均報酬 TD。b は CE の移動平均
+      （tonic ドーパミンによる平均報酬率の表現, Niv et al. 2007 に対応）。
     """
 
-    def __init__(self, hidden_size: int, vocab_size: int, mode: str = "td_sg", gamma: float = 0.9):
+    def __init__(self, hidden_size: int, vocab_size: int, mode: str = "td_sg", gamma: float = 0.9,
+                 value_init: bool = False, reward_baseline: str = "none", baseline_momentum: float = 0.99):
         super().__init__()
         assert mode in ("td", "td_sg", "none"), mode
+        assert reward_baseline in ("none", "ema"), reward_baseline
         self.mode = mode
         self.gamma = gamma
+        self.reward_baseline = reward_baseline
+        self.baseline_momentum = baseline_momentum
+        self.register_buffer("ce_baseline", torch.tensor(float("nan")))
         self.critic = nn.Sequential(
             nn.Linear(hidden_size, hidden_size // 2),
             nn.ReLU(),
             nn.Linear(hidden_size // 2, 1)
         )
+        if value_init and reward_baseline == "none":
+            nn.init.constant_(self.critic[-1].bias, -math.log(vocab_size) / (1 - gamma))
         self.actor = nn.Sequential(
             nn.Linear(hidden_size, hidden_size // 2),
             nn.ReLU(),
@@ -196,6 +211,7 @@ class BasalGangliaHead(nn.Module):
 
         loss = None
         critic_loss = None
+        target_var = None
         if labels is not None:
             shift_logits = policy_logits[..., :-1, :]
             shift_labels = labels[..., 1:]
@@ -212,14 +228,27 @@ class BasalGangliaHead(nn.Module):
                 # 次位置が無効（系列末尾・パディング）なら終端として v_next=0
                 v_next = torch.cat([values[..., 1:-1, 0], torch.zeros_like(v[..., :1])], dim=-1)
                 next_valid = torch.cat([valid[..., 1:], torch.zeros_like(valid[..., :1])], dim=-1)
-                target = (-ce_tok + self.gamma * v_next * next_valid).detach()
+                reward = -ce_tok.detach()
+                if self.reward_baseline == "ema":
+                    batch_mean = (ce_tok.detach() * valid).sum() / n_valid
+                    if self.training:
+                        if torch.isnan(self.ce_baseline):
+                            self.ce_baseline.copy_(batch_mean)
+                        else:
+                            self.ce_baseline.mul_(self.baseline_momentum).add_((1 - self.baseline_momentum) * batch_mean)
+                    b = batch_mean if torch.isnan(self.ce_baseline) else self.ce_baseline
+                    reward = reward + b
+                target = (reward + self.gamma * v_next * next_valid).detach()
                 critic_loss = (((target - v) ** 2) * valid).sum() / n_valid
+                t_mean = (target * valid).sum() / n_valid
+                target_var = (((target - t_mean) ** 2) * valid).sum() / n_valid
                 loss = actor_loss + critic_loss
 
         return {
             'logits': policy_logits,
             'loss': loss,
             'critic_loss': critic_loss,
+            'td_target_var': target_var,
             'values': values,
             'hidden_states': hidden_states
         }
@@ -281,7 +310,8 @@ class BrainInspiredLLMFullScale(nn.Module):
 
         # Brain modules
         self.hippocampus = HippocampusHead(hidden_size, vocab_size) if config.hippocampus_enabled else None
-        self.basal_ganglia = BasalGangliaHead(hidden_size, vocab_size, config.bg_critic_mode, config.bg_gamma) if config.basal_ganglia_enabled else None
+        self.basal_ganglia = BasalGangliaHead(hidden_size, vocab_size, config.bg_critic_mode, config.bg_gamma,
+                                              config.bg_value_init, config.bg_reward_baseline) if config.basal_ganglia_enabled else None
         self.cerebellum = CerebellumHead(hidden_size, vocab_size) if config.cerebellum_enabled else None
 
     def forward(
@@ -373,6 +403,20 @@ class FullScaleTrainer:
         self.val_losses = []
         self.step_count = 0
 
+    def _clip_grads(self) -> None:
+        """勾配クリッピング。基底核 critic は他と別にクリップする。
+
+        全体を1つのノルムでクリップすると、critic の大きな勾配がクリップ倍率を通じて backbone の更新を縮め、
+        critic 入力の勾配停止（td_sg: 価値学習は皮質へ影響しない）が実質的に破られる（2026-10-17 確認）。
+        """
+        bg = getattr(self.model, 'basal_ganglia', None)
+        critic = list(bg.critic.parameters()) if bg is not None else []
+        critic_ids = {id(p) for p in critic}
+        rest = [p for p in self.model.parameters() if id(p) not in critic_ids]
+        torch.nn.utils.clip_grad_norm_(rest, self.config.max_grad_norm)
+        if critic:
+            torch.nn.utils.clip_grad_norm_(critic, self.config.max_grad_norm)
+
     def train_step(self, batch: Dict) -> float:
         """Single training step"""
         self.model.train()
@@ -395,7 +439,7 @@ class FullScaleTrainer:
 
             if (self.step_count + 1) % self.config.gradient_accumulation_steps == 0:
                 self.scaler.unscale_(self.optimizer)
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.max_grad_norm)
+                self._clip_grads()
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
                 self.optimizer.zero_grad()
@@ -409,7 +453,7 @@ class FullScaleTrainer:
             loss.backward()
 
             if (self.step_count + 1) % self.config.gradient_accumulation_steps == 0:
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.max_grad_norm)
+                self._clip_grads()
                 self.optimizer.step()
                 self.optimizer.zero_grad()
 

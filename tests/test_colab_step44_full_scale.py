@@ -149,3 +149,48 @@ def test_phase_b_trains_bg_critic():
     cfg, m = _model("B")
     out = m(**_batches()[0])
     assert "bg_critic_loss" in out["losses"]
+
+
+def test_bg_value_init_sets_bias():
+    import math
+    from colab_step44_full_scale_experiment import BasalGangliaHead
+    head = BasalGangliaHead(H, V, value_init=True, gamma=0.9)
+    assert abs(head.critic[-1].bias.item() + math.log(V) / 0.1) < 1e-4
+
+
+def test_bg_ema_baseline_centers_reward():
+    from colab_step44_full_scale_experiment import BasalGangliaHead
+    torch.manual_seed(0)
+    head = BasalGangliaHead(H, V, reward_baseline="ema")
+    h = torch.randn(2, 10, H)
+    labels = torch.randint(0, V, (2, 10))
+    out = head(h, labels)
+    assert torch.isfinite(head.ce_baseline)
+    # 初回は基準 = バッチ平均 CE なので、報酬（−CE+b）はほぼ平均0になり TD ターゲットの分散は有限
+    assert out["td_target_var"] is not None and torch.isfinite(out["td_target_var"])
+    b0 = head.ce_baseline.clone()
+    head.eval()
+    head(h, labels)
+    assert torch.equal(b0, head.ce_baseline)  # 評価時は基準を更新しない
+
+
+def test_bg_default_unchanged():
+    cfg, m = _model("B")
+    assert cfg.bg_reward_baseline == "none" and not cfg.bg_value_init
+
+
+def test_td_sg_critic_does_not_change_backbone_updates():
+    # 全体一括の勾配クリッピングでは critic の勾配が backbone の更新を縮めていた（2026-10-17）
+    g = torch.Generator().manual_seed(1)
+    xs = torch.randint(0, V, (20, 4, 12), generator=g)
+    emb = {}
+    for mode in ("none", "td_sg"):
+        torch.manual_seed(0)
+        cfg = Step444Config(phase="B", device="cpu", fp16=False, max_seq_length=16,
+                            gradient_accumulation_steps=1, bg_critic_mode=mode, learning_rate=1e-3)
+        m = BrainInspiredLLMFullScale(cfg, vocab_size=V, hidden_size=H, num_layers=1).eval()
+        t = FullScaleTrainer(m, cfg)
+        for x in xs:
+            t.train_step({"input_ids": x, "labels": x, "attention_mask": torch.ones_like(x)})
+        emb[mode] = m.embedding.weight.detach()
+    assert torch.allclose(emb["none"], emb["td_sg"], atol=1e-6)
