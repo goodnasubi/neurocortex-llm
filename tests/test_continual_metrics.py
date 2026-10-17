@@ -75,3 +75,11 @@ def test_capacity_eval_generator_does_not_change_training():
                       eval_generator=torch.Generator().manual_seed(2))
     assert a.per_task_acc == b.per_task_acc and a.acc_matrix is None
     assert len(b.acc_matrix) == 3 and all(len(r) == 3 for r in b.acc_matrix)
+
+
+def test_task_id_input_widens_model_input():
+    specs = [ParitySpec(n_inputs=8, relevant=p) for p in [(0, 1), (2, 3), (4, 5)]]
+    torch.manual_seed(0)
+    R = run_sequence("replay", specs, 8, torch.Generator().manual_seed(1), torch.Generator().manual_seed(2),
+                     pretrain_steps=3, steps=3, eval_n=20, task_id_input=True)
+    assert len(R) == 3 and all(len(r) == 3 for r in R)
