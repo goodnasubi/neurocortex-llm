@@ -62,3 +62,16 @@ def test_t2_training_matches_step10():
     R = run_sequence("replay", [a, b], 8, torch.Generator().manual_seed(3), torch.Generator().manual_seed(9),
                      pretrain_steps=20, steps=20, fisher_batches=2, eval_n=4000)
     assert abs(R[1][0] - r10["acc_a"]) < 0.04 and abs(R[1][1] - r10["acc_b"]) < 0.04
+
+
+def test_capacity_eval_generator_does_not_change_training():
+    from neurocortex.hippocampus_capacity import make_task_specs, run_condition
+    specs = make_task_specs(3, 6)
+    args = (specs, 8, 40, 20, 10, 16, 0.05, 2, 8, 100)
+    torch.manual_seed(0)
+    a = run_condition("uniform-compress", *args, torch.Generator().manual_seed(1))
+    torch.manual_seed(0)
+    b = run_condition("uniform-compress", *args, torch.Generator().manual_seed(1),
+                      eval_generator=torch.Generator().manual_seed(2))
+    assert a.per_task_acc == b.per_task_acc and a.acc_matrix is None
+    assert len(b.acc_matrix) == 3 and all(len(r) == 3 for r in b.acc_matrix)
