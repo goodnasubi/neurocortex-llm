@@ -141,12 +141,18 @@ def main() -> None:
     p.add_argument("--eps", type=float, default=1e-4)
     p.add_argument("--threads", type=int, default=4)
     p.add_argument("--out", type=str, default="results/homeostatic_moe/dev.json")
+    p.add_argument("--merge", type=str, nargs="+", default=None,
+                   help="シードごとに別プロセスで出した結果ファイルを結合して要約・判定だけ行う")
     args = p.parse_args()
     torch.set_num_threads(args.threads)
 
     conds = conditions(args)
     runs = []
-    for seed in args.seeds:
+    if args.merge:
+        parts = [json.loads(Path(f).read_text()) for f in args.merge]
+        runs = [r for part in parts for r in part["シード別"]]
+        args.seeds = [r["seed"] for r in runs]
+    for seed in ([] if args.merge else args.seeds):
         corpus = CharCorpus(synthetic_corpus(n_sentences=args.n_sentences, seed=seed))
         r = {"seed": seed}
         for key, cond in conds.items():
@@ -166,7 +172,8 @@ def main() -> None:
         verdict = judge(runs, s, eta)
         verdict["eta_selected_on"] = "引数 --eta-star（開発用シードで選択済み）" if args.eta_star is not None \
             else "このシードでの選択（12.6.127節の選び方）"
-    out = {"環境": env_info(), "設定": vars(args), "要約": s, "判定": verdict, "シード別": runs}
+    out = {"環境": env_info(), "設定": vars(args),
+           **({"結合元の環境": [part["環境"] for part in parts]} if args.merge else {}), "要約": s, "判定": verdict, "シード別": runs}
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(out, ensure_ascii=False, indent=1))
     print(json.dumps({"要約": s, "判定": verdict}, ensure_ascii=False, indent=1))
