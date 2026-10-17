@@ -70,7 +70,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          selection_trials: int = 0, transition_steps: int = 0,
                          novel_patience: int = 20, store_consistent: bool = False, train_consistent: bool = False,
                          diagnostics: bool = False, trace_every: int = 0, diag_oracle_filter: str = "",
-                         reset_opt_on_new: bool = False) -> dict:
+                         reset_opt_on_new: bool = False, plasticity_cap: float = 0.0, plasticity_ema: float = 0.99,
+                         plasticity_ref: str = "capped", optimizer: str = "adam") -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -103,9 +104,23 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     "new" ではタスク k の期間に作った文脈の学習から前のタスクのサンプルを、"old" ではそれ以外の文脈の学習から
     タスク k のサンプルを除く（"both" は両方）。
     diagnostics = True では "upd"（各最適化ステップの (タスク, ステップ, 文脈, 勾配ノルム, 更新ノルム)）も加える。
+    更新ノルムは plasticity_cap による縮小の後の値。
+
+    plasticity_cap = ρ > 0 では、驚きに応じた可塑性の調節（12.6.125節。reset_opt_on_new の代わり）を行う。
+    新しい入力を学習したステップの更新ノルムの指数移動平均 ū（減衰 plasticity_ema、平常時の可塑性の大きさ）を
+    保持し、更新ノルムが ρ·ū を超える（平常時から予期せぬほど大きい）ときは、更新を ρ·ū に縮める。ū の更新には
+    縮めた後の値を使うので、持続的な変化には1ステップあたり最大 (ρ − 1)(1 − plasticity_ema) の割合で追従する。
+    最適化器の内部状態は変えない。既定の 0 では従来と同じ挙動。plasticity_ref = "raw" では、ū の更新に縮める前の
+    値を使う（修正2。縮めた値を使うと ū が自分の縮小で下がり続け、平常時の可塑性まで抑えるため）。
+
+    optimizer は "adam"（既定）か "sgd"（モーメントなし。Adam 以外でも同じ問題が起きるかの確認用, 12.6.125節）。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
+    if optimizer not in ("adam", "sgd"):
+        raise ValueError(optimizer)
+    if plasticity_ref not in ("capped", "raw"):
+        raise ValueError(plasticity_ref)
     T = len(specs)
     C = 0 if condition == "none" else (T if condition == "oracle" else (n_slots or T + 2))
     model = make_model(specs[0].n_inputs + C, hidden_dim)
@@ -200,11 +215,18 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         bits, labels = make_batch(specs[j], eval_n, eval_generator)
         return float((model(with_ctx(bits, ctx)).argmax(-1) == labels).float().mean())
 
+    def make_opt(k: int) -> torch.optim.Optimizer:
+        wd = pretrain_weight_decay if k == 0 else 0.0
+        if optimizer == "sgd":
+            return torch.optim.SGD(model.parameters(), lr=lr, weight_decay=wd)
+        return torch.optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
+
+    upd_ref: list[float] = []  # plasticity_cap の ū（平常時の更新ノルムの移動平均）
     R: list[list[float]] = []
     for k, spec in enumerate(specs):
         trained: dict[tuple[int, int], int] = {}
         n_used_at_start = len(used)
-        opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=pretrain_weight_decay if k == 0 else 0.0)
+        opt = make_opt(k)
         for step in range(pretrain_steps if k == 0 else steps):
             bits, labels = make_batch(spec, batch, generator)
             src = None
@@ -218,8 +240,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             ctx = pick_ctx(k, bits, labels)
             assign.append((k, ctx))
             if reset_opt_on_new and len(used) > n_used_before:
-                opt = torch.optim.Adam(model.parameters(), lr=lr,
-                                       weight_decay=pretrain_weight_decay if k == 0 else 0.0)
+                opt = make_opt(k)
             ctx_in = src if (condition == "oracle" and src is not None) else ctx
             x = with_ctx(bits, ctx_in)
             y = labels
@@ -240,6 +261,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             if gate["train"] and diagnostics:
                 for t in s_.unique().tolist():
                     trained[(ctx, t)] = trained.get((ctx, t), 0) + int((s_ == t).sum())
+            n_new = y.shape[0]
             if buf_bits and k > 0:
                 bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
                 idx = torch.randint(bb.shape[0], (batch,), generator=generator)
@@ -249,12 +271,27 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 loss = F.cross_entropy(model(x), y)
                 opt.zero_grad(set_to_none=True)
                 loss.backward()
-                if diagnostics:
+                if diagnostics or plasticity_cap > 0:
                     before = [q.detach().clone() for q in model.parameters()]
+                if diagnostics:
                     gnorm = float(torch.sqrt(sum((q.grad ** 2).sum() for q in model.parameters() if q.grad is not None)))
                 opt.step()
-                if diagnostics:
+                if diagnostics or plasticity_cap > 0:
                     unorm = float(torch.sqrt(sum(((q.detach() - b) ** 2).sum() for q, b in zip(model.parameters(), before))))
+                if plasticity_cap > 0:
+                    # 12.6.125節: 平常時の可塑性 ū から予期せぬほど大きい更新を縮める（ノルアドレナリンによる利得調節の
+                    # 単純化）。リプレイだけの静かな期間の後、最適化器の古い推定のまま大きな誤差に反応するのを抑える
+                    raw_unorm = unorm
+                    if upd_ref and unorm > plasticity_cap * upd_ref[0]:
+                        scale = plasticity_cap * upd_ref[0] / unorm
+                        with torch.no_grad():
+                            for q, b in zip(model.parameters(), before):
+                                q.copy_(b + scale * (q - b))
+                        unorm *= scale
+                    if n_new > 0:
+                        u_ = raw_unorm if plasticity_ref == "raw" else unorm
+                        upd_ref[:] = [u_ if not upd_ref else plasticity_ema * upd_ref[0] + (1 - plasticity_ema) * u_]
+                if diagnostics:
                     diag["upd"].append((k, step, ctx, gnorm, unorm))
             if gate["train"]:
                 with torch.no_grad():
