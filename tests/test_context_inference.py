@@ -172,3 +172,29 @@ def test_creation_dynamics():
     d = creation_dynamics(assign, trace, upd, [0, 1], window=10, after=20)
     assert abs(d["prev_drop_at_creation"] - 0.2) < 1e-9
     assert d["grad_pre"] == pytest.approx(0.01) and d["upd_post"] == pytest.approx(0.9)
+
+
+def test_plasticity_cap_default_and_options():
+    # 12.6.125節: 既定（plasticity_cap = 0、optimizer = "adam"）は従来どおり
+    kw = dict(steps=40, pretrain_steps=40, batch=16, tau=0.7, transition_steps=20, store_consistent=True)
+    a = _run("inferred_gated", **kw)
+    b = _run("inferred_gated", plasticity_cap=0.0, plasticity_ref="raw", optimizer="adam", **kw)
+    assert a["R"] == b["R"] and a["assign"] == b["assign"]
+    assert _run("inferred")["R"] == _run("inferred", plasticity_cap=0.0)["R"]
+    upd = lambda **o: [u[4] for u in _run("inferred_gated", diagnostics=True, **kw, **o)["diag"]["upd"]]  # noqa: E731
+    base = upd()
+    assert upd(plasticity_cap=1.0) != base and upd(optimizer="sgd") != base
+    with pytest.raises(ValueError):
+        _run("inferred_gated", optimizer="rmsprop")
+    with pytest.raises(ValueError):
+        _run("inferred_gated", plasticity_cap=1.5, plasticity_ref="x")
+
+
+@pytest.mark.parametrize("optimizer", ["adam", "sgd"])
+def test_plasticity_cap_bounds_updates(optimizer):
+    # ρ = 1 で縮めた値を ū に使うと ū は増えないので、どの更新も最初の更新の大きさを超えない
+    kw = dict(steps=40, pretrain_steps=40, batch=16, tau=0.7, transition_steps=20, store_consistent=True,
+              diagnostics=True, optimizer=optimizer)
+    upd = [u[4] for u in _run("inferred_gated", plasticity_cap=1.0, **kw)["diag"]["upd"]]
+    assert max(upd[1:]) <= upd[0] * (1 + 1e-5)
+    assert upd != [u[4] for u in _run("inferred_gated", **kw)["diag"]["upd"]]
