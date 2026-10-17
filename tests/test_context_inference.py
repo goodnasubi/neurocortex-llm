@@ -45,3 +45,11 @@ def test_inferred_no_switch_when_never_established():
 def test_assignment_purity():
     p = assignment_purity([(0, 0), (0, 0), (1, 1), (1, 0)], 2)
     assert p["purity"] == pytest.approx(0.75) and p["distinct"] == 1.0
+
+
+def test_cue_size_does_not_change_training():
+    a = _run("inferred", cue_n=1, selection_trials=3)
+    b = _run("inferred", cue_n=8, selection_trials=3)
+    assert a["assign"] == b["assign"]
+    assert 0.0 <= a["selection_acc"] <= 1.0
+    assert _run("oracle", selection_trials=3)["selection_acc"] is None

@@ -27,8 +27,14 @@ def run_context_sequence(condition: str, specs: list[ParitySpec], hidden_dim: in
                          eval_generator: torch.Generator, n_slots: int | None = None, tau: float = 0.4,
                          ema: float = 0.9, pretrain_steps: int = 500, pretrain_weight_decay: float = 0.01,
                          steps: int = 500, batch: int = 64, lr: float = 0.05, buffer_size: int = 50,
-                         cue_n: int = 16, eval_n: int = 2000) -> dict:
-    """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数}"""
+                         cue_n: int = 16, eval_n: int = 2000,
+                         selection_trials: int = 0) -> dict:
+    """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
+    "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
+
+    selection_acc は最終モデルで、cue_n 個の手がかりから選んだ文脈が、そのタスクに学習中最も多く割り当てられた
+    文脈と一致する割合（タスクごとに selection_trials 回、評価用の乱数で試行）。12.6.107節。
+    """
     if condition not in CONDITIONS:
         raise ValueError(condition)
     T = len(specs)
@@ -122,7 +128,29 @@ def run_context_sequence(condition: str, specs: list[ParitySpec], hidden_dim: in
                 buf_labels.append(labels[:n])
                 buf_ctx.append(torch.full((n,), ctx, dtype=torch.long))
         R.append([accuracy(j) for j in range(T)])
-    return {"R": R, "assign": assign, "n_contexts": len(used) if condition == "inferred" else C}
+    selection_acc = None
+    if condition == "inferred" and selection_trials > 0:
+        majority = assignment_majority(assign, T)
+        hits = 0
+        for j in range(T):
+            for _ in range(selection_trials):
+                cb, cl = make_batch(specs[j], cue_n, eval_generator)
+                hits += int(min(used, key=lambda c: loss_under(cb, cl, c)) == majority[j])
+        selection_acc = hits / (T * selection_trials)
+    return {"R": R, "assign": assign, "n_contexts": len(used) if condition == "inferred" else C,
+            "selection_acc": selection_acc}
+
+
+def assignment_majority(assign: list[tuple[int, int]], n_tasks: int) -> list[int]:
+    """各タスクで学習中に最も多く割り当てられた文脈。"""
+    out = []
+    for k in range(n_tasks):
+        counts: dict[int, int] = {}
+        for t, c in assign:
+            if t == k:
+                counts[c] = counts.get(c, 0) + 1
+        out.append(max(counts, key=counts.get))
+    return out
 
 
 def assignment_purity(assign: list[tuple[int, int]], n_tasks: int) -> dict[str, float]:
