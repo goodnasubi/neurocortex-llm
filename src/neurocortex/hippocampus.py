@@ -1178,6 +1178,8 @@ class DiskBackedAssociativeStore:
         M: int = 16,
         use_gpu: bool = True,
         return_score_breakdown: bool = False,
+        combine: str = "linear",
+        gate_margin: float = 0.5,
     ):
         """ハイブリッド再ランク（段階1+段階2+段階3）による精度向上。
 
@@ -1205,6 +1207,15 @@ class DiskBackedAssociativeStore:
                 このモードは `read_with_hybrid_rerank` 内で既に計算済みの
                 ベクトル化スコアを再利用することで大規模Nでも実用的な
                 速度で成分別寄与度を計測できる。
+            combine: 合成方式（12.6.117節）。"linear"（既定）は
+                λ_inner·z_inner + λ_density·z_density + λ_template·z_template の
+                線形和。"gate" は、内積（z-score）が1位から`gate_margin`以内の
+                候補（僅差集合）だけを残し、その中を λ_density·z_density +
+                λ_template·z_template で判定する。内積の1位が2位以下を
+                `gate_margin`より大きく引き離していれば僅差集合は1位のみに
+                なり、内積の1位がそのまま採用される。
+            gate_margin: "gate" 時の僅差の幅（内積z-scoreの単位）。0では
+                常に内積の1位を採用する。
 
         Returns:
             return_score_breakdown=False: ([B, value_dim], StoreStats)
@@ -1212,6 +1223,8 @@ class DiskBackedAssociativeStore:
         """
         if faiss is None:
             raise ImportError("faiss がインストールされていません")
+        if combine not in ("linear", "gate"):
+            raise ValueError(f"combine は 'linear' か 'gate': {combine!r}")
 
         # 段階1：GPU/CPU PQ検索で高速候補取得
         if use_gpu and _gpu_available:
@@ -1264,6 +1277,7 @@ class DiskBackedAssociativeStore:
         sel_inner_scores = []
         sel_density_scores = []
         sel_template_scores = []
+        gated_count = 0
 
         for i in range(0, b, chunk):
             bp = min(chunk, b - i)
@@ -1342,13 +1356,26 @@ class DiskBackedAssociativeStore:
             z_density = _row_zscore(score_density, valid_mask_r)
             z_template = _row_zscore(score_template, valid_mask_r)
 
-            # 複合スコア（正規化後の3成分をλで重み付け合成）
-            score_hybrid = (
-                lambda_inner * z_inner
-                + lambda_density * z_density
-                + lambda_template * z_template
-            )
-            score_hybrid = score_hybrid.masked_fill(~valid_mask_r, float("-inf"))
+            if combine == "gate":
+                # ゲート式合成（12.6.117節）: topkは降順なので列0が内積の1位。
+                # 内積で1位と僅差の候補だけを密度・テンプレートで判定する。
+                # 同点は内積で解消する（密度・テンプレートの重みが0なら内積の1位）。
+                tie = valid_mask_r & (z_inner >= z_inner[:, :1] - gate_margin)
+                gated_count += int((tie.sum(dim=-1) > 1).sum())
+                score_hybrid = (
+                    lambda_density * z_density
+                    + lambda_template * z_template
+                    + 1e-6 * z_inner
+                )
+                score_hybrid = score_hybrid.masked_fill(~tie, float("-inf"))
+            else:
+                # 複合スコア（正規化後の3成分をλで重み付け合成）
+                score_hybrid = (
+                    lambda_inner * z_inner
+                    + lambda_density * z_density
+                    + lambda_template * z_template
+                )
+                score_hybrid = score_hybrid.masked_fill(~valid_mask_r, float("-inf"))
 
             # 絞り込んだk_ref件の中で最高スコアのものを選択
             chunk_best_full, chunk_arg_full = score_hybrid.max(dim=-1)
@@ -1446,6 +1473,8 @@ class DiskBackedAssociativeStore:
                     "density_contrib_pct": 0.0,
                     "template_contrib_pct": 0.0,
                 }
+            if combine == "gate":
+                breakdown["gated_fraction"] = gated_count / b
             return out, StoreStats(best, arg), breakdown
 
         return out, StoreStats(best, arg)

@@ -1,4 +1,4 @@
-"""MoE 専門家の予測的プリフェッチと小脳順モデルの結合（12.8.2節、12.6.116節）。
+"""MoE 専門家の予測的プリフェッチと小脳順モデルの結合（12.8.2節、12.6.119節）。
 
 12.8.5節のリスク「予測的中率と実効速度向上を別々に計測すべき」に従い、
 (a) 次ステップの専門家の予測的中率と、(b) ディスク読み込みを模した遅延の下での
@@ -188,7 +188,7 @@ class FastCerebellumPredictor:
     """`CerebellumPredictor` と数学的に同一の計算を、専門家ぶんの `ForwardModel` を1つの行列に
     まとめて行う実装（速度計測用）。`ForwardModel` を1個ずつ呼ぶと torch の小さな演算の
     呼び出し負荷が1ステップ約 0.65 ms になり、計算そのものではなく実装の負荷を測ってしまうため
-    （12.6.116節の修正2）。一致は `tests/test_expert_prefetch.py` で確かめる。
+    （12.6.119節の修正2）。一致は `tests/test_expert_prefetch.py` で確かめる。
     """
 
     def __init__(self, n_experts: int, d_context: int, lr: float, use_context: bool = True) -> None:
