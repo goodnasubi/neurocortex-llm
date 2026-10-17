@@ -23,7 +23,7 @@ from .basal_ganglia_core import ParitySpec
 from .basal_ganglia_core import make_batch as _parity_batch
 from .hippocampus_replay import make_model
 
-CONDITIONS = ("oracle", "none", "inferred", "random")
+CONDITIONS = ("oracle", "none", "inferred", "random", "inferred_gated")
 
 
 @dataclass(frozen=True)
@@ -67,7 +67,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          ema: float = 0.9, pretrain_steps: int = 500, pretrain_weight_decay: float = 0.01,
                          steps: int = 500, batch: int = 64, lr: float = 0.05, buffer_size: int = 50,
                          cue_n: int = 16, eval_n: int = 2000,
-                         selection_trials: int = 0, transition_steps: int = 0) -> dict:
+                         selection_trials: int = 0, transition_steps: int = 0,
+                         novel_patience: int = 20) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -107,8 +108,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     used = [0]
     assign: list[tuple[int, int]] = []
 
+    gate = {"train": True, "store": True}
+    novel_streak = [0]
+
     def pick_ctx(k: int, bits: torch.Tensor, labels: torch.Tensor) -> int:
         nonlocal cur
+        gate["train"], gate["store"] = True, True
         if condition == "oracle":
             return k
         if condition == "random":
@@ -116,6 +121,30 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         if condition == "none":
             return 0
         established = ema_loss.get(cur, math.inf) < tau
+        if condition == "inferred_gated":
+            # 12.6.115節: 驚きのバッチ（混合の疑い）は学習・保存に使わない。新しい文脈は、現在の文脈での正答率が
+            # 完全とチャンスの中間（0.75）を下回ったとき、つまり新しい原因が多数派になってから作る。たまたまの1バッチで作らないよう、それが novel_patience 回続くことを条件にする
+            gate["train"], gate["store"] = True, False
+            if not established:
+                return cur
+            if loss_under(bits, labels, cur) <= tau:
+                gate["store"] = True
+                return cur
+            losses = {c: loss_under(bits, labels, c) for c in used}
+            best = min(losses, key=losses.get)
+            if best != cur and losses[best] < tau:
+                cur = best
+                return cur
+            with torch.no_grad():
+                accs = {c: float((model(with_ctx(bits, c)).argmax(-1) == labels).float().mean()) for c in used}
+            novel_streak[0] = novel_streak[0] + 1 if max(accs.values()) < 0.75 else 0
+            if novel_streak[0] >= novel_patience and len(used) < C:
+                novel_streak[0] = 0
+                cur = len(used)
+                used.append(cur)
+                return cur
+            gate["train"] = False
+            return cur
         if established and loss_under(bits, labels, cur) > tau:
             losses = {c: loss_under(bits, labels, c) for c in used}
             best = min(losses, key=losses.get)
@@ -130,7 +159,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
 
     @torch.no_grad()
     def accuracy(j: int) -> float:
-        if condition == "inferred":
+        if condition in ("inferred", "inferred_gated"):
             cb, cl = make_batch(specs[j], cue_n, eval_generator)
             ctx = min(used, key=lambda c: loss_under(cb, cl, c))
         elif condition == "random":
@@ -157,21 +186,27 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             ctx_in = src if (condition == "oracle" and src is not None) else ctx
             x = with_ctx(bits, ctx_in)
             y = labels
+            if not gate["train"]:
+                x, y = x[:0], y[:0]
             if buf_bits and k > 0:
                 bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
                 idx = torch.randint(bb.shape[0], (batch,), generator=generator)
                 x = torch.cat([x, with_ctx(bb[idx], bc[idx])])
                 y = torch.cat([y, bl[idx]])
-            loss = F.cross_entropy(model(x), y)
-            opt.zero_grad(set_to_none=True)
-            loss.backward()
-            opt.step()
-            with torch.no_grad():
-                cur_loss = loss_under(bits, labels, ctx_in)
-            ema_loss[ctx] = cur_loss if ctx not in ema_loss else ema * ema_loss[ctx] + (1 - ema) * cur_loss
+            if y.numel() > 0:
+                loss = F.cross_entropy(model(x), y)
+                opt.zero_grad(set_to_none=True)
+                loss.backward()
+                opt.step()
+            if gate["train"]:
+                with torch.no_grad():
+                    cur_loss = loss_under(bits, labels, ctx_in)
+                ema_loss[ctx] = cur_loss if ctx not in ema_loss else ema * ema_loss[ctx] + (1 - ema) * cur_loss
+            if not gate["store"]:
+                continue
             # 観測したサンプルを文脈ラベル付きで保存する。保存枠は inferred では推定した文脈ごと
             # （タスクの区切りを知らない）、他の条件では真のタスクごとに buffer_size 個まで
-            key = ctx if condition == "inferred" else k
+            key = ctx if condition in ("inferred", "inferred_gated") else k
             n = min(buffer_size - buf_count.get(key, 0), batch)
             if n > 0:
                 buf_count[key] = buf_count.get(key, 0) + n
@@ -181,7 +216,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                                else torch.full((n,), ctx, dtype=torch.long))
         R.append([accuracy(j) for j in range(T)])
     selection_acc = None
-    if condition == "inferred" and selection_trials > 0:
+    if condition in ("inferred", "inferred_gated") and selection_trials > 0:
         majority = assignment_majority(assign, T)
         hits = 0
         for j in range(T):
@@ -189,7 +224,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 cb, cl = make_batch(specs[j], cue_n, eval_generator)
                 hits += int(min(used, key=lambda c: loss_under(cb, cl, c)) == majority[j])
         selection_acc = hits / (T * selection_trials)
-    return {"R": R, "assign": assign, "n_contexts": len(used) if condition == "inferred" else C,
+    return {"R": R, "assign": assign, "n_contexts": len(used) if condition in ("inferred", "inferred_gated") else C,
             "selection_acc": selection_acc}
 
 

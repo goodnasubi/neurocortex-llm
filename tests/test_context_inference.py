@@ -71,3 +71,16 @@ def test_transition_zero_matches_default_and_mixes_otherwise():
     assert a["R"] == b["R"] and a["assign"] == b["assign"]
     c = _run("oracle", transition_steps=3)
     assert len(c["R"]) == 3
+
+
+def test_gated_variant_runs_and_default_unchanged():
+    # inferred_gated を追加しても inferred の挙動は変わらない
+    a = _run("inferred")
+    assert a["R"] == _run("inferred")["R"]
+    g = _run("inferred_gated", transition_steps=2)
+    assert len(g["R"]) == 3 and 1 <= g["n_contexts"] <= 5
+
+
+def test_gated_needs_persistent_novelty_to_allocate():
+    # novel_patience を学習ステップ数より大きくすると、新しい文脈は作られない
+    assert _run("inferred_gated", novel_patience=10_000)["n_contexts"] == 1
