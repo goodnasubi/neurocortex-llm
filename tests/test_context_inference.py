@@ -129,3 +129,46 @@ def test_native_contexts_and_buffer_metrics():
     specs = [ParitySpec(4, (0, 1)), ParitySpec(4, (2, 3))]
     # 文脈1の規則は b2 XOR b3: 1行目は 1（ラベル0と矛盾）、2行目は 0（整合）
     assert buffer_conflict(buf, [0, 1], specs) == 0.5
+
+
+def test_reset_opt_on_new_default_and_scope():
+    # 12.6.121節: 既定（False）は従来どおり。inferred・oracle では文脈を作らない/作り方が違うので影響しない
+    kw = dict(steps=40, pretrain_steps=40, batch=16, tau=0.7, transition_steps=20, store_consistent=True)
+    a = _run("inferred_gated", **kw)
+    b = _run("inferred_gated", reset_opt_on_new=False, **kw)
+    assert a["R"] == b["R"] and a["assign"] == b["assign"]
+    assert _run("inferred", transition_steps=2)["R"] == _run("inferred", transition_steps=2, reset_opt_on_new=True)["R"]
+    assert _run("oracle", transition_steps=2)["R"] == _run("oracle", transition_steps=2, reset_opt_on_new=True)["R"]
+
+
+def test_reset_opt_on_new_resets_only_at_creation():
+    # 新しい文脈が作られないなら、作り直しは起きず結果は同じ
+    kw = dict(novel_patience=10_000, store_consistent=True, transition_steps=2)
+    assert _run("inferred_gated", **kw)["R"] == _run("inferred_gated", reset_opt_on_new=True, **kw)["R"]
+
+
+def test_trace_and_update_diagnostics_do_not_change_training():
+    # 12.6.121節: trace は専用の乱数、更新ノルムは乱数を使わないので、R・割り当て・ctx_acc は変わらない
+    kw = dict(steps=40, pretrain_steps=40, batch=16, tau=0.7, transition_steps=20, store_consistent=True)
+    a = _run("inferred_gated", diagnostics=True, **kw)
+    b = _run("inferred_gated", diagnostics=True, trace_every=5, **kw)
+    assert a["R"] == b["R"] and a["assign"] == b["assign"] and a["diag"]["ctx_acc"] == b["diag"]["ctx_acc"]
+    tr = b["diag"]["trace"]
+    assert tr and all(len(e["acc"]) == 3 for e in tr) and {e["step"] % 5 for e in tr} == {0}
+    assert len(b["diag"]["upd"]) > 0 and all(u[4] >= 0 for u in b["diag"]["upd"])
+
+
+def test_diag_oracle_filter_only_with_transition():
+    # 移行期間がなければ出どころは1タスクだけなので、反実仮想のフィルタは何もしない
+    kw = dict(steps=40, pretrain_steps=40, batch=16, tau=0.7)
+    assert _run("inferred_gated", **kw)["R"] == _run("inferred_gated", diag_oracle_filter="both", **kw)["R"]
+
+
+def test_creation_dynamics():
+    from neurocortex.experiments.run_context_gated_long import creation_dynamics
+    assign = [(0, 0)] * 30 + [(1, 0)] * 20 + [(1, 1)] * 40
+    trace = [{"task": 1, "step": s, "acc": [[0.9 if s < 20 else 0.7, 0.5]]} for s in range(0, 60, 10)]
+    upd = [(1, s, 0, 0.01 if s < 20 else 0.5, 0.01 if s < 20 else 0.9) for s in range(60)]
+    d = creation_dynamics(assign, trace, upd, [0, 1], window=10, after=20)
+    assert abs(d["prev_drop_at_creation"] - 0.2) < 1e-9
+    assert d["grad_pre"] == pytest.approx(0.01) and d["upd_post"] == pytest.approx(0.9)

@@ -10,7 +10,14 @@
 評価（--phase eval、results/context_inference/gated_long_eval.json）:
     確定後に評価用シード 0〜4 で一度だけ測る。
 
-開発用シード 100〜104 のみを --phase prelim / diag / fix で使う。
+12.6.121節（L = 500 が L = 250 に届かない残りの差）:
+    --phase residual_diag（results/context_inference/gated_residual_diag.json）… 本当の出どころでサンプルを除く
+        反実仮想（diag_oracle_filter）と、新しい文脈の作成時に最適化器を作り直す条件を、修正1（12.6.116節）と比べる。
+    --phase residual_fix（gated_residual_fix_dev.json）… reset_opt_on_new（修正1）と、それに train_consistent を
+        加えたもの（修正2）を L = 0〜500 で 12.6.116節の機構と比べる。
+    --phase residual_eval（gated_residual_eval.json）… 確定後に評価用シードで一度だけ測る。
+
+開発用シード 100〜104 のみを --phase prelim / diag / fix / residual_diag / residual_fix で使う。
 
 使い方:
     PYTHONPATH=src python -m neurocortex.experiments.run_context_gated_long --phase diag
@@ -34,9 +41,15 @@ PAIRS = [(0, 1), (2, 3), (4, 5), (6, 7)]
 DEV_SEEDS = [100, 101, 102, 103, 104]
 EVAL_SEEDS = [0, 1, 2, 3, 4]
 
-# (名前, 条件, L, steps, (store_consistent, train_consistent))
-NONE, STORE, BOTH = (False, False), (True, False), (True, True)
+# (名前, 条件, L, steps, run_context_sequence への追加の引数)
+NONE = {}
+STORE = {"store_consistent": True}
+BOTH = {"store_consistent": True, "train_consistent": True}
 FINAL = STORE  # 開発用シードで確定した機構（12.6.116節、修正1）
+RESET = {"store_consistent": True, "reset_opt_on_new": True}  # 12.6.121節の修正1
+RESET_TRAIN = {**RESET, "train_consistent": True}  # 12.6.121節の修正2
+FINAL_RESIDUAL = RESET_TRAIN  # 開発用シードで確定した機構（12.6.121節、修正2）
+LS = ((0, 500), (100, 500), (250, 500), (500, 500), (500, 1000))
 PHASES = {
     "prelim": [("gated", "inferred_gated", 250, 500, NONE), ("gated", "inferred_gated", 500, 500, NONE),
                ("gated", "inferred_gated", 500, 1000, NONE)],
@@ -47,6 +60,20 @@ PHASES = {
             for L, s in ((0, 500), (100, 500), (250, 500), (500, 500), (500, 1000))],
     "eval": [(n, "inferred_gated", L, s, sc) for sc, n in ((NONE, "gated"), (FINAL, "gated_final"))
              for L, s in ((0, 500), (100, 500), (250, 500), (500, 500), (500, 1000))],
+    "residual_diag": [(n, "inferred_gated", L, s, sc)
+                      for sc, n in ((STORE, "gated_store"), ({**STORE, "diag_oracle_filter": "new"}, "oracle_filter_new"),
+                                    ({**STORE, "diag_oracle_filter": "old"}, "oracle_filter_old"),
+                                    ({**STORE, "diag_oracle_filter": "both"}, "oracle_filter_both"),
+                                    (RESET, "gated_store_reset"),
+                                    ({**RESET, "diag_oracle_filter": "new"}, "reset_oracle_filter_new"),
+                                    ({**RESET, "diag_oracle_filter": "old"}, "reset_oracle_filter_old"),
+                                    ({**RESET, "diag_oracle_filter": "both"}, "reset_oracle_filter_both"))
+                      for L, s in ((250, 500), (500, 500), (500, 1000))],
+    "residual_fix": [(n, "inferred_gated", L, s, sc)
+                     for sc, n in ((STORE, "gated_store"), (RESET, "gated_store_reset"),
+                                   (RESET_TRAIN, "gated_store_reset_train")) for L, s in LS],
+    "residual_eval": [(n, "inferred_gated", L, s, sc)
+                      for sc, n in ((STORE, "gated_store"), (FINAL_RESIDUAL, "gated_store_reset_train")) for L, s in LS],
 }
 
 
@@ -96,6 +123,39 @@ def buffer_conflict(buf: dict, native: list[int], specs: list) -> float:
     return bad / buf["labels"].shape[0]
 
 
+def creation_dynamics(assign: list[tuple[int, int]], trace: list[dict], upd: list[tuple], native: list[int],
+                      window: int = 20, after: int = 50) -> dict:
+    """新しい文脈の作成（タスク k ≥ 1）の前後で、前のタスクの本来の文脈での正確度の落ち込みと、作成直前・直後
+    window ステップの勾配ノルム・更新ノルムの平均（12.6.121節）。trace は作成時点を挟む 10 ステップ刻み。"""
+    created = {}
+    seen = {assign[0][1]}
+    start = {}
+    for i, (k, c) in enumerate(assign):
+        start.setdefault(k, i)
+        if c not in seen:
+            seen.add(c)
+            created[k] = i - start[k]
+    drops, g_pre, g_post, u_pre, u_post = [], [], [], [], []
+    for k, s0 in created.items():
+        if k == 0:
+            continue
+        pre = [e for e in trace if e["task"] == k and e["step"] < s0]
+        post = [e for e in trace if e["task"] == k and s0 + after - 10 <= e["step"] <= s0 + after]
+        if pre and post:
+            c = native[k - 1]
+            drops.append(pre[-1]["acc"][k - 1][c] - post[-1]["acc"][k - 1][c])
+        before = [u for u in upd if u[0] == k and s0 - window <= u[1] < s0]
+        aft = [u for u in upd if u[0] == k and s0 <= u[1] < s0 + window]
+        if before and aft:
+            g_pre.append(sum(u[3] for u in before) / len(before))
+            g_post.append(sum(u[3] for u in aft) / len(aft))
+            u_pre.append(sum(u[4] for u in before) / len(before))
+            u_post.append(sum(u[4] for u in aft) / len(aft))
+    mean = lambda xs: sum(xs) / len(xs) if xs else float("nan")  # noqa: E731
+    return {"prev_drop_at_creation": mean(drops), "grad_pre": mean(g_pre), "grad_post": mean(g_post),
+            "upd_pre": mean(u_pre), "upd_post": mean(u_post)}
+
+
 def run_one(job: tuple) -> dict:
     name, cond, L, steps, sc, seed = job
     torch.set_num_threads(1)
@@ -103,7 +163,7 @@ def run_one(job: tuple) -> dict:
     torch.manual_seed(seed)
     r = run_context_sequence(cond, specs, 32, torch.Generator().manual_seed(seed + 50_000),
                              torch.Generator().manual_seed(seed + 90_000), transition_steps=L, steps=steps,
-                             store_consistent=sc[0], train_consistent=sc[1], diagnostics=True)
+                             diagnostics=True, trace_every=10, **sc)
     d = r["diag"]
     row = {"seed": seed, "R": r["R"], "n_contexts": r["n_contexts"], **forgetting_metrics(r["R"], chance=0.5),
            "final_chosen": d["chosen"][-1], "final_ctx_acc": d["ctx_acc"][-1],
@@ -118,6 +178,7 @@ def run_one(job: tuple) -> dict:
                    buffer_conflict=buffer_conflict(d["buffer"], nat, specs),
                    final_acc_native_ctx=sum(d["ctx_acc"][-1][j][nat[j]] for j in range(T)) / T,
                    final_selection_correct=sum(d["chosen"][-1][j] == nat[j] for j in range(T)) / T)
+        row.update(creation_dynamics(r["assign"], d["trace"], d["upd"], nat))
     return {"key": f"{name}_L{L}_steps{steps}", "row": row}
 
 
@@ -128,17 +189,19 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--out", type=Path)
     args = ap.parse_args()
-    seeds = args.seeds or (EVAL_SEEDS if args.phase == "eval" else DEV_SEEDS)
+    seeds = args.seeds or (EVAL_SEEDS if args.phase in ("eval", "residual_eval") else DEV_SEEDS)
     out_name = {"prelim": "gated_long_dev", "diag": "gated_long_diag", "fix": "gated_long_fix_dev",
-                "eval": "gated_long_eval"}[args.phase]
+                "eval": "gated_long_eval", "residual_diag": "gated_residual_diag",
+                "residual_fix": "gated_residual_fix_dev", "residual_eval": "gated_residual_eval"}[args.phase]
     out_path = args.out or Path(f"results/context_inference/{out_name}.json")
     jobs = [(*cfg, s) for cfg in PHASES[args.phase] for s in seeds]
     with Pool(args.workers) as pool:
         results = pool.map(run_one, jobs)
-    out: dict = {"環境": env_info(), "説明": f"長い移行期間での限界の原因の切り分けと修正（12.6.116節）。phase={args.phase}",
+    sec = "12.6.121節" if args.phase.startswith("residual") else "12.6.116節"
+    out: dict = {"環境": env_info(), "説明": f"長い移行期間での限界の原因の切り分けと修正（{sec}）。phase={args.phase}",
                  "seeds": seeds, "runs": {}}
     keys = ("ACC", "BWT", "LA", "n_contexts", "distinct", "buffer_contamination", "buffer_conflict", "final_acc_native_ctx",
-            "final_selection_correct")
+            "final_selection_correct", "prev_drop_at_creation", "grad_pre", "grad_post", "upd_pre", "upd_post")
     for key in dict.fromkeys(x["key"] for x in results):
         rows = [x["row"] for x in results if x["key"] == key]
         summ = {k: {"mean": float(torch.tensor([float(x[k]) for x in rows]).mean()),
