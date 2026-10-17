@@ -36,14 +36,28 @@ class FlipSpec:
     flip: tuple[int, ...] = ()
 
 
+@dataclass(frozen=True)
+class CueSpec:
+    """入力分布がタスクで異なる課題（12.6.111節）。正解は b[a] XOR b[b]（最初の n_parity ビット）。
+    残りの手がかりビットのうち cue に含まれるビットは確率 q で +1、他は一様。"""
+
+    n_inputs: int = 16
+    relevant: tuple[int, int] = (0, 1)
+    cue: tuple[int, ...] = ()
+    q: float = 0.9
+
+
 def make_batch(spec, batch_size: int, generator: torch.Generator) -> tuple[torch.Tensor, torch.Tensor]:
     """ParitySpec はステップ10と同じ乱数消費で、FlipSpec は同じ入力に反転領域を適用して生成する。"""
     if isinstance(spec, ParitySpec):
         return _parity_batch(spec, batch_size, generator)
     bits = torch.randint(0, 2, (batch_size, spec.n_inputs), generator=generator).float() * 2 - 1
+    if isinstance(spec, CueSpec) and spec.cue:
+        u = torch.rand(batch_size, len(spec.cue), generator=generator)
+        bits[:, list(spec.cue)] = torch.where(u < spec.q, 1.0, -1.0)
     a, b = spec.relevant
     labels = (bits[:, a] > 0) ^ (bits[:, b] > 0)
-    if spec.flip:
+    if isinstance(spec, FlipSpec) and spec.flip:
         labels = labels ^ (bits[:, list(spec.flip)] > 0).all(dim=1)
     return bits, labels.long()
 
