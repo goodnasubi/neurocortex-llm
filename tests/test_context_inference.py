@@ -53,3 +53,13 @@ def test_cue_size_does_not_change_training():
     assert a["assign"] == b["assign"]
     assert 0.0 <= a["selection_acc"] <= 1.0
     assert _run("oracle", selection_trials=3)["selection_acc"] is None
+
+
+def test_flip_spec_disagreement_rate():
+    from neurocortex.context_inference import FlipSpec, make_batch
+    g = torch.Generator().manual_seed(0)
+    bits, base = make_batch(FlipSpec(8), 4000, g)
+    _, flipped = make_batch(FlipSpec(8, flip=(2, 3)), 4000, torch.Generator().manual_seed(0))
+    assert abs((base != flipped).float().mean().item() - 0.25) < 0.03
+    ref_bits, ref = make_batch(ParitySpec(8, (0, 1)), 4000, torch.Generator().manual_seed(0))
+    assert torch.equal(ref_bits, bits) and torch.equal(ref, base)
