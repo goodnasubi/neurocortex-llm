@@ -53,12 +53,16 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          ema: float = 0.9, pretrain_steps: int = 500, pretrain_weight_decay: float = 0.01,
                          steps: int = 500, batch: int = 64, lr: float = 0.05, buffer_size: int = 50,
                          cue_n: int = 16, eval_n: int = 2000,
-                         selection_trials: int = 0) -> dict:
+                         selection_trials: int = 0, transition_steps: int = 0) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
     selection_acc は最終モデルで、cue_n 個の手がかりから選んだ文脈が、そのタスクに学習中最も多く割り当てられた
     文脈と一致する割合（タスクごとに selection_trials 回、評価用の乱数で試行）。12.6.107節。
+
+    transition_steps = L > 0 では、タスク k（k ≥ 1）の最初の L ステップを移行期間とし、各サンプルを確率
+    p = (s+1)/(L+1) でタスク k から、残りをタスク k−1 から取る（少しずつ変わる文脈, 12.6.109節）。oracle は
+    サンプルごとに本当の出どころのタスクを文脈として受け取る。L = 0 では以前と同じ乱数消費になる。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -77,7 +81,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         return torch.cat([bits, oh], dim=1)
 
     @torch.no_grad()
-    def loss_under(bits: torch.Tensor, labels: torch.Tensor, ctx: int) -> float:
+    def loss_under(bits: torch.Tensor, labels: torch.Tensor, ctx: torch.Tensor | int) -> float:
         return float(F.cross_entropy(model(with_ctx(bits, ctx)), labels))
 
     buf_bits: list[torch.Tensor] = []
@@ -125,11 +129,19 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     R: list[list[float]] = []
     for k, spec in enumerate(specs):
         opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=pretrain_weight_decay if k == 0 else 0.0)
-        for _ in range(pretrain_steps if k == 0 else steps):
+        for step in range(pretrain_steps if k == 0 else steps):
             bits, labels = make_batch(spec, batch, generator)
+            src = None
+            if k > 0 and step < transition_steps:
+                old_bits, old_labels = make_batch(specs[k - 1], batch, generator)
+                take_new = torch.rand(batch, generator=generator) < (step + 1) / (transition_steps + 1)
+                bits = torch.where(take_new[:, None], bits, old_bits)
+                labels = torch.where(take_new, labels, old_labels)
+                src = torch.where(take_new, k, k - 1)
             ctx = pick_ctx(k, bits, labels)
             assign.append((k, ctx))
-            x = with_ctx(bits, ctx)
+            ctx_in = src if (condition == "oracle" and src is not None) else ctx
+            x = with_ctx(bits, ctx_in)
             y = labels
             if buf_bits and k > 0:
                 bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
@@ -141,7 +153,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             loss.backward()
             opt.step()
             with torch.no_grad():
-                cur_loss = loss_under(bits, labels, ctx)
+                cur_loss = loss_under(bits, labels, ctx_in)
             ema_loss[ctx] = cur_loss if ctx not in ema_loss else ema * ema_loss[ctx] + (1 - ema) * cur_loss
             # 観測したサンプルを文脈ラベル付きで保存する。保存枠は inferred では推定した文脈ごと
             # （タスクの区切りを知らない）、他の条件では真のタスクごとに buffer_size 個まで
@@ -151,7 +163,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 buf_count[key] = buf_count.get(key, 0) + n
                 buf_bits.append(bits[:n])
                 buf_labels.append(labels[:n])
-                buf_ctx.append(torch.full((n,), ctx, dtype=torch.long))
+                buf_ctx.append(ctx_in[:n].long() if isinstance(ctx_in, torch.Tensor)
+                               else torch.full((n,), ctx, dtype=torch.long))
         R.append([accuracy(j) for j in range(T)])
     selection_acc = None
     if condition == "inferred" and selection_trials > 0:
