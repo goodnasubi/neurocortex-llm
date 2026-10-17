@@ -16,6 +16,7 @@ from pathlib import Path
 
 import torch
 
+from ..run_env import env_info
 from ..continual_metrics import forgetting_metrics
 from ..hippocampus_capacity import CONDITIONS, make_task_specs, run_condition
 
@@ -32,7 +33,7 @@ def main() -> None:
     ref = json.loads(args.reference.read_text())["summary"] if args.reference.exists() else None
     t0 = time.time()
     specs = make_task_specs(5, 10)
-    out: dict = {"説明": "ステップ12・13の6条件を ACC・BWT・F・LA（chance 0.5 で正規化）で再評価（12.6.103節）",
+    out: dict = {"環境": env_info(), "説明": "ステップ12・13の6条件を ACC・BWT・F・LA（chance 0.5 で正規化）で再評価（12.6.103節）",
                  "seeds": args.seeds, "conditions": {}}
     for cond in CONDITIONS:
         rows = []

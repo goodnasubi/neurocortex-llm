@@ -13,6 +13,7 @@ from pathlib import Path
 
 import torch
 
+from ..run_env import env_info
 from ..basal_ganglia_core import ParitySpec
 from ..continual_metrics import forgetting_metrics
 from ..continual_sequence import run_sequence
@@ -27,7 +28,7 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=Path("results/continual_forgetting/task_id_input.json"))
     args = ap.parse_args()
     specs = [ParitySpec(n_inputs=8, relevant=p) for p in PAIRS]
-    out: dict = {"説明": "4タスク列でのタスク ID 入力の有無の比較（12.6.104節）", "seeds": args.seeds, "runs": {}}
+    out: dict = {"環境": env_info(), "説明": "4タスク列でのタスク ID 入力の有無の比較（12.6.104節）", "seeds": args.seeds, "runs": {}}
     for task_id in (False, True):
         key = "task_id" if task_id else "no_task_id"
         out["runs"][key] = {}
