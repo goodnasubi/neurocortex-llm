@@ -69,7 +69,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          cue_n: int = 16, eval_n: int = 2000,
                          selection_trials: int = 0, transition_steps: int = 0,
                          novel_patience: int = 20, store_consistent: bool = False, train_consistent: bool = False,
-                         diagnostics: bool = False) -> dict:
+                         diagnostics: bool = False, trace_every: int = 0, diag_oracle_filter: str = "",
+                         reset_opt_on_new: bool = False) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -91,6 +92,17 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
       buffer_src[c]    … 文脈 c のバッファのサンプルの本当の出どころのタスクごとの数
       buffer           … バッファの中身（bits, labels, ctx, src のテンソル）
       trained_src[i]   … タスク i の期間に、新しい入力として学習に使ったサンプルの (文脈, 出どころ) ごとの数
+      trace            … trace_every > 0 のとき、trace_every ステップごとの (タスク, ステップ, 現在の文脈, 学習したか,
+                         保存したか, 各タスク j を各文脈で評価した正確度) の列（12.6.121節）
+
+    reset_opt_on_new = True では、新しい文脈を作った時点で最適化器（Adam）の状態を作り直す（12.6.121節）。
+    作成の直前はリプレイだけの学習で勾配が極小になり、2次モーメントの推定が縮んでいるため、作成直後の大きな
+    勾配で更新が過大になり、前の文脈を壊す。既定の False では 12.6.116節と同じ挙動。
+
+    diag_oracle_filter は原因の切り分け専用の反実仮想（12.6.121節。機構ではない）。本当の出どころを使い、
+    "new" ではタスク k の期間に作った文脈の学習から前のタスクのサンプルを、"old" ではそれ以外の文脈の学習から
+    タスク k のサンプルを除く（"both" は両方）。
+    diagnostics = True では "upd"（各最適化ステップの (タスク, ステップ, 文脈, 勾配ノルム, 更新ノルム)）も加える。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -117,7 +129,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     buf_ctx: list[torch.Tensor] = []
     buf_src: list[torch.Tensor] = []
     diag_gen = torch.Generator().manual_seed(1234)
-    diag: dict = {"ctx_acc": [], "chosen": [], "trained_src": []}
+    trace_gen = torch.Generator().manual_seed(4321)  # trace 専用（diag_gen の消費を変えない）
+    diag: dict = {"ctx_acc": [], "chosen": [], "trained_src": [], "trace": [], "upd": []}
     buf_count: dict[int, int] = {}
     ema_loss: dict[int, float] = {}
     cur = 0
@@ -190,6 +203,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     R: list[list[float]] = []
     for k, spec in enumerate(specs):
         trained: dict[tuple[int, int], int] = {}
+        n_used_at_start = len(used)
         opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=pretrain_weight_decay if k == 0 else 0.0)
         for step in range(pretrain_steps if k == 0 else steps):
             bits, labels = make_batch(spec, batch, generator)
@@ -200,8 +214,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 bits = torch.where(take_new[:, None], bits, old_bits)
                 labels = torch.where(take_new, labels, old_labels)
                 src = torch.where(take_new, k, k - 1)
+            n_used_before = len(used)
             ctx = pick_ctx(k, bits, labels)
             assign.append((k, ctx))
+            if reset_opt_on_new and len(used) > n_used_before:
+                opt = torch.optim.Adam(model.parameters(), lr=lr,
+                                       weight_decay=pretrain_weight_decay if k == 0 else 0.0)
             ctx_in = src if (condition == "oracle" and src is not None) else ctx
             x = with_ctx(bits, ctx_in)
             y = labels
@@ -214,6 +232,11 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 with torch.no_grad():
                     keep = model(x).argmax(-1) == y
                 x, y, s_ = x[keep], y[keep], s_[keep]
+            if diag_oracle_filter and gate["train"] and src is not None and condition == "inferred_gated":
+                new_ctx = ctx >= n_used_at_start
+                if (new_ctx and diag_oracle_filter in ("new", "both")) or (not new_ctx and diag_oracle_filter in ("old", "both")):
+                    keep = s_ == (k if new_ctx else k - 1)
+                    x, y, s_ = x[keep], y[keep], s_[keep]
             if gate["train"] and diagnostics:
                 for t in s_.unique().tolist():
                     trained[(ctx, t)] = trained.get((ctx, t), 0) + int((s_ == t).sum())
@@ -226,11 +249,25 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 loss = F.cross_entropy(model(x), y)
                 opt.zero_grad(set_to_none=True)
                 loss.backward()
+                if diagnostics:
+                    before = [q.detach().clone() for q in model.parameters()]
+                    gnorm = float(torch.sqrt(sum((q.grad ** 2).sum() for q in model.parameters() if q.grad is not None)))
                 opt.step()
+                if diagnostics:
+                    unorm = float(torch.sqrt(sum(((q.detach() - b) ** 2).sum() for q, b in zip(model.parameters(), before))))
+                    diag["upd"].append((k, step, ctx, gnorm, unorm))
             if gate["train"]:
                 with torch.no_grad():
                     cur_loss = loss_under(bits, labels, ctx_in)
                 ema_loss[ctx] = cur_loss if ctx not in ema_loss else ema * ema_loss[ctx] + (1 - ema) * cur_loss
+            if diagnostics and trace_every > 0 and step % trace_every == 0 and condition in ("inferred", "inferred_gated"):
+                with torch.no_grad():
+                    accs_t = []
+                    for j in range(T):
+                        tb, tl = make_batch(specs[j], 500, trace_gen)
+                        accs_t.append([float((model(with_ctx(tb, c)).argmax(-1) == tl).float().mean()) for c in used])
+                diag["trace"].append({"task": k, "step": step, "ctx": ctx, "train": gate["train"],
+                                      "store": gate["store"], "acc": accs_t})
             if not gate["store"]:
                 continue
             # 観測したサンプルを文脈ラベル付きで保存する。保存枠は inferred では推定した文脈ごと
