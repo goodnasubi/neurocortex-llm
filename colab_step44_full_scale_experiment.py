@@ -40,6 +40,10 @@ from torch.utils.data import DataLoader, Dataset, random_split
 from torch.optim import AdamW
 from torch.cuda.amp import autocast, GradScaler
 
+# 結果ファイルに実行環境を記録する（12.6.114節）。Colab ではリポジトリ直下から実行するので src を追加する
+sys.path.insert(0, str(Path(__file__).resolve().parent / 'src'))
+from neurocortex.run_env import env_info  # noqa: E402
+
 try:
     from datasets import load_dataset
     HAS_DATASETS = True
@@ -678,6 +682,7 @@ def main(argv: Optional[List[str]] = None):
                 continue
             result = run_full_scale_experiment(config, seed)
             result['config'] = asdict(config)
+            result['environment'] = env_info()
             with open(run_file, 'w') as f:
                 json.dump(result, f, indent=2)
             logger.info(f"Saved: {run_file}")

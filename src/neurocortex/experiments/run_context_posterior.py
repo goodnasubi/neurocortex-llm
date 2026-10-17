@@ -12,6 +12,7 @@ from pathlib import Path
 
 import torch
 
+from ..run_env import env_info
 from ..basal_ganglia_core import ParitySpec
 from ..context_inference import assignment_purity
 from ..context_posterior import run_posterior_sequence
@@ -26,7 +27,7 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=Path("results/context_inference/posterior.json"))
     args = ap.parse_args()
     specs = [ParitySpec(n_inputs=8, relevant=p) for p in PAIRS]
-    out: dict = {"説明": "サンプルごとの事後推定による文脈推定（12.6.110節）", "seeds": args.seeds, "L": {}}
+    out: dict = {"環境": env_info(), "説明": "サンプルごとの事後推定による文脈推定（12.6.110節）", "seeds": args.seeds, "L": {}}
     for L in (0, 100, 250, 500):
         rows = []
         for seed in range(args.seeds):

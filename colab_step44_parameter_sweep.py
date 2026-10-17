@@ -30,6 +30,7 @@ from torch.utils.data import DataLoader
 
 from colab_step44_full_scale_experiment import (
     BrainInspiredLLMFullScale, FullScaleTrainer, Step444Config, WikiText103Dataset)
+from neurocortex.run_env import env_info  # noqa: E402  （上の import が src をパスに追加する）
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +158,7 @@ def main(argv: Optional[List[str]] = None):
             r = train_eval(phase, w, seed, p, train_ds, val_ds, len(tok), args.device)
             r['preset'] = args.preset
             r['budget'] = p
+            r['environment'] = env_info()
             f.write_text(json.dumps(r, indent=2))
             logger.info(f"{f.name}: val_ppl={r['val_ppl']:.3f}")
 

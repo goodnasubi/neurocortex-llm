@@ -6710,3 +6710,12 @@ Colab の計算資源を待つ間に、再実験の前提を整えた。
 - CI と pre-commit が使う `requirements-dev.txt` は範囲指定のまま変えない。CPU 版 torch のホイールが同じ番号で提供されない環境があるため（12.6.66節）。
 - 9月以前の結果を出した環境のバージョンは、`requirements-dev.txt` のコメントにある torch 2.14.0+cpu・pytest 9.1.1 以外は記録が残っておらず、完全な再現はできない。
 - 今後、結果ファイルを出すときは、実行環境のバージョンを結果ファイル自体に記録することが望ましい（未対応）。
+
+#### 12.6.114 結果ファイルへの実行環境の記録（2026-10-17）
+
+12.6.113節の未対応事項。`src/neurocortex/run_env.py` の `env_info()` が、Python・OS・torch・numpy のバージョン、CUDA の有無、git のコミット（作業ツリーに未コミットの変更があれば `+dirty`）、実行日時（UTC）を返す。
+
+- `src/neurocortex/experiments/` の継続学習・文脈推定の実験スクリプト9本は、結果の JSON の `環境` に記録する。
+- Colab 用の `colab_step44_full_scale_experiment.py` と `colab_step44_parameter_sweep.py` は、実行ごとの JSON の `environment` に記録する。Colab ではリポジトリ直下から実行するので、`src` をパスに追加して読み込む。
+- これより前に出した結果ファイルには記録がない。
+- テスト: `tests/test_run_env.py`。

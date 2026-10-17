@@ -16,6 +16,7 @@ from pathlib import Path
 
 import torch
 
+from ..run_env import env_info
 from ..basal_ganglia_core import ParitySpec
 from ..continual_metrics import forgetting_metrics
 from ..continual_sequence import run_sequence
@@ -36,7 +37,7 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=Path("results/continual_forgetting/metrics.json"))
     args = ap.parse_args()
     t0 = time.time()
-    out: dict = {"説明": "破局的忘却の評価指標（12.6.101節）。chance=0.5 で正規化", "seeds": args.seeds, "runs": {}}
+    out: dict = {"環境": env_info(), "説明": "破局的忘却の評価指標（12.6.101節）。chance=0.5 で正規化", "seeds": args.seeds, "runs": {}}
     for T in (2, 4):
         specs = [ParitySpec(n_inputs=8, relevant=p) for p in PAIRS[:T]]
         out["runs"][f"T{T}"] = {}

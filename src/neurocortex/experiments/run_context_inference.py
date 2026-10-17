@@ -12,6 +12,7 @@ from pathlib import Path
 
 import torch
 
+from ..run_env import env_info
 from ..basal_ganglia_core import ParitySpec
 from ..context_inference import CONDITIONS, assignment_purity, run_context_sequence
 from ..continual_metrics import forgetting_metrics
@@ -27,7 +28,7 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=Path("results/context_inference/conditions.json"))
     args = ap.parse_args()
     specs = [ParitySpec(n_inputs=8, relevant=p) for p in PAIRS]
-    out: dict = {"説明": "文脈推定機構の検証（12.6.105節）", "seeds": args.seeds, "tau": args.tau, "conditions": {}}
+    out: dict = {"環境": env_info(), "説明": "文脈推定機構の検証（12.6.105節）", "seeds": args.seeds, "tau": args.tau, "conditions": {}}
     for cond in CONDITIONS:
         rows = []
         for seed in range(args.seeds):

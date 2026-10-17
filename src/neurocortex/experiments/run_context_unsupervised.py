@@ -13,6 +13,7 @@ from pathlib import Path
 
 import torch
 
+from ..run_env import env_info
 from ..context_inference import CueSpec, run_context_sequence
 from ..context_unsupervised import run_unsupervised_sequence
 from ..continual_metrics import forgetting_metrics
@@ -29,7 +30,7 @@ def main() -> None:
     ap.add_argument("--seeds", type=int, default=5)
     ap.add_argument("--out", type=Path, default=Path("results/context_inference/unsupervised.json"))
     args = ap.parse_args()
-    out: dict = {"説明": "入力分布からのラベルなし文脈推定（12.6.111節）", "seeds": args.seeds, "runs": {}}
+    out: dict = {"環境": env_info(), "説明": "入力分布からのラベルなし文脈推定（12.6.111節）", "seeds": args.seeds, "runs": {}}
     for q in (0.9, 0.75):
         for L in (0, 250):
             key = f"q{q}_L{L}"

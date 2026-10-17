@@ -14,6 +14,7 @@ from pathlib import Path
 
 import torch
 
+from ..run_env import env_info
 from ..context_inference import FlipSpec, assignment_purity, run_context_sequence
 from ..continual_metrics import forgetting_metrics
 
@@ -31,7 +32,7 @@ def main() -> None:
     ap.add_argument("--tau", type=float, default=0.4)
     ap.add_argument("--out", type=Path, default=Path("results/context_inference/similar_tasks.json"))
     args = ap.parse_args()
-    out: dict = {"説明": "似たタスクでの文脈推定（12.6.108節）", "seeds": args.seeds, "tau": args.tau, "m": {}}
+    out: dict = {"環境": env_info(), "説明": "似たタスクでの文脈推定（12.6.108節）", "seeds": args.seeds, "tau": args.tau, "m": {}}
     for m in (1, 2, 3, 4):
         specs = task_specs(m)
         out["m"][str(m)] = {"disagreement": 2 ** -m}

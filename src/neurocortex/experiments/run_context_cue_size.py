@@ -13,6 +13,7 @@ from pathlib import Path
 
 import torch
 
+from ..run_env import env_info
 from ..basal_ganglia_core import ParitySpec
 from ..context_inference import run_context_sequence
 from ..continual_metrics import forgetting_metrics
@@ -28,7 +29,7 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=Path("results/context_inference/cue_size.json"))
     args = ap.parse_args()
     specs = [ParitySpec(n_inputs=8, relevant=p) for p in PAIRS]
-    out: dict = {"説明": "手がかりの数と文脈推定の精度（12.6.107節）", "seeds": args.seeds, "trials": args.trials,
+    out: dict = {"環境": env_info(), "説明": "手がかりの数と文脈推定の精度（12.6.107節）", "seeds": args.seeds, "trials": args.trials,
                  "cue_sizes": {}}
     for n in CUE_SIZES:
         rows = []
