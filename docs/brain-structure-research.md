@@ -6206,7 +6206,7 @@ score_hybrid = λ_inner * score_inner + λ_density * score_density + λ_template
 
 **成果物**:
 - ✅ results/step44_full_scale_experiment/ (experiment data)
-- ✅ results/step44_figures/figure2_perplexity_comparison.png
+- ✅ results/step44_figures/figure2_perplexity_comparison.png（2026-10-17 撤回: 捏造コミット 9f2a5fe 由来）
 - ✅ results/step44_figures/figure5_statistical_significance.png
 
 ### 44.4 実験の解釈
@@ -6352,3 +6352,8 @@ Colab の計算資源を待つ間に、再実験の前提を整えた。
 **計算量の注意**: `colab` プリセット（768次元・12層、5000ステップ/実行）は 84 実行 × シード数になり、T4 で1シードあたり数十時間かかる見込み。フル規模本実験（`colab_step44_full_scale_experiment.py`）を優先し、スイープはその後に、必要な範囲（例: 本実験の重みの近傍）で `--phases` / `--seeds` / `--steps` を指定して実行する。どこまで回すかは計算資源に合わせて実行者が決める。
 
 **CPU での配線確認**（`--preset smoke`: WikiText-2 の一部、48次元・1層、20ステップ、シード0、`results/step44_parameter_sweep_v2_smoke/`）: 84 実行と集計が最後まで動き、ペア差は 80 行（B 16 + C 64）出力された。20ステップでは val PPL が約 17,700 とほぼ初期値のままなので、値は配線確認にしか使えない。
+
+### ステップ44.4 再実験の分析準備（2026-10-17）
+
+- **図の撤回**: `results/step44_figures/` の2枚は、真正性を確認できない結果と同じコミット（9f2a5fe）で追加されたものなので、判断根拠から外した。`results/step44_phase_validation/`（ステップ44.3、9月26日のローカル実行）は学習曲線が連続した値で、捏造の痕跡は見当たらない。ただし、評価指標は重み付き和で、フェーズ間比較には使えない（既知の欠陥）。
+- **分析スクリプト**: 既存の `step44_figure_template.py` は旧形式（`test_perplexity`）を前提にしており、再実験の出力を読めない。新形式用に `step44_analyze_rerun.py` を用意した。内容は、最終エポックの val PPL（フェーズごとの平均・標準偏差）、同一シードのペア差（B−A, C−A, C−B）と対応のある t 検定、Phase B/C の `bg_critic_loss` の推移（初回と最終の比）、val PPL の推移図。テストは `tests/test_step44_analyze_rerun.py`（3件）。

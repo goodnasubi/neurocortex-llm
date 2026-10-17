@@ -1,5 +1,8 @@
 # ステップ44.5 Phase 2: 結果分析ガイド
 
+> **撤回注記（2026-10-17）**: `results/step44_figures/` の図は、真正性を確認できないステップ44.4 の結果と同じコミット（9f2a5fe）で追加されたもので、判断根拠に使わない。また、本ガイドと `step44_figure_template.py` は旧形式（`test_perplexity`）を前提にしており、再実験の出力（`phase*_seed*.json`）は読めない。再実験の分析には `step44_analyze_rerun.py` を使う。
+
+
 **目的**: ステップ44.4 Colab 実験完了後、結果の統計分析と Figure 生成を実施
 
 **実施者**: ローカル環境（GPU 不要）
