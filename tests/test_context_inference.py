@@ -84,3 +84,48 @@ def test_gated_variant_runs_and_default_unchanged():
 def test_gated_needs_persistent_novelty_to_allocate():
     # novel_patience を学習ステップ数より大きくすると、新しい文脈は作られない
     assert _run("inferred_gated", novel_patience=10_000)["n_contexts"] == 1
+
+
+@pytest.mark.parametrize("cond", ["inferred", "inferred_gated", "oracle"])
+def test_diagnostics_do_not_change_training(cond):
+    # 12.6.116節: 診断は専用の乱数を使い、学習と評価の結果を変えない
+    a = _run(cond, transition_steps=2)
+    b = _run(cond, transition_steps=2, diagnostics=True)
+    assert a["R"] == b["R"] and a["assign"] == b["assign"]
+    d = b["diag"]
+    assert len(d["ctx_acc"]) == len(d["chosen"]) == len(d["trained_src"]) == 3
+    n_buf = sum(sum(v.values()) for v in d["buffer_src"].values())
+    # ゲート付きは極小設定だと文脈が確立せずバッファが空のこともある
+    assert n_buf > 0 or cond == "inferred_gated"
+
+
+def test_store_consistent_only_affects_gated():
+    # 12.6.116節: store_consistent は inferred_gated だけに効き、従来の inferred は変えない
+    a = _run("inferred", transition_steps=2)
+    b = _run("inferred", transition_steps=2, store_consistent=True)
+    assert a["R"] == b["R"] and a["assign"] == b["assign"]
+    g = _run("inferred_gated", transition_steps=2, store_consistent=True, diagnostics=True)
+    assert len(g["R"]) == 3
+
+
+
+def test_store_consistent_default_keeps_gated_behavior():
+    # 既定（False）では 12.6.115節の inferred_gated と同じ
+    kw = dict(steps=40, pretrain_steps=40, batch=16, tau=0.7, transition_steps=20)
+    a = _run("inferred_gated", **kw)
+    b = _run("inferred_gated", store_consistent=False, **kw)
+    assert a["R"] == b["R"] and a["assign"] == b["assign"]
+
+
+def test_native_contexts_and_buffer_metrics():
+    # 12.6.116節: 作成が遅れて最頻の文脈が前のタスクの文脈でも、そのタスクで作られた文脈を本来の文脈とする
+    from neurocortex.experiments.run_context_gated_long import (buffer_conflict, buffer_contamination,
+                                                              native_contexts)
+    assign = [(0, 0)] * 3 + [(1, 0)] * 3 + [(1, 1)] * 2 + [(2, 1)] * 2
+    assert native_contexts(assign, 3) == [0, 1, 1]
+    assert buffer_contamination({0: {0: 3}, 1: {0: 1, 1: 3}}, [0, 1]) == 1 / 7
+    bits = torch.tensor([[1.0, 1.0, 1.0, -1.0], [1.0, -1.0, 1.0, 1.0]])
+    buf = {"bits": bits, "labels": torch.tensor([0, 0]), "ctx": torch.tensor([1, 1]), "src": torch.tensor([0, 1])}
+    specs = [ParitySpec(4, (0, 1)), ParitySpec(4, (2, 3))]
+    # 文脈1の規則は b2 XOR b3: 1行目は 1（ラベル0と矛盾）、2行目は 0（整合）
+    assert buffer_conflict(buf, [0, 1], specs) == 0.5

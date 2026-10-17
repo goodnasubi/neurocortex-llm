@@ -68,7 +68,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          steps: int = 500, batch: int = 64, lr: float = 0.05, buffer_size: int = 50,
                          cue_n: int = 16, eval_n: int = 2000,
                          selection_trials: int = 0, transition_steps: int = 0,
-                         novel_patience: int = 20) -> dict:
+                         novel_patience: int = 20, store_consistent: bool = False, train_consistent: bool = False,
+                         diagnostics: bool = False) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -78,6 +79,18 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     transition_steps = L > 0 では、タスク k（k ≥ 1）の最初の L ステップを移行期間とし、各サンプルを確率
     p = (s+1)/(L+1) でタスク k から、残りをタスク k−1 から取る（少しずつ変わる文脈, 12.6.109節）。oracle は
     サンプルごとに本当の出どころのタスクを文脈として受け取る。L = 0 では以前と同じ乱数消費になる。
+
+    store_consistent = True（inferred_gated のみ）では、保存する文脈で正しく予測できるサンプルだけをバッファに
+    入れる（12.6.116節）。train_consistent = True（inferred_gated のみ）では、確立した文脈で驚きのなかったバッチ
+    のうち、その文脈で正しく予測できるサンプルだけで学習する。どちらも既定の False では 12.6.115節と同じ挙動。
+
+    diagnostics = True では原因の切り分け用（12.6.116節）に "diag" を加える。学習・評価の乱数は消費しない
+    （診断専用の乱数を使う）ので、R と assign は diagnostics = False と同じになる。
+      ctx_acc[i][j][c] … タスク i の学習後、タスク j を文脈 c で評価した正確度（used の順）
+      chosen[i][j]     … 同じ時点で R の計算が手がかりから選んだ文脈
+      buffer_src[c]    … 文脈 c のバッファのサンプルの本当の出どころのタスクごとの数
+      buffer           … バッファの中身（bits, labels, ctx, src のテンソル）
+      trained_src[i]   … タスク i の期間に、新しい入力として学習に使ったサンプルの (文脈, 出どころ) ごとの数
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -102,6 +115,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     buf_bits: list[torch.Tensor] = []
     buf_labels: list[torch.Tensor] = []
     buf_ctx: list[torch.Tensor] = []
+    buf_src: list[torch.Tensor] = []
+    diag_gen = torch.Generator().manual_seed(1234)
+    diag: dict = {"ctx_acc": [], "chosen": [], "trained_src": []}
     buf_count: dict[int, int] = {}
     ema_loss: dict[int, float] = {}
     cur = 0
@@ -158,10 +174,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         return cur
 
     @torch.no_grad()
-    def accuracy(j: int) -> float:
+    def accuracy(j: int, chosen: list[int] | None = None) -> float:
         if condition in ("inferred", "inferred_gated"):
             cb, cl = make_batch(specs[j], cue_n, eval_generator)
             ctx = min(used, key=lambda c: loss_under(cb, cl, c))
+            if chosen is not None:
+                chosen.append(ctx)
         elif condition == "random":
             ctx = int(torch.randint(C, (1,), generator=eval_generator))
         else:
@@ -171,6 +189,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
 
     R: list[list[float]] = []
     for k, spec in enumerate(specs):
+        trained: dict[tuple[int, int], int] = {}
         opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=pretrain_weight_decay if k == 0 else 0.0)
         for step in range(pretrain_steps if k == 0 else steps):
             bits, labels = make_batch(spec, batch, generator)
@@ -186,8 +205,18 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             ctx_in = src if (condition == "oracle" and src is not None) else ctx
             x = with_ctx(bits, ctx_in)
             y = labels
+            s_ = src if src is not None else torch.full((batch,), k)
             if not gate["train"]:
                 x, y = x[:0], y[:0]
+            elif train_consistent and condition == "inferred_gated" and gate["store"]:
+                # 12.6.116節: 確立した文脈で驚きのなかったバッチでも、文脈の規則と食い違うサンプルでは学習しない
+                # （移行の初期に混ざる次のタスクのサンプルで、確立した文脈が上書きされるのを防ぐ）
+                with torch.no_grad():
+                    keep = model(x).argmax(-1) == y
+                x, y, s_ = x[keep], y[keep], s_[keep]
+            if gate["train"] and diagnostics:
+                for t in s_.unique().tolist():
+                    trained[(ctx, t)] = trained.get((ctx, t), 0) + int((s_ == t).sum())
             if buf_bits and k > 0:
                 bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
                 idx = torch.randint(bb.shape[0], (batch,), generator=generator)
@@ -207,14 +236,33 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             # 観測したサンプルを文脈ラベル付きで保存する。保存枠は inferred では推定した文脈ごと
             # （タスクの区切りを知らない）、他の条件では真のタスクごとに buffer_size 個まで
             key = ctx if condition in ("inferred", "inferred_gated") else k
-            n = min(buffer_size - buf_count.get(key, 0), batch)
+            if store_consistent and condition == "inferred_gated":
+                # 12.6.116節: 文脈の今の規則と整合する（正しく予測できる）サンプルだけを保存する。移行の終盤に
+                # 混ざる前のタスクのサンプルのうち、規則と食い違うものがバッファに入るのを防ぐ（スキーマ整合的な固定化）
+                with torch.no_grad():
+                    keep = model(with_ctx(bits, ctx)).argmax(-1) == labels
+                bits, labels = bits[keep], labels[keep]
+                src = src[keep] if src is not None else None
+            n = min(buffer_size - buf_count.get(key, 0), labels.shape[0])
             if n > 0:
                 buf_count[key] = buf_count.get(key, 0) + n
                 buf_bits.append(bits[:n])
                 buf_labels.append(labels[:n])
                 buf_ctx.append(ctx_in[:n].long() if isinstance(ctx_in, torch.Tensor)
                                else torch.full((n,), ctx, dtype=torch.long))
-        R.append([accuracy(j) for j in range(T)])
+                buf_src.append(src[:n].long() if src is not None else torch.full((n,), k, dtype=torch.long))
+        chosen: list[int] = []
+        R.append([accuracy(j, chosen) for j in range(T)])
+        if diagnostics:
+            with torch.no_grad():
+                acc_row = []
+                for j in range(T):
+                    bits, labels = make_batch(specs[j], eval_n, diag_gen)
+                    acc_row.append([float((model(with_ctx(bits, c)).argmax(-1) == labels).float().mean())
+                                    for c in (used if condition in ("inferred", "inferred_gated") else [0])])
+            diag["ctx_acc"].append(acc_row)
+            diag["chosen"].append(chosen)
+            diag["trained_src"].append({f"{c}<-{t}": n for (c, t), n in sorted(trained.items())})
     selection_acc = None
     if condition in ("inferred", "inferred_gated") and selection_trials > 0:
         majority = assignment_majority(assign, T)
@@ -224,8 +272,18 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 cb, cl = make_batch(specs[j], cue_n, eval_generator)
                 hits += int(min(used, key=lambda c: loss_under(cb, cl, c)) == majority[j])
         selection_acc = hits / (T * selection_trials)
-    return {"R": R, "assign": assign, "n_contexts": len(used) if condition in ("inferred", "inferred_gated") else C,
-            "selection_acc": selection_acc}
+    out = {"R": R, "assign": assign, "n_contexts": len(used) if condition in ("inferred", "inferred_gated") else C,
+           "selection_acc": selection_acc}
+    if diagnostics:
+        bc = torch.cat(buf_ctx) if buf_ctx else torch.zeros(0, dtype=torch.long)
+        bs = torch.cat(buf_src) if buf_src else torch.zeros(0, dtype=torch.long)
+        bb = torch.cat(buf_bits) if buf_bits else torch.zeros(0)
+        bl = torch.cat(buf_labels) if buf_labels else torch.zeros(0, dtype=torch.long)
+        diag["buffer"] = {"bits": bb, "labels": bl, "ctx": bc, "src": bs}
+        diag["buffer_src"] = {int(c): {int(t): int(((bc == c) & (bs == t)).sum()) for t in bs[bc == c].unique()}
+                              for c in bc.unique()}
+        out["diag"] = diag
+    return out
 
 
 def assignment_majority(assign: list[tuple[int, int]], n_tasks: int) -> list[int]:
