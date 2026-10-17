@@ -1,6 +1,8 @@
 # Parameter Sweep Prediction Analysis
 
 > **撤回注記（2026-10-15）**: 本文書が根拠とするステップ44.4 フル規模の数値（A 11.36 / B 11.93 / C 12.21 PPL 等）とパラメータスイープの結果は、実際の学習出力であることを確認できず、評価指標も不適切だった（`docs/brain-structure-research.md`「ステップ44.4 フル規模実験結果の真正性に関する注記」）。本文書の結論は判断根拠に使わない。修正済みスクリプト（因果マスク・指標修正・基底核 critic td_sg 移植済み）による Colab 再実験の結果で置き換える。
+>
+> **追記（2026-10-17）**: 旧スイープ結果 `results/step44_parameter_sweep/loss_weight_sweep_results.json` の Phase A の値は 11.53×(1−w_h) に厳密に一致し（w_h = 0.01/0.02/0.03/0.05 → 11.4147/11.2994/11.1841/10.9535）、学習の出力ではない。再構築版は `colab_step44_parameter_sweep.py`。
 
 
 **Date**: 2026-09-26  
