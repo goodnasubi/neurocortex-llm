@@ -1,0 +1,49 @@
+seed 100: ce=0.314 same=0.213 last=0.213/0.350 freq=0.172/0.292 markov=0.332/0.564 cerebellum=0.548/0.728 cerebellum_onehot=0.222/0.392
+  cap2_k1: none=4.20s/st996/w0 last=4.20s/st996/w0 freq=4.51s/st967/w273 markov=4.47s/st976/w315 cerebellum=4.39s/st966/w316 cerebellum_onehot=4.81s/st988/w544 oracle=3.35s/st995/w0
+  cap3_k2: none=4.00s/st901/w0 last=4.11s/st838/w188 freq=4.30s/st837/w386 markov=4.09s/st777/w421 cerebellum=4.43s/st801/w495 cerebellum_onehot=4.53s/st811/w600 oracle=3.18s/st900/w0
+  cap2_k1_io0.5: none=2.68s/st996/w0 last=2.75s/st996/w0 freq=2.71s/st972/w320 markov=2.58s/st812/w377 cerebellum=2.59s/st619/w345 cerebellum_onehot=2.80s/st870/w605 oracle=1.84s/st53/w0
+  cap2_k1_io1: none=3.13s/st996/w0 last=3.19s/st996/w0 freq=3.26s/st953/w281 markov=3.08s/st950/w328 cerebellum=3.24s/st951/w326 cerebellum_onehot=3.48s/st968/w572 oracle=2.26s/st962/w0
+seed 101: ce=0.317 same=0.165 last=0.165/0.289 freq=0.137/0.271 markov=0.346/0.567 cerebellum=0.588/0.763 cerebellum_onehot=0.215/0.412
+  cap2_k1: none=4.59s/st1149/w0 last=4.66s/st1149/w0 freq=5.03s/st1091/w351 markov=4.76s/st1069/w451 cerebellum=4.70s/st1081/w349 cerebellum_onehot=5.19s/st1057/w613 oracle=3.50s/st1143/w0
+  cap3_k2: none=4.29s/st1033/w0 last=4.51s/st980/w220 freq=4.72s/st962/w454 markov=4.83s/st936/w641 cerebellum=4.77s/st938/w615 cerebellum_onehot=5.13s/st972/w748 oracle=3.45s/st1029/w0
+  cap2_k1_io0.5: none=2.92s/st1149/w0 last=2.86s/st1149/w0 freq=2.86s/st1074/w388 markov=2.57s/st801/w522 cerebellum=2.69s/st651/w386 cerebellum_onehot=2.93s/st942/w691 oracle=1.84s/st38/w0
+  cap2_k1_io1: none=3.41s/st1149/w0 last=3.42s/st1149/w0 freq=3.46s/st1084/w361 markov=3.24s/st1021/w461 cerebellum=3.28s/st1061/w357 cerebellum_onehot=3.65s/st1042/w642 oracle=2.33s/st1117/w0
+seed 102: ce=0.319 same=0.191 last=0.191/0.364 freq=0.150/0.300 markov=0.361/0.600 cerebellum=0.611/0.791 cerebellum_onehot=0.238/0.434
+  cap2_k1: none=4.45s/st1099/w0 last=4.47s/st1099/w0 freq=4.90s/st1062/w335 markov=4.76s/st1040/w315 cerebellum=4.68s/st1045/w339 cerebellum_onehot=5.13s/st1028/w559 oracle=3.44s/st1094/w0
+  cap3_k2: none=4.04s/st940/w0 last=4.33s/st924/w192 freq=4.36s/st884/w364 markov=4.49s/st894/w546 cerebellum=4.69s/st881/w623 cerebellum_onehot=4.95s/st888/w654 oracle=3.22s/st940/w0
+  cap2_k1_io0.5: none=2.80s/st1099/w0 last=2.82s/st1099/w0 freq=2.78s/st1024/w362 markov=2.60s/st892/w364 cerebellum=2.60s/st629/w380 cerebellum_onehot=2.88s/st921/w649 oracle=1.86s/st45/w0
+  cap2_k1_io1: none=3.32s/st1099/w0 last=3.34s/st1099/w0 freq=3.47s/st1056/w342 markov=3.29s/st1039/w322 cerebellum=3.22s/st1003/w344 cerebellum_onehot=3.51s/st1009/w564 oracle=2.29s/st1063/w0
+seed 103: ce=0.314 same=0.103 last=0.103/0.261 freq=0.162/0.294 markov=0.359/0.599 cerebellum=0.615/0.787 cerebellum_onehot=0.210/0.415
+  cap2_k1: none=4.88s/st1279/w0 last=4.90s/st1279/w0 freq=5.16s/st1189/w289 markov=5.45s/st1266/w642 cerebellum=5.04s/st1211/w398 cerebellum_onehot=5.66s/st1204/w737 oracle=3.71s/st1276/w0
+  cap3_k2: none=4.48s/st1121/w0 last=4.81s/st1059/w225 freq=4.88s/st1027/w395 markov=5.34s/st1080/w791 cerebellum=5.07s/st1024/w620 cerebellum_onehot=5.50s/st1051/w812 oracle=3.51s/st1119/w0
+  cap2_k1_io0.5: none=2.93s/st1279/w0 last=2.98s/st1279/w0 freq=2.87s/st1122/w322 markov=2.71s/st893/w698 cerebellum=2.70s/st651/w448 cerebellum_onehot=2.92s/st1035/w850 oracle=1.81s/st56/w0
+  cap2_k1_io1: none=3.59s/st1279/w0 last=3.58s/st1279/w0 freq=3.52s/st1170/w291 markov=3.47s/st1217/w650 cerebellum=3.31s/st1166/w403 cerebellum_onehot=3.85s/st1170/w759 oracle=2.40s/st1227/w0
+seed 104: ce=0.318 same=0.220 last=0.220/0.334 freq=0.144/0.271 markov=0.383/0.607 cerebellum=0.622/0.799 cerebellum_onehot=0.252/0.446
+  cap2_k1: none=4.48s/st1107/w0 last=4.45s/st1107/w0 freq=4.85s/st1060/w343 markov=4.60s/st1082/w334 cerebellum=4.48s/st1064/w358 cerebellum_onehot=4.78s/st1026/w560 oracle=3.52s/st1105/w0
+  cap3_k2: none=4.25s/st1014/w0 last=4.48s/st968/w230 freq=4.56s/st933/w425 markov=4.77s/st959/w677 cerebellum=4.64s/st905/w626 cerebellum_onehot=4.89s/st935/w713 oracle=3.32s/st1009/w0
+  cap2_k1_io0.5: none=2.73s/st1107/w0 last=2.74s/st1107/w0 freq=2.75s/st1024/w371 markov=2.74s/st832/w360 cerebellum=2.72s/st617/w406 cerebellum_onehot=2.86s/st806/w624 oracle=1.82s/st39/w0
+  cap2_k1_io1: none=3.41s/st1107/w0 last=3.40s/st1107/w0 freq=3.53s/st1046/w343 markov=3.22s/st1055/w335 cerebellum=3.16s/st1012/w358 cerebellum_onehot=3.42s/st995/w573 oracle=2.34s/st1062/w0
+{
+ "a_pass": true,
+ "a_margin_top1": 0.41875234404300543,
+ "b_pass": false,
+ "b_reduction_vs_none": -0.030793204371434735,
+ "b_wall_mean": {
+  "none": 4.518869440200069,
+  "last": 4.537548685799902,
+  "freq": 4.889116101400032,
+  "markov": 4.809172582600058,
+  "cerebellum": 4.658019910399981,
+  "cerebellum_onehot": 5.113873614200111,
+  "oracle": 3.502791608800089
+ },
+ "参考_予測器時間を除く壁時計": {
+  "none": 4.518869440200069,
+  "last": 4.492735481597902,
+  "freq": 4.845978355799798,
+  "markov": 4.757186824802557,
+  "cerebellum": 4.373059655213729,
+  "cerebellum_onehot": 4.879703430395967,
+  "oracle": 3.4951867404005497
+ }
+}

@@ -1,0 +1,2734 @@
+{
+ "環境": {
+  "python": "3.13.16",
+  "platform": "Linux x86_64",
+  "torch": "2.14.1+cu130",
+  "numpy": "2.5.3",
+  "git_commit": "96e97bcf851072a71573b520910710caf1aa8236+dirty",
+  "utc": "2026-10-17T15:43:11+00:00",
+  "cuda": null
+ },
+ "設定": {
+  "seeds": [
+   100,
+   101,
+   102,
+   103,
+   104
+  ],
+  "n_sentences": 3000,
+  "d": 48,
+  "n_experts": 8,
+  "train_steps": 600,
+  "balance_coef": 0.05,
+  "trace_len": 8000,
+  "speed_len": 1500,
+  "cb_lr": 0.2,
+  "io_ms": 2.0,
+  "compute_ms": 1.0,
+  "io_sweep": [
+   0.5,
+   1.0
+  ],
+  "out": "results/expert_prefetch/dev_rev2.json",
+  "configs": [
+   [
+    2,
+    1,
+    2.0
+   ],
+   [
+    3,
+    2,
+    2.0
+   ],
+   [
+    2,
+    1,
+    0.5
+   ],
+   [
+    2,
+    1,
+    1.0
+   ]
+  ]
+ },
+ "要約": {
+  "hit": {
+   "last": {
+    "top1": {
+     "mean": 0.17832229028628577,
+     "sd": 0.047424822675567795
+    },
+    "top2": {
+     "mean": 0.3196399549943743,
+     "sd": 0.04323339713059523
+    }
+   },
+   "freq": {
+    "top1": {
+     "mean": 0.1529941242655332,
+     "sd": 0.013959661618149849
+    },
+    "top2": {
+     "mean": 0.28558569821227653,
+     "sd": 0.013767791128441342
+    }
+   },
+   "markov": {
+    "top1": {
+     "mean": 0.3559444930616327,
+     "sd": 0.018812546609845607
+    },
+    "top2": {
+     "mean": 0.5873734216777097,
+     "sd": 0.020280409385037633
+    }
+   },
+   "cerebellum": {
+    "top1": {
+     "mean": 0.5970746343292912,
+     "sd": 0.030145231497643695
+    },
+    "top2": {
+     "mean": 0.7737217152144018,
+     "sd": 0.02900887886690222
+    }
+   },
+   "cerebellum_onehot": {
+    "top1": {
+     "mean": 0.22730341292661582,
+     "sd": 0.017077427501695518
+    },
+    "top2": {
+     "mean": 0.41950243780472557,
+     "sd": 0.020639621891929215
+    }
+   }
+  },
+  "speed": {
+   "cap2_k1": {
+    "none": {
+     "wall_s": {
+      "mean": 4.518869440200069,
+      "sd": 0.24536667952300983
+     },
+     "stalls": {
+      "mean": 1126,
+      "sd": 102.38163897887159
+     },
+     "stall_s": {
+      "mean": 2.7882282502088858,
+      "sd": 0.24669403385999175
+     },
+     "demand_loads": {
+      "mean": 1126,
+      "sd": 102.38163897887159
+     },
+     "prefetch_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_bytes": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "predictor_s": {
+      "mean": 0.0,
+      "sd": 0.0
+     }
+    },
+    "last": {
+     "wall_s": {
+      "mean": 4.537548685799902,
+      "sd": 0.26116359962508706
+     },
+     "stalls": {
+      "mean": 1126,
+      "sd": 102.38163897887159
+     },
+     "stall_s": {
+      "mean": 2.7738012825989244,
+      "sd": 0.25624493964088746
+     },
+     "demand_loads": {
+      "mean": 1126,
+      "sd": 102.38163897887159
+     },
+     "prefetch_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_bytes": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "predictor_s": {
+      "mean": 0.044813204202000634,
+      "sd": 0.0023881100775210934
+     }
+    },
+    "freq": {
+     "wall_s": {
+      "mean": 4.889116101400032,
+      "sd": 0.2449348425121694
+     },
+     "stalls": {
+      "mean": 1073.8,
+      "sd": 79.53426934347232
+     },
+     "stall_s": {
+      "mean": 3.075701925199701,
+      "sd": 0.24868098809129102
+     },
+     "demand_loads": {
+      "mean": 1011.8,
+      "sd": 65.1820527446014
+     },
+     "prefetch_loads": {
+      "mean": 462.8,
+      "sd": 31.172102912700645
+     },
+     "wasted_loads": {
+      "mean": 318.2,
+      "sd": 34.8883934855132
+     },
+     "wasted_bytes": {
+      "mean": 7820083.2,
+      "sd": 857417.1582999724
+     },
+     "predictor_s": {
+      "mean": 0.04313774560023376,
+      "sd": 0.004046526899746835
+     }
+    },
+    "markov": {
+     "wall_s": {
+      "mean": 4.809172582600058,
+      "sd": 0.3781219554285456
+     },
+     "stalls": {
+      "mean": 1086.6,
+      "sd": 108.30420121121803
+     },
+     "stall_s": {
+      "mean": 2.9675366265986667,
+      "sd": 0.3749548653473155
+     },
+     "demand_loads": {
+      "mean": 763.8,
+      "sd": 56.49070720038828
+     },
+     "prefetch_loads": {
+      "mean": 818.8,
+      "sd": 232.59664657943802
+     },
+     "wasted_loads": {
+      "mean": 411.4,
+      "sd": 140.82009799740945
+     },
+     "wasted_bytes": {
+      "mean": 10110566.4,
+      "sd": 3460794.7283843346
+     },
+     "predictor_s": {
+      "mean": 0.05198575779750172,
+      "sd": 0.0034212338007143963
+     }
+    },
+    "cerebellum": {
+     "wall_s": {
+      "mean": 4.658019910399981,
+      "sd": 0.25126494652187753
+     },
+     "stalls": {
+      "mean": 1073.4,
+      "sd": 88.6301303169526
+     },
+     "stall_s": {
+      "mean": 2.5851737089981723,
+      "sd": 0.21674421261471163
+     },
+     "demand_loads": {
+      "mean": 549.6,
+      "sd": 16.57709262808168
+     },
+     "prefetch_loads": {
+      "mean": 967.2,
+      "sd": 113.8472661068328
+     },
+     "wasted_loads": {
+      "mean": 352,
+      "sd": 30.108138434649195
+     },
+     "wasted_bytes": {
+      "mean": 8650752,
+      "sd": 739937.6101699385
+     },
+     "predictor_s": {
+      "mean": 0.28496025518625173,
+      "sd": 0.022939973469472994
+     }
+    },
+    "cerebellum_onehot": {
+     "wall_s": {
+      "mean": 5.113873614200111,
+      "sd": 0.3569897297082865
+     },
+     "stalls": {
+      "mean": 1060.6,
+      "sd": 83.82601028320505
+     },
+     "stall_s": {
+      "mean": 3.0844359798008556,
+      "sd": 0.3471872994632174
+     },
+     "demand_loads": {
+      "mean": 807,
+      "sd": 70.6080731928014
+     },
+     "prefetch_loads": {
+      "mean": 988.6,
+      "sd": 107.2347891311397
+     },
+     "wasted_loads": {
+      "mean": 602.6,
+      "sd": 79.56318244012114
+     },
+     "wasted_bytes": {
+      "mean": 14809497.6,
+      "sd": 1955344.771648417
+     },
+     "predictor_s": {
+      "mean": 0.23417018380414448,
+      "sd": 0.014859938357931457
+     }
+    },
+    "oracle": {
+     "wall_s": {
+      "mean": 3.502791608800089,
+      "sd": 0.13125153393892655
+     },
+     "stalls": {
+      "mean": 1122.6,
+      "sd": 101.68234851733116
+     },
+     "stall_s": {
+      "mean": 1.7137418728021658,
+      "sd": 0.1307993746629479
+     },
+     "demand_loads": {
+      "mean": 1,
+      "sd": 0.0
+     },
+     "prefetch_loads": {
+      "mean": 1125,
+      "sd": 102.38163897887159
+     },
+     "wasted_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_bytes": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "predictor_s": {
+      "mean": 0.007604868399539555,
+      "sd": 0.0008845297946024772
+     }
+    }
+   },
+   "cap3_k2": {
+    "none": {
+     "wall_s": {
+      "mean": 4.21455750819996,
+      "sd": 0.1942851559494527
+     },
+     "stalls": {
+      "mean": 1001.8,
+      "sd": 85.60198595827084
+     },
+     "stall_s": {
+      "mean": 2.484253407599044,
+      "sd": 0.2025667551417043
+     },
+     "demand_loads": {
+      "mean": 1001.8,
+      "sd": 85.60198595827084
+     },
+     "prefetch_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_bytes": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "predictor_s": {
+      "mean": 0.0,
+      "sd": 0.0
+     }
+    },
+    "last": {
+     "wall_s": {
+      "mean": 4.448509180800102,
+      "sd": 0.2571882366465785
+     },
+     "stalls": {
+      "mean": 953.8,
+      "sd": 81.01357910869017
+     },
+     "stall_s": {
+      "mean": 2.6322334238009715,
+      "sd": 0.26029910312933896
+     },
+     "demand_loads": {
+      "mean": 892.4,
+      "sd": 60.86706827176745
+     },
+     "prefetch_loads": {
+      "mean": 390.4,
+      "sd": 61.57759332744338
+     },
+     "wasted_loads": {
+      "mean": 211,
+      "sd": 19.544820285692065
+     },
+     "wasted_bytes": {
+      "mean": 5185536,
+      "sd": 480333.50334116817
+     },
+     "predictor_s": {
+      "mean": 0.04551511579984435,
+      "sd": 0.0014112289498855205
+     }
+    },
+    "freq": {
+     "wall_s": {
+      "mean": 4.564237678400059,
+      "sd": 0.2396513342439425
+     },
+     "stalls": {
+      "mean": 928.6,
+      "sd": 72.79629111431433
+     },
+     "stall_s": {
+      "mean": 2.7314483039961486,
+      "sd": 0.24050543521564519
+     },
+     "demand_loads": {
+      "mean": 828.6,
+      "sd": 58.56876300554759
+     },
+     "prefetch_loads": {
+      "mean": 665.2,
+      "sd": 56.883213692617616
+     },
+     "wasted_loads": {
+      "mean": 404.8,
+      "sd": 35.15252480263687
+     },
+     "wasted_bytes": {
+      "mean": 9948364.8,
+      "sd": 863908.4495496036
+     },
+     "predictor_s": {
+      "mean": 0.04167986559559722,
+      "sd": 0.0011135716262386812
+     }
+    },
+    "markov": {
+     "wall_s": {
+      "mean": 4.706723910999881,
+      "sd": 0.46103129888861905
+     },
+     "stalls": {
+      "mean": 929.2,
+      "sd": 109.63439241405956
+     },
+     "stall_s": {
+      "mean": 2.8252306507974025,
+      "sd": 0.47884749350826433
+     },
+     "demand_loads": {
+      "mean": 388.6,
+      "sd": 15.565988564816562
+     },
+     "prefetch_loads": {
+      "mean": 1354,
+      "sd": 231.74447134721467
+     },
+     "wasted_loads": {
+      "mean": 615.2,
+      "sd": 139.5464080512286
+     },
+     "wasted_bytes": {
+      "mean": 15119155.2,
+      "sd": 3429492.524266994
+     },
+     "predictor_s": {
+      "mean": 0.05313620040260503,
+      "sd": 0.003214385763361424
+     }
+    },
+    "cerebellum": {
+     "wall_s": {
+      "mean": 4.720343853800022,
+      "sd": 0.23332550649365513
+     },
+     "stalls": {
+      "mean": 909.8,
+      "sd": 81.43525035265748
+     },
+     "stall_s": {
+      "mean": 2.605607078405592,
+      "sd": 0.2562511286205044
+     },
+     "demand_loads": {
+      "mean": 295.2,
+      "sd": 18.633303518163384
+     },
+     "prefetch_loads": {
+      "mean": 1421.2,
+      "sd": 140.69363880431837
+     },
+     "wasted_loads": {
+      "mean": 595.8,
+      "sd": 56.495132533697095
+     },
+     "wasted_bytes": {
+      "mean": 14642380.8,
+      "sd": 1388424.3771481398
+     },
+     "predictor_s": {
+      "mean": 0.29383494240028085,
+      "sd": 0.026816411691750298
+     }
+    },
+    "cerebellum_onehot": {
+     "wall_s": {
+      "mean": 4.998120554000161,
+      "sd": 0.35254443708675853
+     },
+     "stalls": {
+      "mean": 931.4,
+      "sd": 89.92385667885914
+     },
+     "stall_s": {
+      "mean": 2.9439767986013066,
+      "sd": 0.3610055277241939
+     },
+     "demand_loads": {
+      "mean": 501.6,
+      "sd": 35.69733883638947
+     },
+     "prefetch_loads": {
+      "mean": 1340.6,
+      "sd": 154.79114961779953
+     },
+     "wasted_loads": {
+      "mean": 705.4,
+      "sd": 82.1389067373069
+     },
+     "wasted_bytes": {
+      "mean": 17335910.4,
+      "sd": 2018645.7719760542
+     },
+     "predictor_s": {
+      "mean": 0.2419548099970598,
+      "sd": 0.006188983184391012
+     }
+    },
+    "oracle": {
+     "wall_s": {
+      "mean": 3.336793163999846,
+      "sd": 0.14359403618486752
+     },
+     "stalls": {
+      "mean": 999.4,
+      "sd": 84.67762396288644
+     },
+     "stall_s": {
+      "mean": 1.5468162597996524,
+      "sd": 0.13175350403586555
+     },
+     "demand_loads": {
+      "mean": 1,
+      "sd": 0.0
+     },
+     "prefetch_loads": {
+      "mean": 1000.8,
+      "sd": 85.60198595827084
+     },
+     "wasted_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_bytes": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "predictor_s": {
+      "mean": 0.007451457198749267,
+      "sd": 0.0011821266075405024
+     }
+    }
+   },
+   "cap2_k1_io0.5": {
+    "none": {
+     "wall_s": {
+      "mean": 2.8111283185999127,
+      "sd": 0.11394582799637992
+     },
+     "stalls": {
+      "mean": 1126,
+      "sd": 102.38163897887159
+     },
+     "stall_s": {
+      "mean": 1.066484770399984,
+      "sd": 0.0963869832082077
+     },
+     "demand_loads": {
+      "mean": 1126,
+      "sd": 102.38163897887159
+     },
+     "prefetch_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_bytes": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "predictor_s": {
+      "mean": 0.0,
+      "sd": 0.0
+     }
+    },
+    "last": {
+     "wall_s": {
+      "mean": 2.82835823539981,
+      "sd": 0.09688612059819612
+     },
+     "stalls": {
+      "mean": 1126,
+      "sd": 102.38163897887159
+     },
+     "stall_s": {
+      "mean": 1.057278616795611,
+      "sd": 0.09320746430112599
+     },
+     "demand_loads": {
+      "mean": 1126,
+      "sd": 102.38163897887159
+     },
+     "prefetch_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_bytes": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "predictor_s": {
+      "mean": 0.044951149597636686,
+      "sd": 0.00244716094415324
+     }
+    },
+    "freq": {
+     "wall_s": {
+      "mean": 2.794117852599902,
+      "sd": 0.07019074421771339
+     },
+     "stalls": {
+      "mean": 1043.2,
+      "sd": 56.9315378327338
+     },
+     "stall_s": {
+      "mean": 0.9824679678019492,
+      "sd": 0.05681290637879693
+     },
+     "demand_loads": {
+      "mean": 1039.2,
+      "sd": 54.78320910644064
+     },
+     "prefetch_loads": {
+      "mean": 496.6,
+      "sd": 26.91282222287362
+     },
+     "wasted_loads": {
+      "mean": 352.6,
+      "sd": 30.328204694640267
+     },
+     "wasted_bytes": {
+      "mean": 8665497.6,
+      "sd": 745345.9585754792
+     },
+     "predictor_s": {
+      "mean": 0.042174577001969735,
+      "sd": 0.0015437956983438163
+     }
+    },
+    "markov": {
+     "wall_s": {
+      "mean": 2.6397573167999324,
+      "sd": 0.07969599618959657
+     },
+     "stalls": {
+      "mean": 846,
+      "sd": 43.88051959582977
+     },
+     "stall_s": {
+      "mean": 0.8001997864029363,
+      "sd": 0.04325294192468068
+     },
+     "demand_loads": {
+      "mean": 827.8,
+      "sd": 45.54338590838411
+     },
+     "prefetch_loads": {
+      "mean": 838.8,
+      "sd": 227.99495608455902
+     },
+     "wasted_loads": {
+      "mean": 464.2,
+      "sd": 147.05849176433165
+     },
+     "wasted_bytes": {
+      "mean": 11408179.2,
+      "sd": 3614109.493600215
+     },
+     "predictor_s": {
+      "mean": 0.046890234997954396,
+      "sd": 0.00450404962768901
+     }
+    },
+    "cerebellum": {
+     "wall_s": {
+      "mean": 2.661029352800051,
+      "sd": 0.05809885776196208
+     },
+     "stalls": {
+      "mean": 633.4,
+      "sd": 16.69730517179344
+     },
+     "stall_s": {
+      "mean": 0.6137871134014858,
+      "sd": 0.0353080488352849
+     },
+     "demand_loads": {
+      "mean": 601.2,
+      "sd": 19.690099034794112
+     },
+     "prefetch_loads": {
+      "mean": 973.4,
+      "sd": 117.18062979861476
+     },
+     "wasted_loads": {
+      "mean": 393,
+      "sd": 37.8021163428716
+     },
+     "wasted_bytes": {
+      "mean": 9658368,
+      "sd": 929024.8112424124
+     },
+     "predictor_s": {
+      "mean": 0.2471756646025824,
+      "sd": 0.01180665871133434
+     }
+    },
+    "cerebellum_onehot": {
+     "wall_s": {
+      "mean": 2.8769319983999595,
+      "sd": 0.05365966466936438
+     },
+     "stalls": {
+      "mean": 914.8,
+      "sd": 85.25080644779848
+     },
+     "stall_s": {
+      "mean": 0.8500728922021153,
+      "sd": 0.06062824084452784
+     },
+     "demand_loads": {
+      "mean": 897.8,
+      "sd": 88.86900472043106
+     },
+     "prefetch_loads": {
+      "mean": 993.6,
+      "sd": 114.85556146743613
+     },
+     "wasted_loads": {
+      "mean": 683.8,
+      "sd": 98.32446287674294
+     },
+     "wasted_bytes": {
+      "mean": 16805068.8,
+      "sd": 2416421.9996588347
+     },
+     "predictor_s": {
+      "mean": 0.22439455519397597,
+      "sd": 0.009136894418034282
+     }
+    },
+    "oracle": {
+     "wall_s": {
+      "mean": 1.8351441875998717,
+      "sd": 0.01801269993970805
+     },
+     "stalls": {
+      "mean": 46.2,
+      "sd": 8.105553651663778
+     },
+     "stall_s": {
+      "mean": 0.03156620300196664,
+      "sd": 0.00492047046797549
+     },
+     "demand_loads": {
+      "mean": 1,
+      "sd": 0.0
+     },
+     "prefetch_loads": {
+      "mean": 1125,
+      "sd": 102.38163897887159
+     },
+     "wasted_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_bytes": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "predictor_s": {
+      "mean": 0.0018766410002172052,
+      "sd": 0.00010588502680986926
+     }
+    }
+   },
+   "cap2_k1_io1": {
+    "none": {
+     "wall_s": {
+      "mean": 3.372112599200045,
+      "sd": 0.16706486029643292
+     },
+     "stalls": {
+      "mean": 1126,
+      "sd": 102.38163897887159
+     },
+     "stall_s": {
+      "mean": 1.6389965343991206,
+      "sd": 0.16064235089339804
+     },
+     "demand_loads": {
+      "mean": 1126,
+      "sd": 102.38163897887159
+     },
+     "prefetch_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_bytes": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "predictor_s": {
+      "mean": 0.0,
+      "sd": 0.0
+     }
+    },
+    "last": {
+     "wall_s": {
+      "mean": 3.38615450039988,
+      "sd": 0.1414940577735305
+     },
+     "stalls": {
+      "mean": 1126,
+      "sd": 102.38163897887159
+     },
+     "stall_s": {
+      "mean": 1.6210514538011012,
+      "sd": 0.14357468985988667
+     },
+     "demand_loads": {
+      "mean": 1126,
+      "sd": 102.38163897887159
+     },
+     "prefetch_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_bytes": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "predictor_s": {
+      "mean": 0.044427568193259506,
+      "sd": 0.0016542194064027478
+     }
+    },
+    "freq": {
+     "wall_s": {
+      "mean": 3.448331333600072,
+      "sd": 0.10771466213417222
+     },
+     "stalls": {
+      "mean": 1061.8,
+      "sd": 77.97563722086534
+     },
+     "stall_s": {
+      "mean": 1.6444287852015804,
+      "sd": 0.10740229223272191
+     },
+     "demand_loads": {
+      "mean": 1013.8,
+      "sd": 65.7662527440936
+     },
+     "prefetch_loads": {
+      "mean": 468.4,
+      "sd": 30.582674833964408
+     },
+     "wasted_loads": {
+      "mean": 323.6,
+      "sd": 35.32421265930778
+     },
+     "wasted_bytes": {
+      "mean": 7952793.6,
+      "sd": 868127.850315148
+     },
+     "predictor_s": {
+      "mean": 0.04225599419751234,
+      "sd": 0.0034543152997739486
+     }
+    },
+    "markov": {
+     "wall_s": {
+      "mean": 3.2586189437999566,
+      "sd": 0.13877533318829902
+     },
+     "stalls": {
+      "mean": 1056.4,
+      "sd": 98.32497139587684
+     },
+     "stall_s": {
+      "mean": 1.4297809249997955,
+      "sd": 0.1312266645058847
+     },
+     "demand_loads": {
+      "mean": 772,
+      "sd": 54.66717479438644
+     },
+     "prefetch_loads": {
+      "mean": 822.8,
+      "sd": 230.50097613676172
+     },
+     "wasted_loads": {
+      "mean": 419.2,
+      "sd": 141.30711234753898
+     },
+     "wasted_bytes": {
+      "mean": 10302259.2,
+      "sd": 3472763.593053118
+     },
+     "predictor_s": {
+      "mean": 0.04749176559898842,
+      "sd": 0.0020140992286241336
+     }
+    },
+    "cerebellum": {
+     "wall_s": {
+      "mean": 3.2406842568001593,
+      "sd": 0.05631994761385444
+     },
+     "stalls": {
+      "mean": 1038.6,
+      "sd": 81.21145239435138
+     },
+     "stall_s": {
+      "mean": 1.1720610816038062,
+      "sd": 0.052109212280149385
+     },
+     "demand_loads": {
+      "mean": 556,
+      "sd": 16.537835408541227
+     },
+     "prefetch_loads": {
+      "mean": 967.8,
+      "sd": 114.99434768717983
+     },
+     "wasted_loads": {
+      "mean": 357.6,
+      "sd": 28.48332845718702
+     },
+     "wasted_bytes": {
+      "mean": 8788377.6,
+      "sd": 700006.2801638283
+     },
+     "predictor_s": {
+      "mean": 0.2813479637979981,
+      "sd": 0.011490597298593074
+     }
+    },
+    "cerebellum_onehot": {
+     "wall_s": {
+      "mean": 3.5842160833999515,
+      "sd": 0.17199174285249605
+     },
+     "stalls": {
+      "mean": 1036.8,
+      "sd": 79.09298325388922
+     },
+     "stall_s": {
+      "mean": 1.521259253801054,
+      "sd": 0.15708087087742295
+     },
+     "demand_loads": {
+      "mean": 821.2,
+      "sd": 71.46817473533237
+     },
+     "prefetch_loads": {
+      "mean": 997,
+      "sd": 107.38482201875645
+     },
+     "wasted_loads": {
+      "mean": 622,
+      "sd": 82.81606124418137
+     },
+     "wasted_bytes": {
+      "mean": 15286272,
+      "sd": 2035287.5211370015
+     },
+     "predictor_s": {
+      "mean": 0.2592605130039374,
+      "sd": 0.010308361362821502
+     }
+    },
+    "oracle": {
+     "wall_s": {
+      "mean": 2.325383787199917,
+      "sd": 0.051873222433575554
+     },
+     "stalls": {
+      "mean": 1086.2,
+      "sd": 96.59554855168017
+     },
+     "stall_s": {
+      "mean": 0.5255343364005057,
+      "sd": 0.0454312313685417
+     },
+     "demand_loads": {
+      "mean": 1,
+      "sd": 0.0
+     },
+     "prefetch_loads": {
+      "mean": 1125,
+      "sd": 102.38163897887159
+     },
+     "wasted_loads": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "wasted_bytes": {
+      "mean": 0,
+      "sd": 0.0
+     },
+     "predictor_s": {
+      "mean": 0.005642498395354778,
+      "sd": 0.00037901436336711466
+     }
+    }
+   }
+  }
+ },
+ "判定": {
+  "a_pass": true,
+  "a_margin_top1": 0.41875234404300543,
+  "b_pass": false,
+  "b_reduction_vs_none": -0.030793204371434735,
+  "b_wall_mean": {
+   "none": 4.518869440200069,
+   "last": 4.537548685799902,
+   "freq": 4.889116101400032,
+   "markov": 4.809172582600058,
+   "cerebellum": 4.658019910399981,
+   "cerebellum_onehot": 5.113873614200111,
+   "oracle": 3.502791608800089
+  },
+  "参考_予測器時間を除く壁時計": {
+   "none": 4.518869440200069,
+   "last": 4.492735481597902,
+   "freq": 4.845978355799798,
+   "markov": 4.757186824802557,
+   "cerebellum": 4.373059655213729,
+   "cerebellum_onehot": 4.879703430395967,
+   "oracle": 3.4951867404005497
+  }
+ },
+ "シード別": [
+  {
+   "seed": 100,
+   "train_ce": 0.31421491503715515,
+   "expert_usage": [
+    0.125875,
+    0.1145,
+    0.172875,
+    0.128,
+    0.117375,
+    0.09175,
+    0.12775,
+    0.121875
+   ],
+   "same_as_prev_rate": 0.21340167520940118,
+   "hit": {
+    "last": {
+     "top1": 0.21340167520940118,
+     "top2": 0.3496687085885736
+    },
+    "freq": {
+     "top1": 0.17214651831478936,
+     "top2": 0.291911488936117
+    },
+    "markov": {
+     "top1": 0.3320415051881485,
+     "top2": 0.5640705088136017
+    },
+    "cerebellum": {
+     "top1": 0.5483185398174771,
+     "top2": 0.7278409801225153
+    },
+    "cerebellum_onehot": {
+     "top1": 0.22190273784223027,
+     "top2": 0.3922990373796725
+    }
+   },
+   "speed": {
+    "cap2_k1": {
+     "none": {
+      "wall_s": 4.199227071000223,
+      "stalls": 996,
+      "stall_s": 2.4674632440192,
+      "demand_loads": 996,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 4.203583756000171,
+      "stalls": 996,
+      "stall_s": 2.4465500900050756,
+      "demand_loads": 996,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.04515155799617787
+     },
+     "freq": {
+      "wall_s": 4.507458103999852,
+      "stalls": 967,
+      "stall_s": 2.6931861760035645,
+      "demand_loads": 915,
+      "prefetch_loads": 413,
+      "wasted_loads": 273,
+      "wasted_bytes": 6709248,
+      "predictor_s": 0.04123651099189374
+     },
+     "markov": {
+      "wall_s": 4.47431368100024,
+      "stalls": 976,
+      "stall_s": 2.6326172039989615,
+      "demand_loads": 710,
+      "prefetch_loads": 673,
+      "wasted_loads": 315,
+      "wasted_bytes": 7741440,
+      "predictor_s": 0.052520525997806544
+     },
+     "cerebellum": {
+      "wall_s": 4.3854145650002465,
+      "stalls": 966,
+      "stall_s": 2.336966484003824,
+      "demand_loads": 540,
+      "prefetch_loads": 827,
+      "wasted_loads": 316,
+      "wasted_bytes": 7766016,
+      "predictor_s": 0.27087764098587286
+     },
+     "cerebellum_onehot": {
+      "wall_s": 4.811024654999983,
+      "stalls": 988,
+      "stall_s": 2.7948779199900855,
+      "demand_loads": 768,
+      "prefetch_loads": 883,
+      "wasted_loads": 544,
+      "wasted_bytes": 13369344,
+      "predictor_s": 0.22671226199190642
+     },
+     "oracle": {
+      "wall_s": 3.35082723000005,
+      "stalls": 995,
+      "stall_s": 1.5597214680069555,
+      "demand_loads": 1,
+      "prefetch_loads": 995,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.009068844998182612
+     }
+    },
+    "cap3_k2": {
+     "none": {
+      "wall_s": 4.0045048839997435,
+      "stalls": 901,
+      "stall_s": 2.2545451739983946,
+      "demand_loads": 901,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 4.109020227000201,
+      "stalls": 838,
+      "stall_s": 2.2970409829995333,
+      "demand_loads": 799,
+      "prefetch_loads": 343,
+      "wasted_loads": 188,
+      "wasted_bytes": 4620288,
+      "predictor_s": 0.04709138401449309
+     },
+     "freq": {
+      "wall_s": 4.3039787910001905,
+      "stalls": 837,
+      "stall_s": 2.4586601589953716,
+      "demand_loads": 770,
+      "prefetch_loads": 594,
+      "wasted_loads": 386,
+      "wasted_bytes": 9486336,
+      "predictor_s": 0.04184466198694281
+     },
+     "markov": {
+      "wall_s": 4.091868075999628,
+      "stalls": 777,
+      "stall_s": 2.1719418010052323,
+      "demand_loads": 370,
+      "prefetch_loads": 1053,
+      "wasted_loads": 421,
+      "wasted_bytes": 10346496,
+      "predictor_s": 0.058248437002930586
+     },
+     "cerebellum": {
+      "wall_s": 4.4274083480004265,
+      "stalls": 801,
+      "stall_s": 2.2333947759966577,
+      "demand_loads": 307,
+      "prefetch_loads": 1192,
+      "wasted_loads": 495,
+      "wasted_bytes": 12165120,
+      "predictor_s": 0.3388393679983892
+     },
+     "cerebellum_onehot": {
+      "wall_s": 4.532334926000203,
+      "stalls": 811,
+      "stall_s": 2.4622176770203623,
+      "demand_loads": 469,
+      "prefetch_loads": 1142,
+      "wasted_loads": 600,
+      "wasted_bytes": 14745600,
+      "predictor_s": 0.24748021600271386
+     },
+     "oracle": {
+      "wall_s": 3.1766678419999153,
+      "stalls": 900,
+      "stall_s": 1.397014054004103,
+      "demand_loads": 1,
+      "prefetch_loads": 900,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0068539400085683155
+     }
+    },
+    "cap2_k1_io0.5": {
+     "none": {
+      "wall_s": 2.67528616699974,
+      "stalls": 996,
+      "stall_s": 0.9433624349981073,
+      "demand_loads": 996,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 2.752246577999813,
+      "stalls": 996,
+      "stall_s": 0.9678966629912793,
+      "demand_loads": 996,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0444046299880938
+     },
+     "freq": {
+      "wall_s": 2.7141584639998655,
+      "stalls": 972,
+      "stall_s": 0.9144146089938658,
+      "demand_loads": 969,
+      "prefetch_loads": 460,
+      "wasted_loads": 320,
+      "wasted_bytes": 7864320,
+      "predictor_s": 0.040993797001192434
+     },
+     "markov": {
+      "wall_s": 2.575050431999898,
+      "stalls": 812,
+      "stall_s": 0.7648500160112235,
+      "demand_loads": 798,
+      "prefetch_loads": 708,
+      "wasted_loads": 377,
+      "wasted_bytes": 9265152,
+      "predictor_s": 0.04418528599489946
+     },
+     "cerebellum": {
+      "wall_s": 2.5930668920000244,
+      "stalls": 619,
+      "stall_s": 0.5728915750119086,
+      "demand_loads": 599,
+      "prefetch_loads": 824,
+      "wasted_loads": 345,
+      "wasted_bytes": 8478720,
+      "predictor_s": 0.24273110899957828
+     },
+     "cerebellum_onehot": {
+      "wall_s": 2.798038355999779,
+      "stalls": 870,
+      "stall_s": 0.7921734079955058,
+      "demand_loads": 857,
+      "prefetch_loads": 873,
+      "wasted_loads": 605,
+      "wasted_bytes": 14868480,
+      "predictor_s": 0.21823767599835264
+     },
+     "oracle": {
+      "wall_s": 1.8363759919998301,
+      "stalls": 53,
+      "stall_s": 0.04025179199743434,
+      "demand_loads": 1,
+      "prefetch_loads": 995,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0017265259948544553
+     }
+    },
+    "cap2_k1_io1": {
+     "none": {
+      "wall_s": 3.130374546999974,
+      "stalls": 996,
+      "stall_s": 1.4179218080053033,
+      "demand_loads": 996,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 3.191492272999767,
+      "stalls": 996,
+      "stall_s": 1.431768625001041,
+      "demand_loads": 996,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.04539640498569497
+     },
+     "freq": {
+      "wall_s": 3.263079437000215,
+      "stalls": 953,
+      "stall_s": 1.461721737003245,
+      "demand_loads": 918,
+      "prefetch_loads": 421,
+      "wasted_loads": 281,
+      "wasted_bytes": 6905856,
+      "predictor_s": 0.04212596999423113
+     },
+     "markov": {
+      "wall_s": 3.083870028999627,
+      "stalls": 950,
+      "stall_s": 1.2777628449989606,
+      "demand_loads": 728,
+      "prefetch_loads": 682,
+      "wasted_loads": 328,
+      "wasted_bytes": 8060928,
+      "predictor_s": 0.04507986300086486
+     },
+     "cerebellum": {
+      "wall_s": 3.2367031140001927,
+      "stalls": 951,
+      "stall_s": 1.147472111987554,
+      "demand_loads": 557,
+      "prefetch_loads": 825,
+      "wasted_loads": 326,
+      "wasted_bytes": 8011776,
+      "predictor_s": 0.29429283501258396
+     },
+     "cerebellum_onehot": {
+      "wall_s": 3.483687558999918,
+      "stalls": 968,
+      "stall_s": 1.436569670002882,
+      "demand_loads": 787,
+      "prefetch_loads": 896,
+      "wasted_loads": 572,
+      "wasted_bytes": 14057472,
+      "predictor_s": 0.25084772499621977
+     },
+     "oracle": {
+      "wall_s": 2.262080807000075,
+      "stalls": 962,
+      "stall_s": 0.46374516200694416,
+      "demand_loads": 1,
+      "prefetch_loads": 995,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.005454992995964858
+     }
+    }
+   }
+  },
+  {
+   "seed": 101,
+   "train_ce": 0.3165856897830963,
+   "expert_usage": [
+    0.13675,
+    0.118125,
+    0.122875,
+    0.13425,
+    0.113875,
+    0.11925,
+    0.11625,
+    0.138625
+   ],
+   "same_as_prev_rate": 0.16527065883235403,
+   "hit": {
+    "last": {
+     "top1": 0.16527065883235403,
+     "top2": 0.28853606700837603
+    },
+    "freq": {
+     "top1": 0.13714214276784598,
+     "top2": 0.2712839104888111
+    },
+    "markov": {
+     "top1": 0.3456682085260658,
+     "top2": 0.5668208526065758
+    },
+    "cerebellum": {
+     "top1": 0.5880735091886485,
+     "top2": 0.7629703712964121
+    },
+    "cerebellum_onehot": {
+     "top1": 0.21502687835979498,
+     "top2": 0.4115514439304913
+    }
+   },
+   "speed": {
+    "cap2_k1": {
+     "none": {
+      "wall_s": 4.586292139999841,
+      "stalls": 1149,
+      "stall_s": 2.8526775589971294,
+      "demand_loads": 1149,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 4.6642695609998555,
+      "stalls": 1149,
+      "stall_s": 2.8672627219943934,
+      "demand_loads": 1149,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.04819085300960069
+     },
+     "freq": {
+      "wall_s": 5.029202371999872,
+      "stalls": 1091,
+      "stall_s": 3.208045205993585,
+      "demand_loads": 1037,
+      "prefetch_loads": 486,
+      "wasted_loads": 351,
+      "wasted_bytes": 8626176,
+      "predictor_s": 0.04303535600001851
+     },
+     "markov": {
+      "wall_s": 4.760064938000141,
+      "stalls": 1069,
+      "stall_s": 2.890605219990448,
+      "demand_loads": 704,
+      "prefetch_loads": 929,
+      "wasted_loads": 451,
+      "wasted_bytes": 11083776,
+      "predictor_s": 0.055348558993500774
+     },
+     "cerebellum": {
+      "wall_s": 4.700561117999769,
+      "stalls": 1081,
+      "stall_s": 2.6185174489996825,
+      "demand_loads": 554,
+      "prefetch_loads": 969,
+      "wasted_loads": 349,
+      "wasted_bytes": 8577024,
+      "predictor_s": 0.29322359197021797
+     },
+     "cerebellum_onehot": {
+      "wall_s": 5.187741214000198,
+      "stalls": 1057,
+      "stall_s": 3.148455946996819,
+      "demand_loads": 833,
+      "prefetch_loads": 982,
+      "wasted_loads": 613,
+      "wasted_bytes": 15065088,
+      "predictor_s": 0.2412541900062024
+     },
+     "oracle": {
+      "wall_s": 3.5009789139999157,
+      "stalls": 1143,
+      "stall_s": 1.7244537870001295,
+      "demand_loads": 1,
+      "prefetch_loads": 1148,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0068574710071516165
+     }
+    },
+    "cap3_k2": {
+     "none": {
+      "wall_s": 4.289935832000083,
+      "stalls": 1033,
+      "stall_s": 2.5554917960012062,
+      "demand_loads": 1033,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 4.513414677000128,
+      "stalls": 980,
+      "stall_s": 2.6930053140026757,
+      "demand_loads": 921,
+      "prefetch_loads": 383,
+      "wasted_loads": 220,
+      "wasted_bytes": 5406720,
+      "predictor_s": 0.0446596079932533
+     },
+     "freq": {
+      "wall_s": 4.717770873000063,
+      "stalls": 962,
+      "stall_s": 2.8895591820078153,
+      "demand_loads": 851,
+      "prefetch_loads": 709,
+      "wasted_loads": 454,
+      "wasted_bytes": 11157504,
+      "predictor_s": 0.04233645199155944
+     },
+     "markov": {
+      "wall_s": 4.832740088999799,
+      "stalls": 936,
+      "stall_s": 2.949553783009378,
+      "demand_loads": 407,
+      "prefetch_loads": 1381,
+      "wasted_loads": 641,
+      "wasted_bytes": 15753216,
+      "predictor_s": 0.05303195900978608
+     },
+     "cerebellum": {
+      "wall_s": 4.772025916000075,
+      "stalls": 938,
+      "stall_s": 2.676451206004458,
+      "demand_loads": 317,
+      "prefetch_loads": 1445,
+      "wasted_loads": 615,
+      "wasted_bytes": 15114240,
+      "predictor_s": 0.28041792700923907
+     },
+     "cerebellum_onehot": {
+      "wall_s": 5.130566996000198,
+      "stalls": 972,
+      "stall_s": 3.079269366997778,
+      "demand_loads": 542,
+      "prefetch_loads": 1365,
+      "wasted_loads": 748,
+      "wasted_bytes": 18382848,
+      "predictor_s": 0.24125036301393266
+     },
+     "oracle": {
+      "wall_s": 3.4507626330000676,
+      "stalls": 1029,
+      "stall_s": 1.631223322006008,
+      "demand_loads": 1,
+      "prefetch_loads": 1032,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.009492252004292823
+     }
+    },
+    "cap2_k1_io0.5": {
+     "none": {
+      "wall_s": 2.923554392999904,
+      "stalls": 1149,
+      "stall_s": 1.128948959002173,
+      "demand_loads": 1149,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 2.855810318999829,
+      "stalls": 1149,
+      "stall_s": 1.0824844740022854,
+      "demand_loads": 1149,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0472304109957804
+     },
+     "freq": {
+      "wall_s": 2.8635932529996353,
+      "stalls": 1074,
+      "stall_s": 1.0241730030033978,
+      "demand_loads": 1067,
+      "prefetch_loads": 521,
+      "wasted_loads": 388,
+      "wasted_bytes": 9535488,
+      "predictor_s": 0.04073503800327671
+     },
+     "markov": {
+      "wall_s": 2.569934772000124,
+      "stalls": 801,
+      "stall_s": 0.7471208729903083,
+      "demand_loads": 784,
+      "prefetch_loads": 952,
+      "wasted_loads": 522,
+      "wasted_bytes": 12828672,
+      "predictor_s": 0.04543999797988363
+     },
+     "cerebellum": {
+      "wall_s": 2.689567311999781,
+      "stalls": 651,
+      "stall_s": 0.603551298003822,
+      "demand_loads": 612,
+      "prefetch_loads": 969,
+      "wasted_loads": 386,
+      "wasted_bytes": 9486336,
+      "predictor_s": 0.2613622250082699
+     },
+     "cerebellum_onehot": {
+      "wall_s": 2.9300505159999375,
+      "stalls": 942,
+      "stall_s": 0.8900185430074998,
+      "demand_loads": 921,
+      "prefetch_loads": 987,
+      "wasted_loads": 691,
+      "wasted_bytes": 16982016,
+      "predictor_s": 0.2324738389961567
+     },
+     "oracle": {
+      "wall_s": 1.8434435189997203,
+      "stalls": 38,
+      "stall_s": 0.030051916000502388,
+      "demand_loads": 1,
+      "prefetch_loads": 1148,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0018476460008969298
+     }
+    },
+    "cap2_k1_io1": {
+     "none": {
+      "wall_s": 3.412718009999935,
+      "stalls": 1149,
+      "stall_s": 1.6788617880042693,
+      "demand_loads": 1149,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 3.4189481769999475,
+      "stalls": 1149,
+      "stall_s": 1.6550904480086501,
+      "demand_loads": 1149,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.04513199499479015
+     },
+     "freq": {
+      "wall_s": 3.4639369890001035,
+      "stalls": 1084,
+      "stall_s": 1.6750408970096942,
+      "demand_loads": 1038,
+      "prefetch_loads": 496,
+      "wasted_loads": 361,
+      "wasted_bytes": 8871936,
+      "predictor_s": 0.04037526400134084
+     },
+     "markov": {
+      "wall_s": 3.2412464230001206,
+      "stalls": 1021,
+      "stall_s": 1.3948888149989216,
+      "demand_loads": 710,
+      "prefetch_loads": 932,
+      "wasted_loads": 461,
+      "wasted_bytes": 11329536,
+      "predictor_s": 0.04892788398819903
+     },
+     "cerebellum": {
+      "wall_s": 3.276208219000182,
+      "stalls": 1061,
+      "stall_s": 1.1954479770106445,
+      "demand_loads": 560,
+      "prefetch_loads": 973,
+      "wasted_loads": 357,
+      "wasted_bytes": 8773632,
+      "predictor_s": 0.29187205800008087
+     },
+     "cerebellum_onehot": {
+      "wall_s": 3.6484381259997463,
+      "stalls": 1042,
+      "stall_s": 1.562437933997444,
+      "demand_loads": 850,
+      "prefetch_loads": 996,
+      "wasted_loads": 642,
+      "wasted_bytes": 15777792,
+      "predictor_s": 0.2737313469997389
+     },
+     "oracle": {
+      "wall_s": 2.3288018999996893,
+      "stalls": 1117,
+      "stall_s": 0.5342304290002176,
+      "demand_loads": 1,
+      "prefetch_loads": 1148,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.005792813996777113
+     }
+    }
+   }
+  },
+  {
+   "seed": 102,
+   "train_ce": 0.318960964679718,
+   "expert_usage": [
+    0.135125,
+    0.1265,
+    0.10975,
+    0.09725,
+    0.115125,
+    0.15375,
+    0.14775,
+    0.11475
+   ],
+   "same_as_prev_rate": 0.19052381547693462,
+   "hit": {
+    "last": {
+     "top1": 0.19052381547693462,
+     "top2": 0.36442055256907113
+    },
+    "freq": {
+     "top1": 0.14976872109013628,
+     "top2": 0.30041255156894614
+    },
+    "markov": {
+     "top1": 0.36079509938742343,
+     "top2": 0.6004500562570322
+    },
+    "cerebellum": {
+     "top1": 0.6112014001750219,
+     "top2": 0.7912239029878735
+    },
+    "cerebellum_onehot": {
+     "top1": 0.23777972246530815,
+     "top2": 0.43355419427428427
+    }
+   },
+   "speed": {
+    "cap2_k1": {
+     "none": {
+      "wall_s": 4.449795956000344,
+      "stalls": 1099,
+      "stall_s": 2.7204863020006087,
+      "demand_loads": 1099,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 4.471574777999649,
+      "stalls": 1099,
+      "stall_s": 2.711381225007699,
+      "demand_loads": 1099,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.04559842799835678
+     },
+     "freq": {
+      "wall_s": 4.90465802000017,
+      "stalls": 1062,
+      "stall_s": 3.091283421992557,
+      "demand_loads": 1006,
+      "prefetch_loads": 464,
+      "wasted_loads": 335,
+      "wasted_bytes": 8232960,
+      "predictor_s": 0.04143800599604219
+     },
+     "markov": {
+      "wall_s": 4.764951988999655,
+      "stalls": 1040,
+      "stall_s": 2.918326082997737,
+      "demand_loads": 832,
+      "prefetch_loads": 615,
+      "wasted_loads": 315,
+      "wasted_bytes": 7741440,
+      "predictor_s": 0.055102211999383144
+     },
+     "cerebellum": {
+      "wall_s": 4.680784664999919,
+      "stalls": 1045,
+      "stall_s": 2.5902516099986315,
+      "demand_loads": 554,
+      "prefetch_loads": 927,
+      "wasted_loads": 339,
+      "wasted_bytes": 8331264,
+      "predictor_s": 0.29311625099444427
+     },
+     "cerebellum_onehot": {
+      "wall_s": 5.128571638000267,
+      "stalls": 1028,
+      "stall_s": 3.077463194003485,
+      "demand_loads": 808,
+      "prefetch_loads": 928,
+      "wasted_loads": 559,
+      "wasted_bytes": 13737984,
+      "predictor_s": 0.2522658710113319
+     },
+     "oracle": {
+      "wall_s": 3.4399197390002882,
+      "stalls": 1094,
+      "stall_s": 1.6504677339976297,
+      "demand_loads": 1,
+      "prefetch_loads": 1098,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.007229475995245593
+     }
+    },
+    "cap3_k2": {
+     "none": {
+      "wall_s": 4.043788505000066,
+      "stalls": 940,
+      "stall_s": 2.3170837300117455,
+      "demand_loads": 940,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 4.32972978700036,
+      "stalls": 924,
+      "stall_s": 2.504561615008697,
+      "demand_loads": 871,
+      "prefetch_loads": 347,
+      "wasted_loads": 192,
+      "wasted_bytes": 4718592,
+      "predictor_s": 0.04654968500108225
+     },
+     "freq": {
+      "wall_s": 4.3643273819998285,
+      "stalls": 884,
+      "stall_s": 2.5319682279764493,
+      "demand_loads": 765,
+      "prefetch_loads": 643,
+      "wasted_loads": 364,
+      "wasted_bytes": 8945664,
+      "predictor_s": 0.04291138400776617
+     },
+     "markov": {
+      "wall_s": 4.492080321999765,
+      "stalls": 894,
+      "stall_s": 2.6229211579957337,
+      "demand_loads": 402,
+      "prefetch_loads": 1242,
+      "wasted_loads": 546,
+      "wasted_bytes": 13418496,
+      "predictor_s": 0.05335506399751466
+     },
+     "cerebellum": {
+      "wall_s": 4.687065690000054,
+      "stalls": 881,
+      "stall_s": 2.582994903020335,
+      "demand_loads": 286,
+      "prefetch_loads": 1433,
+      "wasted_loads": 623,
+      "wasted_bytes": 15310848,
+      "predictor_s": 0.288406459998896
+     },
+     "cerebellum_onehot": {
+      "wall_s": 4.945420396000372,
+      "stalls": 888,
+      "stall_s": 2.8749320919991987,
+      "demand_loads": 498,
+      "prefetch_loads": 1262,
+      "wasted_loads": 654,
+      "wasted_bytes": 16072704,
+      "predictor_s": 0.24808860399207333
+     },
+     "oracle": {
+      "wall_s": 3.2214409409998552,
+      "stalls": 940,
+      "stall_s": 1.4534385320002912,
+      "demand_loads": 1,
+      "prefetch_loads": 939,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0066206189894728595
+     }
+    },
+    "cap2_k1_io0.5": {
+     "none": {
+      "wall_s": 2.800959370000328,
+      "stalls": 1099,
+      "stall_s": 1.053377867004201,
+      "demand_loads": 1099,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 2.8173457509997206,
+      "stalls": 1099,
+      "stall_s": 1.042053898996528,
+      "demand_loads": 1099,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.04561214499608468
+     },
+     "freq": {
+      "wall_s": 2.775827186999777,
+      "stalls": 1024,
+      "stall_s": 0.9654804380052155,
+      "demand_loads": 1022,
+      "prefetch_loads": 492,
+      "wasted_loads": 362,
+      "wasted_bytes": 8896512,
+      "predictor_s": 0.041924780999579525
+     },
+     "markov": {
+      "wall_s": 2.6026427100000546,
+      "stalls": 892,
+      "stall_s": 0.806817220002813,
+      "demand_loads": 886,
+      "prefetch_loads": 641,
+      "wasted_loads": 364,
+      "wasted_bytes": 8945664,
+      "predictor_s": 0.043851172996710375
+     },
+     "cerebellum": {
+      "wall_s": 2.6044646529999227,
+      "stalls": 629,
+      "stall_s": 0.5922119120032221,
+      "demand_loads": 598,
+      "prefetch_loads": 942,
+      "wasted_loads": 380,
+      "wasted_bytes": 9338880,
+      "predictor_s": 0.23008233599966843
+     },
+     "cerebellum_onehot": {
+      "wall_s": 2.87716099499994,
+      "stalls": 921,
+      "stall_s": 0.8558662269961133,
+      "demand_loads": 905,
+      "prefetch_loads": 932,
+      "wasted_loads": 649,
+      "wasted_bytes": 15949824,
+      "predictor_s": 0.22405611699696237
+     },
+     "oracle": {
+      "wall_s": 1.8595826359996863,
+      "stalls": 45,
+      "stall_s": 0.029091161003634625,
+      "demand_loads": 1,
+      "prefetch_loads": 1098,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0019081610066677968
+     }
+    },
+    "cap2_k1_io1": {
+     "none": {
+      "wall_s": 3.3151847469998756,
+      "stalls": 1099,
+      "stall_s": 1.5934765479887574,
+      "demand_loads": 1099,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 3.3388752900000327,
+      "stalls": 1099,
+      "stall_s": 1.575251088985624,
+      "demand_loads": 1099,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.04278630098724534
+     },
+     "freq": {
+      "wall_s": 3.4670915910000986,
+      "stalls": 1056,
+      "stall_s": 1.6569865320016106,
+      "demand_loads": 1007,
+      "prefetch_loads": 471,
+      "wasted_loads": 342,
+      "wasted_bytes": 8404992,
+      "predictor_s": 0.04294931800677659
+     },
+     "markov": {
+      "wall_s": 3.285588351000115,
+      "stalls": 1039,
+      "stall_s": 1.4716423960053362,
+      "demand_loads": 839,
+      "prefetch_loads": 621,
+      "wasted_loads": 322,
+      "wasted_bytes": 7913472,
+      "predictor_s": 0.04811876600706455
+     },
+     "cerebellum": {
+      "wall_s": 3.2223053430002437,
+      "stalls": 1003,
+      "stall_s": 1.15072719100408,
+      "demand_loads": 557,
+      "prefetch_loads": 930,
+      "wasted_loads": 344,
+      "wasted_bytes": 8454144,
+      "predictor_s": 0.2785928100042838
+     },
+     "cerebellum_onehot": {
+      "wall_s": 3.514286018999883,
+      "stalls": 1009,
+      "stall_s": 1.4800051059974066,
+      "demand_loads": 812,
+      "prefetch_loads": 933,
+      "wasted_loads": 564,
+      "wasted_bytes": 13860864,
+      "predictor_s": 0.2512344890019449
+     },
+     "oracle": {
+      "wall_s": 2.293267732000004,
+      "stalls": 1063,
+      "stall_s": 0.5022183749929354,
+      "demand_loads": 1,
+      "prefetch_loads": 1098,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.005165682991446374
+     }
+    }
+   }
+  },
+  {
+   "seed": 103,
+   "train_ce": 0.314462810754776,
+   "expert_usage": [
+    0.115375,
+    0.129375,
+    0.135375,
+    0.162,
+    0.130375,
+    0.118375,
+    0.095625,
+    0.1135
+   ],
+   "same_as_prev_rate": 0.10263782972871609,
+   "hit": {
+    "last": {
+     "top1": 0.10263782972871609,
+     "top2": 0.26140767595949493
+    },
+    "freq": {
+     "top1": 0.16164520565070634,
+     "top2": 0.29378672334041755
+    },
+    "markov": {
+     "top1": 0.3586698337292161,
+     "top2": 0.5985748218527316
+    },
+    "cerebellum": {
+     "top1": 0.6153269158644831,
+     "top2": 0.7872234029253656
+    },
+    "cerebellum_onehot": {
+     "top1": 0.21027628453556696,
+     "top2": 0.41455181897737214
+    }
+   },
+   "speed": {
+    "cap2_k1": {
+     "none": {
+      "wall_s": 4.876640816999952,
+      "stalls": 1279,
+      "stall_s": 3.1493703980113423,
+      "demand_loads": 1279,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 4.901708062000125,
+      "stalls": 1279,
+      "stall_s": 3.1444495579967224,
+      "demand_loads": 1279,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0420419239990224
+     },
+     "freq": {
+      "wall_s": 5.158494411999982,
+      "stalls": 1189,
+      "stall_s": 3.359995387002982,
+      "demand_loads": 1095,
+      "prefetch_loads": 492,
+      "wasted_loads": 289,
+      "wasted_bytes": 7102464,
+      "predictor_s": 0.0398842450099437
+     },
+     "markov": {
+      "wall_s": 5.44972554900005,
+      "stalls": 1266,
+      "stall_s": 3.607679734008343,
+      "demand_loads": 804,
+      "prefetch_loads": 1176,
+      "wasted_loads": 642,
+      "wasted_bytes": 15777792,
+      "predictor_s": 0.04915491300971553
+     },
+     "cerebellum": {
+      "wall_s": 5.039525782000055,
+      "stalls": 1211,
+      "stall_s": 2.917181892994904,
+      "demand_loads": 572,
+      "prefetch_loads": 1142,
+      "wasted_loads": 398,
+      "wasted_bytes": 9781248,
+      "predictor_s": 0.31353341898056897
+     },
+     "cerebellum_onehot": {
+      "wall_s": 5.662273737000305,
+      "stalls": 1204,
+      "stall_s": 3.6291388390022803,
+      "demand_loads": 907,
+      "prefetch_loads": 1165,
+      "wasted_loads": 737,
+      "wasted_bytes": 18112512,
+      "predictor_s": 0.23741266201341205
+     },
+     "oracle": {
+      "wall_s": 3.707007029000124,
+      "stalls": 1276,
+      "stall_s": 1.9151531839947893,
+      "demand_loads": 1,
+      "prefetch_loads": 1278,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.007772371000100975
+     }
+    },
+    "cap3_k2": {
+     "none": {
+      "wall_s": 4.479913595999733,
+      "stalls": 1121,
+      "stall_s": 2.7596034539906213,
+      "demand_loads": 1121,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 4.808961746000023,
+      "stalls": 1059,
+      "stall_s": 3.0033326450011373,
+      "demand_loads": 959,
+      "prefetch_loads": 495,
+      "wasted_loads": 225,
+      "wasted_bytes": 5529600,
+      "predictor_s": 0.04360332598980676
+     },
+     "freq": {
+      "wall_s": 4.8779411089999485,
+      "stalls": 1027,
+      "stall_s": 3.0348473719982394,
+      "demand_loads": 898,
+      "prefetch_loads": 736,
+      "wasted_loads": 395,
+      "wasted_bytes": 9707520,
+      "predictor_s": 0.04131600999062357
+     },
+     "markov": {
+      "wall_s": 5.343733347000125,
+      "stalls": 1080,
+      "stall_s": 3.479508410985545,
+      "demand_loads": 379,
+      "prefetch_loads": 1682,
+      "wasted_loads": 791,
+      "wasted_bytes": 19439616,
+      "predictor_s": 0.049663892001262866
+     },
+     "cerebellum": {
+      "wall_s": 5.070318006999969,
+      "stalls": 1024,
+      "stall_s": 2.94940034900128,
+      "demand_loads": 297,
+      "prefetch_loads": 1578,
+      "wasted_loads": 620,
+      "wasted_bytes": 15237120,
+      "predictor_s": 0.29299173498202435
+     },
+     "cerebellum_onehot": {
+      "wall_s": 5.495575371000086,
+      "stalls": 1051,
+      "stall_s": 3.4515757699959977,
+      "demand_loads": 534,
+      "prefetch_loads": 1561,
+      "wasted_loads": 812,
+      "wasted_bytes": 19955712,
+      "predictor_s": 0.2399817849786814
+     },
+     "oracle": {
+      "wall_s": 3.511086673999671,
+      "stalls": 1119,
+      "stall_s": 1.7225013920010497,
+      "demand_loads": 1,
+      "prefetch_loads": 1120,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.00745344999631925
+     }
+    },
+    "cap2_k1_io0.5": {
+     "none": {
+      "wall_s": 2.9283561590000318,
+      "stalls": 1279,
+      "stall_s": 1.1905696049957442,
+      "demand_loads": 1279,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 2.978816459999962,
+      "stalls": 1279,
+      "stall_s": 1.2036139619995083,
+      "demand_loads": 1279,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.04650734899860254
+     },
+     "freq": {
+      "wall_s": 2.8707068210001125,
+      "stalls": 1122,
+      "stall_s": 1.0556755950019578,
+      "demand_loads": 1115,
+      "prefetch_loads": 525,
+      "wasted_loads": 322,
+      "wasted_bytes": 7913472,
+      "predictor_s": 0.04458059500393574
+     },
+     "markov": {
+      "wall_s": 2.7147325179998916,
+      "stalls": 893,
+      "stall_s": 0.8447081790031916,
+      "demand_loads": 867,
+      "prefetch_loads": 1187,
+      "wasted_loads": 698,
+      "wasted_bytes": 17154048,
+      "predictor_s": 0.04620884200403452
+     },
+     "cerebellum": {
+      "wall_s": 2.6975769180003226,
+      "stalls": 651,
+      "stall_s": 0.643040906000806,
+      "demand_loads": 625,
+      "prefetch_loads": 1151,
+      "wasted_loads": 448,
+      "wasted_bytes": 11010048,
+      "predictor_s": 0.247904012003346
+     },
+     "cerebellum_onehot": {
+      "wall_s": 2.922456398000122,
+      "stalls": 1035,
+      "stall_s": 0.9256068220083762,
+      "demand_loads": 1024,
+      "prefetch_loads": 1179,
+      "wasted_loads": 850,
+      "wasted_bytes": 20889600,
+      "predictor_s": 0.21289322198481386
+     },
+     "oracle": {
+      "wall_s": 1.813000466000176,
+      "stalls": 56,
+      "stall_s": 0.03020760201252415,
+      "demand_loads": 1,
+      "prefetch_loads": 1278,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0020196689979457005
+     }
+    },
+    "cap2_k1_io1": {
+     "none": {
+      "wall_s": 3.587797896000211,
+      "stalls": 1279,
+      "stall_s": 1.8641319969970027,
+      "demand_loads": 1279,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 3.582942123999601,
+      "stalls": 1279,
+      "stall_s": 1.8291864370116855,
+      "demand_loads": 1279,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0425654070049859
+     },
+     "freq": {
+      "wall_s": 3.516265837999981,
+      "stalls": 1170,
+      "stall_s": 1.7452540379995298,
+      "demand_loads": 1100,
+      "prefetch_loads": 494,
+      "wasted_loads": 291,
+      "wasted_bytes": 7151616,
+      "predictor_s": 0.03828725799030508
+     },
+     "markov": {
+      "wall_s": 3.4673504960001083,
+      "stalls": 1217,
+      "stall_s": 1.6293541839932004,
+      "demand_loads": 813,
+      "prefetch_loads": 1177,
+      "wasted_loads": 650,
+      "wasted_bytes": 15974400,
+      "predictor_s": 0.04567961300472234
+     },
+     "cerebellum": {
+      "wall_s": 3.3082154470002934,
+      "stalls": 1166,
+      "stall_s": 1.2504142560078435,
+      "demand_loads": 576,
+      "prefetch_loads": 1144,
+      "wasted_loads": 403,
+      "wasted_bytes": 9904128,
+      "predictor_s": 0.27471175598384434
+     },
+     "cerebellum_onehot": {
+      "wall_s": 3.853622206000182,
+      "stalls": 1170,
+      "stall_s": 1.769232548988839,
+      "demand_loads": 924,
+      "prefetch_loads": 1175,
+      "wasted_loads": 759,
+      "wasted_bytes": 18653184,
+      "predictor_s": 0.266510110015588
+     },
+     "oracle": {
+      "wall_s": 2.398594982999839,
+      "stalls": 1227,
+      "stall_s": 0.5849480309939281,
+      "demand_loads": 1,
+      "prefetch_loads": 1278,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.006180036994464899
+     }
+    }
+   }
+  },
+  {
+   "seed": 104,
+   "train_ce": 0.3179164528846741,
+   "expert_usage": [
+    0.118875,
+    0.1485,
+    0.118375,
+    0.1235,
+    0.116875,
+    0.127875,
+    0.13125,
+    0.11475
+   ],
+   "same_as_prev_rate": 0.219777472184023,
+   "hit": {
+    "last": {
+     "top1": 0.219777472184023,
+     "top2": 0.3341667708463558
+    },
+    "freq": {
+     "top1": 0.14426803350418801,
+     "top2": 0.27053381672709087
+    },
+    "markov": {
+     "top1": 0.3825478184773097,
+     "top2": 0.6069508688586073
+    },
+    "cerebellum": {
+     "top1": 0.6224528066008251,
+     "top2": 0.7993499187398425
+    },
+    "cerebellum_onehot": {
+     "top1": 0.25153144143017875,
+     "top2": 0.4455556944618077
+    }
+   },
+   "speed": {
+    "cap2_k1": {
+     "none": {
+      "wall_s": 4.482391216999986,
+      "stalls": 1107,
+      "stall_s": 2.7511437480161476,
+      "demand_loads": 1107,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 4.44660727199971,
+      "stalls": 1107,
+      "stall_s": 2.699362817990732,
+      "demand_loads": 1107,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.043083258006845426
+     },
+     "freq": {
+      "wall_s": 4.845767599000283,
+      "stalls": 1060,
+      "stall_s": 3.025999435005815,
+      "demand_loads": 1006,
+      "prefetch_loads": 459,
+      "wasted_loads": 343,
+      "wasted_bytes": 8429568,
+      "predictor_s": 0.050094610003270645
+     },
+     "markov": {
+      "wall_s": 4.5968067560002055,
+      "stalls": 1082,
+      "stall_s": 2.7884548919978442,
+      "demand_loads": 769,
+      "prefetch_loads": 701,
+      "wasted_loads": 334,
+      "wasted_bytes": 8208384,
+      "predictor_s": 0.047802578987102606
+     },
+     "cerebellum": {
+      "wall_s": 4.483813421999912,
+      "stalls": 1064,
+      "stall_s": 2.4629511089938205,
+      "demand_loads": 528,
+      "prefetch_loads": 971,
+      "wasted_loads": 358,
+      "wasted_bytes": 8798208,
+      "predictor_s": 0.25405037300015465
+     },
+     "cerebellum_onehot": {
+      "wall_s": 4.779756826999801,
+      "stalls": 1026,
+      "stall_s": 2.7722439990116072,
+      "demand_loads": 719,
+      "prefetch_loads": 985,
+      "wasted_loads": 560,
+      "wasted_bytes": 13762560,
+      "predictor_s": 0.21320593399786958
+     },
+     "oracle": {
+      "wall_s": 3.5152251320000687,
+      "stalls": 1105,
+      "stall_s": 1.7189131910113247,
+      "demand_loads": 1,
+      "prefetch_loads": 1106,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0070961789970169775
+     }
+    },
+    "cap3_k2": {
+     "none": {
+      "wall_s": 4.254644724000173,
+      "stalls": 1014,
+      "stall_s": 2.534542883993254,
+      "demand_loads": 1014,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 4.481419466999796,
+      "stalls": 968,
+      "stall_s": 2.663226561992815,
+      "demand_loads": 912,
+      "prefetch_loads": 384,
+      "wasted_loads": 230,
+      "wasted_bytes": 5652480,
+      "predictor_s": 0.045671576000586356
+     },
+     "freq": {
+      "wall_s": 4.557170237000264,
+      "stalls": 933,
+      "stall_s": 2.7422065790028682,
+      "demand_loads": 859,
+      "prefetch_loads": 644,
+      "wasted_loads": 425,
+      "wasted_bytes": 10444800,
+      "predictor_s": 0.03999082000109411
+     },
+     "markov": {
+      "wall_s": 4.773197721000088,
+      "stalls": 959,
+      "stall_s": 2.902228100991124,
+      "demand_loads": 385,
+      "prefetch_loads": 1412,
+      "wasted_loads": 677,
+      "wasted_bytes": 16637952,
+      "predictor_s": 0.05138165000153094
+     },
+     "cerebellum": {
+      "wall_s": 4.644901307999589,
+      "stalls": 905,
+      "stall_s": 2.5857941580052284,
+      "demand_loads": 269,
+      "prefetch_loads": 1458,
+      "wasted_loads": 626,
+      "wasted_bytes": 15384576,
+      "predictor_s": 0.2685192220128556
+     },
+     "cerebellum_onehot": {
+      "wall_s": 4.8867050809999455,
+      "stalls": 935,
+      "stall_s": 2.8518890869931965,
+      "demand_loads": 465,
+      "prefetch_loads": 1373,
+      "wasted_loads": 713,
+      "wasted_bytes": 17522688,
+      "predictor_s": 0.23297308199789768
+     },
+     "oracle": {
+      "wall_s": 3.324007729999721,
+      "stalls": 1009,
+      "stall_s": 1.5299039989868106,
+      "demand_loads": 1,
+      "prefetch_loads": 1013,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.006837024995093088
+     }
+    },
+    "cap2_k1_io0.5": {
+     "none": {
+      "wall_s": 2.72748550399956,
+      "stalls": 1107,
+      "stall_s": 1.0161649859996942,
+      "demand_loads": 1107,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 2.737572068999725,
+      "stalls": 1107,
+      "stall_s": 0.990344085988454,
+      "demand_loads": 1107,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.041001213009622006
+     },
+     "freq": {
+      "wall_s": 2.74630353800012,
+      "stalls": 1024,
+      "stall_s": 0.9525961940053094,
+      "demand_loads": 1023,
+      "prefetch_loads": 485,
+      "wasted_loads": 371,
+      "wasted_bytes": 9117696,
+      "predictor_s": 0.042638674001864274
+     },
+     "markov": {
+      "wall_s": 2.7364261519996944,
+      "stalls": 832,
+      "stall_s": 0.8375026440071451,
+      "demand_loads": 804,
+      "prefetch_loads": 706,
+      "wasted_loads": 360,
+      "wasted_bytes": 8847360,
+      "predictor_s": 0.054765876014243986
+     },
+     "cerebellum": {
+      "wall_s": 2.720470989000205,
+      "stalls": 617,
+      "stall_s": 0.6572398759876705,
+      "demand_loads": 572,
+      "prefetch_loads": 981,
+      "wasted_loads": 406,
+      "wasted_bytes": 9977856,
+      "predictor_s": 0.2537986410020494
+     },
+     "cerebellum_onehot": {
+      "wall_s": 2.8569537270000183,
+      "stalls": 806,
+      "stall_s": 0.7866994610030815,
+      "demand_loads": 782,
+      "prefetch_loads": 997,
+      "wasted_loads": 624,
+      "wasted_bytes": 15335424,
+      "predictor_s": 0.2343119219935943
+     },
+     "oracle": {
+      "wall_s": 1.8233183249999456,
+      "stalls": 39,
+      "stall_s": 0.02822854399573771,
+      "demand_loads": 1,
+      "prefetch_loads": 1106,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0018812030007211433
+     }
+    },
+    "cap2_k1_io1": {
+     "none": {
+      "wall_s": 3.4144877960002304,
+      "stalls": 1107,
+      "stall_s": 1.6405905310002709,
+      "demand_loads": 1107,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.0
+     },
+     "last": {
+      "wall_s": 3.3985146380000515,
+      "stalls": 1107,
+      "stall_s": 1.6139606699985052,
+      "demand_loads": 1107,
+      "prefetch_loads": 0,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.04625773299358116
+     },
+     "freq": {
+      "wall_s": 3.5312828129999616,
+      "stalls": 1046,
+      "stall_s": 1.6831407219938228,
+      "demand_loads": 1006,
+      "prefetch_loads": 460,
+      "wasted_loads": 343,
+      "wasted_bytes": 8429568,
+      "predictor_s": 0.047542160994908045
+     },
+     "markov": {
+      "wall_s": 3.215039419999812,
+      "stalls": 1055,
+      "stall_s": 1.375256385002558,
+      "demand_loads": 770,
+      "prefetch_loads": 702,
+      "wasted_loads": 335,
+      "wasted_bytes": 8232960,
+      "predictor_s": 0.04965270199409133
+     },
+     "cerebellum": {
+      "wall_s": 3.159989160999885,
+      "stalls": 1012,
+      "stall_s": 1.1162438720089085,
+      "demand_loads": 530,
+      "prefetch_loads": 967,
+      "wasted_loads": 358,
+      "wasted_bytes": 8798208,
+      "predictor_s": 0.26727035998919746
+     },
+     "cerebellum_onehot": {
+      "wall_s": 3.421046507000028,
+      "stalls": 995,
+      "stall_s": 1.3580510100186984,
+      "demand_loads": 733,
+      "prefetch_loads": 985,
+      "wasted_loads": 573,
+      "wasted_bytes": 14082048,
+      "predictor_s": 0.25397889400619533
+     },
+     "oracle": {
+      "wall_s": 2.3441735139999764,
+      "stalls": 1062,
+      "stall_s": 0.5425296850085033,
+      "demand_loads": 1,
+      "prefetch_loads": 1106,
+      "wasted_loads": 0,
+      "wasted_bytes": 0,
+      "predictor_s": 0.005618964998120646
+     }
+    }
+   }
+  }
+ ]
+}
