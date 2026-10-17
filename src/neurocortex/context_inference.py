@@ -17,13 +17,38 @@ import math
 import torch
 import torch.nn.functional as F
 
-from .basal_ganglia_core import ParitySpec, make_batch
+from dataclasses import dataclass
+
+from .basal_ganglia_core import ParitySpec
+from .basal_ganglia_core import make_batch as _parity_batch
 from .hippocampus_replay import make_model
 
 CONDITIONS = ("oracle", "none", "inferred", "random")
 
 
-def run_context_sequence(condition: str, specs: list[ParitySpec], hidden_dim: int, generator: torch.Generator,
+@dataclass(frozen=True)
+class FlipSpec:
+    """似たタスク（12.6.108節）。正解は b[a] XOR b[b] を基本とし、flip の全ビットが +1 の領域でだけ反転する。
+    反転領域の割合は 2^-len(flip)。flip が空なら基本タスクそのもの。"""
+
+    n_inputs: int = 8
+    relevant: tuple[int, int] = (0, 1)
+    flip: tuple[int, ...] = ()
+
+
+def make_batch(spec, batch_size: int, generator: torch.Generator) -> tuple[torch.Tensor, torch.Tensor]:
+    """ParitySpec はステップ10と同じ乱数消費で、FlipSpec は同じ入力に反転領域を適用して生成する。"""
+    if isinstance(spec, ParitySpec):
+        return _parity_batch(spec, batch_size, generator)
+    bits = torch.randint(0, 2, (batch_size, spec.n_inputs), generator=generator).float() * 2 - 1
+    a, b = spec.relevant
+    labels = (bits[:, a] > 0) ^ (bits[:, b] > 0)
+    if spec.flip:
+        labels = labels ^ (bits[:, list(spec.flip)] > 0).all(dim=1)
+    return bits, labels.long()
+
+
+def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator: torch.Generator,
                          eval_generator: torch.Generator, n_slots: int | None = None, tau: float = 0.4,
                          ema: float = 0.9, pretrain_steps: int = 500, pretrain_weight_decay: float = 0.01,
                          steps: int = 500, batch: int = 64, lr: float = 0.05, buffer_size: int = 50,
