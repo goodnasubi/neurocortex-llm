@@ -64,7 +64,10 @@ PHASES = {
                       for sc, n in ((STORE, "gated_store"), ({**STORE, "diag_oracle_filter": "new"}, "oracle_filter_new"),
                                     ({**STORE, "diag_oracle_filter": "old"}, "oracle_filter_old"),
                                     ({**STORE, "diag_oracle_filter": "both"}, "oracle_filter_both"),
-                                    (RESET, "gated_store_reset"))
+                                    (RESET, "gated_store_reset"),
+                                    ({**RESET, "diag_oracle_filter": "new"}, "reset_oracle_filter_new"),
+                                    ({**RESET, "diag_oracle_filter": "old"}, "reset_oracle_filter_old"),
+                                    ({**RESET, "diag_oracle_filter": "both"}, "reset_oracle_filter_both"))
                       for L, s in ((250, 500), (500, 500), (500, 1000))],
     "residual_fix": [(n, "inferred_gated", L, s, sc)
                      for sc, n in ((STORE, "gated_store"), (RESET, "gated_store_reset"),
