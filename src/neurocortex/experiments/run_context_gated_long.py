@@ -17,7 +17,19 @@
         加えたもの（修正2）を L = 0〜500 で 12.6.116節の機構と比べる。
     --phase residual_eval（gated_residual_eval.json）… 確定後に評価用シードで一度だけ測る。
 
-開発用シード 100〜104 のみを --phase prelim / diag / fix / residual_diag / residual_fix で使う。
+12.6.125節（最適化器の作り直しの代わりに、驚きに応じた可塑性の調節 plasticity_cap）:
+    --phase neuromod_fix（gated_neuromod_fix_dev.json）… 12.6.121節の確定機構（作り直し＋学習時の整合フィルタ）、
+        作り直しなし、作り直しの代わりに plasticity_cap を L = 0〜500 で比べる。
+    --phase neuromod_sgd（gated_neuromod_sgd_dev.json）… Adam 以外（モーメントなし SGD）でも作成直後の過大な更新が
+        起きるか、作り直し・plasticity_cap が効くかを確かめる。
+    --phase neuromod_fix2 / neuromod_fix3（gated_neuromod_fix2_dev.json / gated_neuromod_fix3_dev.json）… 修正2
+        （ū に縮める前の値を使う）と修正3（ρ = 2.0）。
+    --phase neuromod_ctrl（gated_neuromod_ctrl_dev.json）… 統制。作り直し・調節なしで学習率だけを下げる。
+    --phase neuromod_eval（gated_neuromod_eval.json）… 確定後に評価用シードで一度だけ測る。
+    --phase neuromod_eval_ctrl（gated_neuromod_eval_ctrl.json）… 統制（学習率 0.01）を評価用シードで一度だけ測る。
+
+開発用シード 100〜104 のみを --phase prelim / diag / fix / residual_diag / residual_fix / neuromod_fix〜fix3 /
+neuromod_sgd / neuromod_ctrl で使う。
 
 使い方:
     PYTHONPATH=src python -m neurocortex.experiments.run_context_gated_long --phase diag
@@ -49,6 +61,13 @@ FINAL = STORE  # 開発用シードで確定した機構（12.6.116節、修正1
 RESET = {"store_consistent": True, "reset_opt_on_new": True}  # 12.6.121節の修正1
 RESET_TRAIN = {**RESET, "train_consistent": True}  # 12.6.121節の修正2
 FINAL_RESIDUAL = RESET_TRAIN  # 開発用シードで確定した機構（12.6.121節、修正2）
+TRAIN = {"store_consistent": True, "train_consistent": True}  # 作り直しなし
+CAP = {**TRAIN, "plasticity_cap": 1.5}  # 12.6.125節の修正1（作り直しの代わり）
+CAP_RAW = {**CAP, "plasticity_ref": "raw"}  # 12.6.125節の修正2
+CAP2 = {**TRAIN, "plasticity_cap": 2.0}  # 12.6.125節の修正3
+FINAL_NEUROMOD = CAP2  # 開発用シードで確定した機構（12.6.125節、修正3）
+SGD_LR = 0.5
+SGD = {"optimizer": "sgd", "lr": SGD_LR}
 LS = ((0, 500), (100, 500), (250, 500), (500, 500), (500, 1000))
 PHASES = {
     "prelim": [("gated", "inferred_gated", 250, 500, NONE), ("gated", "inferred_gated", 500, 500, NONE),
@@ -74,6 +93,25 @@ PHASES = {
                                    (RESET_TRAIN, "gated_store_reset_train")) for L, s in LS],
     "residual_eval": [(n, "inferred_gated", L, s, sc)
                       for sc, n in ((STORE, "gated_store"), (FINAL_RESIDUAL, "gated_store_reset_train")) for L, s in LS],
+    "neuromod_fix": [(n, "inferred_gated", L, s, sc)
+                     for sc, n in ((FINAL_RESIDUAL, "gated_store_reset_train"), (TRAIN, "gated_store_train"),
+                                   (CAP, "gated_store_cap_train")) for L, s in LS],
+    "neuromod_fix2": [(n, "inferred_gated", L, s, sc) for sc, n in ((CAP_RAW, "gated_store_capraw_train"),) for L, s in LS],
+    "neuromod_fix3": [(n, "inferred_gated", L, s, sc) for sc, n in ((CAP2, "gated_store_cap2_train"),) for L, s in LS],
+    "neuromod_sgd": [(n, "inferred_gated", L, s, sc)
+                     for sc, n in (({**TRAIN, **SGD}, "sgd_store_train"),
+                                   ({**FINAL_RESIDUAL, **SGD}, "sgd_store_reset_train"),
+                                   ({**FINAL_NEUROMOD, **SGD}, "sgd_store_cap2_train")) for L, s in LS],
+    # 統制: 可塑性の調節の効果が、全体の学習率を下げただけの効果かどうか（作り直し・調節なし）
+    "neuromod_ctrl": [(n, "inferred_gated", L, s, sc)
+                      for sc, n in (({**TRAIN, "lr": 0.02}, "gated_store_train_lr0.02"),
+                                    ({**TRAIN, "lr": 0.01}, "gated_store_train_lr0.01")) for L, s in LS],
+    # 統制（学習率だけを下げる）を評価用シードで一度だけ測る。neuromod_eval の結果を見る前に追加を決めた
+    "neuromod_eval_ctrl": [(n, "inferred_gated", L, s, sc)
+                           for sc, n in (({**TRAIN, "lr": 0.01}, "gated_store_train_lr0.01"),) for L, s in LS],
+    "neuromod_eval": [(n, "inferred_gated", L, s, sc)
+                      for sc, n in ((FINAL_RESIDUAL, "gated_store_reset_train"), (FINAL_NEUROMOD, "gated_store_cap2_train"))
+                      for L, s in LS],
 }
 
 
@@ -189,15 +227,22 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--out", type=Path)
     args = ap.parse_args()
-    seeds = args.seeds or (EVAL_SEEDS if args.phase in ("eval", "residual_eval") else DEV_SEEDS)
+    seeds = args.seeds or (EVAL_SEEDS if args.phase in ("eval", "residual_eval", "neuromod_eval", "neuromod_eval_ctrl")
+                          else DEV_SEEDS)
     out_name = {"prelim": "gated_long_dev", "diag": "gated_long_diag", "fix": "gated_long_fix_dev",
                 "eval": "gated_long_eval", "residual_diag": "gated_residual_diag",
-                "residual_fix": "gated_residual_fix_dev", "residual_eval": "gated_residual_eval"}[args.phase]
+                "residual_fix": "gated_residual_fix_dev", "residual_eval": "gated_residual_eval",
+                "neuromod_fix": "gated_neuromod_fix_dev", "neuromod_fix2": "gated_neuromod_fix2_dev",
+                "neuromod_fix3": "gated_neuromod_fix3_dev",
+                "neuromod_sgd": "gated_neuromod_sgd_dev",
+                "neuromod_ctrl": "gated_neuromod_ctrl_dev",
+                "neuromod_eval": "gated_neuromod_eval", "neuromod_eval_ctrl": "gated_neuromod_eval_ctrl"}[args.phase]
     out_path = args.out or Path(f"results/context_inference/{out_name}.json")
     jobs = [(*cfg, s) for cfg in PHASES[args.phase] for s in seeds]
     with Pool(args.workers) as pool:
         results = pool.map(run_one, jobs)
-    sec = "12.6.121節" if args.phase.startswith("residual") else "12.6.116節"
+    sec = ("12.6.121節" if args.phase.startswith("residual") else
+           "12.6.125節" if args.phase.startswith("neuromod") else "12.6.116節")
     out: dict = {"環境": env_info(), "説明": f"長い移行期間での限界の原因の切り分けと修正（{sec}）。phase={args.phase}",
                  "seeds": seeds, "runs": {}}
     keys = ("ACC", "BWT", "LA", "n_contexts", "distinct", "buffer_contamination", "buffer_conflict", "final_acc_native_ctx",
