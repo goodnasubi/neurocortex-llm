@@ -95,7 +95,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          com_window: int = 0, reliability_lapse: bool = True,
                          reliability_source: str = "gated", reliability_holdout: int = 0,
                          cue_weight: str = "", active_pool: int = 0, active_source: str = "task",
-                         active_verify: int = 0) -> dict:
+                         active_verify: int = 0, verify_mode: str = "top2") -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -205,6 +205,21 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
       active_verify = n > 0 … 打ち切りの閾値に達したら、先頭の文脈と2番目の文脈の2つだけを等しい重みで区別する
           手がかり（先頭の仮説を最も反証しうる手がかり）を n 個観測してから決める。その間に閾値を割るか先頭が
           入れ替われば、通常の能動的な蓄積に戻り、再び閾値に達したら検証をやり直す。観測は最大 cue_n 個。
+
+    海馬のバッファの候補の切り分けと、対立仮説が複数残る場面の検証（12.6.151節。既定では 12.6.147節と同じ挙動）:
+      active_source = "holdout" … 候補を、リプレイに使わない保留サンプル（reliability_holdout > 0 で文脈ごとに保存。
+          バッファと同じ時点・同じ整合フィルタで取る）から取り出す。"replay" との違いは、リプレイで学習し続けたか
+          どうかだけ。reliability_holdout > 0 では、evidence_reliability によらず保留サンプルを保存する（学習・乱数の
+          消費には影響しない）。
+      verify_mode … active_verify の検証の手がかりの作り方。"top2"（既定。12.6.147節）は先頭と2番目、"all" は先頭に
+          0.5、残りの全文脈に 0.5 を等分した事前分布で区別する手がかり（全対立仮説をまとめて反証しうる観測）、"each" は
+          先頭以外の文脈を事後確率の順に1つずつ、先頭とその文脈だけを区別する手がかりで検証する（対立仮説ごとに反証を
+          試みる。検証の手がかりは active_verify·(文脈の数 − 1) 個）。
+      能動的な選択（active_pool > 0）では、最初に閾値に達した時点の事後分布について、先頭以外の質量のうち2番目の
+      文脈が占める割合（"rival_share"）と、文脈の事後確率の順（"order"）を記録する（selection_trials > 0 では
+      "selection_rival_share"・"selection_order"）。diagnostics = True では "origin_acc"（最終モデルで、各タスク j を
+      各文脈 c で、入力の出どころ（own_buf: c のバッファ、other_buf: 他の文脈のバッファ、holdout: c の保留サンプル）
+      ごとに、タスク j の正解で測った正確度）を加える。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -228,10 +243,14 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         raise ValueError("cue_weight は ''・'info'・'info_post'、active_pool は 0 以上")
     if (cue_weight or active_pool) and (cue_select != "evidence" or evidence_reliability or evidence_com):
         raise ValueError("cue_weight / active_pool は cue_select='evidence'（信頼性・乗り換えなし）でのみ使う")
-    if active_source not in ("task", "uniform", "replay", "search") or active_verify < 0:
-        raise ValueError("active_source は task・uniform・replay・search、active_verify は 0 以上")
+    if active_source not in ("task", "uniform", "replay", "search", "holdout") or active_verify < 0:
+        raise ValueError("active_source は task・uniform・replay・search・holdout、active_verify は 0 以上")
     if (active_source != "task" or active_verify) and active_pool <= 0:
         raise ValueError("active_source / active_verify は active_pool > 0 でのみ使う")
+    if verify_mode not in ("top2", "all", "each"):
+        raise ValueError("verify_mode は top2・all・each")
+    if active_source == "holdout" and reliability_holdout <= 0:
+        raise ValueError("active_source='holdout' は reliability_holdout > 0 でのみ使う")
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
     if split_ctx_lr > 0:
@@ -366,14 +385,23 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         avail = torch.ones(bits.shape[0], dtype=torch.bool)
         seen: list[int] = []
         seen_pts = torch.zeros(0, bits.shape[1])
-        verify_left, leader0 = 0, -1
+        verify_left, leader0, verify_total = 0, -1, 0
+        rivals: list[int] = []
+        first_hit: dict = {}
         for t in range(cue_n):
             if active_pool > 0:
                 post = F.softmax(cum, dim=0)
                 prior = post
-                if verify_left > 0:  # 先頭と2番目だけを区別する手がかり
+                if verify_left > 0:  # 先頭と対立仮説を区別する手がかり（12.6.147・151節）
                     prior = torch.zeros(len(used))
-                    prior[post.topk(2).indices] = 0.5
+                    if verify_mode == "all":
+                        prior[:] = 0.5 / (len(used) - 1)
+                        prior[leader0] = 0.5
+                    elif verify_mode == "each":
+                        prior[leader0] = 0.5
+                        prior[rivals[(verify_total - verify_left) % len(rivals)]] = 0.5
+                    else:
+                        prior[post.topk(2).indices] = 0.5
                 gain = cue_information(probs, prior)
                 gain[~avail] = -math.inf
                 if active_source == "search" and seen_pts.numel():
@@ -411,10 +439,19 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 elif verify_left == 0:
                     break
             elif conf:
+                if not first_hit:
+                    post = F.softmax(cum, dim=0)
+                    srt = post.argsort(descending=True)
+                    first_hit.update(rival_share=float(post[srt[1]] / post[srt[1:]].sum().clamp_min(1e-300)),
+                                     order=[used[int(i_)] for i_ in srt])
                 if active_verify == 0:
                     break
-                verify_left, leader0 = active_verify, lead
-        sel_info.update(info=float(info_u[seen].mean()))
+                leader0 = lead
+                rivals = [int(i_) for i_ in F.softmax(cum, dim=0).argsort(descending=True)[1:]]
+                verify_total = active_verify * (len(used) - 1) if verify_mode == "each" else active_verify
+                verify_left = verify_total
+        sel_info.update(info=float(info_u[seen].mean()), rival_share=first_hit.get("rival_share"),
+                        order=first_hit.get("order"))
         return used[int(cum.argmax())], len(seen)
 
     revised = cue_select == "evidence" and (evidence_reliability or evidence_com)
@@ -499,8 +536,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         if informed and active_source in ("uniform", "search"):
             cb = torch.randint(0, 2, (active_pool * cue_n, specs[j].n_inputs), generator=active_gen).float() * 2 - 1
             return cb, task_labels(specs[j], cb)
-        if informed and active_source == "replay":
-            pool = torch.cat(buf_bits) if buf_bits else cb
+        if informed and active_source in ("replay", "holdout"):
+            src_bits = buf_bits if active_source == "replay" else hold_bits
+            pool = torch.cat(src_bits) if src_bits else cb
             cb = pool[torch.randperm(pool.shape[0], generator=active_gen)[:active_pool * cue_n]]
             return cb, task_labels(specs[j], cb)
         if informed and active_pool > 1:
@@ -667,7 +705,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 buf_ctx.append(ctx_in[:n].long() if isinstance(ctx_in, torch.Tensor)
                                else torch.full((n,), ctx, dtype=torch.long))
                 buf_src.append(src[:n].long() if src is not None else torch.full((n,), k, dtype=torch.long))
-            if reliability_holdout > 0 and evidence_reliability and revised:
+            if reliability_holdout > 0:
                 n0 = max(n, 0)
                 m = min(reliability_holdout - hold_count.get(key, 0), labels.shape[0] - n0)
                 if m > 0:
@@ -711,6 +749,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             rel_now.update(context_reliability())
         hits = 0
         sel_inf: list[list[float]] = [[] for _ in range(T)]
+        sel_share: list[list] = [[] for _ in range(T)]
+        sel_order: list[list] = [[] for _ in range(T)]
         for j in range(T):
             sel_choices.append([])
             sel_cues.append([])
@@ -721,6 +761,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 ctx, n_cues = select_ctx(cb, cl)
                 if informed:
                     sel_inf[j].append(sel_info["info"])
+                    sel_share[j].append(sel_info["rival_share"])
+                    sel_order[j].append(sel_info["order"])
                 hits += int(ctx == majority[j])
                 sel_choices[j].append(ctx)
                 sel_cues[j].append(n_cues)
@@ -734,6 +776,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         out.update(selection_choices=sel_choices, selection_cues=sel_cues)
         if informed:
             out.update(selection_info=sel_inf)
+            if active_pool > 0:
+                out.update(selection_rival_share=sel_share, selection_order=sel_order)
         if revised:
             out.update(selection_observed=sel_extra["observed"], selection_switches=sel_extra["switches"],
                        selection_first=sel_extra["first"])
@@ -743,6 +787,20 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         bb = torch.cat(buf_bits) if buf_bits else torch.zeros(0)
         bl = torch.cat(buf_labels) if buf_labels else torch.zeros(0, dtype=torch.long)
         diag["buffer"] = {"bits": bb, "labels": bl, "ctx": bc, "src": bs}
+        if condition in ("inferred", "inferred_gated"):
+            # 12.6.151節: 入力の出どころごとの正確度（正解は評価するタスク j の規則）
+            hc = torch.cat(hold_ctx) if hold_ctx else torch.zeros(0, dtype=torch.long)
+            hb = torch.cat(hold_bits) if hold_bits else torch.zeros(0, n_bits)
+            bb_ = bb if bb.numel() else torch.zeros(0, n_bits)
+
+            @torch.no_grad()
+            def acc_on(x: torch.Tensor, j: int, c: int) -> float | None:
+                if x.shape[0] == 0:
+                    return None
+                return float((model(with_ctx(x, c)).argmax(-1) == task_labels(specs[j], x)).float().mean())
+
+            diag["origin_acc"] = [[{"own_buf": acc_on(bb_[bc == c], j, c), "other_buf": acc_on(bb_[bc != c], j, c),
+                                    "holdout": acc_on(hb[hc == c], j, c)} for c in used] for j in range(T)]
         diag["buffer_src"] = {int(c): {int(t): int(((bc == c) & (bs == t)).sum()) for t in bs[bc == c].unique()}
                               for c in bc.unique()}
         out["diag"] = diag
