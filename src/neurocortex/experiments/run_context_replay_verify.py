@@ -130,8 +130,98 @@ SUMMARY_KEYS = ("ACC", "selection_acc", "cues_used", "expected_acc", "native_acc
                 "nat_other_buf", "nat_holdout", "rival_share", "native_second_frac", "wrong_native_rank")
 
 
+def _m(runs: dict, key: str, k: str) -> float | None:
+    v = runs.get(key, {}).get("summary", {}).get(k)
+    return v["mean"] if v else None
+
+
+def _spearman(x: list[float], y: list[float]) -> float:
+    rank = lambda v: torch.tensor(v).argsort().argsort().float()  # noqa: E731  （同順位はほぼない）
+    rx, ry = rank(x), rank(y)
+    rx, ry = rx - rx.mean(), ry - ry.mean()
+    return float((rx * ry).sum() / (rx.norm() * ry.norm()))
+
+
+def analyze_replay(path: Path) -> dict:
+    """12.6.151節の H1〜H3 の判定に使う量。"""
+    runs = json.loads(path.read_text(encoding="utf-8"))["runs"]
+    combos = []
+    for mech in REPLAY_MECHS:
+        for fam in REPLAY_FAMILIES:
+            for L in LS:
+                c = f"{fam}/{mech}_L{L}"
+                k16 = f"{c}/cue16/active"
+                row = {"combo": c, **{k: _m(runs, k16, k) for k in ("nat_own_buf", "nat_fresh", "nat_other_buf",
+                                                                      "nat_holdout", "native_acc")}}
+                row["gap"] = row["nat_own_buf"] - row["nat_fresh"]
+                for n in REPLAY_CUE_NS:
+                    for sel in REPLAY_SELECTS:
+                        row[f"{sel}_{n}"] = _m(runs, f"{c}/cue{n}/{sel}", "selection_acc")
+                        row[f"{sel}_{n}_exp"] = _m(runs, f"{c}/cue{n}/{sel}", "expected_acc")
+                    row[f"gain_replay_{n}"] = row[f"gen_replay_{n}"] - row[f"active_{n}"]
+                    row[f"gain_holdout_{n}"] = row[f"gen_holdout_{n}"] - row[f"active_{n}"]
+                combos.append(row)
+    over = [r for r in combos if r["gap"] >= 0.10]
+    intact = [r for r in combos if r["gap"] <= 0.03]
+    rep = [r for r in over if r["combo"].split("_L")[0] != "flip_m1/reset"]
+    avg = lambda rs, k: sum(r[k] for r in rs) / len(rs) if rs else None  # noqa: E731
+    out = {"combos": combos, "n_over": len(over), "n_intact": len(intact), "n_replication": len(rep),
+           "over": [r["combo"] for r in over], "replication": [r["combo"] for r in rep]}
+    for n in (8, 16):
+        out[f"over_gain_replay_{n}"] = avg(over, f"gain_replay_{n}")
+        out[f"rep_gain_replay_{n}"] = avg(rep, f"gain_replay_{n}")
+        out[f"intact_gain_replay_{n}"] = avg(intact, f"gain_replay_{n}")
+        out[f"over_gain_holdout_{n}"] = avg(over, f"gain_holdout_{n}")
+    out["spearman_gap_gain"] = _spearman([r["gap"] for r in combos],
+                                         [(r["gain_replay_8"] + r["gain_replay_16"]) / 2 for r in combos])
+    for k in ("nat_own_buf", "nat_fresh", "nat_other_buf", "nat_holdout"):
+        out[f"over_{k}"] = avg(over, k)
+    return out
+
+
+def frontier(points: list[tuple[float, float]], x: float) -> float:
+    """(手がかりの数, 選択精度) の点を手がかりの数の順に結んだ折れ線の x での値（範囲の外は端の値）。"""
+    pts = sorted(points)
+    if x <= pts[0][0]:
+        return pts[0][1]
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        if x <= x1:
+            return y0 + (y1 - y0) * (x - x0) / (x1 - x0) if x1 > x0 else max(y0, y1)
+    return pts[-1][1]
+
+
+def analyze_verify(path: Path) -> dict:
+    """12.6.151節の場面の分類と H4・H5 の判定に使う量。"""
+    runs = json.loads(path.read_text(encoding="utf-8"))["runs"]
+    out: dict = {}
+    for fam, mech in VERIFY_SCENARIOS:
+        rows = []
+        for L in LS:
+            for n in VERIFY_CUE_NS:
+                c = f"{fam}/{mech}_L{L}/cue{n}"
+                row = {"L": L, "cue": n, **{sel: _m(runs, f"{c}/{sel}", "selection_acc") for sel in VERIFY_SELECTS},
+                       **{f"{sel}_cues": _m(runs, f"{c}/{sel}", "cues_used") for sel in VERIFY_SELECTS},
+                       "rival_share": _m(runs, f"{c}/active", "rival_share"),
+                       "native_second_frac": _m(runs, f"{c}/active", "native_second_frac"),
+                       "wrong_native_rank": _m(runs, f"{c}/active", "wrong_native_rank")}
+                pts = [(row[f"{s}_cues"], row[s]) for s in VERIFY_SELECTS if s == "active" or s.startswith("cautious")]
+                for v in ("verify_top2", "verify_all", "verify_each"):
+                    row[f"{v}_over_frontier"] = row[v] - frontier(pts, row[f"{v}_cues"])
+                rows.append(row)
+        big = [r for r in rows if r["cue"] in (8, 16)]
+        avg = lambda k: (sum(r[k] for r in big if r[k] is not None)  # noqa: E731
+                         / max(1, sum(r[k] is not None for r in big)))
+        s = {k: avg(k) for k in ("rival_share", "native_second_frac", "wrong_native_rank", "verify_top2_over_frontier",
+                                 "verify_all_over_frontier", "verify_each_over_frontier")}
+        s["each_minus_top2"] = avg("verify_each") - avg("verify_top2")
+        s["dispersed"] = s["rival_share"] <= 0.7 and s["native_second_frac"] <= 0.7
+        out[f"{fam}/{mech}"] = {"summary": s, "rows": rows}
+    return out
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--analyze", type=Path, help="結果ファイルを集計して判定に使う量を表示する")
     ap.add_argument("--part", choices=tuple(PARTS), default="replay")
     ap.add_argument("--phase", choices=("dev", "eval"), default="dev")
     ap.add_argument("--seeds", type=int, nargs="+")
@@ -139,6 +229,10 @@ def main() -> None:
     ap.add_argument("--selects", nargs="+", default=None)
     ap.add_argument("--out", type=Path)
     args = ap.parse_args()
+    if args.analyze:
+        res = (analyze_replay if args.part == "replay" else analyze_verify)(args.analyze)
+        print(json.dumps(res, ensure_ascii=False, indent=1))
+        return
     table = PARTS[args.part]
     selects = args.selects or list(table)
     seeds = args.seeds or (EVAL_SEEDS if args.phase == "eval" else DEV_SEEDS)
