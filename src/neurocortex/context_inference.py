@@ -72,7 +72,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          diagnostics: bool = False, trace_every: int = 0, diag_oracle_filter: str = "",
                          reset_opt_on_new: bool = False, plasticity_cap: float = 0.0, plasticity_ema: float = 0.99,
                          plasticity_ref: str = "capped", optimizer: str = "adam", split_window: int = 0,
-                         split_ctx_gain: float = 1.0, split_shared_gain: float = 1.0) -> dict:
+                         split_ctx_gain: float = 1.0, split_shared_gain: float = 1.0,
+                         split_shared_lr_floor: float = 0.0, split_ctx_lr: float = 0.0) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -120,6 +121,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     新しい文脈を作った時点から W ステップの間、各最適化ステップの更新（パラメータの変化）に利得をかける。
     新しい文脈の one-hot 入力からの重み（fc1.weight の該当列）には split_ctx_gain、それ以外（共有の重みと
     既存の文脈の列）には split_shared_gain。最適化器の内部状態は変えない。既定の 0 では従来と同じ挙動。
+
+    学習率への依存の改善（12.6.132節。どちらも既定の 0 では無効）:
+      split_shared_lr_floor = f > 0 … 共有の重みの実効学習率 lr·g_shared に下限 min(f, lr) を設ける。利得は
+          max(split_shared_gain, min(1, f / lr)) になる（土台の学習率より大きくはしない）。
+      split_ctx_lr = η > 0 … 新しい文脈の列の利得を、土台の学習率に対する相対値ではなく実効学習率 η で決める
+          （利得 η / lr。split_ctx_gain の代わり）。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -127,8 +134,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         raise ValueError(optimizer)
     if plasticity_ref not in ("capped", "raw"):
         raise ValueError(plasticity_ref)
-    if split_window < 0 or split_ctx_gain < 0 or split_shared_gain < 0:
-        raise ValueError("split_window / split_ctx_gain / split_shared_gain は 0 以上")
+    if min(split_window, split_ctx_gain, split_shared_gain, split_shared_lr_floor, split_ctx_lr) < 0:
+        raise ValueError("split_window / split_ctx_gain / split_shared_gain / split_shared_lr_floor / split_ctx_lr は 0 以上")
+    if split_shared_lr_floor > 0:
+        split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
+    if split_ctx_lr > 0:
+        split_ctx_gain = split_ctx_lr / lr
     T = len(specs)
     C = 0 if condition == "none" else (T if condition == "oracle" else (n_slots or T + 2))
     model = make_model(specs[0].n_inputs + C, hidden_dim)
