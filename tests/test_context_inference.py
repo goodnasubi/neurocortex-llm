@@ -248,3 +248,34 @@ def test_split_plasticity_gates_updates_after_creation():
     win = lambda r: [u[4] for u in r["diag"]["upd"] if u[0] == k0 and s0 <= u[1] < s0 + W]  # noqa: E731
     assert r1["assign"][:i0 + 1] == base["assign"][:i0 + 1]
     assert win(r1)[0] < win(base)[0]
+
+
+def test_split_lr_floor_and_ctx_lr():
+    # 12.6.132節: 既定（0）は無効。下限は lr·g_shared が下限以上なら効かず、ctx_lr は利得 η / lr と同じ
+    on = dict(split_window=10, split_ctx_gain=2.0, split_shared_gain=0.2)
+    base = _run("inferred_gated", **SPLIT_KW, **on)
+    assert _run("inferred_gated", **SPLIT_KW, **on, split_shared_lr_floor=0.0, split_ctx_lr=0.0)["R"] == base["R"]
+    # lr = 0.05, g_shared = 0.2 → 実効 0.01。下限 0.01 では同じ
+    assert _run("inferred_gated", **SPLIT_KW, **on, split_shared_lr_floor=0.01)["R"] == base["R"]
+    # 下限 0.05（= lr）は g_shared = 1 と同じ。下限が lr より大きくても 1 を超えない
+    g1 = _run("inferred_gated", **SPLIT_KW, **{**on, "split_shared_gain": 1.0})["R"]
+    assert _run("inferred_gated", **SPLIT_KW, **on, split_shared_lr_floor=0.05)["R"] == g1
+    assert _run("inferred_gated", **SPLIT_KW, **on, split_shared_lr_floor=0.5)["R"] == g1
+    # ctx_lr = 0.1 は lr = 0.05 で g_ctx = 2 と同じ
+    assert _run("inferred_gated", **SPLIT_KW, **{**on, "split_ctx_gain": 1.0}, split_ctx_lr=0.1)["R"] == base["R"]
+    for bad in (dict(split_shared_lr_floor=-0.1), dict(split_ctx_lr=-0.1)):
+        with pytest.raises(ValueError):
+            _run("inferred_gated", **bad)
+
+
+def test_split_generalize_labels_match_make_batch():
+    # 12.6.131節: 汎化の集計で使う正解の再計算が make_batch と一致する（FlipSpec・CueSpec・ParitySpec）
+    from neurocortex.context_inference import make_batch
+    from neurocortex.experiments.run_context_split_generalize import family_specs, true_labels
+    g = torch.Generator().manual_seed(0)
+    for fam in ("parity", "flip_m1", "flip_m3", "cue_q0.9", "cuen4"):
+        specs, extra = family_specs(fam)
+        assert len(specs) == 4 and set(extra) <= {"cue_n"}
+        for spec in specs:
+            bits, labels = make_batch(spec, 256, g)
+            assert torch.equal(true_labels(spec, bits), labels)

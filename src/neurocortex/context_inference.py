@@ -72,7 +72,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          diagnostics: bool = False, trace_every: int = 0, diag_oracle_filter: str = "",
                          reset_opt_on_new: bool = False, plasticity_cap: float = 0.0, plasticity_ema: float = 0.99,
                          plasticity_ref: str = "capped", optimizer: str = "adam", split_window: int = 0,
-                         split_ctx_gain: float = 1.0, split_shared_gain: float = 1.0) -> dict:
+                         split_ctx_gain: float = 1.0, split_shared_gain: float = 1.0,
+                         split_shared_lr_floor: float = 0.0, split_ctx_lr: float = 0.0,
+                         cue_select: str = "batch", evidence_lapse: float = 0.1, evidence_alpha: float = 0.01) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -120,6 +122,21 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     新しい文脈を作った時点から W ステップの間、各最適化ステップの更新（パラメータの変化）に利得をかける。
     新しい文脈の one-hot 入力からの重み（fc1.weight の該当列）には split_ctx_gain、それ以外（共有の重みと
     既存の文脈の列）には split_shared_gain。最適化器の内部状態は変えない。既定の 0 では従来と同じ挙動。
+
+    学習率への依存の改善（12.6.132節。どちらも既定の 0 では無効）:
+      split_shared_lr_floor = f > 0 … 共有の重みの実効学習率 lr·g_shared に下限 min(f, lr) を設ける。利得は
+          max(split_shared_gain, min(1, f / lr)) になる（土台の学習率より大きくはしない）。
+      split_ctx_lr = η > 0 … 新しい文脈の列の利得を、土台の学習率に対する相対値ではなく実効学習率 η で決める
+          （利得 η / lr。split_ctx_gain の代わり）。
+
+    cue_select はテスト時の文脈の選択の規則（inferred / inferred_gated のみ。12.6.135節）。
+      "batch"（既定）… cue_n 個の手がかりの平均損失が最小の文脈を1回で選ぶ（従来と同じ）。
+      "evidence" … 手がかりを1個ずつ観測し、文脈ごとの対数尤度 log((1 − ε)·p + ε/K)（ε = evidence_lapse,
+          K はクラス数）を積み上げる（一様な事前分布）。最大の事後確率が 1 − evidence_alpha に達した時点で決め、
+          達しなければ cue_n 個を使い切った時点で事後確率が最大の文脈に決める（逐次確率比検定, Gold & Shadlen 2007）。
+      どちらも手がかりの生成（乱数の消費）は同じ。diagnostics = True では "cues_used"（chosen と同じ形の、決定まで
+      に使った手がかりの数）を加える。selection_trials > 0 では "selection_choices"（タスクごとの試行ごとの選択）と
+      "selection_cues"（同じく手がかりの数）も返す。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -127,8 +144,16 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         raise ValueError(optimizer)
     if plasticity_ref not in ("capped", "raw"):
         raise ValueError(plasticity_ref)
-    if split_window < 0 or split_ctx_gain < 0 or split_shared_gain < 0:
-        raise ValueError("split_window / split_ctx_gain / split_shared_gain は 0 以上")
+    if min(split_window, split_ctx_gain, split_shared_gain, split_shared_lr_floor, split_ctx_lr) < 0:
+        raise ValueError("split_window / split_ctx_gain / split_shared_gain / split_shared_lr_floor / split_ctx_lr は 0 以上")
+    if cue_select not in ("batch", "evidence"):
+        raise ValueError(cue_select)
+    if not (0.0 <= evidence_lapse <= 1.0 and 0.0 <= evidence_alpha < 1.0):
+        raise ValueError("evidence_lapse は [0, 1]、evidence_alpha は [0, 1)")
+    if split_shared_lr_floor > 0:
+        split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
+    if split_ctx_lr > 0:
+        split_ctx_gain = split_ctx_lr / lr
     T = len(specs)
     C = 0 if condition == "none" else (T if condition == "oracle" else (n_slots or T + 2))
     model = make_model(specs[0].n_inputs + C, hidden_dim)
@@ -147,13 +172,29 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     def loss_under(bits: torch.Tensor, labels: torch.Tensor, ctx: torch.Tensor | int) -> float:
         return float(F.cross_entropy(model(with_ctx(bits, ctx)), labels))
 
+    @torch.no_grad()
+    def select_ctx(bits: torch.Tensor, labels: torch.Tensor) -> tuple[int, int]:
+        """手がかりから文脈を選ぶ。戻り値は (選んだ文脈, 決定までに使った手がかりの数)。"""
+        if cue_select == "batch":
+            return min(used, key=lambda c: loss_under(bits, labels, c)), bits.shape[0]
+        ll = []
+        for c in used:
+            p = F.softmax(model(with_ctx(bits, c)), dim=-1)
+            p = (1 - evidence_lapse) * p + evidence_lapse / p.shape[-1]
+            ll.append(torch.log(p.gather(1, labels[:, None])[:, 0]))
+        cum = torch.stack(ll, dim=1).cumsum(dim=0)  # [手がかり, 文脈]
+        post = F.softmax(cum, dim=1)
+        hit = (post.max(dim=1).values >= 1 - evidence_alpha).nonzero()
+        n = int(hit[0, 0]) + 1 if hit.numel() else bits.shape[0]
+        return used[int(cum[n - 1].argmax())], n
+
     buf_bits: list[torch.Tensor] = []
     buf_labels: list[torch.Tensor] = []
     buf_ctx: list[torch.Tensor] = []
     buf_src: list[torch.Tensor] = []
     diag_gen = torch.Generator().manual_seed(1234)
     trace_gen = torch.Generator().manual_seed(4321)  # trace 専用（diag_gen の消費を変えない）
-    diag: dict = {"ctx_acc": [], "chosen": [], "trained_src": [], "trace": [], "upd": []}
+    diag: dict = {"ctx_acc": [], "chosen": [], "cues_used": [], "trained_src": [], "trace": [], "upd": []}
     buf_count: dict[int, int] = {}
     ema_loss: dict[int, float] = {}
     cur = 0
@@ -210,12 +251,14 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         return cur
 
     @torch.no_grad()
-    def accuracy(j: int, chosen: list[int] | None = None) -> float:
+    def accuracy(j: int, chosen: list[int] | None = None, cues: list[int] | None = None) -> float:
         if condition in ("inferred", "inferred_gated"):
             cb, cl = make_batch(specs[j], cue_n, eval_generator)
-            ctx = min(used, key=lambda c: loss_under(cb, cl, c))
+            ctx, n_cues = select_ctx(cb, cl)
             if chosen is not None:
                 chosen.append(ctx)
+            if cues is not None:
+                cues.append(n_cues)
         elif condition == "random":
             ctx = int(torch.randint(C, (1,), generator=eval_generator))
         else:
@@ -352,7 +395,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                                else torch.full((n,), ctx, dtype=torch.long))
                 buf_src.append(src[:n].long() if src is not None else torch.full((n,), k, dtype=torch.long))
         chosen: list[int] = []
-        R.append([accuracy(j, chosen) for j in range(T)])
+        cues_used: list[int] = []
+        R.append([accuracy(j, chosen, cues_used) for j in range(T)])
         if diagnostics:
             with torch.no_grad():
                 acc_row = []
@@ -362,18 +406,28 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                                     for c in (used if condition in ("inferred", "inferred_gated") else [0])])
             diag["ctx_acc"].append(acc_row)
             diag["chosen"].append(chosen)
+            diag["cues_used"].append(cues_used)
             diag["trained_src"].append({f"{c}<-{t}": n for (c, t), n in sorted(trained.items())})
     selection_acc = None
+    sel_choices: list[list[int]] = []
+    sel_cues: list[list[int]] = []
     if condition in ("inferred", "inferred_gated") and selection_trials > 0:
         majority = assignment_majority(assign, T)
         hits = 0
         for j in range(T):
+            sel_choices.append([])
+            sel_cues.append([])
             for _ in range(selection_trials):
                 cb, cl = make_batch(specs[j], cue_n, eval_generator)
-                hits += int(min(used, key=lambda c: loss_under(cb, cl, c)) == majority[j])
+                ctx, n_cues = select_ctx(cb, cl)
+                hits += int(ctx == majority[j])
+                sel_choices[j].append(ctx)
+                sel_cues[j].append(n_cues)
         selection_acc = hits / (T * selection_trials)
     out = {"R": R, "assign": assign, "n_contexts": len(used) if condition in ("inferred", "inferred_gated") else C,
            "selection_acc": selection_acc}
+    if sel_choices:
+        out.update(selection_choices=sel_choices, selection_cues=sel_cues)
     if diagnostics:
         bc = torch.cat(buf_ctx) if buf_ctx else torch.zeros(0, dtype=torch.long)
         bs = torch.cat(buf_src) if buf_src else torch.zeros(0, dtype=torch.long)
