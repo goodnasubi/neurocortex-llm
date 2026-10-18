@@ -38,7 +38,9 @@ ACTIVE = {**FIX2, "active_pool": 4, "reliability_holdout": HOLDOUT}
 LS = (0, 250, 500)
 
 # (1) 候補の出どころ
-REPLAY_FAMILIES = ("parity", "flip_m1", "flip_m2", "cue_q0.9", "cue_q0.75")
+REPLAY_FAMILIES = ("parity", "flip_m1", "flip_m2", "cue_q0.9", "cue_q0.75", "flip7_m1")
+# 修正1（12.6.151節）: 開発用シードでは上書きありの組が似たタスク m = 1 の作り直しだけで、別の課題での再現（H1(a)）を
+# 検証できなかった。(2) の場面で本来の文脈の上書き（gap 0.25〜0.27）が分かった flip7_m1 を加える（gen_replay の値は見ていない）
 REPLAY_MECHS = ("reset", "split")
 REPLAY_CUE_NS = (4, 8, 16)
 REPLAY_SELECTS: dict[str, dict] = {
@@ -71,9 +73,9 @@ def specs_for(family: str) -> list:
     return family_specs(family)[0]
 
 
-def jobs(part: str, selects) -> list[tuple]:
+def jobs(part: str, selects, families=REPLAY_FAMILIES) -> list[tuple]:
     if part == "replay":
-        combos = [(f, m) for m in REPLAY_MECHS for f in REPLAY_FAMILIES]
+        combos = [(f, m) for m in REPLAY_MECHS for f in families]
         cue_ns = REPLAY_CUE_NS
     else:
         combos, cue_ns = list(VERIFY_SCENARIOS), VERIFY_CUE_NS
@@ -142,14 +144,23 @@ def _spearman(x: list[float], y: list[float]) -> float:
     return float((rx * ry).sum() / (rx.norm() * ry.norm()))
 
 
-def analyze_replay(path: Path) -> dict:
-    """12.6.151節の H1〜H3 の判定に使う量。"""
-    runs = json.loads(path.read_text(encoding="utf-8"))["runs"]
+def _load_runs(paths: list[Path]) -> dict:
+    runs: dict = {}
+    for p in paths:
+        runs.update(json.loads(p.read_text(encoding="utf-8"))["runs"])
+    return runs
+
+
+def analyze_replay(paths: list[Path]) -> dict:
+    """12.6.151節の H1〜H3 の判定に使う量（複数の結果ファイルを合わせる）。"""
+    runs = _load_runs(paths)
     combos = []
     for mech in REPLAY_MECHS:
         for fam in REPLAY_FAMILIES:
             for L in LS:
                 c = f"{fam}/{mech}_L{L}"
+                if f"{c}/cue16/active" not in runs:
+                    continue
                 k16 = f"{c}/cue16/active"
                 row = {"combo": c, **{k: _m(runs, k16, k) for k in ("nat_own_buf", "nat_fresh", "nat_other_buf",
                                                                       "nat_holdout", "native_acc")}}
@@ -190,9 +201,9 @@ def frontier(points: list[tuple[float, float]], x: float) -> float:
     return pts[-1][1]
 
 
-def analyze_verify(path: Path) -> dict:
+def analyze_verify(paths: list[Path]) -> dict:
     """12.6.151節の場面の分類と H4・H5 の判定に使う量。"""
-    runs = json.loads(path.read_text(encoding="utf-8"))["runs"]
+    runs = _load_runs(paths)
     out: dict = {}
     for fam, mech in VERIFY_SCENARIOS:
         rows = []
@@ -221,7 +232,8 @@ def analyze_verify(path: Path) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--analyze", type=Path, help="結果ファイルを集計して判定に使う量を表示する")
+    ap.add_argument("--analyze", type=Path, nargs="+", help="結果ファイルを集計して判定に使う量を表示する")
+    ap.add_argument("--families", nargs="+", default=list(REPLAY_FAMILIES))
     ap.add_argument("--part", choices=tuple(PARTS), default="replay")
     ap.add_argument("--phase", choices=("dev", "eval"), default="dev")
     ap.add_argument("--seeds", type=int, nargs="+")
@@ -237,7 +249,7 @@ def main() -> None:
     selects = args.selects or list(table)
     seeds = args.seeds or (EVAL_SEEDS if args.phase == "eval" else DEV_SEEDS)
     out_path = args.out or Path(f"results/context_inference/replay_verify_{args.part}_{args.phase}.json")
-    all_jobs = [(*cfg, s) for cfg in jobs(args.part, selects) for s in seeds]
+    all_jobs = [(*cfg, s) for cfg in jobs(args.part, selects, tuple(args.families)) for s in seeds]
     with Pool(args.workers) as pool:
         results = pool.map(partial(run_one, table=table), all_jobs, chunksize=1)
     out: dict = {"環境": env_info(),

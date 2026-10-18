@@ -92,7 +92,7 @@ def test_flip7_specs_and_jobs():
     for i in range(7):
         for k in range(i + 1, 7):  # どの2タスクも入力の約半分で食い違う
             assert abs(float((labels[i] != labels[k]).float().mean()) - 0.5) < 0.05
-    assert len(jobs("replay", REPLAY_SELECTS)) == 5 * 2 * 3 * 3 * len(REPLAY_SELECTS)
+    assert len(jobs("replay", REPLAY_SELECTS)) == 6 * 2 * 3 * 3 * len(REPLAY_SELECTS)
     assert len(jobs("verify", VERIFY_SELECTS)) == 2 * 3 * 3 * len(VERIFY_SELECTS)
     assert REPLAY_SELECTS["gen_holdout"]["active_source"] == "holdout"
     assert VERIFY_SELECTS["verify_each"]["verify_mode"] == "each"
