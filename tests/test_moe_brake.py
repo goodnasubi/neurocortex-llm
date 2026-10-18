@@ -68,6 +68,13 @@ def test_full_brake_freezes_router_after_close():
     for pa, pb in zip(a.routers.parameters(), b.routers.parameters()):
         assert torch.equal(pa, pb)  # 閉じた後はルータが動かない
     assert not torch.equal(a.w1[0], b.w1[0])  # 専門家は学習を続ける
+    assert not torch.equal(a.rnn.weight_hh_l0, b.rnn.weight_hh_l0)  # ルータの入力（GRU）も学習を続ける
+    f = _braked(**kw, brake_front=True)
+    g = _braked(**kw, brake_front=True)
+    _train(f, train_braked, 8)
+    _train(g, train_braked, 4)
+    assert torch.equal(f.rnn.weight_hh_l0, g.rnn.weight_hh_l0) and torch.equal(f.embed.weight, g.embed.weight)
+    assert not torch.equal(f.w1[0], g.w1[0]) and not torch.equal(f.head.weight, g.head.weight)
     c = _braked(**{**kw, "brake": 0.5})
     _train(c, train_braked, 3)
     assert abs(c.router_lr_scale - 0.75) < 1e-12  # s(3) = 0.5 → 0.5 + 0.5·0.5
@@ -126,6 +133,8 @@ def test_parse_and_conditions():
     c = R.parse_pb("pb1_o0.25_r0.25_frz_b0.1")
     assert c["freeze"] and c["brake"] == 0.1 and c["open"] == 0.25 and c["variant"] == "frz_b0.1"
     assert R.parse_pb("pb0.3_o0.5_r0.5_none")["brake"] is None and not R.parse_pb("pb0.3_o0.5_r0.5_b0")["freeze"]
+    f = R.parse_pb("pb1_o0.25_r0.25_frz_bf0")
+    assert f["freeze"] and f["brake_front"] and f["brake"] == 0.0 and not c["brake_front"]
     assert R.parse_pb("pb0.3_o0.5_r0.5_b0")["brake"] == 0.0 and R.parse_pb("pb1_o0.5_r0.5_frz")["brake"] is None
     a = argparse.Namespace(grid=True, pb=["32,1=pb1_o0.25_r0.25_none"], dissect=True)
     c16, c32, c8 = R.conditions(a, 16, 1), R.conditions(a, 32, 1), R.conditions(a, 8, 1)
@@ -146,6 +155,8 @@ def test_select_pb_rules():
     v = {"pb1_o0.5_r0.5_none": _cand(0.4, ok=False, h3=False), "pb1_o0.25_r0.25_b0": _cand(0.5, ok=False)}
     k, why = R.select_pb(v)
     assert k == "pb1_o0.25_r0.25_b0" and "満たさない" in why
+    v["pb1_o0.25_r0.25_frz_bf0"] = _cand(0.01)
+    assert R.select_pb(v)[0] == "pb1_o0.25_r0.25_b0"  # 参考条件は選ばない
 
 
 def test_end_to_end_small(monkeypatch):

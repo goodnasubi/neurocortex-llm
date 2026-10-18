@@ -36,6 +36,8 @@ from .run_moe_scale import run_one
 SCHEDULES = ((0.25, 0.05), (0.25, 0.25), (0.5, 0.25), (0.5, 0.5))
 # 閉じた後の手当て: frz = 閉じ始めと同時に θ の積分を止める、b<β> = ルータの学習率の倍率 β + (1−β)·s(t)
 VARIANTS = ("none", "frz", "b0.1", "b0", "frz_b0.1", "frz_b0")
+# 修正1の参考条件（選び方の格子には入れない）: bf<β> = ブレーキをルータとその入力（埋め込み・GRU）に掛ける
+REF_VARIANTS = ("frz_bf0",)
 CP_ETA = {"E16_L1": 0.3, "E32_L1": 1.0}  # 12.6.145節で開発用シードから選んだ臨界期型の η
 H11_PAIR = ((0.25, 0.25), "frz_b0.1", "none")  # H11 の固定の比較（固定化期間 50%）
 DISSECT = {"sel1_a0.01": {"alpha": 0.01}, "sel1_a0.2": {"alpha": 0.2}, "sel1_mlp96": {"router_hidden": 96}}
@@ -51,7 +53,8 @@ def parse_pb(key: str) -> dict:
     c = {"kind": "select", "eta": float(eta), "open": float(o[1:]), "ramp": float(r[1:]), "variant": v}
     c["freeze"] = v.startswith("frz")
     b = v.split("b")[-1] if "b" in v.replace("frz", "") else None
-    c["brake"] = float(b) if b is not None else None
+    c["brake_front"] = b is not None and b.startswith("f")
+    c["brake"] = float(b.lstrip("f")) if b is not None else None
     return c
 
 
@@ -96,7 +99,8 @@ def run_cond(seed: int, e: int, l: int, key: str, cond: dict, corpus: CharCorpus
 
     kw = {"total_steps": args.train_steps, "open_frac": cond.get("open"), "ramp_frac": cond.get("ramp", 0.0),
           "probe": probe, "log_every": args.log_every, "vec_every": 10 ** 9, "freeze": cond.get("freeze", False),
-          "brake": cond.get("brake"), "router_hidden": cond.get("router_hidden", 0), "lag": args.lag}
+          "brake": cond.get("brake"), "router_hidden": cond.get("router_hidden", 0), "lag": args.lag,
+          "brake_front": cond.get("brake_front", False)}
     r = run_one(seed, e, l, cond, corpus, a, BrakedCriticalLM, args.train_steps, post=post, train_fn=train_braked, **kw)
     return slim(r, False)
 
@@ -146,6 +150,8 @@ def adoption_summary(sub: list[dict], key: str, total: int) -> dict:
 def select_pb(verdicts: dict[str, dict]) -> tuple[str | None, str]:
     """12.6.145節の選び方を手当ての格子に広げたもの。合格（H1〜H3 かつジニ ≦ 0.3）のうちシード最大のジニが最小。同じなら
     固定化期間が長い方、次に手当てが弱い方（VARIANTS の順）。合格がなければ H3 を満たす中で同じ順の最小を「基準を満たさない」として返す。"""
+    verdicts = {k: v for k, v in verdicts.items() if parse_pb(k)["variant"] in VARIANTS}  # 参考条件は選ばない
+
     def rank(k):
         p = parse_pb(k)
         return (verdicts[k]["ジニ_シード最大"], p["open"] + p["ramp"], VARIANTS.index(p["variant"]))

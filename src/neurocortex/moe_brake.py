@@ -8,6 +8,8 @@
     起きなくなること（Desai et al., 2002）に当たる。
   - `brake=β`: ルータ（競合の回路）の学習率の倍率を m(t) = β + (1−β)·s(t) にする（PNN・Lynx1 のような可塑性の
     ブレーキが、臨界期が閉じるのにつれて付く。Pizzorusso et al., 2002; Morishita et al., 2010）。専門家の学習率は変えない。
+  - `brake_front=True`（12.6.149節の修正1、参考条件）: ブレーキをルータに加えて、その入力を作る埋め込みと GRU にも掛ける
+    （閉じた後の偏りの戻りが、ルータの入力の表現が変わることで起きるかの確かめ）。
   - `router_hidden=h`: ルータを線形から2層（d→h→E、ReLU）にする（ルータの表現力の切り分け）。
   既定（freeze=False・brake=None・router_hidden=0）では `CriticalPeriodLM` と同じ乱数の消費・同じ学習経過になる
   （`tests/test_moe_brake.py`）。
@@ -33,9 +35,11 @@ class BrakedCriticalLM(CriticalPeriodLM):
     """閉じると同時に θ の積分を止める（freeze）、ルータの学習率のブレーキ（brake）、2層ルータ（router_hidden）。"""
 
     def __init__(self, *args, freeze: bool = False, brake: float | None = None, router_hidden: int = 0,
+                 brake_front: bool = False,
                  lag: int = 100, **kw) -> None:
         super().__init__(*args, **kw)
         self.freeze, self.brake, self.router_hidden, self.lag = freeze, brake, router_hidden, lag
+        self.brake_front = brake_front
         self.router_lr_scale = 1.0
         self._choices: list[tuple[int, np.ndarray, np.ndarray]] = []
         if router_hidden > 0:  # 専門家・出力層の初期値は線形ルータの場合と同じ（ルータは後から作り直す）
@@ -47,7 +51,9 @@ class BrakedCriticalLM(CriticalPeriodLM):
                 self.logit0 = self._mean_logits()
 
     def router_parameters(self) -> list[nn.Parameter]:
-        return list(self.routers.parameters())
+        """ブレーキを掛けるパラメータ（ルータ。brake_front ではその入力を作る埋め込みと GRU も）。"""
+        front = [*self.embed.parameters(), *self.rnn.parameters()] if self.brake_front else []
+        return [*front, *self.routers.parameters()]
 
     @torch.no_grad()
     def homeostatic_step(self, choice: torch.Tensor) -> None:
