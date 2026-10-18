@@ -58,6 +58,11 @@ def jobs(selects=BASE_SELECTS) -> list[tuple]:
 
 
 def run_one(job: tuple) -> dict:
+    return run_job(job, SELECTS[job[4]])
+
+
+def run_job(job: tuple, select_kw: dict) -> dict:
+    """job = (課題, 機構, L, 手がかりの数, 規則の名前, シード) を、選択の規則の引数 select_kw で1回走らせる。"""
     fam, mech, L, cue_n, sel, seed = job
     torch.set_num_threads(1)
     specs, _ = family_specs(fam)
@@ -65,7 +70,7 @@ def run_one(job: tuple) -> dict:
     r = run_context_sequence("inferred_gated", specs, 32, torch.Generator().manual_seed(seed + 50_000),
                              torch.Generator().manual_seed(seed + 90_000), transition_steps=L, steps=500,
                              diagnostics=True, cue_n=cue_n, selection_trials=SELECTION_TRIALS, **MECHS[mech],
-                             **SELECTS[sel])
+                             **select_kw)
     d, T = r["diag"], len(specs)
     nat = native_contexts(r["assign"], T)
     acc = d["ctx_acc"][-1]  # [タスク][文脈]（used の順。used は 0, 1, 2, … なので文脈番号と一致）

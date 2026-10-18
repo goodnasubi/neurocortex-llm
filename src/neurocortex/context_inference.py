@@ -55,11 +55,17 @@ def make_batch(spec, batch_size: int, generator: torch.Generator) -> tuple[torch
     if isinstance(spec, CueSpec) and spec.cue:
         u = torch.rand(batch_size, len(spec.cue), generator=generator)
         bits[:, list(spec.cue)] = torch.where(u < spec.q, 1.0, -1.0)
+    return bits, task_labels(spec, bits)
+
+
+def task_labels(spec, bits: torch.Tensor) -> torch.Tensor:
+    """入力 bits に対する spec の正解（make_batch と同じ規則。乱数は消費しない）。12.6.147節の自己生成の候補に
+    環境が答える（問い合わせの正解を返す）ために使う。"""
     a, b = spec.relevant
     labels = (bits[:, a] > 0) ^ (bits[:, b] > 0)
     if isinstance(spec, FlipSpec) and spec.flip:
         labels = labels ^ (bits[:, list(spec.flip)] > 0).all(dim=1)
-    return bits, labels.long()
+    return labels.long()
 
 
 def cue_information(probs: torch.Tensor, prior: torch.Tensor | None = None) -> torch.Tensor:
@@ -88,7 +94,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          evidence_reliability: bool = False, evidence_com: bool = False, com_alpha: float = 0.1,
                          com_window: int = 0, reliability_lapse: bool = True,
                          reliability_source: str = "gated", reliability_holdout: int = 0,
-                         cue_weight: str = "", active_pool: int = 0) -> dict:
+                         cue_weight: str = "", active_pool: int = 0, active_source: str = "task",
+                         active_verify: int = 0) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -186,6 +193,18 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
           打ち切りの規則は evidence と同じ。
       diagnostics = True では "cue_info"（観測した手がかりの一様事前のもとでの情報量の平均）を、selection_trials > 0
       では "selection_info" も返す。
+
+    候補の出どころと打ち切り（active_pool > 0 のみ。12.6.147節。既定では 12.6.143節と同じ挙動）:
+      active_source = "task"（既定）… 候補は与えられた手がかりと、同じタスクの分布からの追加の入力（12.6.143節）。
+          "uniform" … 候補 P·cue_n 個を入力空間から一様に自分で生成し、選んだ入力の正解を環境に問い合わせる
+          （task_labels）。タスクの入力分布は使わない。
+          "replay" … 候補 P·cue_n 個を海馬のバッファ（学習中に保存した過去の入力）から取り出す（足りなければ全部）。
+          "search" … "uniform" の候補から情報量が最大のものを選び、1ビットずつ反転して情報量が増える限り登る
+          （山登り、最大 n_inputs 回）。既に観測した入力には移らず、観測した入力と同じ候補は選ばない。
+          どの出どころでも、評価用の乱数の消費（従来の cue_n 個の手がかり）は同じにする。
+      active_verify = n > 0 … 打ち切りの閾値に達したら、先頭の文脈と2番目の文脈の2つだけを等しい重みで区別する
+          手がかり（先頭の仮説を最も反証しうる手がかり）を n 個観測してから決める。その間に閾値を割るか先頭が
+          入れ替われば、通常の能動的な蓄積に戻り、再び閾値に達したら検証をやり直す。観測は最大 cue_n 個。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -209,6 +228,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         raise ValueError("cue_weight は ''・'info'・'info_post'、active_pool は 0 以上")
     if (cue_weight or active_pool) and (cue_select != "evidence" or evidence_reliability or evidence_com):
         raise ValueError("cue_weight / active_pool は cue_select='evidence'（信頼性・乗り換えなし）でのみ使う")
+    if active_source not in ("task", "uniform", "replay", "search") or active_verify < 0:
+        raise ValueError("active_source は task・uniform・replay・search、active_verify は 0 以上")
+    if (active_source != "task" or active_verify) and active_pool <= 0:
+        raise ValueError("active_source / active_verify は active_pool > 0 でのみ使う")
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
     if split_ctx_lr > 0:
@@ -309,39 +332,95 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         return used[cur_i], n
 
     @torch.no_grad()
+    def ctx_probs(bits: torch.Tensor) -> torch.Tensor:
+        """各文脈の lapse 付きの予測 [入力, 文脈, K]。"""
+        probs = torch.stack([F.softmax(model(with_ctx(bits, c)), dim=-1) for c in used], dim=1)
+        return (1 - evidence_lapse) * probs + evidence_lapse / probs.shape[-1]
+
+    @torch.no_grad()
+    def climb(x: torch.Tensor, g: float, prior: torch.Tensor, seen_pts: torch.Tensor) -> torch.Tensor:
+        """12.6.147節の "search": 1ビットの反転で情報量が増える限り登る（既に観測した入力には移らない）。"""
+        n = x.shape[0]
+        for _ in range(n):
+            nb = x.repeat(n, 1)
+            nb[torch.arange(n), torch.arange(n)] *= -1
+            gain = cue_information(ctx_probs(nb), prior)
+            if seen_pts.numel():
+                gain[(nb[:, None, :] == seen_pts[None]).all(-1).any(-1)] = -math.inf
+            b = int(gain.argmax())
+            if float(gain[b]) <= g + 1e-9:
+                break
+            x, g = nb[b], float(gain[b])
+        return x
+
+    @torch.no_grad()
     def select_ctx_info(bits: torch.Tensor, labels: torch.Tensor) -> tuple[int, int]:
         """12.6.143節: 手がかりの情報量で重み付けた証拠の蓄積と、能動的な手がかりの選択。bits の行数は
-        active_pool·cue_n（能動）か cue_n。観測するのは最大 cue_n 個。"""
-        probs = torch.stack([F.softmax(model(with_ctx(bits, c)), dim=-1) for c in used], dim=1)  # [候補, 文脈, K]
-        probs = (1 - evidence_lapse) * probs + evidence_lapse / probs.shape[-1]
+        active_pool·cue_n（能動）か cue_n。観測するのは最大 cue_n 個。12.6.147節の候補の出どころ（"search" は
+        候補を登って作り直し、正解を環境に問い合わせる）と、検証つきの打ち切り（active_verify）にも対応する。"""
+        probs = ctx_probs(bits)  # [候補, 文脈, K]
         ll = torch.log(probs.gather(2, labels[:, None, None].expand(-1, len(used), 1))[..., 0])  # [候補, 文脈]
         info_u = cue_information(probs)  # 一様な事前分布のもとでの情報量（重みと記録に使う）
         w = info_u if cue_weight == "info" else torch.ones(bits.shape[0])
         cum = torch.zeros(len(used))
         avail = torch.ones(bits.shape[0], dtype=torch.bool)
         seen: list[int] = []
+        seen_pts = torch.zeros(0, bits.shape[1])
+        verify_left, leader0 = 0, -1
         for t in range(cue_n):
             if active_pool > 0:
-                gain = cue_information(probs, F.softmax(cum, dim=0))
+                post = F.softmax(cum, dim=0)
+                prior = post
+                if verify_left > 0:  # 先頭と2番目だけを区別する手がかり
+                    prior = torch.zeros(len(used))
+                    prior[post.topk(2).indices] = 0.5
+                gain = cue_information(probs, prior)
                 gain[~avail] = -math.inf
+                if active_source == "search" and seen_pts.numel():
+                    gain[(bits[:, None, :] == seen_pts[None]).all(-1).any(-1)] = -math.inf
                 i = int(gain.argmax())
+                if active_source == "search":
+                    x = climb(bits[i], float(gain[i]), prior, seen_pts)
+                    if not bool((x == bits[i]).all()):  # 作った入力を候補に足し、正解を環境に問い合わせる
+                        bits, labels = torch.cat([bits, x[None]]), torch.cat([labels, task_labels(oracle[0], x[None])])
+                        p_new = ctx_probs(x[None])
+                        probs = torch.cat([probs, p_new])
+                        ll = torch.cat([ll, torch.log(p_new.gather(2, labels[-1:, None, None].expand(-1, len(used), 1))[..., 0])])
+                        info_u = torch.cat([info_u, cue_information(p_new)])
+                        w = torch.cat([w, info_u[-1:] if cue_weight == "info" else torch.ones(1)])
+                        avail = torch.cat([avail, torch.ones(1, dtype=torch.bool)])
+                        i = bits.shape[0] - 1
             else:
                 i = t
             avail[i] = False
             seen.append(i)
+            seen_pts = torch.cat([seen_pts, bits[i:i + 1]])
             if cue_weight == "info_post":
                 w_i = cue_information(probs[i:i + 1], F.softmax(cum, dim=0))[0]
             else:
                 w_i = w[i]
             cum = cum + w_i * ll[i]
-            if len(used) == 1 or float(F.softmax(cum, dim=0).max()) >= 1 - evidence_alpha:
+            if len(used) == 1:
                 break
+            conf = float(F.softmax(cum, dim=0).max()) >= 1 - evidence_alpha
+            lead = int(cum.argmax())
+            if verify_left > 0:
+                verify_left -= 1
+                if not conf or lead != leader0:  # 検証で先頭が揺らいだら通常の蓄積に戻る
+                    verify_left = 0
+                elif verify_left == 0:
+                    break
+            elif conf:
+                if active_verify == 0:
+                    break
+                verify_left, leader0 = active_verify, lead
         sel_info.update(info=float(info_u[seen].mean()))
         return used[int(cum.argmax())], len(seen)
 
     revised = cue_select == "evidence" and (evidence_reliability or evidence_com)
     informed = cue_select == "evidence" and (bool(cue_weight) or active_pool > 0)
     active_gen = torch.Generator().manual_seed(eval_generator.initial_seed() + 777)  # active_pool の候補専用
+    oracle: list = [None]  # 12.6.147節: 自己生成の候補の正解を返す、評価中のタスクの spec
     sel_info: dict = {}
     rel_now: dict[int, float] = {}
     ema_acc: dict[int, float] = {}  # 12.6.139節: 文脈ごとの学習中の正確度の移動平均（evidence_reliability のみ）
@@ -416,6 +495,14 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     def draw_cues(j: int) -> tuple[torch.Tensor, torch.Tensor]:
         """テスト時の手がかり。active_pool > 0 では、従来の cue_n 個の後に専用の乱数で候補を足す（評価用の乱数の消費は同じ）。"""
         cb, cl = make_batch(specs[j], cue_n, eval_generator)
+        oracle[0] = specs[j]
+        if informed and active_source in ("uniform", "search"):
+            cb = torch.randint(0, 2, (active_pool * cue_n, specs[j].n_inputs), generator=active_gen).float() * 2 - 1
+            return cb, task_labels(specs[j], cb)
+        if informed and active_source == "replay":
+            pool = torch.cat(buf_bits) if buf_bits else cb
+            cb = pool[torch.randperm(pool.shape[0], generator=active_gen)[:active_pool * cue_n]]
+            return cb, task_labels(specs[j], cb)
         if informed and active_pool > 1:
             xb, xl = make_batch(specs[j], (active_pool - 1) * cue_n, active_gen)
             cb, cl = torch.cat([cb, xb]), torch.cat([cl, xl])
