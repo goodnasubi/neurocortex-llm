@@ -65,4 +65,4 @@ def test_experiment_jobs_cover_design():
     from neurocortex.experiments.run_context_evidence import CUE_NS, FAMILIES, LS, MECHS, SELECTS, jobs
     assert set(CUE_NS) == {1, 2, 4, 8, 16} and set(LS) == {0, 250, 500}
     assert {m for m, _ in MECHS} == {"split", "reset"} and "batch" in SELECTS and "evidence" in SELECTS
-    assert len(jobs()) == len(FAMILIES) * len(MECHS) * len(LS) * len(CUE_NS) * len(SELECTS)
+    assert len(jobs()) == len(FAMILIES) * len(MECHS) * len(LS) * len(CUE_NS) * 3

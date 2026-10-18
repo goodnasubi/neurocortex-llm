@@ -7,6 +7,7 @@
 課題はパリティ・似たタスク m = 1・入力分布が異なる課題 q = 0.9、0.75。L = 0/250/500（500ステップ）。
 
     --phase dev（開発用シード, evidence_dev.json）/ eval（評価用シードで一度だけ, evidence_eval.json）
+    --selects で選択の規則を選ぶ（修正の確認は --selects evidence_fix1 --out .../evidence_fix1_dev.json）
 
 使い方:
     PYTHONPATH=src python -m neurocortex.experiments.run_context_evidence --phase dev
@@ -36,13 +37,17 @@ SELECTS: dict[str, dict] = {
     "batch": {"cue_select": "batch"},
     "evidence": {"cue_select": "evidence", "evidence_lapse": 0.1, "evidence_alpha": 0.01},
     "evidence_nolapse": {"cue_select": "evidence", "evidence_lapse": 0.0, "evidence_alpha": 0.01},
+    # 修正1: 開発用シードで、打ち切りの誤り（モデルの事後確率の過信）で選択精度が従来を下回った（最悪 −0.034）ため、
+    # 閾値を α = 0.001 に厳しくする
+    "evidence_fix1": {"cue_select": "evidence", "evidence_lapse": 0.1, "evidence_alpha": 0.001},
 }
+BASE_SELECTS = ("batch", "evidence", "evidence_nolapse")
 SELECTION_TRIALS = 50
 
 
-def jobs() -> list[tuple]:
+def jobs(selects=BASE_SELECTS) -> list[tuple]:
     return [(fam, mech, sc, L, n, sel) for fam in FAMILIES for mech, sc in MECHS for L in LS for n in CUE_NS
-            for sel in SELECTS]
+            for sel in selects]
 
 
 def run_one(job: tuple) -> dict:
@@ -74,15 +79,16 @@ def main() -> None:
     ap.add_argument("--phase", choices=("dev", "eval"), default="dev")
     ap.add_argument("--seeds", type=int, nargs="+")
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--selects", nargs="+", choices=list(SELECTS), default=list(BASE_SELECTS))
     ap.add_argument("--out", type=Path)
     args = ap.parse_args()
     seeds = args.seeds or (EVAL_SEEDS if args.phase == "eval" else DEV_SEEDS)
     out_path = args.out or Path(f"results/context_inference/evidence_{args.phase}.json")
-    all_jobs = [(*cfg, s) for cfg in jobs() for s in seeds]
+    all_jobs = [(*cfg, s) for cfg in jobs(args.selects) for s in seeds]
     with Pool(args.workers) as pool:
         results = pool.map(run_one, all_jobs)
     out: dict = {"環境": env_info(), "説明": f"テスト時の文脈選択を証拠の蓄積にする（12.6.135〜136節）。phase={args.phase}",
-                 "seeds": seeds, "selects": SELECTS, "selection_trials": SELECTION_TRIALS, "runs": {}}
+                 "seeds": seeds, "selects": {k: SELECTS[k] for k in args.selects}, "selection_trials": SELECTION_TRIALS, "runs": {}}
     keys = ("ACC", "BWT", "LA", "final_selection_correct", "final_cues_used", "selection_acc", "cues_used",
             "expected_acc", "native_acc")
     for key in dict.fromkeys(x["key"] for x in results):
