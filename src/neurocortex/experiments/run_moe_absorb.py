@@ -51,6 +51,7 @@ def run_cond(seed: int, e: int, l: int, cond: dict, corpus: CharCorpus, args: ar
 def select_eta_b(s: dict, etas: list[float]) -> tuple[float, str]:
     """12.6.141節 (b) の選び方。比 ≤ 1.5・CE ≤ 補助損失0.05 + 0.01・外したときのジニ ≤ 0.3・ΔCE_off ≤ 0.02 の最小の η。"""
     ref = s["aux0.05"]["zero"]["base_ce"]["mean"]
+    etas = [e for e in etas if f"sel{e:g}" in s]  # 修正1: 規模によって候補の η が違う
 
     def ok2(e):
         z = s[f"sel{e:g}"]["zero"]
@@ -132,6 +133,8 @@ def main() -> None:
     p.add_argument("--threads", type=int, default=1)
     p.add_argument("--out", type=str, default="results/moe_absorb/dev.json")
     p.add_argument("--merge", type=str, nargs="+", default=None)
+    p.add_argument("--only", type=str, nargs="*", default=None,
+                   help="この条件のキーだけ測る（修正1で η を足すとき。--merge で同じシード・規模の部分を合わせる）")
     args = p.parse_args()
     torch.set_num_threads(args.threads)
 
@@ -145,6 +148,8 @@ def main() -> None:
                 e, l = map(int, sc.split(","))
                 runs = {}
                 for key, cond in conditions(args, e).items():
+                    if args.only and key not in args.only:
+                        continue
                     z = runs[key] = run_cond(seed, e, l, cond, corpus, args)
                     zl = z["lesion"]["zero"]
                     extra = (f" th_range={z['threshold_range']:.2f} off_gini={z['threshold_off']['gini']:.3f}"
@@ -153,6 +158,12 @@ def main() -> None:
                           f"base={zl['base_ce']:.4f} ratio={zl['ratio']:.2f} pergate R={zl['d_random_per_gate']:.3f} "
                           f"gate={z['gate_mean']:.3f}{extra}", flush=True)
                 parts.append({"環境": env_info(), "seed": seed, "scale": f"E{e}_L{l}", "runs": runs})
+    envs = [pt["環境"] for pt in parts]
+    merged: dict = {}  # 同じシード・規模の部分（--only で足した条件）を1つにまとめる
+    for pt in parts:
+        m = merged.setdefault((pt["seed"], pt["scale"]), {**pt, "runs": {}})
+        m["runs"].update(pt["runs"])
+    parts = list(merged.values())
     stars = dict(kv.split("=") for kv in args.eta_b) if args.eta_b else {}
     scales_seen = list(dict.fromkeys(pt["scale"] for pt in parts))
     out_s, verdict, seeds = {}, {}, {}
@@ -164,7 +175,7 @@ def main() -> None:
         r = analyze(sub, args, float(star) if star is not None else None)
         out_s[name], verdict[name] = r["要約"], r["判定"]
         seeds[name] = {pt["seed"]: pt["runs"] for pt in ps}
-    out = {"環境": env_info(), "設定": vars(args), "結合元の環境": [pt["環境"] for pt in parts],
+    out = {"環境": env_info(), "設定": vars(args), "結合元の環境": envs,
            "要約": out_s, "判定": verdict, **({"シード別": seeds} if args.merge else {"部分": parts})}
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(out, ensure_ascii=False))

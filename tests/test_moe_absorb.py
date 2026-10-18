@@ -101,3 +101,10 @@ def test_end_to_end_small():
     assert r["要約"]["ann0.01"]["threshold_range"]["mean"] == 0.0
     assert r["要約"]["ann0.01"]["threshold_state_range"] > 0
     assert "long" in r["要約"] and "取り込みが起きた_H7かつH1〜H3" in v["a_学習量"]
+
+
+def test_select_eta_b_ignores_missing_candidates():
+    z = {"zero": {"ratio_of_means": 1.0, "base_ce": {"mean": 0.32}},
+         "threshold_off": {"gini": {"mean": 0.1}, "d_ce": {"mean": 0.0}}}
+    s = {"aux0.05": {"zero": {"base_ce": {"mean": 0.32}}}, "sel0.3": z}
+    assert R.select_eta_b(s, [0.01, 0.3, 1.0])[0] == 0.3
