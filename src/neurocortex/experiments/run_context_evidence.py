@@ -45,6 +45,8 @@ SELECTS: dict[str, dict] = {
     "evidence_fix2": {"cue_select": "evidence", "evidence_lapse": 0.02, "evidence_alpha": 0.001},
 }
 BASE_SELECTS = ("batch", "evidence", "evidence_nolapse")
+FINAL_SELECT = "evidence_fix2"  # 開発用シードで確定（修正2。修正3は使わない）
+EVAL_SELECTS = ("batch", FINAL_SELECT, "evidence_nolapse")
 SELECTION_TRIALS = 50
 
 
@@ -82,9 +84,11 @@ def main() -> None:
     ap.add_argument("--phase", choices=("dev", "eval"), default="dev")
     ap.add_argument("--seeds", type=int, nargs="+")
     ap.add_argument("--workers", type=int, default=4)
-    ap.add_argument("--selects", nargs="+", choices=list(SELECTS), default=list(BASE_SELECTS))
+    ap.add_argument("--selects", nargs="+", choices=list(SELECTS), default=None)
     ap.add_argument("--out", type=Path)
     args = ap.parse_args()
+    if args.selects is None:
+        args.selects = list(EVAL_SELECTS if args.phase == "eval" else BASE_SELECTS)
     seeds = args.seeds or (EVAL_SEEDS if args.phase == "eval" else DEV_SEEDS)
     out_path = args.out or Path(f"results/context_inference/evidence_{args.phase}.json")
     all_jobs = [(*cfg, s) for cfg in jobs(args.selects) for s in seeds]
