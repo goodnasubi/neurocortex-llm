@@ -103,7 +103,7 @@ def select_eta(s: dict, etas: list[float]) -> float:
 
 
 def judge(runs: list[dict], s: dict, eta: float, gate_key: str) -> dict:
-    """12.6.137節の合格条件（12.6.133節の H1〜H5 を各規模に当てはめ、H6 を足す）。主除去 = 出力の除去。"""
+    """12.6.137節の合格条件（12.6.133節の H1〜H5 を各規模に当てはめ、H6・H7 を足す）。主除去 = 出力の除去。"""
     key = f"sel{eta:g}"
     g0 = [r["aux0"]["gini"] for r in runs]
     gs = [r[key]["gini"] for r in runs]
@@ -117,9 +117,12 @@ def judge(runs: list[dict], s: dict, eta: float, gate_key: str) -> dict:
     h5 = s[key]["threshold_off"]["d_ce"]["mean"] <= s[gate_key]["threshold_off"]["d_ce"]["mean"] / 2
     sel_g, aux_g = s[key]["zero"]["d_random_per_gate"]["mean"], s["aux0.05"]["zero"]["d_random_per_gate"]["mean"]
     h6 = sel_g <= 0.8 * aux_g
+    off = s[key]["threshold_off"]
+    h7 = off["gini"]["mean"] <= 0.3 and off["d_ce"]["mean"] <= 0.02
     return {"eta": eta, "比較のゲート込み条件": gate_key, "H1_崩壊を防ぐ": h1, "H2_ハブの非対称性を消す": h2,
             "H3_性能を損なわない": h3, "H4_閾値の幅が小さい": h4, "H5_閾値を外したときの悪化が小さい": h5,
-            "H6_ゲートの質量あたりでも頑健": h6, "H6_比_選択専用÷補助損失0.05": sel_g / aux_g}
+            "H6_ゲートの質量あたりでも頑健": h6, "H6_比_選択専用÷補助損失0.05": sel_g / aux_g,
+            "H7_重みが均等な使い方を身につける": h7}
 
 
 def main() -> None:
