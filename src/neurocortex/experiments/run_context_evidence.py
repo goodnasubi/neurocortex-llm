@@ -40,6 +40,9 @@ SELECTS: dict[str, dict] = {
     # 修正1: 開発用シードで、打ち切りの誤り（モデルの事後確率の過信）で選択精度が従来を下回った（最悪 −0.034）ため、
     # 閾値を α = 0.001 に厳しくする
     "evidence_fix1": {"cue_select": "evidence", "evidence_lapse": 0.1, "evidence_alpha": 0.001},
+    # 修正2: 修正1でも手がかり 2・4 個（打ち切りが起きない）の低下が残った。lapse が確信度の段階の情報を捨てるため
+    # なので、ε を本来の文脈の誤りの率の下限（ε/K = 0.01）に合わせて 0.02 にする
+    "evidence_fix2": {"cue_select": "evidence", "evidence_lapse": 0.02, "evidence_alpha": 0.001},
 }
 BASE_SELECTS = ("batch", "evidence", "evidence_nolapse")
 SELECTION_TRIALS = 50
