@@ -72,8 +72,9 @@ def conditions(args: argparse.Namespace, n_experts: int, n_layers: int) -> dict[
 def slim(out: dict, keep_vectors: bool) -> dict:
     """結果ファイルを数 MB に収めるため、負荷・閾値のベクトルと時系列のベクトルを落とす。"""
     out = {k: v for k, v in out.items() if k not in ("load", "threshold")}
-    if not keep_vectors and "series" in out:
-        out["series"] = [{k: v for k, v in p.items() if k not in ("theta_state", "d_logit")} for p in out["series"]]
+    if "series" in out:  # 時系列のスカラーは 4 桁に丸める
+        out["series"] = [{k: round(v, 4) if isinstance(v, float) else v for k, v in p.items()
+                          if keep_vectors or k not in ("theta_state", "d_logit")} for p in out["series"]]
     return out
 
 
@@ -130,7 +131,8 @@ def series_summary(sub: list[dict], key: str) -> list[dict]:
         return []
     out = []
     for pts in zip(*ss):
-        out.append({k: statistics.mean(p[k] for p in pts) for k, v in pts[0].items() if isinstance(v, (int, float))})
+        out.append({k: round(statistics.mean(p[k] for p in pts), 4) for k, v in pts[0].items()
+                    if isinstance(v, (int, float))})
     return out
 
 
@@ -270,6 +272,13 @@ def main() -> None:
     for n in names:
         r = analyze(subs[n], args, n, ref)
         out_s[n], verdict[n] = r["要約"], r["判定"]
+        chosen = r["判定"]["2_選択"]["キー"]
+        for runs in subs[n]:  # 時系列を丸め、格子のうち選ばれなかった候補はシード別の時系列を落とす（数 MB に収める）
+            for k in runs:
+                if k.startswith("cp") and args.grid and k != chosen:  # シード平均の時系列は要約に残る
+                    runs[k] = {kk: vv for kk, vv in slim(runs[k], False).items() if kk != "series"}
+                else:
+                    runs[k] = slim(runs[k], True)
     out = {"環境": env_info(), "設定": vars(args), "結合元の環境": sorted({json.dumps(e, sort_keys=True)
                                                                 for pt in parts for e in pt["環境"]}),
            "H7*の基準_E8_L1_sel0.01の正規化ΔCE_off": ref, "要約": out_s, "判定": verdict,
