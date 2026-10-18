@@ -1,0 +1,35 @@
+seed=0 aux0 gini=0.683 used=3 base=0.321 dT=0.954 dR=0.104 ratio=9.16 perload T=1.264 R=1.275 | reroute dT=2.407 dR=0.238
+seed=0 aux0.01 gini=0.584 used=7 base=0.323 dT=0.766 dR=0.117 ratio=6.56 perload T=1.161 R=0.865 | reroute dT=1.401 dR=0.189
+seed=0 aux0.05 gini=0.077 used=8 base=0.324 dT=0.322 dR=0.280 ratio=1.15 perload T=1.036 R=1.223 | reroute dT=0.504 dR=0.506
+seed=0 homeo0.01 gini=0.633 used=8 base=0.323 dT=0.876 dR=0.114 ratio=7.70 perload T=1.267 R=0.719 | reroute dT=0.803 dR=0.126 th_range=20.49 off_gini=0.779 off_ce=2.001
+seed=0 homeo0.03 gini=0.311 used=8 base=0.329 dT=0.709 dR=0.194 ratio=3.66 perload T=1.639 R=0.991 | reroute dT=0.615 dR=0.214 th_range=45.01 off_gini=0.781 off_ce=2.634
+seed=0 homeo0.1 gini=0.033 used=8 base=0.325 dT=0.215 dR=0.309 ratio=0.70 perload T=0.807 R=1.264 | reroute dT=0.442 dR=0.563 th_range=13.70 off_gini=0.552 off_ce=2.419
+seed=0 homeo0.3 gini=0.041 used=8 base=0.325 dT=0.286 dR=0.304 ratio=0.94 perload T=1.047 R=1.262 | reroute dT=0.857 dR=0.777 th_range=8.29 off_gini=0.418 off_ce=1.478
+seed=1 aux0 gini=0.816 used=3 base=0.324 dT=1.174 dR=0.013 ratio=91.51 perload T=1.198 R=1.922 | reroute dT=2.076 dR=0.031
+seed=1 aux0.01 gini=0.410 used=8 base=0.323 dT=0.591 dR=0.217 ratio=2.72 perload T=1.230 R=1.124 | reroute dT=1.147 dR=0.325
+seed=1 aux0.05 gini=0.054 used=8 base=0.325 dT=0.307 dR=0.244 ratio=1.26 perload T=1.096 R=1.018 | reroute dT=0.555 dR=0.487
+seed=1 homeo0.01 gini=0.559 used=8 base=0.325 dT=0.810 dR=0.103 ratio=7.90 perload T=1.330 R=0.693 | reroute dT=0.771 dR=0.108 th_range=20.90 off_gini=0.825 off_ce=2.137
+seed=1 homeo0.03 gini=0.237 used=8 base=0.328 dT=0.529 dR=0.191 ratio=2.77 perload T=1.219 R=1.033 | reroute dT=0.401 dR=0.193 th_range=27.94 off_gini=0.749 off_ce=2.082
+seed=1 homeo0.1 gini=0.071 used=8 base=0.328 dT=0.270 dR=0.259 ratio=1.04 perload T=0.915 R=1.102 | reroute dT=0.323 dR=0.292 th_range=15.43 off_gini=0.591 off_ce=2.631
+seed=1 homeo0.3 gini=0.038 used=8 base=0.324 dT=0.312 dR=0.284 ratio=1.10 perload T=1.171 R=1.161 | reroute dT=0.540 dR=0.545 th_range=5.33 off_gini=0.357 off_ce=1.174
+seed=2 aux0 gini=0.757 used=3 base=0.319 dT=1.250 dR=0.000 ratio=12500.33 perload T=1.251 R=0.227 | reroute dT=1.432 dR=-0.000
+seed=2 aux0.01 gini=0.403 used=8 base=0.321 dT=0.605 dR=0.182 ratio=3.32 perload T=1.244 R=1.016 | reroute dT=1.802 dR=0.258
+seed=2 aux0.05 gini=0.059 used=8 base=0.317 dT=0.401 dR=0.268 ratio=1.49 perload T=1.410 R=1.119 | reroute dT=0.762 dR=0.409
+seed=2 homeo0.01 gini=0.525 used=8 base=0.319 dT=0.761 dR=0.112 ratio=6.82 perload T=1.190 R=0.781 | reroute dT=0.892 dR=0.132 th_range=22.73 off_gini=0.833 off_ce=2.592
+seed=2 homeo0.03 gini=0.109 used=8 base=0.323 dT=0.426 dR=0.220 ratio=1.94 perload T=1.366 R=0.961 | reroute dT=0.543 dR=0.249 th_range=28.46 off_gini=0.802 off_ce=5.260
+seed=2 homeo0.1 gini=0.047 used=8 base=0.317 dT=0.314 dR=0.285 ratio=1.10 perload T=1.138 R=1.184 | reroute dT=0.600 dR=0.524 th_range=20.04 off_gini=0.652 off_ce=3.795
+seed=2 homeo0.3 gini=0.040 used=8 base=0.319 dT=0.288 dR=0.259 ratio=1.11 perload T=1.044 R=1.070 | reroute dT=0.747 dR=0.581 th_range=24.12 off_gini=0.577 off_ce=4.193
+seed=3 aux0 gini=0.855 used=3 base=0.321 dT=1.077 dR=0.000 ratio=10770.60 perload T=1.077 R=0.878 | reroute dT=1.235 dR=0.001
+seed=3 aux0.01 gini=0.524 used=8 base=0.320 dT=0.737 dR=0.119 ratio=6.21 perload T=1.210 R=0.807 | reroute dT=1.401 dR=0.177
+seed=3 aux0.05 gini=0.051 used=8 base=0.316 dT=0.330 dR=0.276 ratio=1.20 perload T=1.204 R=1.144 | reroute dT=0.520 dR=0.558
+seed=3 homeo0.01 gini=0.671 used=8 base=0.316 dT=1.058 dR=0.031 ratio=34.19 perload T=1.276 R=0.521 | reroute dT=1.052 dR=0.031 th_range=24.78 off_gini=0.807 off_ce=1.426
+seed=3 homeo0.03 gini=0.116 used=8 base=0.316 dT=0.322 dR=0.247 ratio=1.30 perload T=0.965 R=1.106 | reroute dT=0.330 dR=0.337 th_range=23.82 off_gini=0.744 off_ce=3.599
+seed=3 homeo0.1 gini=0.077 used=8 base=0.320 dT=0.197 dR=0.269 ratio=0.73 perload T=0.651 R=1.156 | reroute dT=0.250 dR=0.437 th_range=20.60 off_gini=0.645 off_ce=2.847
+seed=3 homeo0.3 gini=0.044 used=8 base=0.321 dT=0.271 dR=0.284 ratio=0.95 perload T=0.989 R=1.170 | reroute dT=0.486 dR=0.492 th_range=19.64 off_gini=0.422 off_ce=2.133
+seed=4 aux0 gini=0.720 used=4 base=0.310 dT=1.115 dR=0.055 ratio=20.43 perload T=1.234 R=1.219 | reroute dT=2.485 dR=0.154
+seed=4 aux0.01 gini=0.484 used=7 base=0.313 dT=0.781 dR=0.141 ratio=5.55 perload T=1.357 R=0.840 | reroute dT=1.436 dR=0.279
+seed=4 aux0.05 gini=0.043 used=8 base=0.313 dT=0.271 dR=0.340 ratio=0.80 perload T=0.999 R=1.404 | reroute dT=0.581 dR=0.633
+seed=4 homeo0.01 gini=0.637 used=8 base=0.315 dT=1.041 dR=0.086 ratio=12.12 perload T=1.375 R=0.655 | reroute dT=0.959 dR=0.195 th_range=20.99 off_gini=0.783 off_ce=1.754
+seed=4 homeo0.03 gini=0.164 used=8 base=0.319 dT=0.283 dR=0.292 ratio=0.97 perload T=0.859 R=1.283 | reroute dT=0.265 dR=0.249 th_range=27.64 off_gini=0.557 off_ce=1.123
+seed=4 homeo0.1 gini=0.055 used=8 base=0.320 dT=0.372 dR=0.278 ratio=1.34 perload T=1.345 R=1.162 | reroute dT=0.634 dR=0.318 th_range=38.23 off_gini=0.730 off_ce=4.263
+seed=4 homeo0.3 gini=0.025 used=8 base=0.314 dT=0.285 dR=0.297 ratio=0.96 perload T=1.081 R=1.211 | reroute dT=0.582 dR=0.617 th_range=8.62 off_gini=0.365 off_ce=1.377
