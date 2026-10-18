@@ -158,6 +158,10 @@ def main() -> None:
                           f"base={zl['base_ce']:.4f} ratio={zl['ratio']:.2f} pergate R={zl['d_random_per_gate']:.3f} "
                           f"gate={z['gate_mean']:.3f}{extra}", flush=True)
                 parts.append({"環境": env_info(), "seed": seed, "scale": f"E{e}_L{l}", "runs": runs})
+    if args.only and not args.merge:  # 足した条件だけの部分は、結合してから要約・判定する
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.out).write_text(json.dumps({"環境": env_info(), "設定": vars(args), "部分": parts}, ensure_ascii=False))
+        return
     envs = [pt["環境"] for pt in parts]
     merged: dict = {}  # 同じシード・規模の部分（--only で足した条件）を1つにまとめる
     for pt in parts:
