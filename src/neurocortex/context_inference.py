@@ -62,6 +62,16 @@ def make_batch(spec, batch_size: int, generator: torch.Generator) -> tuple[torch
     return bits, labels.long()
 
 
+def cue_information(probs: torch.Tensor, prior: torch.Tensor | None = None) -> torch.Tensor:
+    """各候補の手がかりについて、文脈と正解の相互情報量 H(Σπ_c p_c) − Σπ_c H(p_c) を log K で正規化して返す
+    （12.6.143節）。probs は [候補, 文脈, K]、prior は文脈の事前分布 π（既定は一様）。"""
+    pi = torch.full((probs.shape[1],), 1.0 / probs.shape[1]) if prior is None else prior
+    ent = -(probs * torch.log(probs.clamp_min(1e-12))).sum(-1)  # [候補, 文脈]
+    mix = (pi[None, :, None] * probs).sum(1)
+    h_mix = -(mix * torch.log(mix.clamp_min(1e-12))).sum(-1)
+    return ((h_mix - (pi[None] * ent).sum(1)) / math.log(probs.shape[-1])).clamp_min(0.0)
+
+
 def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator: torch.Generator,
                          eval_generator: torch.Generator, n_slots: int | None = None, tau: float = 0.4,
                          ema: float = 0.9, pretrain_steps: int = 500, pretrain_weight_decay: float = 0.01,
@@ -77,7 +87,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          cue_select: str = "batch", evidence_lapse: float = 0.1, evidence_alpha: float = 0.01,
                          evidence_reliability: bool = False, evidence_com: bool = False, com_alpha: float = 0.1,
                          com_window: int = 0, reliability_lapse: bool = True,
-                         reliability_source: str = "gated", reliability_holdout: int = 0) -> dict:
+                         reliability_source: str = "gated", reliability_holdout: int = 0,
+                         cue_weight: str = "", active_pool: int = 0) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -161,6 +172,20 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
       総数）・"switches"（乗り換えの回数）・"first_choice"（最初の選択）を、evidence_reliability では "reliability"
       （評価時点ごとの {文脈: a_c}）も加える。selection_trials > 0 では "selection_observed"・"selection_switches"・
       "selection_first" も返す。
+
+    手がかりの情報量（cue_select="evidence" のみ。12.6.143節。どちらも既定では無効）:
+      cue_weight = "info" … 手がかり i の証拠（各文脈の対数尤度）に、一様な事前分布のもとでの文脈と正解の相互情報量
+          I_i = H(平均の予測) − 平均の H(予測)（log K で正規化。文脈の間の予測の不一致）を重みとして掛ける
+          （Yang & Shadlen 2007 の、手がかりの診断性で重み付けた対数尤度比の蓄積）。全文脈が同じ予測をする手がかりは
+          確信度が違っても重みがほぼ 0 になる。
+      cue_weight = "info_post" … 重みを、その手がかりを観測する直前の事後分布のもとでの相互情報量にする（12.6.143節の
+          修正1。一様な事前分布では、忘れた文脈の雑音の予測でどの手がかりも不一致が大きく見え、重みが区別しないため）。
+      active_pool = P > 0 … 手がかりを P·cue_n 個のラベルなしの候補（先頭 cue_n 個は従来の手がかり、残りは評価用の
+          乱数を消費しない専用の乱数で生成）から、現在の事後分布のもとでの期待情報量 H(Σπ_c p_c) − Σπ_c H(p_c) が最大の
+          ものを1個ずつ選んで正解を観測する（能動的知覚、Yang, Lengyel & Wolpert 2016）。観測するのは最大 cue_n 個で、
+          打ち切りの規則は evidence と同じ。
+      diagnostics = True では "cue_info"（観測した手がかりの一様事前のもとでの情報量の平均）を、selection_trials > 0
+      では "selection_info" も返す。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -180,6 +205,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         raise ValueError(reliability_source)
     if not (0.0 < com_alpha < 1.0) or com_window < 0:
         raise ValueError("com_alpha は (0, 1)、com_window は 0 以上")
+    if cue_weight not in ("", "info", "info_post") or active_pool < 0:
+        raise ValueError("cue_weight は ''・'info'・'info_post'、active_pool は 0 以上")
+    if (cue_weight or active_pool) and (cue_select != "evidence" or evidence_reliability or evidence_com):
+        raise ValueError("cue_weight / active_pool は cue_select='evidence'（信頼性・乗り換えなし）でのみ使う")
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
     if split_ctx_lr > 0:
@@ -209,6 +238,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             return min(used, key=lambda c: loss_under(bits, labels, c)), bits.shape[0]
         if revised:
             return select_ctx_revised(bits, labels)
+        if informed:
+            return select_ctx_info(bits, labels)
         ll = []
         for c in used:
             p = F.softmax(model(with_ctx(bits, c)), dim=-1)
@@ -277,7 +308,40 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         sel_info.update(observed=observed, switches=switches, first=first)
         return used[cur_i], n
 
+    @torch.no_grad()
+    def select_ctx_info(bits: torch.Tensor, labels: torch.Tensor) -> tuple[int, int]:
+        """12.6.143節: 手がかりの情報量で重み付けた証拠の蓄積と、能動的な手がかりの選択。bits の行数は
+        active_pool·cue_n（能動）か cue_n。観測するのは最大 cue_n 個。"""
+        probs = torch.stack([F.softmax(model(with_ctx(bits, c)), dim=-1) for c in used], dim=1)  # [候補, 文脈, K]
+        probs = (1 - evidence_lapse) * probs + evidence_lapse / probs.shape[-1]
+        ll = torch.log(probs.gather(2, labels[:, None, None].expand(-1, len(used), 1))[..., 0])  # [候補, 文脈]
+        info_u = cue_information(probs)  # 一様な事前分布のもとでの情報量（重みと記録に使う）
+        w = info_u if cue_weight == "info" else torch.ones(bits.shape[0])
+        cum = torch.zeros(len(used))
+        avail = torch.ones(bits.shape[0], dtype=torch.bool)
+        seen: list[int] = []
+        for t in range(cue_n):
+            if active_pool > 0:
+                gain = cue_information(probs, F.softmax(cum, dim=0))
+                gain[~avail] = -math.inf
+                i = int(gain.argmax())
+            else:
+                i = t
+            avail[i] = False
+            seen.append(i)
+            if cue_weight == "info_post":
+                w_i = cue_information(probs[i:i + 1], F.softmax(cum, dim=0))[0]
+            else:
+                w_i = w[i]
+            cum = cum + w_i * ll[i]
+            if len(used) == 1 or float(F.softmax(cum, dim=0).max()) >= 1 - evidence_alpha:
+                break
+        sel_info.update(info=float(info_u[seen].mean()))
+        return used[int(cum.argmax())], len(seen)
+
     revised = cue_select == "evidence" and (evidence_reliability or evidence_com)
+    informed = cue_select == "evidence" and (bool(cue_weight) or active_pool > 0)
+    active_gen = torch.Generator().manual_seed(eval_generator.initial_seed() + 777)  # active_pool の候補専用
     sel_info: dict = {}
     rel_now: dict[int, float] = {}
     ema_acc: dict[int, float] = {}  # 12.6.139節: 文脈ごとの学習中の正確度の移動平均（evidence_reliability のみ）
@@ -349,12 +413,22 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 cur = best
         return cur
 
+    def draw_cues(j: int) -> tuple[torch.Tensor, torch.Tensor]:
+        """テスト時の手がかり。active_pool > 0 では、従来の cue_n 個の後に専用の乱数で候補を足す（評価用の乱数の消費は同じ）。"""
+        cb, cl = make_batch(specs[j], cue_n, eval_generator)
+        if informed and active_pool > 1:
+            xb, xl = make_batch(specs[j], (active_pool - 1) * cue_n, active_gen)
+            cb, cl = torch.cat([cb, xb]), torch.cat([cl, xl])
+        return cb, cl
+
     @torch.no_grad()
     def accuracy(j: int, chosen: list[int] | None = None, cues: list[int] | None = None,
                  extra: dict | None = None) -> float:
         if condition in ("inferred", "inferred_gated"):
-            cb, cl = make_batch(specs[j], cue_n, eval_generator)
+            cb, cl = draw_cues(j)
             ctx, n_cues = select_ctx(cb, cl)
+            if informed and extra is not None:
+                extra.setdefault("info", []).append(sel_info["info"])
             if chosen is not None:
                 chosen.append(ctx)
             if cues is not None:
@@ -536,6 +610,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 diag["switches"].append(extra.get("switches", []))
                 diag["first_choice"].append(extra.get("first", []))
                 diag["reliability"].append(dict(rel_now))
+            if informed:
+                diag.setdefault("cue_info", []).append(extra.get("info", []))
             diag["trained_src"].append({f"{c}<-{t}": n for (c, t), n in sorted(trained.items())})
     selection_acc = None
     sel_choices: list[list[int]] = []
@@ -547,14 +623,17 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             rel_now.clear()
             rel_now.update(context_reliability())
         hits = 0
+        sel_inf: list[list[float]] = [[] for _ in range(T)]
         for j in range(T):
             sel_choices.append([])
             sel_cues.append([])
             for v in sel_extra.values():
                 v.append([])
             for _ in range(selection_trials):
-                cb, cl = make_batch(specs[j], cue_n, eval_generator)
+                cb, cl = draw_cues(j)
                 ctx, n_cues = select_ctx(cb, cl)
+                if informed:
+                    sel_inf[j].append(sel_info["info"])
                 hits += int(ctx == majority[j])
                 sel_choices[j].append(ctx)
                 sel_cues[j].append(n_cues)
@@ -566,6 +645,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
            "selection_acc": selection_acc}
     if sel_choices:
         out.update(selection_choices=sel_choices, selection_cues=sel_cues)
+        if informed:
+            out.update(selection_info=sel_inf)
         if revised:
             out.update(selection_observed=sel_extra["observed"], selection_switches=sel_extra["switches"],
                        selection_first=sel_extra["first"])
