@@ -51,13 +51,16 @@ class ScaledRoutedCharLM(nn.Module):
 
     def run(self, x: torch.Tensor, disabled: torch.Tensor | None = None, mode: str = "zero",
             gate_one: bool = False, use_threshold: bool = True) -> dict:
-        """順伝播。disabled は bool [L,E]。返り値: logits・choice [L,B,T]・gate [L,B,T]・balance（層の和）。"""
+        """順伝播。disabled は bool [L,E]。返り値: logits・choice [L,B,T]・gate [L,B,T]・balance（層の和）・
+        contrib [L,B,T]（残差に足す g·y のノルム ‖g·y‖）・router [L,B,T,E]（閾値を引く前のルータの対数）。
+        contrib と router は 12.6.145節の取り込みの指標と時系列に使う。"""
         if mode not in ("zero", "reroute"):
             raise ValueError(mode)
         h, _ = self.rnn(self.embed(x))
-        choices, gates, balance = [], [], h.new_zeros(())
+        choices, gates, contribs, raws, balance = [], [], [], [], h.new_zeros(())
         for l in range(self.n_layers):
             raw = self.routers[l](h)
+            raws.append(raw)
             th = self.threshold[l] if use_threshold else torch.zeros_like(self.threshold[l])
             if self.kind == "gate":
                 raw = raw - th
@@ -70,13 +73,15 @@ class ScaledRoutedCharLM(nn.Module):
             y = torch.einsum("btf,btfd->btd", y, self.w2[l][choice])
             if disabled is not None and mode == "zero":
                 y = y * (~disabled[l].to(torch.bool))[choice].unsqueeze(-1).to(y.dtype)
-            h = h + (torch.ones_like(gate) if gate_one else gate) * y
+            gy = (torch.ones_like(gate) if gate_one else gate) * y
+            h = h + gy
+            contribs.append(gy.norm(dim=-1))
             frac = F.one_hot(choice, self.n_experts).float().mean(dim=(0, 1))
             balance = balance + self.n_experts * (frac * probs.mean(dim=(0, 1))).sum()
             choices.append(choice)
             gates.append(gate.squeeze(-1))
         return {"logits": self.head(h), "choice": torch.stack(choices), "gate": torch.stack(gates),
-                "balance": balance}
+                "contrib": torch.stack(contribs), "router": torch.stack(raws), "balance": balance}
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         r = self.run(x)
