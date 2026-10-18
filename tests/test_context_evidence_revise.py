@@ -79,7 +79,25 @@ def test_reliability_recorded_and_slows_decision():
     assert mean(r["selection_cues"]) >= mean(e["selection_cues"]) - 1e-9
 
 
-@pytest.mark.parametrize("bad", [dict(com_alpha=0.0), dict(com_alpha=1.0), dict(com_window=-1)])
+def test_reliability_threshold_only_keeps_choice_at_full_cues():
+    """修正1: 信頼性を閾値だけに使う（共通の ε）と、打ち切らなかった試行の選択は 12.6.135節の蓄積と同じ。"""
+    e = _run(**EV)
+    r = _run(**EV, evidence_reliability=True, reliability_lapse=False, reliability_source="pre")
+    assert r["assign"] == e["assign"]
+    n_full = 0
+    for ce, cr, ne, nr in zip(e["selection_choices"], r["selection_choices"], e["selection_cues"], r["selection_cues"]):
+        for x, y, m, n in zip(ce, cr, ne, nr):
+            assert n >= m  # 閾値は信頼性 ≦ 1 で厳しくなる方向にしか変わらない
+            if m == n == KW["cue_n"]:
+                n_full += 1
+                assert x == y
+    assert n_full > 0
+    rel = r["diag"]["reliability"][-1]
+    assert all(0.0 <= v <= 1.0 for v in rel.values())
+
+
+@pytest.mark.parametrize("bad", [dict(com_alpha=0.0), dict(com_alpha=1.0), dict(com_window=-1),
+                                 dict(reliability_source="x")])
 def test_invalid_args(bad):
     with pytest.raises(ValueError):
         _run(**EV, **bad)

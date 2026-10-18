@@ -76,7 +76,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          split_shared_lr_floor: float = 0.0, split_ctx_lr: float = 0.0,
                          cue_select: str = "batch", evidence_lapse: float = 0.1, evidence_alpha: float = 0.01,
                          evidence_reliability: bool = False, evidence_com: bool = False, com_alpha: float = 0.1,
-                         com_window: int = 0) -> dict:
+                         com_window: int = 0, reliability_lapse: bool = True,
+                         reliability_source: str = "gated") -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -147,6 +148,11 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
       evidence_com = True … 最初の決定の後も手がかりを最大 com_window 個（0 は cue_n 個まで）観測し続け、他の文脈の
           最大が現在の選択を対数オッズ log((1 − com_alpha)/com_alpha) 上回ったら乗り換える（change of mind,
           Resulaj et al. 2009）。最終の選択を使う。
+      reliability_lapse = False … 信頼性を閾値だけに使い、lapse は全文脈で共通の ε にする（12.6.139節の修正1。
+          文脈ごとに ε_c が違うと、平らにされた文脈が誤っても罰されにくく、選択が信頼性の低い文脈に偏るため）。
+      reliability_source = "pre" … 学習中の正確度を、ゲート・更新の前に、その文脈を選んだ全バッチで測る（ただし
+          新しい原因の判定と同じく、正答率 0.75 未満のバッチは除く）。既定の "gated" は、学習・保存したバッチの
+          更新後の正確度（損失 ≦ τ のバッチに偏るため高めに出る）。
       cues_used / selection_cues は最初の決定までの手がかりの数。diagnostics = True では "cues_observed"（観測した
       総数）・"switches"（乗り換えの回数）・"first_choice"（最初の選択）を、evidence_reliability では "reliability"
       （評価時点ごとの {文脈: a_c}）も加える。selection_trials > 0 では "selection_observed"・"selection_switches"・
@@ -164,6 +170,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         raise ValueError(cue_select)
     if not (0.0 <= evidence_lapse <= 1.0 and 0.0 <= evidence_alpha < 1.0):
         raise ValueError("evidence_lapse は [0, 1]、evidence_alpha は [0, 1)")
+    if reliability_source not in ("gated", "pre"):
+        raise ValueError(reliability_source)
     if not (0.0 < com_alpha < 1.0) or com_window < 0:
         raise ValueError("com_alpha は (0, 1)、com_window は 0 以上")
     if split_shared_lr_floor > 0:
@@ -228,7 +236,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         for c in used:
             p = F.softmax(model(with_ctx(bits, c)), dim=-1)
             K = p.shape[-1]
-            eps = max(evidence_lapse, K * (1 - rel_now[c]) / (K - 1)) if evidence_reliability else evidence_lapse
+            eps = (max(evidence_lapse, K * (1 - rel_now[c]) / (K - 1)) if evidence_reliability and reliability_lapse
+                   else evidence_lapse)
             eps = min(eps, 1.0)
             p = (1 - eps) * p + eps / K
             ll.append(torch.log(p.gather(1, labels[:, None])[:, 0]))
@@ -377,6 +386,11 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             n_used_before = len(used)
             ctx = pick_ctx(k, bits, labels)
             assign.append((k, ctx))
+            if evidence_reliability and revised and reliability_source == "pre":
+                with torch.no_grad():
+                    pre_acc = float((model(with_ctx(bits, ctx)).argmax(-1) == labels).float().mean())
+                if pre_acc >= 0.75:
+                    ema_acc[ctx] = pre_acc if ctx not in ema_acc else ema * ema_acc[ctx] + (1 - ema) * pre_acc
             if reset_opt_on_new and len(used) > n_used_before:
                 opt = make_opt(k)
             if split_on and len(used) > n_used_before:
@@ -449,7 +463,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 with torch.no_grad():
                     cur_loss = loss_under(bits, labels, ctx_in)
                 ema_loss[ctx] = cur_loss if ctx not in ema_loss else ema * ema_loss[ctx] + (1 - ema) * cur_loss
-                if evidence_reliability and revised:
+                if evidence_reliability and revised and reliability_source == "gated":
                     with torch.no_grad():
                         cur_acc = float((model(with_ctx(bits, ctx_in)).argmax(-1) == labels).float().mean())
                     ema_acc[ctx] = cur_acc if ctx not in ema_acc else ema * ema_acc[ctx] + (1 - ema) * cur_acc

@@ -41,6 +41,12 @@ SELECTS: dict[str, dict] = {
     "rel": {**FIX2, "evidence_reliability": True},
     "com": {**FIX2, "evidence_com": True, "com_alpha": 0.1, "com_window": 0},
     "rel_com": {**FIX2, "evidence_reliability": True, "evidence_com": True, "com_alpha": 0.1, "com_window": 0},
+    # 修正1: 開発用シードで rel が evidence_fix2 を下回った（手がかり2個で平均 −0.004、作り直しの L = 250 で −0.044）。
+    # 文脈ごとの ε_c が選択を信頼性の低い文脈に偏らせることと、ゲート後の正確度で信頼性を高めに見積もる
+    # （作り直しで 0.97〜1.0、実際は 0.80〜0.83）ことが原因なので、信頼性は閾値だけに使い、ゲート前の正確度で測る
+    "rel_fix1": {**FIX2, "evidence_reliability": True, "reliability_lapse": False, "reliability_source": "pre"},
+    "rel_com_fix1": {**FIX2, "evidence_reliability": True, "reliability_lapse": False, "reliability_source": "pre",
+                     "evidence_com": True, "com_alpha": 0.1, "com_window": 0},
 }
 BASE_SELECTS = ("batch", "evidence_fix2", "rel", "com", "rel_com")
 EVAL_SELECTS = BASE_SELECTS
