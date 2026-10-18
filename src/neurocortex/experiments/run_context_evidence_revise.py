@@ -56,7 +56,8 @@ SELECTS: dict[str, dict] = {
                      "reliability_holdout": 50, "evidence_com": True, "com_alpha": 0.1, "com_window": 0},
 }
 BASE_SELECTS = ("batch", "evidence_fix2", "rel", "com", "rel_com")
-EVAL_SELECTS = BASE_SELECTS
+# 開発用シードで確定: (a) は修正2（修正3は使わない）、(b) は初期設定のまま
+EVAL_SELECTS = ("batch", "evidence_fix2", "rel_fix2", "com", "rel_com_fix2")
 SELECTION_TRIALS = 50
 
 
