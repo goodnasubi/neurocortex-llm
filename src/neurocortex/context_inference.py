@@ -71,7 +71,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          novel_patience: int = 20, store_consistent: bool = False, train_consistent: bool = False,
                          diagnostics: bool = False, trace_every: int = 0, diag_oracle_filter: str = "",
                          reset_opt_on_new: bool = False, plasticity_cap: float = 0.0, plasticity_ema: float = 0.99,
-                         plasticity_ref: str = "capped", optimizer: str = "adam") -> dict:
+                         plasticity_ref: str = "capped", optimizer: str = "adam", split_window: int = 0,
+                         split_ctx_gain: float = 1.0, split_shared_gain: float = 1.0) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -114,6 +115,11 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     値を使う（修正2。縮めた値を使うと ū が自分の縮小で下がり続け、平常時の可塑性まで抑えるため）。
 
     optimizer は "adam"（既定）か "sgd"（モーメントなし。Adam 以外でも同じ問題が起きるかの確認用, 12.6.125節）。
+
+    split_window = W > 0（inferred / inferred_gated のみ）では、文脈固有と共有で可塑性を分ける（12.6.129節）。
+    新しい文脈を作った時点から W ステップの間、各最適化ステップの更新（パラメータの変化）に利得をかける。
+    新しい文脈の one-hot 入力からの重み（fc1.weight の該当列）には split_ctx_gain、それ以外（共有の重みと
+    既存の文脈の列）には split_shared_gain。最適化器の内部状態は変えない。既定の 0 では従来と同じ挙動。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -121,6 +127,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         raise ValueError(optimizer)
     if plasticity_ref not in ("capped", "raw"):
         raise ValueError(plasticity_ref)
+    if split_window < 0 or split_ctx_gain < 0 or split_shared_gain < 0:
+        raise ValueError("split_window / split_ctx_gain / split_shared_gain は 0 以上")
     T = len(specs)
     C = 0 if condition == "none" else (T if condition == "oracle" else (n_slots or T + 2))
     model = make_model(specs[0].n_inputs + C, hidden_dim)
@@ -222,6 +230,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         return torch.optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
 
     upd_ref: list[float] = []  # plasticity_cap の ū（平常時の更新ノルムの移動平均）
+    split = {"left": 0, "ctx": -1}  # split_window の残りステップと、対象の新しい文脈
+    split_on = split_window > 0 and condition in ("inferred", "inferred_gated")
+    fc1_w = model.backbone.fc1.weight
+    n_bits = specs[0].n_inputs
     R: list[list[float]] = []
     for k, spec in enumerate(specs):
         trained: dict[tuple[int, int], int] = {}
@@ -241,6 +253,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             assign.append((k, ctx))
             if reset_opt_on_new and len(used) > n_used_before:
                 opt = make_opt(k)
+            if split_on and len(used) > n_used_before:
+                split["left"], split["ctx"] = split_window, ctx
+            split_now = split["left"] > 0
+            split["left"] = max(split["left"] - 1, 0)
             ctx_in = src if (condition == "oracle" and src is not None) else ctx
             x = with_ctx(bits, ctx_in)
             y = labels
@@ -271,11 +287,21 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 loss = F.cross_entropy(model(x), y)
                 opt.zero_grad(set_to_none=True)
                 loss.backward()
-                if diagnostics or plasticity_cap > 0:
+                if diagnostics or plasticity_cap > 0 or split_now:
                     before = [q.detach().clone() for q in model.parameters()]
                 if diagnostics:
                     gnorm = float(torch.sqrt(sum((q.grad ** 2).sum() for q in model.parameters() if q.grad is not None)))
                 opt.step()
+                if split_now:
+                    # 12.6.129節: 新しい原因を立てた直後は、その文脈の入力重みの可塑性を上げ（新しい情報からの学習を
+                    # 速める）、共有の重みの可塑性を下げる（前の文脈への干渉を抑える）
+                    with torch.no_grad():
+                        for q, b in zip(model.parameters(), before):
+                            d = (q - b) * split_shared_gain
+                            if q is fc1_w:
+                                col = n_bits + split["ctx"]
+                                d[:, col] = (q[:, col] - b[:, col]) * split_ctx_gain
+                            q.copy_(b + d)
                 if diagnostics or plasticity_cap > 0:
                     unorm = float(torch.sqrt(sum(((q.detach() - b) ** 2).sum() for q, b in zip(model.parameters(), before))))
                 if plasticity_cap > 0:

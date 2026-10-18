@@ -28,8 +28,17 @@
     --phase neuromod_eval（gated_neuromod_eval.json）… 確定後に評価用シードで一度だけ測る。
     --phase neuromod_eval_ctrl（gated_neuromod_eval_ctrl.json）… 統制（学習率 0.01）を評価用シードで一度だけ測る。
 
+12.6.129節（文脈固有と共有で可塑性を分ける split_window / split_ctx_gain / split_shared_gain）:
+    --phase split_dev（gated_split_dev.json）… 作り直しの代わりに、新しい文脈を作ってから W ステップ、その文脈の
+        入力重みの更新を g_ctx 倍、それ以外の更新を g_shared 倍にする。lr = 0.05 と 0.01 の両方の土台で測る。
+    --phase split_ablation（gated_split_ablation_dev.json）… 切り分け。g_ctx = 1（共有を抑えるだけ）と
+        g_shared = 1（新しい文脈の列を速めるだけ）。
+    --phase split_fix1〜3（gated_split_fix{1,2,3}_dev.json）… 修正（上限3回）。
+    --phase split_eval（gated_split_eval.json）… 確定後に評価用シードで一度だけ、12.6.121節の確定機構・
+        12.6.125節の ρ = 2.0・統制 lr = 0.01 と並べて測る。
+
 開発用シード 100〜104 のみを --phase prelim / diag / fix / residual_diag / residual_fix / neuromod_fix〜fix3 /
-neuromod_sgd / neuromod_ctrl で使う。
+neuromod_sgd / neuromod_ctrl / split_dev / split_ablation / split_fix1〜3 で使う。
 
 使い方:
     PYTHONPATH=src python -m neurocortex.experiments.run_context_gated_long --phase diag
@@ -66,6 +75,11 @@ CAP = {**TRAIN, "plasticity_cap": 1.5}  # 12.6.125節の修正1（作り直し�
 CAP_RAW = {**CAP, "plasticity_ref": "raw"}  # 12.6.125節の修正2
 CAP2 = {**TRAIN, "plasticity_cap": 2.0}  # 12.6.125節の修正3
 FINAL_NEUROMOD = CAP2  # 開発用シードで確定した機構（12.6.125節、修正3）
+SPLIT = {**TRAIN, "split_window": 100, "split_ctx_gain": 2.0, "split_shared_gain": 0.2}  # 12.6.129節の初期設定
+SPLIT_FIXES: dict[str, dict] = {}  # 修正（12.6.129節）。開発用シードの結果を見て追加する
+FINAL_SPLIT = SPLIT  # 開発用シードで確定した機構（12.6.129節。修正なしで条件を満たした）
+SPLIT_SHARED_ONLY = {**SPLIT, "split_ctx_gain": 1.0}  # 切り分け: 共有の重みを抑えるだけ
+SPLIT_CTX_ONLY = {**SPLIT, "split_shared_gain": 1.0}  # 切り分け: 新しい文脈の列を速めるだけ
 SGD_LR = 0.5
 SGD = {"optimizer": "sgd", "lr": SGD_LR}
 LS = ((0, 500), (100, 500), (250, 500), (500, 500), (500, 1000))
@@ -112,6 +126,23 @@ PHASES = {
     "neuromod_eval": [(n, "inferred_gated", L, s, sc)
                       for sc, n in ((FINAL_RESIDUAL, "gated_store_reset_train"), (FINAL_NEUROMOD, "gated_store_cap2_train"))
                       for L, s in LS],
+    "split_dev": [(n, "inferred_gated", L, s, sc)
+                  for sc, n in ((SPLIT, "gated_store_split_train"), ({**SPLIT, "lr": 0.01}, "gated_store_split_train_lr0.01"))
+                  for L, s in LS],
+    **{f"split_fix{i}": [(n, "inferred_gated", L, s, sc)
+                         for sc, n in ((fx, f"gated_store_split{i}_train"), ({**fx, "lr": 0.01}, f"gated_store_split{i}_train_lr0.01"))
+                         for L, s in LS] for i, fx in SPLIT_FIXES.items()},
+    # 切り分け（修正ではない）: 2つの利得のどちらが効いているか
+    "split_ablation": [(n, "inferred_gated", L, s, sc)
+                       for sc, n in ((SPLIT_SHARED_ONLY, "gated_store_split_sharedonly_train"),
+                                     (SPLIT_CTX_ONLY, "gated_store_split_ctxonly_train")) for L, s in LS],
+    "split_eval": [(n, "inferred_gated", L, s, sc)
+                   for sc, n in ((FINAL_RESIDUAL, "gated_store_reset_train"), (FINAL_NEUROMOD, "gated_store_cap2_train"),
+                                 ({**TRAIN, "lr": 0.01}, "gated_store_train_lr0.01"), (FINAL_SPLIT, "gated_store_split_train"),
+                                 ({**FINAL_SPLIT, "lr": 0.01}, "gated_store_split_train_lr0.01"),
+                                 (SPLIT_SHARED_ONLY, "gated_store_split_sharedonly_train"),
+                                 (SPLIT_CTX_ONLY, "gated_store_split_ctxonly_train"))
+                   for L, s in LS],
 }
 
 
@@ -227,8 +258,8 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--out", type=Path)
     args = ap.parse_args()
-    seeds = args.seeds or (EVAL_SEEDS if args.phase in ("eval", "residual_eval", "neuromod_eval", "neuromod_eval_ctrl")
-                          else DEV_SEEDS)
+    seeds = args.seeds or (EVAL_SEEDS if args.phase in ("eval", "residual_eval", "neuromod_eval", "neuromod_eval_ctrl",
+                                                         "split_eval") else DEV_SEEDS)
     out_name = {"prelim": "gated_long_dev", "diag": "gated_long_diag", "fix": "gated_long_fix_dev",
                 "eval": "gated_long_eval", "residual_diag": "gated_residual_diag",
                 "residual_fix": "gated_residual_fix_dev", "residual_eval": "gated_residual_eval",
@@ -236,13 +267,16 @@ def main() -> None:
                 "neuromod_fix3": "gated_neuromod_fix3_dev",
                 "neuromod_sgd": "gated_neuromod_sgd_dev",
                 "neuromod_ctrl": "gated_neuromod_ctrl_dev",
-                "neuromod_eval": "gated_neuromod_eval", "neuromod_eval_ctrl": "gated_neuromod_eval_ctrl"}[args.phase]
+                "neuromod_eval": "gated_neuromod_eval", "neuromod_eval_ctrl": "gated_neuromod_eval_ctrl",
+                "split_dev": "gated_split_dev", "split_ablation": "gated_split_ablation_dev", "split_eval": "gated_split_eval",
+                **{f"split_fix{i}": f"gated_split_fix{i}_dev" for i in SPLIT_FIXES}}[args.phase]
     out_path = args.out or Path(f"results/context_inference/{out_name}.json")
     jobs = [(*cfg, s) for cfg in PHASES[args.phase] for s in seeds]
     with Pool(args.workers) as pool:
         results = pool.map(run_one, jobs)
     sec = ("12.6.121節" if args.phase.startswith("residual") else
-           "12.6.125節" if args.phase.startswith("neuromod") else "12.6.116節")
+           "12.6.125節" if args.phase.startswith("neuromod") else
+           "12.6.129節" if args.phase.startswith("split") else "12.6.116節")
     out: dict = {"環境": env_info(), "説明": f"長い移行期間での限界の原因の切り分けと修正（{sec}）。phase={args.phase}",
                  "seeds": seeds, "runs": {}}
     keys = ("ACC", "BWT", "LA", "n_contexts", "distinct", "buffer_contamination", "buffer_conflict", "final_acc_native_ctx",
