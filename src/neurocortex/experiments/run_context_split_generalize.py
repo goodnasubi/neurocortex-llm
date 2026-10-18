@@ -87,7 +87,7 @@ def gen_jobs() -> list[tuple]:
     return out
 
 
-# 学習率への依存（12.6.132節）。修正は開発用シードの結果を見て追加する（上限3回）
+# 学習率への依存（12.6.132節）。修正は開発用シードの結果を見て追加する（上限3回。修正1で条件を満たし確定）
 LR_FIXES: dict[int, dict] = {
     1: {**FINAL_SPLIT, "split_shared_lr_floor": 0.01},
 }
