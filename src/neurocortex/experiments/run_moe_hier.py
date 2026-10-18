@@ -48,6 +48,8 @@ ORDERS = {"hier": dict(zip(("embed", "rnn", "router", "experts"), ORDER_ENDS)),
           "rev": dict(zip(("experts", "router", "rnn", "embed"), ORDER_ENDS)),
           "sim": {g: statistics.mean(ORDER_ENDS) for g in ("embed", "rnn", "router", "experts")}}
 SEL_ETA = {"E8_L1": 0.01, **CP_ETA}  # (C) の選択専用（閉じない）
+# 条件の名前の接頭辞 → 閉じ終わりの倍率 β。"" は主条件（β=0.1）、"0" は修正1で足した β=0（完全に止める）
+PREFIX_BETA = {"": BETA, "0": 0.0}
 
 
 def scope_sched(scope: str) -> dict:
@@ -71,8 +73,9 @@ def conditions(e: int, l: int) -> dict[str, dict]:
     if name == "E8_L1":
         return c
     th = {"kind": "select", "eta": eta, "open": TH_SCHED[0], "ramp": TH_SCHED[1], "freeze": True}
-    c.update({f"sc_{s}": {**th, "sched": scope_sched(s)} for s in SCOPES})
-    c.update({f"ord_{o}": {**th, "sched": order_sched(o)} for o in ORDERS})
+    for pre, beta in PREFIX_BETA.items():
+        c.update({f"sc{pre}_{s}": {**th, "sched": scope_sched(s), "beta": beta} for s in SCOPES})
+        c.update({f"ord{pre}_{o}": {**th, "sched": order_sched(o), "beta": beta} for o in ORDERS})
     return c
 
 
@@ -89,7 +92,7 @@ def run_cond(seed: int, e: int, l: int, key: str, cond: dict, corpus: CharCorpus
 
     kw = {"total_steps": args.train_steps, "open_frac": cond.get("open"), "ramp_frac": cond.get("ramp", 0.0),
           "probe": probe, "log_every": args.log_every, "vec_every": 10 ** 9, "freeze": cond.get("freeze", False),
-          "lag": args.lag, "brake_sched": cond.get("sched"), "beta": args.beta}
+          "lag": args.lag, "brake_sched": cond.get("sched"), "beta": cond.get("beta", args.beta)}
     r = run_one(seed, e, l, cond, corpus, args, HierBrakeLM, args.train_steps, post=post, train_fn=train_hier, **kw)
     return slim(r, False)
 
@@ -122,11 +125,15 @@ def paired_less(a: list[float], b: list[float]) -> int:
     return sum(x < y for x, y in zip(a, b))
 
 
-def judge_scale(sub: list[dict], conds: dict, args: argparse.Namespace) -> dict:
-    """H16（範囲）・H17（順序）の判定。12.6.153節の合格条件。"""
+def judge_scale(sub: list[dict], conds: dict, args: argparse.Namespace, pre: str = "") -> dict:
+    """H16（範囲）・H17（順序）の判定。12.6.153節の合格条件。pre は β の接頭辞（`PREFIX_BETA`）。"""
     T, n = args.train_steps, len(sub)
-    ret = {k: returns(sub, k, conds[k], T) for k in conds if k.startswith(("sc_", "ord_"))}
-    gini = {k: [r[k]["gini"] for r in sub] for k in conds}
+    full = {k: k.replace(f"sc{pre}_", "sc_", 1).replace(f"ord{pre}_", "ord_", 1)
+            for k in conds if k.startswith((f"sc{pre}_", f"ord{pre}_"))}
+    sub = [{**r, **{v: r[k] for k, v in full.items()}} for r in sub]
+    conds = {**conds, **{v: conds[k] for k, v in full.items()}}
+    ret = {v: returns(sub, v, conds[v], T) for v in full.values()}
+    gini = {k: [r[k]["gini"] for r in sub] for k in ret}
     m = {k: statistics.mean(v) for k, v in ret.items()}
     v: dict = {"戻り_平均": m, "戻り_シード別": ret,
                "ジニ_平均": {k: statistics.mean(gini[k]) for k in ret}}
@@ -140,7 +147,7 @@ def judge_scale(sub: list[dict], conds: dict, args: argparse.Namespace) -> dict:
         statistics.mean(gh) < statistics.mean(gr) and paired_less(gh, gr) >= n - 1
         and statistics.mean(gh) < statistics.mean(gs) and paired_less(gh, gs) >= n - 1)
     v["H17b_階層的な順序で戻りが小さい_≦0.02"] = bool(m["ord_hier"] <= 0.02)
-    jk = {k: judge_key(sub, k, args) for k in conds if k.startswith(("sc_", "ord_"))}
+    jk = {k: judge_key(sub, k, args) for k in ret}
     for k, j in jk.items():
         j["取り込み_H1〜H3かつジニ≦0.3"] = bool(j["H1_崩壊を防ぐ"] and j["H2_ハブの非対称性を消す"]
                                          and j["H3_性能を損なわない"] and j["ジニ"] <= 0.3)
@@ -178,8 +185,10 @@ def analyze(subs: dict[str, list[dict]], args: argparse.Namespace) -> tuple[dict
         e, l = map(int, n[1:].split("_L"))
         conds = conditions(e, l)
         summ[n] = {k: summarize_key(sub, k, conds.get(k, {}), args.train_steps) for k in sub[0]}
-        if all(k in sub[0] for k in conds) and any(k.startswith("sc_") for k in conds):
-            verdict[n] = judge_scale(sub, conds, args)
+        for pre in PREFIX_BETA:
+            ks = [k for k in conds if k.startswith((f"sc{pre}_", f"ord{pre}_"))]
+            if ks and all(k in sub[0] for k in (*ks, *BASE)):
+                verdict.setdefault(n, {})[f"β={PREFIX_BETA[pre]:g}"] = judge_scale(sub, conds, args, pre)
     verdict["H15"] = judge_h15(subs)
     return summ, verdict
 
@@ -244,7 +253,9 @@ def main() -> None:
     subs = {n: [pt["runs"] for pt in sorted((pt for pt in parts if pt["scale"] == n), key=lambda pt: pt["seed"])]
             for n in names}
     summ, verdict = analyze(subs, args)
-    keep = {"sel0.01", "sel0.3", "sel1", "sc_none", "sc_R", "sc_RGM", "ord_hier", "ord_rev", "ord_sim"}
+    keep = {"sel0.01", "sel0.3", "sel1", *(f"{a}{p}_{b}" for p in PREFIX_BETA for a, b in
+                                         (("sc", "none"), ("sc", "R"), ("sc", "RGM"), ("ord", "hier"), ("ord", "rev"),
+                                          ("ord", "sim")))}
     for sub in subs.values():  # 結果ファイルを数 MB に収めるため、シード別の時系列は主な条件だけ残す
         for runs in sub:
             for k in list(runs):

@@ -96,6 +96,7 @@ def test_order_schedules():
     c8, c32 = R.conditions(8, 1), R.conditions(32, 1)
     assert list(c8) == ["sel0.01"]
     assert {"aux0", "aux0.05", "gate0.1", "sel1", "sc_RGMX", "ord_hier"} <= set(c32)
+    assert c32["sc0_RGM"]["beta"] == 0.0 and c32["sc_RGM"]["beta"] == 0.1 and "ord0_hier" in c32
     assert c32["sc_R"]["freeze"] and c32["sc_R"]["open"] == 0.25 and R.conditions(16, 1)["ord_rev"]["eta"] == 0.3
 
 
@@ -125,7 +126,9 @@ def test_end_to_end_small():
         subs[name] = [{k: R.run_cond(s, e, l, k, c, corpus, args) for k, c in R.conditions(e, l).items()}
                       for s in (0, 1)]
     summ, v = R.analyze(subs, args)
-    j = v["E32_L1"]
+    assert set(v["E32_L1"]) == {"β=0.1", "β=0"}
+    assert subs["E32_L1"][0]["sc0_R"] != subs["E32_L1"][0]["sc_R"]
+    j = v["E32_L1"]["β=0.1"]
     for k in ("H16a_入力の安定化が要る", "H16b_入力だけでルータ以上に戻りを防ぐ", "H16c_専門家のブレーキは戻りに効かない",
               "H17a_階層的な順序で学習の終わりの偏りが小さい", "H17b_階層的な順序で戻りが小さい_≦0.02",
               "H17c_階層的な順序で取り込み"):
