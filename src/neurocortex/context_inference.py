@@ -77,7 +77,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          cue_select: str = "batch", evidence_lapse: float = 0.1, evidence_alpha: float = 0.01,
                          evidence_reliability: bool = False, evidence_com: bool = False, com_alpha: float = 0.1,
                          com_window: int = 0, reliability_lapse: bool = True,
-                         reliability_source: str = "gated") -> dict:
+                         reliability_source: str = "gated", reliability_holdout: int = 0) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -153,6 +153,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
       reliability_source = "pre" … 学習中の正確度を、ゲート・更新の前に、その文脈を選んだ全バッチで測る（ただし
           新しい原因の判定と同じく、正答率 0.75 未満のバッチは除く）。既定の "gated" は、学習・保存したバッチの
           更新後の正確度（損失 ≦ τ のバッチに偏るため高めに出る）。
+      reliability_holdout = m > 0 … バッファの整合度の代わりに、リプレイに使わない保留サンプル（文脈ごとに m 個まで。
+          保存するバッチのうちバッファに入れなかった残りから、同じ整合フィルタで取る）の整合度を使う（12.6.139節の
+          修正2。リプレイはバッファのサンプルそのものを学習し続けるので、バッファの整合度には忘却が現れない）。
+          学習・乱数の消費には影響しない。
       cues_used / selection_cues は最初の決定までの手がかりの数。diagnostics = True では "cues_observed"（観測した
       総数）・"switches"（乗り換えの回数）・"first_choice"（最初の選択）を、evidence_reliability では "reliability"
       （評価時点ごとの {文脈: a_c}）も加える。selection_trials > 0 では "selection_observed"・"selection_switches"・
@@ -170,6 +174,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         raise ValueError(cue_select)
     if not (0.0 <= evidence_lapse <= 1.0 and 0.0 <= evidence_alpha < 1.0):
         raise ValueError("evidence_lapse は [0, 1]、evidence_alpha は [0, 1)")
+    if reliability_holdout < 0:
+        raise ValueError("reliability_holdout は 0 以上")
     if reliability_source not in ("gated", "pre"):
         raise ValueError(reliability_source)
     if not (0.0 < com_alpha < 1.0) or com_window < 0:
@@ -217,13 +223,14 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     @torch.no_grad()
     def context_reliability() -> dict[int, float]:
         """12.6.139節: 各文脈の信頼性 a_c = min(学習中の正確度の移動平均, バッファの整合度)。"""
-        bc = torch.cat(buf_ctx) if buf_ctx else torch.zeros(0, dtype=torch.long)
+        src_b, src_l, src_c = (hold_bits, hold_labels, hold_ctx) if reliability_holdout > 0 else (buf_bits, buf_labels, buf_ctx)
+        bc = torch.cat(src_c) if src_c else torch.zeros(0, dtype=torch.long)
         rel: dict[int, float] = {}
         for c in used:
             vals = [ema_acc[c]] if c in ema_acc else []
             m = bc == c
             if bool(m.any()):
-                bb, bl = torch.cat(buf_bits)[m], torch.cat(buf_labels)[m]
+                bb, bl = torch.cat(src_b)[m], torch.cat(src_l)[m]
                 vals.append(float((model(with_ctx(bb, c)).argmax(-1) == bl).float().mean()))
             rel[c] = min(vals) if vals else 1.0
         return rel
@@ -274,6 +281,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     sel_info: dict = {}
     rel_now: dict[int, float] = {}
     ema_acc: dict[int, float] = {}  # 12.6.139節: 文脈ごとの学習中の正確度の移動平均（evidence_reliability のみ）
+    hold_bits: list[torch.Tensor] = []  # 12.6.139節の修正2: リプレイに使わない保留サンプル
+    hold_labels: list[torch.Tensor] = []
+    hold_ctx: list[torch.Tensor] = []
+    hold_count: dict[int, int] = {}
     buf_bits: list[torch.Tensor] = []
     buf_labels: list[torch.Tensor] = []
     buf_ctx: list[torch.Tensor] = []
@@ -495,6 +506,14 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 buf_ctx.append(ctx_in[:n].long() if isinstance(ctx_in, torch.Tensor)
                                else torch.full((n,), ctx, dtype=torch.long))
                 buf_src.append(src[:n].long() if src is not None else torch.full((n,), k, dtype=torch.long))
+            if reliability_holdout > 0 and evidence_reliability and revised:
+                n0 = max(n, 0)
+                m = min(reliability_holdout - hold_count.get(key, 0), labels.shape[0] - n0)
+                if m > 0:
+                    hold_count[key] = hold_count.get(key, 0) + m
+                    hold_bits.append(bits[n0:n0 + m])
+                    hold_labels.append(labels[n0:n0 + m])
+                    hold_ctx.append(torch.full((m,), ctx, dtype=torch.long))
         chosen: list[int] = []
         cues_used: list[int] = []
         extra: dict = {}

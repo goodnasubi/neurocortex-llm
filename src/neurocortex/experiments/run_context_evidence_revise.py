@@ -47,6 +47,13 @@ SELECTS: dict[str, dict] = {
     "rel_fix1": {**FIX2, "evidence_reliability": True, "reliability_lapse": False, "reliability_source": "pre"},
     "rel_com_fix1": {**FIX2, "evidence_reliability": True, "reliability_lapse": False, "reliability_source": "pre",
                      "evidence_com": True, "com_alpha": 0.1, "com_window": 0},
+    # 修正2: 修正1でも作り直しの L = 0 が改善しなかった。上書きされた本来の文脈（新しいサンプルで正確度 0.57〜0.66）の
+    # バッファの整合度が 1.0 のまま（リプレイがバッファのサンプルそのものを学習し続けるため）なので、リプレイに使わない
+    # 保留サンプル（文脈ごとに 50 個）の整合度で忘却を測る
+    "rel_fix2": {**FIX2, "evidence_reliability": True, "reliability_lapse": False, "reliability_source": "pre",
+                 "reliability_holdout": 50},
+    "rel_com_fix2": {**FIX2, "evidence_reliability": True, "reliability_lapse": False, "reliability_source": "pre",
+                     "reliability_holdout": 50, "evidence_com": True, "com_alpha": 0.1, "com_window": 0},
 }
 BASE_SELECTS = ("batch", "evidence_fix2", "rel", "com", "rel_com")
 EVAL_SELECTS = BASE_SELECTS
