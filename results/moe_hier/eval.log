@@ -1,0 +1,245 @@
+seed=0 E16_L1/aux0 gini=0.906 used=3.0 base=0.3232 ratio=12066.74 gate=0.848 oracle_gini=0.889
+seed=0 E16_L1/aux0.05 gini=0.072 used=16.0 base=0.3262 ratio=1.51 gate=0.465 oracle_gini=0.124
+seed=0 E16_L1/gate0.1 gini=0.085 used=16.0 base=0.3242 ratio=0.77 gate=0.469 off_gini=0.694 agree=0.339 oracle_gini=0.105
+seed=0 E16_L1/sel0.3 gini=0.095 used=16.0 base=0.3260 ratio=0.90 gate=0.468 off_gini=0.140 agree=0.886 oracle_gini=0.135
+seed=0 E16_L1/sc_none gini=0.204 used=16.0 base=0.3239 ratio=1.59 gate=0.499 off_gini=0.204 agree=1.000 close=0.213 ret=+0.014 oracle_gini=0.200
+seed=0 E16_L1/sc_R gini=0.179 used=16.0 base=0.3247 ratio=1.39 gate=0.480 off_gini=0.179 agree=1.000 close=0.215 ret=-0.020 oracle_gini=0.150
+seed=0 E16_L1/sc_RG gini=0.211 used=16.0 base=0.3230 ratio=1.48 gate=0.490 off_gini=0.211 agree=1.000 close=0.198 ret=+0.027 oracle_gini=0.153
+seed=0 E16_L1/sc_RGM gini=0.201 used=16.0 base=0.3243 ratio=1.54 gate=0.489 off_gini=0.201 agree=1.000 close=0.195 ret=+0.025 oracle_gini=0.148
+seed=0 E16_L1/sc_GM gini=0.215 used=16.0 base=0.3257 ratio=1.70 gate=0.510 off_gini=0.215 agree=1.000 close=0.222 ret=+0.011 oracle_gini=0.203
+seed=0 E16_L1/sc_X gini=0.224 used=16.0 base=0.3226 ratio=1.63 gate=0.557 off_gini=0.224 agree=1.000 close=0.218 ret=+0.022 oracle_gini=0.168
+seed=0 E16_L1/sc_RGMX gini=0.209 used=16.0 base=0.3225 ratio=1.32 gate=0.516 off_gini=0.209 agree=1.000 close=0.200 ret=+0.022 oracle_gini=0.130
+seed=0 E16_L1/ord_hier gini=0.203 used=16.0 base=0.3218 ratio=1.56 gate=0.511 off_gini=0.203 agree=1.000 close=0.166 ret=+0.045 oracle_gini=0.195
+seed=0 E16_L1/ord_rev gini=0.174 used=16.0 base=0.3247 ratio=1.55 gate=0.531 off_gini=0.174 agree=1.000 close=0.110 ret=+0.064 oracle_gini=0.104
+seed=0 E16_L1/ord_sim gini=0.211 used=16.0 base=0.3226 ratio=1.29 gate=0.514 off_gini=0.211 agree=1.000 close=0.193 ret=+0.030 oracle_gini=0.140
+seed=0 E16_L1/sc0_none gini=0.204 used=16.0 base=0.3239 ratio=1.59 gate=0.499 off_gini=0.204 agree=1.000 close=0.213 ret=+0.014 oracle_gini=0.200
+seed=0 E16_L1/sc0_R gini=0.183 used=16.0 base=0.3243 ratio=1.35 gate=0.478 off_gini=0.183 agree=1.000 close=0.210 ret=-0.009 oracle_gini=0.145
+seed=0 E16_L1/sc0_RG gini=0.187 used=16.0 base=0.3235 ratio=1.27 gate=0.486 off_gini=0.187 agree=1.000 close=0.186 ret=+0.016 oracle_gini=0.137
+seed=0 E16_L1/sc0_RGM gini=0.175 used=16.0 base=0.3234 ratio=1.30 gate=0.487 off_gini=0.175 agree=1.000 close=0.180 ret=+0.000 oracle_gini=0.130
+seed=0 E16_L1/sc0_GM gini=0.229 used=16.0 base=0.3290 ratio=1.58 gate=0.525 off_gini=0.229 agree=1.000 close=0.216 ret=+0.026 oracle_gini=0.198
+seed=0 E16_L1/sc0_X gini=0.221 used=16.0 base=0.3226 ratio=1.66 gate=0.568 off_gini=0.221 agree=1.000 close=0.218 ret=+0.021 oracle_gini=0.182
+seed=0 E16_L1/sc0_RGMX gini=0.180 used=16.0 base=0.3277 ratio=1.21 gate=0.497 off_gini=0.180 agree=1.000 close=0.185 ret=+0.000 oracle_gini=0.120
+seed=0 E16_L1/ord0_hier gini=0.134 used=16.0 base=0.3252 ratio=1.50 gate=0.496 off_gini=0.134 agree=1.000 close=0.140 ret=+0.000 oracle_gini=0.167
+seed=0 E16_L1/ord0_rev gini=0.105 used=16.0 base=0.3362 ratio=1.14 gate=0.516 off_gini=0.105 agree=1.000 close=0.104 ret=+0.002 oracle_gini=0.128
+seed=0 E16_L1/ord0_sim gini=0.181 used=16.0 base=0.3291 ratio=1.24 gate=0.492 off_gini=0.181 agree=1.000 close=0.184 ret=+0.000 oracle_gini=0.125
+seed=0 E32_L1/aux0 gini=0.937 used=5.0 base=0.3231 ratio=12575.26 gate=0.834 oracle_gini=0.930
+seed=0 E32_L1/aux0.05 gini=0.129 used=32.0 base=0.3218 ratio=1.31 gate=0.324 oracle_gini=0.163
+seed=0 E32_L1/gate0.1 gini=0.152 used=32.0 base=0.3258 ratio=0.81 gate=0.302 off_gini=0.729 agree=0.335 oracle_gini=0.164
+seed=0 E32_L1/sel1 gini=0.096 used=32.0 base=0.3208 ratio=0.95 gate=0.351 off_gini=0.270 agree=0.773 oracle_gini=0.204
+seed=0 E32_L1/sc_none gini=0.451 used=28.0 base=0.3201 ratio=2.49 gate=0.406 off_gini=0.451 agree=1.000 close=0.298 ret=+0.149 oracle_gini=0.328
+seed=0 E32_L1/sc_R gini=0.341 used=31.0 base=0.3212 ratio=2.33 gate=0.372 off_gini=0.341 agree=1.000 close=0.268 ret=+0.075 oracle_gini=0.259
+seed=0 E32_L1/sc_RG gini=0.328 used=31.0 base=0.3219 ratio=1.92 gate=0.388 off_gini=0.328 agree=1.000 close=0.294 ret=+0.042 oracle_gini=0.252
+seed=0 E32_L1/sc_RGM gini=0.330 used=31.0 base=0.3221 ratio=1.92 gate=0.389 off_gini=0.330 agree=1.000 close=0.272 ret=+0.068 oracle_gini=0.249
+seed=0 E32_L1/sc_GM gini=0.480 used=30.0 base=0.3217 ratio=3.50 gate=0.440 off_gini=0.480 agree=1.000 close=0.264 ret=+0.222 oracle_gini=0.355
+seed=0 E32_L1/sc_X gini=0.372 used=31.0 base=0.3199 ratio=2.15 gate=0.461 off_gini=0.372 agree=1.000 close=0.256 ret=+0.104 oracle_gini=0.291
+seed=0 E32_L1/sc_RGMX gini=0.261 used=31.0 base=0.3242 ratio=1.80 gate=0.405 off_gini=0.261 agree=1.000 close=0.264 ret=-0.006 oracle_gini=0.216
+seed=0 E32_L1/ord_hier gini=0.387 used=31.0 base=0.3255 ratio=1.97 gate=0.429 off_gini=0.387 agree=1.000 close=0.250 ret=+0.132 oracle_gini=0.264
+seed=0 E32_L1/ord_rev gini=0.261 used=31.0 base=0.3279 ratio=1.68 gate=0.425 off_gini=0.261 agree=1.000 close=0.222 ret=+0.047 oracle_gini=0.224
+seed=0 E32_L1/ord_sim gini=0.266 used=31.0 base=0.3242 ratio=1.69 gate=0.404 off_gini=0.266 agree=1.000 close=0.264 ret=+0.003 oracle_gini=0.250
+seed=0 E32_L1/sc0_none gini=0.451 used=28.0 base=0.3201 ratio=2.49 gate=0.406 off_gini=0.451 agree=1.000 close=0.298 ret=+0.149 oracle_gini=0.328
+seed=0 E32_L1/sc0_R gini=0.303 used=31.0 base=0.3200 ratio=2.23 gate=0.366 off_gini=0.303 agree=1.000 close=0.260 ret=+0.043 oracle_gini=0.262
+seed=0 E32_L1/sc0_RG gini=0.298 used=32.0 base=0.3229 ratio=1.76 gate=0.380 off_gini=0.298 agree=1.000 close=0.304 ret=+0.002 oracle_gini=0.240
+seed=0 E32_L1/sc0_RGM gini=0.282 used=32.0 base=0.3258 ratio=1.49 gate=0.377 off_gini=0.282 agree=1.000 close=0.289 ret=+0.000 oracle_gini=0.245
+seed=0 E32_L1/sc0_GM gini=0.458 used=29.0 base=0.3249 ratio=3.38 gate=0.439 off_gini=0.458 agree=1.000 close=0.259 ret=+0.219 oracle_gini=0.334
+seed=0 E32_L1/sc0_X gini=0.309 used=31.0 base=0.3201 ratio=1.94 gate=0.463 off_gini=0.309 agree=1.000 close=0.252 ret=+0.048 oracle_gini=0.236
+seed=0 E32_L1/sc0_RGMX gini=0.258 used=32.0 base=0.3400 ratio=1.41 gate=0.385 off_gini=0.258 agree=1.000 close=0.266 ret=+0.000 oracle_gini=0.245
+seed=0 E32_L1/ord0_hier gini=0.256 used=32.0 base=0.3326 ratio=1.70 gate=0.389 off_gini=0.256 agree=1.000 close=0.253 ret=+0.000 oracle_gini=0.207
+seed=0 E32_L1/ord0_rev gini=0.182 used=32.0 base=0.3410 ratio=1.64 gate=0.402 off_gini=0.182 agree=1.000 close=0.213 ret=-0.000 oracle_gini=0.233
+seed=0 E32_L1/ord0_sim gini=0.289 used=31.0 base=0.3429 ratio=1.76 gate=0.381 off_gini=0.289 agree=1.000 close=0.302 ret=+0.000 oracle_gini=0.236
+seed=0 E8_L1/sel0.01 gini=0.162 used=8.0 base=0.3247 ratio=1.66 gate=0.475 off_gini=0.252 agree=0.809 oracle_gini=0.128
+seed=1 E16_L1/aux0 gini=0.928 used=3.0 base=0.3230 ratio=11032.41 gate=0.874 oracle_gini=0.907
+seed=1 E16_L1/aux0.05 gini=0.066 used=16.0 base=0.3213 ratio=1.18 gate=0.473 oracle_gini=0.099
+seed=1 E16_L1/gate0.1 gini=0.048 used=16.0 base=0.3248 ratio=1.02 gate=0.492 off_gini=0.832 agree=0.233 oracle_gini=0.124
+seed=1 E16_L1/sel0.3 gini=0.045 used=16.0 base=0.3203 ratio=0.84 gate=0.471 off_gini=0.173 agree=0.888 oracle_gini=0.138
+seed=1 E16_L1/sc_none gini=0.289 used=16.0 base=0.3261 ratio=1.65 gate=0.492 off_gini=0.289 agree=1.000 close=0.232 ret=+0.045 oracle_gini=0.179
+seed=1 E16_L1/sc_R gini=0.220 used=16.0 base=0.3209 ratio=1.46 gate=0.496 off_gini=0.220 agree=1.000 close=0.225 ret=-0.013 oracle_gini=0.156
+seed=1 E16_L1/sc_RG gini=0.242 used=16.0 base=0.3198 ratio=1.44 gate=0.503 off_gini=0.242 agree=1.000 close=0.239 ret=+0.005 oracle_gini=0.150
+seed=1 E16_L1/sc_RGM gini=0.245 used=16.0 base=0.3204 ratio=1.45 gate=0.505 off_gini=0.245 agree=1.000 close=0.233 ret=+0.016 oracle_gini=0.145
+seed=1 E16_L1/sc_GM gini=0.293 used=16.0 base=0.3225 ratio=1.65 gate=0.502 off_gini=0.293 agree=1.000 close=0.246 ret=+0.042 oracle_gini=0.143
+seed=1 E16_L1/sc_X gini=0.252 used=15.0 base=0.3197 ratio=1.57 gate=0.559 off_gini=0.252 agree=1.000 close=0.258 ret=-0.006 oracle_gini=0.174
+seed=1 E16_L1/sc_RGMX gini=0.252 used=15.0 base=0.3217 ratio=1.54 gate=0.541 off_gini=0.252 agree=1.000 close=0.252 ret=+0.006 oracle_gini=0.180
+seed=1 E16_L1/ord_hier gini=0.232 used=15.0 base=0.3198 ratio=1.35 gate=0.531 off_gini=0.232 agree=1.000 close=0.228 ret=+0.010 oracle_gini=0.161
+seed=1 E16_L1/ord_rev gini=0.204 used=16.0 base=0.3244 ratio=1.32 gate=0.563 off_gini=0.204 agree=1.000 close=0.135 ret=+0.081 oracle_gini=0.146
+seed=1 E16_L1/ord_sim gini=0.252 used=15.0 base=0.3214 ratio=1.54 gate=0.537 off_gini=0.252 agree=1.000 close=0.244 ret=+0.015 oracle_gini=0.170
+seed=1 E16_L1/sc0_none gini=0.289 used=16.0 base=0.3261 ratio=1.65 gate=0.492 off_gini=0.289 agree=1.000 close=0.232 ret=+0.045 oracle_gini=0.179
+seed=1 E16_L1/sc0_R gini=0.225 used=16.0 base=0.3233 ratio=1.44 gate=0.497 off_gini=0.225 agree=1.000 close=0.220 ret=+0.000 oracle_gini=0.147
+seed=1 E16_L1/sc0_RG gini=0.227 used=16.0 base=0.3200 ratio=1.52 gate=0.505 off_gini=0.227 agree=1.000 close=0.243 ret=-0.006 oracle_gini=0.153
+seed=1 E16_L1/sc0_RGM gini=0.216 used=16.0 base=0.3201 ratio=1.51 gate=0.508 off_gini=0.216 agree=1.000 close=0.233 ret=+0.000 oracle_gini=0.145
+seed=1 E16_L1/sc0_GM gini=0.295 used=16.0 base=0.3210 ratio=1.62 gate=0.506 off_gini=0.295 agree=1.000 close=0.246 ret=+0.043 oracle_gini=0.161
+seed=1 E16_L1/sc0_X gini=0.247 used=15.0 base=0.3206 ratio=1.58 gate=0.569 off_gini=0.247 agree=1.000 close=0.251 ret=-0.008 oracle_gini=0.184
+seed=1 E16_L1/sc0_RGMX gini=0.246 used=16.0 base=0.3262 ratio=1.55 gate=0.524 off_gini=0.246 agree=1.000 close=0.255 ret=+0.000 oracle_gini=0.171
+seed=1 E16_L1/ord0_hier gini=0.238 used=15.0 base=0.3242 ratio=1.36 gate=0.512 off_gini=0.238 agree=1.000 close=0.252 ret=+0.000 oracle_gini=0.157
+seed=1 E16_L1/ord0_rev gini=0.113 used=16.0 base=0.3285 ratio=1.33 gate=0.549 off_gini=0.113 agree=1.000 close=0.121 ret=+0.001 oracle_gini=0.111
+seed=1 E16_L1/ord0_sim gini=0.225 used=16.0 base=0.3256 ratio=1.51 gate=0.515 off_gini=0.225 agree=1.000 close=0.243 ret=+0.000 oracle_gini=0.135
+seed=1 E32_L1/aux0 gini=0.922 used=4.0 base=0.3193 ratio=11887.46 gate=0.787 oracle_gini=0.918
+seed=1 E32_L1/aux0.05 gini=0.144 used=32.0 base=0.3265 ratio=1.26 gate=0.306 oracle_gini=0.188
+seed=1 E32_L1/gate0.1 gini=0.117 used=32.0 base=0.3223 ratio=1.04 gate=0.371 off_gini=0.783 agree=0.323 oracle_gini=0.165
+seed=1 E32_L1/sel1 gini=0.095 used=32.0 base=0.3220 ratio=1.04 gate=0.353 off_gini=0.266 agree=0.757 oracle_gini=0.179
+seed=1 E32_L1/sc_none gini=0.331 used=31.0 base=0.3274 ratio=1.96 gate=0.391 off_gini=0.331 agree=1.000 close=0.273 ret=+0.073 oracle_gini=0.254
+seed=1 E32_L1/sc_R gini=0.290 used=31.0 base=0.3192 ratio=2.05 gate=0.378 off_gini=0.290 agree=1.000 close=0.269 ret=+0.034 oracle_gini=0.236
+seed=1 E32_L1/sc_RG gini=0.279 used=32.0 base=0.3204 ratio=2.26 gate=0.390 off_gini=0.279 agree=1.000 close=0.270 ret=+0.018 oracle_gini=0.195
+seed=1 E32_L1/sc_RGM gini=0.270 used=31.0 base=0.3208 ratio=2.16 gate=0.396 off_gini=0.270 agree=1.000 close=0.275 ret=+0.006 oracle_gini=0.238
+seed=1 E32_L1/sc_GM gini=0.293 used=31.0 base=0.3195 ratio=2.07 gate=0.406 off_gini=0.293 agree=1.000 close=0.286 ret=+0.015 oracle_gini=0.261
+seed=1 E32_L1/sc_X gini=0.408 used=28.0 base=0.3215 ratio=2.43 gate=0.487 off_gini=0.408 agree=1.000 close=0.281 ret=+0.137 oracle_gini=0.328
+seed=1 E32_L1/sc_RGMX gini=0.284 used=31.0 base=0.3209 ratio=2.27 gate=0.421 off_gini=0.284 agree=1.000 close=0.274 ret=+0.019 oracle_gini=0.220
+seed=1 E32_L1/ord_hier gini=0.327 used=31.0 base=0.3188 ratio=2.01 gate=0.425 off_gini=0.327 agree=1.000 close=0.281 ret=+0.055 oracle_gini=0.268
+seed=1 E32_L1/ord_rev gini=0.241 used=32.0 base=0.3221 ratio=1.71 gate=0.435 off_gini=0.241 agree=1.000 close=0.257 ret=-0.017 oracle_gini=0.165
+seed=1 E32_L1/ord_sim gini=0.267 used=31.0 base=0.3204 ratio=1.83 gate=0.418 off_gini=0.267 agree=1.000 close=0.277 ret=+0.008 oracle_gini=0.176
+seed=1 E32_L1/sc0_none gini=0.331 used=31.0 base=0.3274 ratio=1.96 gate=0.391 off_gini=0.331 agree=1.000 close=0.273 ret=+0.073 oracle_gini=0.254
+seed=1 E32_L1/sc0_R gini=0.273 used=32.0 base=0.3197 ratio=1.82 gate=0.378 off_gini=0.273 agree=1.000 close=0.260 ret=+0.019 oracle_gini=0.238
+seed=1 E32_L1/sc0_RG gini=0.266 used=31.0 base=0.3195 ratio=1.96 gate=0.396 off_gini=0.266 agree=1.000 close=0.279 ret=-0.005 oracle_gini=0.212
+seed=1 E32_L1/sc0_RGM gini=0.263 used=31.0 base=0.3191 ratio=2.00 gate=0.394 off_gini=0.263 agree=1.000 close=0.270 ret=+0.000 oracle_gini=0.201
+seed=1 E32_L1/sc0_GM gini=0.284 used=31.0 base=0.3193 ratio=2.08 gate=0.414 off_gini=0.284 agree=1.000 close=0.290 ret=+0.005 oracle_gini=0.230
+seed=1 E32_L1/sc0_X gini=0.414 used=28.0 base=0.3228 ratio=2.30 gate=0.495 off_gini=0.414 agree=1.000 close=0.299 ret=+0.126 oracle_gini=0.334
+seed=1 E32_L1/sc0_RGMX gini=0.266 used=31.0 base=0.3257 ratio=2.15 gate=0.407 off_gini=0.266 agree=1.000 close=0.279 ret=+0.000 oracle_gini=0.199
+seed=1 E32_L1/ord0_hier gini=0.268 used=31.0 base=0.3221 ratio=1.69 gate=0.407 off_gini=0.268 agree=1.000 close=0.282 ret=+0.000 oracle_gini=0.209
+seed=1 E32_L1/ord0_rev gini=0.261 used=32.0 base=0.3304 ratio=1.93 gate=0.419 off_gini=0.261 agree=1.000 close=0.288 ret=-0.018 oracle_gini=0.152
+seed=1 E32_L1/ord0_sim gini=0.271 used=32.0 base=0.3267 ratio=2.23 gate=0.394 off_gini=0.271 agree=1.000 close=0.285 ret=+0.000 oracle_gini=0.179
+seed=1 E8_L1/sel0.01 gini=0.178 used=8.0 base=0.3263 ratio=1.33 gate=0.423 off_gini=0.167 agree=0.922 oracle_gini=0.148
+seed=2 E16_L1/aux0 gini=0.853 used=5.0 base=0.3169 ratio=859.52 gate=0.781 oracle_gini=0.832
+seed=2 E16_L1/aux0.05 gini=0.070 used=16.0 base=0.3181 ratio=1.06 gate=0.465 oracle_gini=0.109
+seed=2 E16_L1/gate0.1 gini=0.068 used=16.0 base=0.3167 ratio=1.05 gate=0.489 off_gini=0.592 agree=0.438 oracle_gini=0.126
+seed=2 E16_L1/sel0.3 gini=0.057 used=16.0 base=0.3118 ratio=0.84 gate=0.484 off_gini=0.105 agree=0.917 oracle_gini=0.081
+seed=2 E16_L1/sc_none gini=0.188 used=16.0 base=0.3165 ratio=1.37 gate=0.495 off_gini=0.188 agree=1.000 close=0.175 ret=+0.016 oracle_gini=0.155
+seed=2 E16_L1/sc_R gini=0.167 used=16.0 base=0.3157 ratio=1.60 gate=0.487 off_gini=0.167 agree=1.000 close=0.145 ret=+0.016 oracle_gini=0.108
+seed=2 E16_L1/sc_RG gini=0.161 used=16.0 base=0.3155 ratio=1.46 gate=0.495 off_gini=0.161 agree=1.000 close=0.150 ret=-0.002 oracle_gini=0.123
+seed=2 E16_L1/sc_RGM gini=0.160 used=16.0 base=0.3150 ratio=1.46 gate=0.496 off_gini=0.160 agree=1.000 close=0.148 ret=-0.003 oracle_gini=0.124
+seed=2 E16_L1/sc_GM gini=0.190 used=16.0 base=0.3143 ratio=1.46 gate=0.502 off_gini=0.190 agree=1.000 close=0.168 ret=+0.017 oracle_gini=0.117
+seed=2 E16_L1/sc_X gini=0.256 used=16.0 base=0.3161 ratio=1.59 gate=0.574 off_gini=0.256 agree=1.000 close=0.178 ret=+0.082 oracle_gini=0.193
+seed=2 E16_L1/sc_RGMX gini=0.162 used=16.0 base=0.3187 ratio=1.59 gate=0.524 off_gini=0.162 agree=1.000 close=0.151 ret=+0.006 oracle_gini=0.120
+seed=2 E16_L1/ord_hier gini=0.179 used=16.0 base=0.3147 ratio=1.43 gate=0.520 off_gini=0.179 agree=1.000 close=0.141 ret=+0.025 oracle_gini=0.112
+seed=2 E16_L1/ord_rev gini=0.104 used=16.0 base=0.3179 ratio=1.60 gate=0.554 off_gini=0.104 agree=1.000 close=0.105 ret=-0.008 oracle_gini=0.132
+seed=2 E16_L1/ord_sim gini=0.188 used=16.0 base=0.3172 ratio=1.43 gate=0.520 off_gini=0.188 agree=1.000 close=0.162 ret=+0.013 oracle_gini=0.141
+seed=2 E16_L1/sc0_none gini=0.188 used=16.0 base=0.3165 ratio=1.37 gate=0.495 off_gini=0.188 agree=1.000 close=0.175 ret=+0.016 oracle_gini=0.155
+seed=2 E16_L1/sc0_R gini=0.163 used=16.0 base=0.3155 ratio=1.61 gate=0.488 off_gini=0.163 agree=1.000 close=0.139 ret=+0.017 oracle_gini=0.091
+seed=2 E16_L1/sc0_RG gini=0.154 used=16.0 base=0.3153 ratio=1.59 gate=0.496 off_gini=0.154 agree=1.000 close=0.149 ret=-0.003 oracle_gini=0.124
+seed=2 E16_L1/sc0_RGM gini=0.151 used=16.0 base=0.3156 ratio=1.57 gate=0.499 off_gini=0.151 agree=1.000 close=0.145 ret=+0.000 oracle_gini=0.114
+seed=2 E16_L1/sc0_GM gini=0.185 used=16.0 base=0.3175 ratio=1.52 gate=0.503 off_gini=0.185 agree=1.000 close=0.180 ret=-0.007 oracle_gini=0.130
+seed=2 E16_L1/sc0_X gini=0.264 used=16.0 base=0.3160 ratio=1.66 gate=0.587 off_gini=0.264 agree=1.000 close=0.175 ret=+0.093 oracle_gini=0.203
+seed=2 E16_L1/sc0_RGMX gini=0.165 used=16.0 base=0.3177 ratio=1.58 gate=0.509 off_gini=0.165 agree=1.000 close=0.149 ret=+0.000 oracle_gini=0.117
+seed=2 E16_L1/ord0_hier gini=0.171 used=16.0 base=0.3194 ratio=1.40 gate=0.510 off_gini=0.171 agree=1.000 close=0.161 ret=+0.000 oracle_gini=0.130
+seed=2 E16_L1/ord0_rev gini=0.104 used=16.0 base=0.3229 ratio=1.42 gate=0.543 off_gini=0.104 agree=1.000 close=0.091 ret=+0.001 oracle_gini=0.124
+seed=2 E16_L1/ord0_sim gini=0.175 used=16.0 base=0.3187 ratio=1.43 gate=0.506 off_gini=0.175 agree=1.000 close=0.158 ret=+0.000 oracle_gini=0.115
+seed=2 E32_L1/aux0 gini=0.964 used=3.0 base=0.3181 ratio=11757.63 gate=0.875 oracle_gini=0.948
+seed=2 E32_L1/aux0.05 gini=0.137 used=32.0 base=0.3248 ratio=1.29 gate=0.326 oracle_gini=0.194
+seed=2 E32_L1/gate0.1 gini=0.080 used=32.0 base=0.3176 ratio=1.17 gate=0.315 off_gini=0.851 agree=0.181 oracle_gini=0.229
+seed=2 E32_L1/sel1 gini=0.106 used=32.0 base=0.3167 ratio=1.00 gate=0.342 off_gini=0.320 agree=0.745 oracle_gini=0.161
+seed=2 E32_L1/sc_none gini=0.392 used=31.0 base=0.3139 ratio=1.93 gate=0.385 off_gini=0.392 agree=1.000 close=0.252 ret=+0.128 oracle_gini=0.283
+seed=2 E32_L1/sc_R gini=0.313 used=31.0 base=0.3134 ratio=1.68 gate=0.367 off_gini=0.313 agree=1.000 close=0.240 ret=+0.059 oracle_gini=0.206
+seed=2 E32_L1/sc_RG gini=0.309 used=31.0 base=0.3105 ratio=1.71 gate=0.374 off_gini=0.309 agree=1.000 close=0.248 ret=+0.045 oracle_gini=0.209
+seed=2 E32_L1/sc_RGM gini=0.308 used=31.0 base=0.3108 ratio=1.70 gate=0.375 off_gini=0.308 agree=1.000 close=0.247 ret=+0.048 oracle_gini=0.223
+seed=2 E32_L1/sc_GM gini=0.414 used=29.0 base=0.3120 ratio=2.34 gate=0.397 off_gini=0.414 agree=1.000 close=0.263 ret=+0.128 oracle_gini=0.276
+seed=2 E32_L1/sc_X gini=0.365 used=29.0 base=0.3172 ratio=1.87 gate=0.459 off_gini=0.365 agree=1.000 close=0.243 ret=+0.102 oracle_gini=0.279
+seed=2 E32_L1/sc_RGMX gini=0.289 used=31.0 base=0.3126 ratio=1.71 gate=0.402 off_gini=0.289 agree=1.000 close=0.242 ret=+0.035 oracle_gini=0.207
+seed=2 E32_L1/ord_hier gini=0.334 used=31.0 base=0.3106 ratio=1.77 gate=0.406 off_gini=0.334 agree=1.000 close=0.290 ret=+0.028 oracle_gini=0.240
+seed=2 E32_L1/ord_rev gini=0.268 used=31.0 base=0.3195 ratio=1.38 gate=0.413 off_gini=0.268 agree=1.000 close=0.211 ret=+0.056 oracle_gini=0.219
+seed=2 E32_L1/ord_sim gini=0.294 used=31.0 base=0.3123 ratio=1.78 gate=0.400 off_gini=0.294 agree=1.000 close=0.247 ret=+0.032 oracle_gini=0.231
+seed=2 E32_L1/sc0_none gini=0.392 used=31.0 base=0.3139 ratio=1.93 gate=0.385 off_gini=0.392 agree=1.000 close=0.252 ret=+0.128 oracle_gini=0.283
+seed=2 E32_L1/sc0_R gini=0.292 used=31.0 base=0.3112 ratio=1.47 gate=0.365 off_gini=0.292 agree=1.000 close=0.240 ret=+0.040 oracle_gini=0.229
+seed=2 E32_L1/sc0_RG gini=0.259 used=31.0 base=0.3116 ratio=1.68 gate=0.375 off_gini=0.259 agree=1.000 close=0.248 ret=-0.004 oracle_gini=0.211
+seed=2 E32_L1/sc0_RGM gini=0.261 used=31.0 base=0.3122 ratio=1.71 gate=0.377 off_gini=0.261 agree=1.000 close=0.249 ret=+0.000 oracle_gini=0.213
+seed=2 E32_L1/sc0_GM gini=0.416 used=29.0 base=0.3140 ratio=2.32 gate=0.404 off_gini=0.416 agree=1.000 close=0.264 ret=+0.127 oracle_gini=0.288
+seed=2 E32_L1/sc0_X gini=0.333 used=30.0 base=0.3137 ratio=1.56 gate=0.455 off_gini=0.333 agree=1.000 close=0.257 ret=+0.063 oracle_gini=0.282
+seed=2 E32_L1/sc0_RGMX gini=0.249 used=31.0 base=0.3190 ratio=1.52 gate=0.384 off_gini=0.249 agree=1.000 close=0.243 ret=+0.000 oracle_gini=0.199
+seed=2 E32_L1/ord0_hier gini=0.303 used=31.0 base=0.3149 ratio=1.72 gate=0.384 off_gini=0.303 agree=1.000 close=0.290 ret=+0.000 oracle_gini=0.213
+seed=2 E32_L1/ord0_rev gini=0.193 used=31.0 base=0.3249 ratio=1.21 gate=0.394 off_gini=0.193 agree=1.000 close=0.189 ret=+0.002 oracle_gini=0.174
+seed=2 E32_L1/ord0_sim gini=0.262 used=31.0 base=0.3209 ratio=1.71 gate=0.379 off_gini=0.262 agree=1.000 close=0.256 ret=+0.000 oracle_gini=0.202
+seed=2 E8_L1/sel0.01 gini=0.159 used=8.0 base=0.3177 ratio=0.79 gate=0.489 off_gini=0.196 agree=0.898 oracle_gini=0.172
+seed=3 E16_L1/aux0 gini=0.918 used=3.0 base=0.3239 ratio=10283.96 gate=0.855 oracle_gini=0.891
+seed=3 E16_L1/aux0.05 gini=0.156 used=16.0 base=0.3200 ratio=1.52 gate=0.466 oracle_gini=0.154
+seed=3 E16_L1/gate0.1 gini=0.063 used=16.0 base=0.3202 ratio=1.00 gate=0.481 off_gini=0.710 agree=0.384 oracle_gini=0.111
+seed=3 E16_L1/sel0.3 gini=0.052 used=16.0 base=0.3146 ratio=1.15 gate=0.487 off_gini=0.125 agree=0.884 oracle_gini=0.105
+seed=3 E16_L1/sc_none gini=0.222 used=16.0 base=0.3163 ratio=1.82 gate=0.492 off_gini=0.222 agree=1.000 close=0.204 ret=+0.013 oracle_gini=0.179
+seed=3 E16_L1/sc_R gini=0.214 used=16.0 base=0.3164 ratio=1.57 gate=0.500 off_gini=0.214 agree=1.000 close=0.198 ret=+0.014 oracle_gini=0.189
+seed=3 E16_L1/sc_RG gini=0.229 used=16.0 base=0.3172 ratio=1.59 gate=0.514 off_gini=0.229 agree=1.000 close=0.215 ret=+0.009 oracle_gini=0.182
+seed=3 E16_L1/sc_RGM gini=0.225 used=16.0 base=0.3168 ratio=1.57 gate=0.514 off_gini=0.225 agree=1.000 close=0.216 ret=+0.006 oracle_gini=0.179
+seed=3 E16_L1/sc_GM gini=0.262 used=16.0 base=0.3178 ratio=1.70 gate=0.515 off_gini=0.262 agree=1.000 close=0.234 ret=+0.024 oracle_gini=0.225
+seed=3 E16_L1/sc_X gini=0.225 used=15.0 base=0.3131 ratio=1.65 gate=0.592 off_gini=0.225 agree=1.000 close=0.217 ret=+0.011 oracle_gini=0.222
+seed=3 E16_L1/sc_RGMX gini=0.236 used=16.0 base=0.3171 ratio=1.66 gate=0.552 off_gini=0.236 agree=1.000 close=0.206 ret=+0.022 oracle_gini=0.185
+seed=3 E16_L1/ord_hier gini=0.247 used=16.0 base=0.3161 ratio=1.66 gate=0.543 off_gini=0.247 agree=1.000 close=0.239 ret=+0.010 oracle_gini=0.205
+seed=3 E16_L1/ord_rev gini=0.238 used=16.0 base=0.3190 ratio=1.72 gate=0.585 off_gini=0.238 agree=1.000 close=0.220 ret=+0.021 oracle_gini=0.152
+seed=3 E16_L1/ord_sim gini=0.232 used=16.0 base=0.3173 ratio=1.67 gate=0.551 off_gini=0.232 agree=1.000 close=0.207 ret=+0.020 oracle_gini=0.173
+seed=3 E16_L1/sc0_none gini=0.222 used=16.0 base=0.3163 ratio=1.82 gate=0.492 off_gini=0.222 agree=1.000 close=0.204 ret=+0.013 oracle_gini=0.179
+seed=3 E16_L1/sc0_R gini=0.214 used=16.0 base=0.3159 ratio=1.60 gate=0.502 off_gini=0.214 agree=1.000 close=0.195 ret=+0.018 oracle_gini=0.190
+seed=3 E16_L1/sc0_RG gini=0.214 used=16.0 base=0.3169 ratio=1.56 gate=0.520 off_gini=0.214 agree=1.000 close=0.214 ret=-0.001 oracle_gini=0.162
+seed=3 E16_L1/sc0_RGM gini=0.218 used=16.0 base=0.3170 ratio=1.56 gate=0.520 off_gini=0.218 agree=1.000 close=0.216 ret=+0.000 oracle_gini=0.166
+seed=3 E16_L1/sc0_GM gini=0.253 used=16.0 base=0.3159 ratio=1.59 gate=0.518 off_gini=0.253 agree=1.000 close=0.222 ret=+0.025 oracle_gini=0.210
+seed=3 E16_L1/sc0_X gini=0.235 used=15.0 base=0.3152 ratio=1.71 gate=0.600 off_gini=0.235 agree=1.000 close=0.217 ret=+0.021 oracle_gini=0.213
+seed=3 E16_L1/sc0_RGMX gini=0.205 used=16.0 base=0.3176 ratio=1.57 gate=0.530 off_gini=0.205 agree=1.000 close=0.201 ret=+0.000 oracle_gini=0.176
+seed=3 E16_L1/ord0_hier gini=0.241 used=16.0 base=0.3162 ratio=1.67 gate=0.531 off_gini=0.241 agree=1.000 close=0.243 ret=+0.000 oracle_gini=0.209
+seed=3 E16_L1/ord0_rev gini=0.191 used=16.0 base=0.3247 ratio=1.74 gate=0.561 off_gini=0.191 agree=1.000 close=0.189 ret=+0.001 oracle_gini=0.127
+seed=3 E16_L1/ord0_sim gini=0.209 used=16.0 base=0.3207 ratio=1.59 gate=0.529 off_gini=0.209 agree=1.000 close=0.205 ret=+0.000 oracle_gini=0.177
+seed=3 E32_L1/aux0 gini=0.965 used=4.0 base=0.3215 ratio=10868.93 gate=0.920 oracle_gini=0.952
+seed=3 E32_L1/aux0.05 gini=0.123 used=32.0 base=0.3182 ratio=1.22 gate=0.312 oracle_gini=0.164
+seed=3 E32_L1/gate0.1 gini=0.115 used=32.0 base=0.3243 ratio=1.92 gate=0.288 off_gini=0.825 agree=0.248 oracle_gini=0.163
+seed=3 E32_L1/sel1 gini=0.092 used=32.0 base=0.3166 ratio=1.12 gate=0.367 off_gini=0.266 agree=0.802 oracle_gini=0.165
+seed=3 E32_L1/sc_none gini=0.382 used=30.0 base=0.3190 ratio=2.20 gate=0.398 off_gini=0.382 agree=1.000 close=0.245 ret=+0.148 oracle_gini=0.259
+seed=3 E32_L1/sc_R gini=0.262 used=32.0 base=0.3165 ratio=2.14 gate=0.382 off_gini=0.262 agree=1.000 close=0.240 ret=+0.029 oracle_gini=0.204
+seed=3 E32_L1/sc_RG gini=0.281 used=32.0 base=0.3192 ratio=2.02 gate=0.392 off_gini=0.281 agree=1.000 close=0.254 ret=+0.025 oracle_gini=0.194
+seed=3 E32_L1/sc_RGM gini=0.282 used=32.0 base=0.3182 ratio=1.99 gate=0.391 off_gini=0.282 agree=1.000 close=0.243 ret=+0.044 oracle_gini=0.181
+seed=3 E32_L1/sc_GM gini=0.366 used=30.0 base=0.3177 ratio=1.91 gate=0.408 off_gini=0.366 agree=1.000 close=0.248 ret=+0.115 oracle_gini=0.247
+seed=3 E32_L1/sc_X gini=0.306 used=31.0 base=0.3175 ratio=2.23 gate=0.452 off_gini=0.306 agree=1.000 close=0.227 ret=+0.067 oracle_gini=0.234
+seed=3 E32_L1/sc_RGMX gini=0.243 used=32.0 base=0.3178 ratio=1.84 gate=0.413 off_gini=0.243 agree=1.000 close=0.230 ret=+0.014 oracle_gini=0.193
+seed=3 E32_L1/ord_hier gini=0.302 used=32.0 base=0.3156 ratio=2.58 gate=0.416 off_gini=0.302 agree=1.000 close=0.240 ret=+0.060 oracle_gini=0.178
+seed=3 E32_L1/ord_rev gini=0.286 used=32.0 base=0.3183 ratio=1.91 gate=0.423 off_gini=0.286 agree=1.000 close=0.257 ret=+0.019 oracle_gini=0.192
+seed=3 E32_L1/ord_sim gini=0.264 used=32.0 base=0.3173 ratio=1.90 gate=0.411 off_gini=0.264 agree=1.000 close=0.247 ret=+0.014 oracle_gini=0.189
+seed=3 E32_L1/sc0_none gini=0.382 used=30.0 base=0.3190 ratio=2.20 gate=0.398 off_gini=0.382 agree=1.000 close=0.245 ret=+0.148 oracle_gini=0.259
+seed=3 E32_L1/sc0_R gini=0.263 used=32.0 base=0.3162 ratio=2.12 gate=0.380 off_gini=0.263 agree=1.000 close=0.244 ret=+0.015 oracle_gini=0.195
+seed=3 E32_L1/sc0_RG gini=0.245 used=32.0 base=0.3168 ratio=1.87 gate=0.386 off_gini=0.245 agree=1.000 close=0.235 ret=+0.004 oracle_gini=0.193
+seed=3 E32_L1/sc0_RGM gini=0.241 used=32.0 base=0.3176 ratio=1.80 gate=0.384 off_gini=0.241 agree=1.000 close=0.238 ret=+0.000 oracle_gini=0.197
+seed=3 E32_L1/sc0_GM gini=0.368 used=31.0 base=0.3179 ratio=2.26 gate=0.413 off_gini=0.368 agree=1.000 close=0.230 ret=+0.155 oracle_gini=0.230
+seed=3 E32_L1/sc0_X gini=0.296 used=30.0 base=0.3161 ratio=2.15 gate=0.463 off_gini=0.296 agree=1.000 close=0.232 ret=+0.051 oracle_gini=0.247
+seed=3 E32_L1/sc0_RGMX gini=0.239 used=32.0 base=0.3203 ratio=1.91 gate=0.394 off_gini=0.239 agree=1.000 close=0.232 ret=+0.000 oracle_gini=0.175
+seed=3 E32_L1/ord0_hier gini=0.269 used=32.0 base=0.3165 ratio=2.10 gate=0.389 off_gini=0.269 agree=1.000 close=0.272 ret=+0.000 oracle_gini=0.188
+seed=3 E32_L1/ord0_rev gini=0.241 used=32.0 base=0.3307 ratio=2.08 gate=0.408 off_gini=0.241 agree=1.000 close=0.224 ret=-0.011 oracle_gini=0.148
+seed=3 E32_L1/ord0_sim gini=0.259 used=32.0 base=0.3247 ratio=1.83 gate=0.389 off_gini=0.259 agree=1.000 close=0.250 ret=+0.000 oracle_gini=0.204
+seed=3 E8_L1/sel0.01 gini=0.100 used=8.0 base=0.3160 ratio=1.60 gate=0.447 off_gini=0.263 agree=0.842 oracle_gini=0.178
+seed=4 E16_L1/aux0 gini=0.936 used=3.0 base=0.3083 ratio=11603.92 gate=0.938 oracle_gini=0.922
+seed=4 E16_L1/aux0.05 gini=0.125 used=16.0 base=0.3102 ratio=1.75 gate=0.493 oracle_gini=0.119
+seed=4 E16_L1/gate0.1 gini=0.114 used=16.0 base=0.3139 ratio=1.44 gate=0.475 off_gini=0.726 agree=0.319 oracle_gini=0.121
+seed=4 E16_L1/sel0.3 gini=0.057 used=16.0 base=0.3104 ratio=0.83 gate=0.461 off_gini=0.180 agree=0.839 oracle_gini=0.108
+seed=4 E16_L1/sc_none gini=0.396 used=16.0 base=0.3115 ratio=1.98 gate=0.516 off_gini=0.396 agree=1.000 close=0.305 ret=+0.097 oracle_gini=0.276
+seed=4 E16_L1/sc_R gini=0.287 used=16.0 base=0.3105 ratio=2.14 gate=0.500 off_gini=0.287 agree=1.000 close=0.290 ret=+0.006 oracle_gini=0.234
+seed=4 E16_L1/sc_RG gini=0.308 used=16.0 base=0.3103 ratio=2.21 gate=0.516 off_gini=0.308 agree=1.000 close=0.316 ret=-0.004 oracle_gini=0.226
+seed=4 E16_L1/sc_RGM gini=0.308 used=16.0 base=0.3103 ratio=2.10 gate=0.519 off_gini=0.308 agree=1.000 close=0.316 ret=-0.001 oracle_gini=0.232
+seed=4 E16_L1/sc_GM gini=0.430 used=16.0 base=0.3133 ratio=3.10 gate=0.546 off_gini=0.430 agree=1.000 close=0.349 ret=+0.078 oracle_gini=0.341
+seed=4 E16_L1/sc_X gini=0.324 used=16.0 base=0.3096 ratio=2.52 gate=0.582 off_gini=0.324 agree=1.000 close=0.336 ret=-0.009 oracle_gini=0.275
+seed=4 E16_L1/sc_RGMX gini=0.343 used=16.0 base=0.3118 ratio=2.51 gate=0.560 off_gini=0.343 agree=1.000 close=0.289 ret=+0.048 oracle_gini=0.232
+seed=4 E16_L1/ord_hier gini=0.358 used=16.0 base=0.3101 ratio=1.73 gate=0.558 off_gini=0.358 agree=1.000 close=0.333 ret=+0.017 oracle_gini=0.258
+seed=4 E16_L1/ord_rev gini=0.180 used=16.0 base=0.3122 ratio=2.17 gate=0.574 off_gini=0.180 agree=1.000 close=0.204 ret=-0.006 oracle_gini=0.162
+seed=4 E16_L1/ord_sim gini=0.309 used=16.0 base=0.3133 ratio=2.48 gate=0.552 off_gini=0.309 agree=1.000 close=0.279 ret=+0.023 oracle_gini=0.231
+seed=4 E16_L1/sc0_none gini=0.396 used=16.0 base=0.3115 ratio=1.98 gate=0.516 off_gini=0.396 agree=1.000 close=0.305 ret=+0.097 oracle_gini=0.276
+seed=4 E16_L1/sc0_R gini=0.274 used=16.0 base=0.3113 ratio=2.04 gate=0.498 off_gini=0.274 agree=1.000 close=0.283 ret=+0.002 oracle_gini=0.211
+seed=4 E16_L1/sc0_RG gini=0.309 used=16.0 base=0.3110 ratio=2.13 gate=0.521 off_gini=0.309 agree=1.000 close=0.314 ret=+0.003 oracle_gini=0.229
+seed=4 E16_L1/sc0_RGM gini=0.303 used=16.0 base=0.3109 ratio=2.25 gate=0.525 off_gini=0.303 agree=1.000 close=0.312 ret=+0.000 oracle_gini=0.247
+seed=4 E16_L1/sc0_GM gini=0.429 used=16.0 base=0.3119 ratio=2.86 gate=0.546 off_gini=0.429 agree=1.000 close=0.360 ret=+0.072 oracle_gini=0.298
+seed=4 E16_L1/sc0_X gini=0.323 used=16.0 base=0.3101 ratio=2.46 gate=0.595 off_gini=0.323 agree=1.000 close=0.334 ret=-0.002 oracle_gini=0.285
+seed=4 E16_L1/sc0_RGMX gini=0.290 used=16.0 base=0.3169 ratio=2.51 gate=0.539 off_gini=0.290 agree=1.000 close=0.288 ret=+0.000 oracle_gini=0.214
+seed=4 E16_L1/ord0_hier gini=0.329 used=16.0 base=0.3136 ratio=1.58 gate=0.539 off_gini=0.329 agree=1.000 close=0.330 ret=+0.000 oracle_gini=0.237
+seed=4 E16_L1/ord0_rev gini=0.154 used=16.0 base=0.3207 ratio=1.42 gate=0.556 off_gini=0.154 agree=1.000 close=0.174 ret=-0.002 oracle_gini=0.133
+seed=4 E16_L1/ord0_sim gini=0.301 used=16.0 base=0.3185 ratio=2.36 gate=0.535 off_gini=0.301 agree=1.000 close=0.307 ret=+0.000 oracle_gini=0.230
+seed=4 E32_L1/aux0 gini=0.901 used=6.0 base=0.3095 ratio=12145.53 gate=0.766 oracle_gini=0.897
+seed=4 E32_L1/aux0.05 gini=0.131 used=32.0 base=0.3116 ratio=2.12 gate=0.306 oracle_gini=0.217
+seed=4 E32_L1/gate0.1 gini=0.107 used=32.0 base=0.3156 ratio=1.84 gate=0.350 off_gini=0.903 agree=0.122 oracle_gini=0.145
+seed=4 E32_L1/sel1 gini=0.114 used=32.0 base=0.3151 ratio=1.16 gate=0.353 off_gini=0.214 agree=0.786 oracle_gini=0.171
+seed=4 E32_L1/sc_none gini=0.323 used=29.0 base=0.3099 ratio=1.70 gate=0.391 off_gini=0.323 agree=1.000 close=0.227 ret=+0.083 oracle_gini=0.262
+seed=4 E32_L1/sc_R gini=0.280 used=31.0 base=0.3111 ratio=1.48 gate=0.378 off_gini=0.280 agree=1.000 close=0.248 ret=+0.023 oracle_gini=0.255
+seed=4 E32_L1/sc_RG gini=0.272 used=30.0 base=0.3103 ratio=1.45 gate=0.386 off_gini=0.272 agree=1.000 close=0.244 ret=+0.009 oracle_gini=0.261
+seed=4 E32_L1/sc_RGM gini=0.264 used=30.0 base=0.3103 ratio=1.44 gate=0.387 off_gini=0.264 agree=1.000 close=0.243 ret=-0.000 oracle_gini=0.255
+seed=4 E32_L1/sc_GM gini=0.343 used=29.0 base=0.3100 ratio=1.68 gate=0.400 off_gini=0.343 agree=1.000 close=0.256 ret=+0.072 oracle_gini=0.268
+seed=4 E32_L1/sc_X gini=0.427 used=28.0 base=0.3106 ratio=1.91 gate=0.477 off_gini=0.427 agree=1.000 close=0.222 ret=+0.192 oracle_gini=0.291
+seed=4 E32_L1/sc_RGMX gini=0.275 used=29.0 base=0.3102 ratio=1.45 gate=0.422 off_gini=0.275 agree=1.000 close=0.235 ret=+0.024 oracle_gini=0.254
+seed=4 E32_L1/ord_hier gini=0.325 used=29.0 base=0.3089 ratio=1.85 gate=0.424 off_gini=0.325 agree=1.000 close=0.293 ret=+0.023 oracle_gini=0.275
+seed=4 E32_L1/ord_rev gini=0.237 used=30.0 base=0.3108 ratio=1.49 gate=0.438 off_gini=0.237 agree=1.000 close=0.214 ret=+0.016 oracle_gini=0.223
+seed=4 E32_L1/ord_sim gini=0.273 used=29.0 base=0.3100 ratio=1.41 gate=0.420 off_gini=0.273 agree=1.000 close=0.217 ret=+0.043 oracle_gini=0.254
+seed=4 E32_L1/sc0_none gini=0.323 used=29.0 base=0.3099 ratio=1.70 gate=0.391 off_gini=0.323 agree=1.000 close=0.227 ret=+0.083 oracle_gini=0.262
+seed=4 E32_L1/sc0_R gini=0.284 used=31.0 base=0.3115 ratio=1.53 gate=0.379 off_gini=0.284 agree=1.000 close=0.248 ret=+0.014 oracle_gini=0.240
+seed=4 E32_L1/sc0_RG gini=0.265 used=30.0 base=0.3104 ratio=1.48 gate=0.388 off_gini=0.265 agree=1.000 close=0.238 ret=+0.002 oracle_gini=0.253
+seed=4 E32_L1/sc0_RGM gini=0.260 used=31.0 base=0.3096 ratio=1.42 gate=0.390 off_gini=0.260 agree=1.000 close=0.236 ret=+0.000 oracle_gini=0.255
+seed=4 E32_L1/sc0_GM gini=0.309 used=29.0 base=0.3091 ratio=1.45 gate=0.403 off_gini=0.309 agree=1.000 close=0.265 ret=+0.033 oracle_gini=0.262
+seed=4 E32_L1/sc0_X gini=0.401 used=28.0 base=0.3119 ratio=1.86 gate=0.491 off_gini=0.401 agree=1.000 close=0.227 ret=+0.167 oracle_gini=0.327
+seed=4 E32_L1/sc0_RGMX gini=0.249 used=30.0 base=0.3146 ratio=1.48 gate=0.402 off_gini=0.249 agree=1.000 close=0.223 ret=+0.000 oracle_gini=0.229
+seed=4 E32_L1/ord0_hier gini=0.321 used=29.0 base=0.3122 ratio=1.61 gate=0.415 off_gini=0.321 agree=1.000 close=0.303 ret=+0.000 oracle_gini=0.292
+seed=4 E32_L1/ord0_rev gini=0.259 used=30.0 base=0.3216 ratio=1.25 gate=0.421 off_gini=0.259 agree=1.000 close=0.254 ret=-0.000 oracle_gini=0.159
+seed=4 E32_L1/ord0_sim gini=0.262 used=30.0 base=0.3173 ratio=1.70 gate=0.397 off_gini=0.262 agree=1.000 close=0.239 ret=+0.000 oracle_gini=0.210
+seed=4 E8_L1/sel0.01 gini=0.165 used=8.0 base=0.3148 ratio=1.39 gate=0.467 off_gini=0.178 agree=0.927 oracle_gini=0.236
