@@ -39,12 +39,15 @@ def conditions(args: argparse.Namespace) -> dict[str, dict]:
 
 
 def run_one(seed: int, n_experts: int, n_layers: int, cond: dict, corpus: CharCorpus,
-            args: argparse.Namespace) -> dict:
+            args: argparse.Namespace, model_cls: type = ScaledRoutedCharLM, steps: int | None = None,
+            **model_kw) -> dict:
+    """model_cls・steps・model_kw は 12.6.141節（`run_moe_absorb.py`）の拡張。既定では 12.6.137節のまま。"""
+    steps = args.train_steps if steps is None else steps
     torch.manual_seed(seed)  # 条件が違っても初期値・データ順は同じ
     g = torch.Generator().manual_seed(seed)
-    model = ScaledRoutedCharLM(corpus.vocab_size, d=args.d, n_experts=n_experts, n_layers=n_layers,
-                               kind=cond["kind"], eta=cond.get("eta", 0.0), alpha=args.alpha)
-    train_ce = train_scaled(model, corpus.train, args.train_steps, 32, args.seq_len, 3e-3, g, cond.get("coef", 0.0))
+    model = model_cls(corpus.vocab_size, d=args.d, n_experts=n_experts, n_layers=n_layers,
+                      kind=cond["kind"], eta=cond.get("eta", 0.0), alpha=args.alpha, **model_kw)
+    train_ce = train_scaled(model, corpus.train, steps, 32, args.seq_len, 3e-3, g, cond.get("coef", 0.0))
     model.eval()
     x, y = make_windows(corpus.val, args.seq_len, args.n_windows)
     k = max(1, n_experts * args.k_num // args.k_den)
@@ -65,6 +68,9 @@ def run_one(seed: int, n_experts: int, n_layers: int, cond: dict, corpus: CharCo
         off["base_ce"] = eval_ce(model, x, y, use_threshold=False)
         off["d_ce"] = off["base_ce"] - out["lesion"]["zero"]["base_ce"]
         out["threshold_off"] = off
+        if hasattr(model, "threshold_state"):  # 12.6.141節 (c): 効きを掛ける前の閾値の状態 θ
+            st = model.threshold_state
+            out["threshold_state_range"] = float((st.max(1).values - st.min(1).values).mean())
     return out
 
 

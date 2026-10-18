@@ -9,3 +9,4 @@ results/step44_full_scale_experiment/
 *.npz
 rust/target/
 commit_step44_validation_results.sh
+results/moe_absorb/parts/
