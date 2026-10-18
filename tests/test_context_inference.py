@@ -198,3 +198,53 @@ def test_plasticity_cap_bounds_updates(optimizer):
     upd = [u[4] for u in _run("inferred_gated", plasticity_cap=1.0, **kw)["diag"]["upd"]]
     assert max(upd[1:]) <= upd[0] * (1 + 1e-5)
     assert upd != [u[4] for u in _run("inferred_gated", **kw)["diag"]["upd"]]
+
+
+SPLIT_KW = dict(steps=40, pretrain_steps=40, batch=16, tau=0.7, transition_steps=20, store_consistent=True)
+
+
+def _created(assign):
+    seen, out = {assign[0][1]}, []
+    for i, (_, c) in enumerate(assign):
+        if c not in seen:
+            seen.add(c)
+            out.append(i)
+    return out
+
+
+def test_split_plasticity_default_and_scope():
+    # 12.6.129節: 既定（split_window = 0）は利得によらず従来どおり。oracle・新しい文脈を作らない場合は影響しない
+    a = _run("inferred_gated", **SPLIT_KW)
+    b = _run("inferred_gated", split_window=0, split_ctx_gain=3.0, split_shared_gain=0.1, **SPLIT_KW)
+    assert a["R"] == b["R"] and a["assign"] == b["assign"]
+    on = dict(split_window=10, split_ctx_gain=3.0, split_shared_gain=0.1)
+    assert _run("oracle", transition_steps=2)["R"] == _run("oracle", transition_steps=2, **on)["R"]
+    kw = dict(novel_patience=10_000, store_consistent=True, transition_steps=2)
+    assert _run("inferred_gated", **kw)["R"] == _run("inferred_gated", **kw, **on)["R"]
+    assert _created(a["assign"])
+    assert _run("inferred_gated", **SPLIT_KW, **on)["R"] != a["R"]
+    for bad in (dict(split_window=-1), dict(split_ctx_gain=-1.0), dict(split_shared_gain=-0.5)):
+        with pytest.raises(ValueError):
+            _run("inferred_gated", **bad)
+
+
+def test_split_plasticity_gates_updates_after_creation():
+    # 利得 0 では、作成から W ステップの更新は 0。新しい文脈の列だけ利得 1 なら、その列以外は動かない（更新は小さい）
+    W = 5
+    kw = dict(**SPLIT_KW, diagnostics=True)
+    r0 = _run("inferred_gated", split_window=W, split_ctx_gain=0.0, split_shared_gain=0.0, **kw)
+    created = _created(r0["assign"])
+    assert created
+    i0 = created[0]
+    steps_all = [(k, s) for k, s in ((k, i) for i, (k, _) in enumerate(r0["assign"]))]
+    k0 = steps_all[i0][0]
+    s0 = i0 - next(i for i, (k, _) in enumerate(r0["assign"]) if k == k0)
+    in_win = [u for u in r0["diag"]["upd"] if u[0] == k0 and s0 <= u[1] < s0 + W]
+    assert in_win and all(u[4] == 0.0 for u in in_win)
+    after = [u for u in r0["diag"]["upd"] if u[0] == k0 and u[1] >= s0 + W]
+    assert any(u[4] > 0 for u in after)
+    r1 = _run("inferred_gated", split_window=W, split_ctx_gain=1.0, split_shared_gain=0.0, **kw)
+    base = _run("inferred_gated", **kw)
+    win = lambda r: [u[4] for u in r["diag"]["upd"] if u[0] == k0 and s0 <= u[1] < s0 + W]  # noqa: E731
+    assert r1["assign"][:i0 + 1] == base["assign"][:i0 + 1]
+    assert win(r1)[0] < win(base)[0]
