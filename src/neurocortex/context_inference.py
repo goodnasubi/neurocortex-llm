@@ -74,7 +74,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          plasticity_ref: str = "capped", optimizer: str = "adam", split_window: int = 0,
                          split_ctx_gain: float = 1.0, split_shared_gain: float = 1.0,
                          split_shared_lr_floor: float = 0.0, split_ctx_lr: float = 0.0,
-                         cue_select: str = "batch", evidence_lapse: float = 0.1, evidence_alpha: float = 0.01) -> dict:
+                         cue_select: str = "batch", evidence_lapse: float = 0.1, evidence_alpha: float = 0.01,
+                         evidence_reliability: bool = False, evidence_com: bool = False, com_alpha: float = 0.1,
+                         com_window: int = 0, reliability_lapse: bool = True,
+                         reliability_source: str = "gated", reliability_holdout: int = 0) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -137,6 +140,27 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
       どちらも手がかりの生成（乱数の消費）は同じ。diagnostics = True では "cues_used"（chosen と同じ形の、決定まで
       に使った手がかりの数）を加える。selection_trials > 0 では "selection_choices"（タスクごとの試行ごとの選択）と
       "selection_cues"（同じく手がかりの数）も返す。
+
+    証拠の蓄積の変種（cue_select="evidence" のみ。12.6.139節。どちらも既定の False では無効）:
+      evidence_reliability = True … 各文脈 c の信頼性 a_c（学習中の正確度の移動平均と、評価時点のバッファの整合度の
+          小さい方）から、lapse を ε_c = max(ε, K(1 − a_c)/(K − 1))、先頭の文脈 c* に決める閾値を事後対数オッズ
+          log((1 − α)/α) / max(2a_{c*} − 1, 0.1) にする（信頼性の低い文脈ほど多くの証拠を要する）。
+      evidence_com = True … 最初の決定の後も手がかりを最大 com_window 個（0 は cue_n 個まで）観測し続け、他の文脈の
+          最大が現在の選択を対数オッズ log((1 − com_alpha)/com_alpha) 上回ったら乗り換える（change of mind,
+          Resulaj et al. 2009）。最終の選択を使う。
+      reliability_lapse = False … 信頼性を閾値だけに使い、lapse は全文脈で共通の ε にする（12.6.139節の修正1。
+          文脈ごとに ε_c が違うと、平らにされた文脈が誤っても罰されにくく、選択が信頼性の低い文脈に偏るため）。
+      reliability_source = "pre" … 学習中の正確度を、ゲート・更新の前に、その文脈を選んだ全バッチで測る（ただし
+          新しい原因の判定と同じく、正答率 0.75 未満のバッチは除く）。既定の "gated" は、学習・保存したバッチの
+          更新後の正確度（損失 ≦ τ のバッチに偏るため高めに出る）。
+      reliability_holdout = m > 0 … バッファの整合度の代わりに、リプレイに使わない保留サンプル（文脈ごとに m 個まで。
+          保存するバッチのうちバッファに入れなかった残りから、同じ整合フィルタで取る）の整合度を使う（12.6.139節の
+          修正2。リプレイはバッファのサンプルそのものを学習し続けるので、バッファの整合度には忘却が現れない）。
+          学習・乱数の消費には影響しない。
+      cues_used / selection_cues は最初の決定までの手がかりの数。diagnostics = True では "cues_observed"（観測した
+      総数）・"switches"（乗り換えの回数）・"first_choice"（最初の選択）を、evidence_reliability では "reliability"
+      （評価時点ごとの {文脈: a_c}）も加える。selection_trials > 0 では "selection_observed"・"selection_switches"・
+      "selection_first" も返す。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -150,6 +174,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         raise ValueError(cue_select)
     if not (0.0 <= evidence_lapse <= 1.0 and 0.0 <= evidence_alpha < 1.0):
         raise ValueError("evidence_lapse は [0, 1]、evidence_alpha は [0, 1)")
+    if reliability_holdout < 0:
+        raise ValueError("reliability_holdout は 0 以上")
+    if reliability_source not in ("gated", "pre"):
+        raise ValueError(reliability_source)
+    if not (0.0 < com_alpha < 1.0) or com_window < 0:
+        raise ValueError("com_alpha は (0, 1)、com_window は 0 以上")
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
     if split_ctx_lr > 0:
@@ -177,6 +207,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         """手がかりから文脈を選ぶ。戻り値は (選んだ文脈, 決定までに使った手がかりの数)。"""
         if cue_select == "batch":
             return min(used, key=lambda c: loss_under(bits, labels, c)), bits.shape[0]
+        if revised:
+            return select_ctx_revised(bits, labels)
         ll = []
         for c in used:
             p = F.softmax(model(with_ctx(bits, c)), dim=-1)
@@ -188,6 +220,71 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         n = int(hit[0, 0]) + 1 if hit.numel() else bits.shape[0]
         return used[int(cum[n - 1].argmax())], n
 
+    @torch.no_grad()
+    def context_reliability() -> dict[int, float]:
+        """12.6.139節: 各文脈の信頼性 a_c = min(学習中の正確度の移動平均, バッファの整合度)。"""
+        src_b, src_l, src_c = (hold_bits, hold_labels, hold_ctx) if reliability_holdout > 0 else (buf_bits, buf_labels, buf_ctx)
+        bc = torch.cat(src_c) if src_c else torch.zeros(0, dtype=torch.long)
+        rel: dict[int, float] = {}
+        for c in used:
+            vals = [ema_acc[c]] if c in ema_acc else []
+            m = bc == c
+            if bool(m.any()):
+                bb, bl = torch.cat(src_b)[m], torch.cat(src_l)[m]
+                vals.append(float((model(with_ctx(bb, c)).argmax(-1) == bl).float().mean()))
+            rel[c] = min(vals) if vals else 1.0
+        return rel
+
+    @torch.no_grad()
+    def select_ctx_revised(bits: torch.Tensor, labels: torch.Tensor) -> tuple[int, int]:
+        """12.6.139節の証拠の蓄積（信頼性による lapse・閾値、決定後の乗り換え）。sel_info に詳細を残す。"""
+        N = bits.shape[0]
+        ll = []
+        for c in used:
+            p = F.softmax(model(with_ctx(bits, c)), dim=-1)
+            K = p.shape[-1]
+            eps = (max(evidence_lapse, K * (1 - rel_now[c]) / (K - 1)) if evidence_reliability and reliability_lapse
+                   else evidence_lapse)
+            eps = min(eps, 1.0)
+            p = (1 - eps) * p + eps / K
+            ll.append(torch.log(p.gather(1, labels[:, None])[:, 0]))
+        cum = torch.stack(ll, dim=1).cumsum(dim=0)  # [手がかり, 文脈]
+        lead = cum.argmax(dim=1)
+        if len(used) == 1:
+            n = 1
+        else:
+            others = cum.clone()
+            others[torch.arange(N), lead] = -math.inf
+            log_odds = cum.max(dim=1).values - torch.logsumexp(others, dim=1)
+            bound = math.log((1 - evidence_alpha) / evidence_alpha) if evidence_alpha > 0 else math.inf
+            if evidence_reliability:
+                r = torch.tensor([max(2 * rel_now[c] - 1, 0.1) for c in used])
+                bound = bound / r[lead]
+            hit = (log_odds >= bound).nonzero()
+            n = int(hit[0, 0]) + 1 if hit.numel() else N
+        cur_i = int(lead[n - 1])
+        first, observed, switches = used[cur_i], n, 0
+        if evidence_com and n < N and len(used) > 1:
+            end = N if com_window == 0 else min(N, n + com_window)
+            b_com = math.log((1 - com_alpha) / com_alpha)
+            for t in range(n, end):
+                row = cum[t].clone()
+                row[cur_i] = -math.inf
+                alt = int(row.argmax())
+                if float(cum[t, alt] - cum[t, cur_i]) >= b_com:
+                    cur_i, switches = alt, switches + 1
+            observed = end
+        sel_info.update(observed=observed, switches=switches, first=first)
+        return used[cur_i], n
+
+    revised = cue_select == "evidence" and (evidence_reliability or evidence_com)
+    sel_info: dict = {}
+    rel_now: dict[int, float] = {}
+    ema_acc: dict[int, float] = {}  # 12.6.139節: 文脈ごとの学習中の正確度の移動平均（evidence_reliability のみ）
+    hold_bits: list[torch.Tensor] = []  # 12.6.139節の修正2: リプレイに使わない保留サンプル
+    hold_labels: list[torch.Tensor] = []
+    hold_ctx: list[torch.Tensor] = []
+    hold_count: dict[int, int] = {}
     buf_bits: list[torch.Tensor] = []
     buf_labels: list[torch.Tensor] = []
     buf_ctx: list[torch.Tensor] = []
@@ -195,6 +292,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     diag_gen = torch.Generator().manual_seed(1234)
     trace_gen = torch.Generator().manual_seed(4321)  # trace 専用（diag_gen の消費を変えない）
     diag: dict = {"ctx_acc": [], "chosen": [], "cues_used": [], "trained_src": [], "trace": [], "upd": []}
+    if revised:
+        diag.update(cues_observed=[], switches=[], first_choice=[], reliability=[])
     buf_count: dict[int, int] = {}
     ema_loss: dict[int, float] = {}
     cur = 0
@@ -251,7 +350,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         return cur
 
     @torch.no_grad()
-    def accuracy(j: int, chosen: list[int] | None = None, cues: list[int] | None = None) -> float:
+    def accuracy(j: int, chosen: list[int] | None = None, cues: list[int] | None = None,
+                 extra: dict | None = None) -> float:
         if condition in ("inferred", "inferred_gated"):
             cb, cl = make_batch(specs[j], cue_n, eval_generator)
             ctx, n_cues = select_ctx(cb, cl)
@@ -259,6 +359,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 chosen.append(ctx)
             if cues is not None:
                 cues.append(n_cues)
+            if extra is not None and revised:
+                for k_ in ("observed", "switches", "first"):
+                    extra.setdefault(k_, []).append(sel_info[k_])
         elif condition == "random":
             ctx = int(torch.randint(C, (1,), generator=eval_generator))
         else:
@@ -294,6 +397,11 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             n_used_before = len(used)
             ctx = pick_ctx(k, bits, labels)
             assign.append((k, ctx))
+            if evidence_reliability and revised and reliability_source == "pre":
+                with torch.no_grad():
+                    pre_acc = float((model(with_ctx(bits, ctx)).argmax(-1) == labels).float().mean())
+                if pre_acc >= 0.75:
+                    ema_acc[ctx] = pre_acc if ctx not in ema_acc else ema * ema_acc[ctx] + (1 - ema) * pre_acc
             if reset_opt_on_new and len(used) > n_used_before:
                 opt = make_opt(k)
             if split_on and len(used) > n_used_before:
@@ -366,6 +474,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 with torch.no_grad():
                     cur_loss = loss_under(bits, labels, ctx_in)
                 ema_loss[ctx] = cur_loss if ctx not in ema_loss else ema * ema_loss[ctx] + (1 - ema) * cur_loss
+                if evidence_reliability and revised and reliability_source == "gated":
+                    with torch.no_grad():
+                        cur_acc = float((model(with_ctx(bits, ctx_in)).argmax(-1) == labels).float().mean())
+                    ema_acc[ctx] = cur_acc if ctx not in ema_acc else ema * ema_acc[ctx] + (1 - ema) * cur_acc
             if diagnostics and trace_every > 0 and step % trace_every == 0 and condition in ("inferred", "inferred_gated"):
                 with torch.no_grad():
                     accs_t = []
@@ -394,9 +506,21 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 buf_ctx.append(ctx_in[:n].long() if isinstance(ctx_in, torch.Tensor)
                                else torch.full((n,), ctx, dtype=torch.long))
                 buf_src.append(src[:n].long() if src is not None else torch.full((n,), k, dtype=torch.long))
+            if reliability_holdout > 0 and evidence_reliability and revised:
+                n0 = max(n, 0)
+                m = min(reliability_holdout - hold_count.get(key, 0), labels.shape[0] - n0)
+                if m > 0:
+                    hold_count[key] = hold_count.get(key, 0) + m
+                    hold_bits.append(bits[n0:n0 + m])
+                    hold_labels.append(labels[n0:n0 + m])
+                    hold_ctx.append(torch.full((m,), ctx, dtype=torch.long))
         chosen: list[int] = []
         cues_used: list[int] = []
-        R.append([accuracy(j, chosen, cues_used) for j in range(T)])
+        extra: dict = {}
+        if evidence_reliability and revised:
+            rel_now.clear()
+            rel_now.update(context_reliability())
+        R.append([accuracy(j, chosen, cues_used, extra) for j in range(T)])
         if diagnostics:
             with torch.no_grad():
                 acc_row = []
@@ -407,27 +531,44 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             diag["ctx_acc"].append(acc_row)
             diag["chosen"].append(chosen)
             diag["cues_used"].append(cues_used)
+            if revised:
+                diag["cues_observed"].append(extra.get("observed", []))
+                diag["switches"].append(extra.get("switches", []))
+                diag["first_choice"].append(extra.get("first", []))
+                diag["reliability"].append(dict(rel_now))
             diag["trained_src"].append({f"{c}<-{t}": n for (c, t), n in sorted(trained.items())})
     selection_acc = None
     sel_choices: list[list[int]] = []
     sel_cues: list[list[int]] = []
+    sel_extra: dict[str, list[list[int]]] = {"observed": [], "switches": [], "first": []}
     if condition in ("inferred", "inferred_gated") and selection_trials > 0:
         majority = assignment_majority(assign, T)
+        if evidence_reliability and revised:
+            rel_now.clear()
+            rel_now.update(context_reliability())
         hits = 0
         for j in range(T):
             sel_choices.append([])
             sel_cues.append([])
+            for v in sel_extra.values():
+                v.append([])
             for _ in range(selection_trials):
                 cb, cl = make_batch(specs[j], cue_n, eval_generator)
                 ctx, n_cues = select_ctx(cb, cl)
                 hits += int(ctx == majority[j])
                 sel_choices[j].append(ctx)
                 sel_cues[j].append(n_cues)
+                if revised:
+                    for k_, v in sel_extra.items():
+                        v[j].append(sel_info[k_])
         selection_acc = hits / (T * selection_trials)
     out = {"R": R, "assign": assign, "n_contexts": len(used) if condition in ("inferred", "inferred_gated") else C,
            "selection_acc": selection_acc}
     if sel_choices:
         out.update(selection_choices=sel_choices, selection_cues=sel_cues)
+        if revised:
+            out.update(selection_observed=sel_extra["observed"], selection_switches=sel_extra["switches"],
+                       selection_first=sel_extra["first"])
     if diagnostics:
         bc = torch.cat(buf_ctx) if buf_ctx else torch.zeros(0, dtype=torch.long)
         bs = torch.cat(buf_src) if buf_src else torch.zeros(0, dtype=torch.long)
