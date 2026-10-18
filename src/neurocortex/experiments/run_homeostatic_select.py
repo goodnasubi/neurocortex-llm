@@ -39,6 +39,21 @@ def conditions(args: argparse.Namespace) -> dict[str, dict]:
     return c
 
 
+@torch.no_grad()
+def gate_stats(model, x: torch.Tensor) -> dict:
+    """参考（12.6.133節の修正1）: 選ばれた専門家のゲートの平均と、閾値で選択が確率の最大から外れた割合。"""
+    h, _ = model.rnn(model.embed(x))
+    if getattr(model, "select_only", False):
+        raw = model.router.linear(h)
+        probs = torch.softmax(raw, -1)
+        choice = (raw - model.router.threshold).argmax(-1)
+    else:
+        probs = torch.softmax(model.router(h), -1)
+        choice = probs.argmax(-1)
+    gate = probs.gather(-1, choice.unsqueeze(-1))
+    return {"gate_mean": float(gate.mean()), "shifted_frac": float((choice != probs.argmax(-1)).float().mean())}
+
+
 def run_one(seed: int, cond: dict, corpus: CharCorpus, args: argparse.Namespace) -> dict:
     torch.manual_seed(seed)  # 条件が違っても初期値・データ順は同じ
     g = torch.Generator().manual_seed(seed)
@@ -54,7 +69,7 @@ def run_one(seed: int, cond: dict, corpus: CharCorpus, args: argparse.Namespace)
     x, y = make_windows(corpus.val, args.seq_len, args.n_windows)
     with use_select_forward(model):
         load, out = load_stats(model, x, args.n_experts)
-        out.update({"train_ce": train_ce, "load": load.tolist(), "lesion": {}})
+        out.update({"train_ce": train_ce, "load": load.tolist(), "lesion": {}, **gate_stats(model, x)})
         for mode in MODES:
             r = lesion_study(model, x, y, load, args.k, mode)
             r["ratio"] = r["d_target"] / max(r["d_random_mean"], args.eps)
@@ -77,6 +92,7 @@ def summarize(runs: list[dict], keys: list[str], eps: float) -> dict:
     for key in keys:
         rs = [r[key] for r in runs]
         d = {m: ms([r[m] for r in rs]) for m in ("gini", "max_over_mean", "entropy", "n_used", "train_ce")}
+        d.update({m: ms([r[m] for r in rs]) for m in ("gate_mean", "shifted_frac") if m in rs[0]})
         d["all_used_seeds"] = sum(r["n_used"] == len(r["load"]) for r in rs)
         for mode in MODES:
             ls = [r["lesion"][mode] for r in rs]

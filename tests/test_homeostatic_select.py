@@ -109,3 +109,16 @@ def test_select_only_homeostasis_reduces_imbalance_with_small_threshold():
         with use_select_forward(m), torch.no_grad():
             loads[eta] = np.bincount(expert_choices(m, x).numpy().ravel(), minlength=4)
     assert gini(loads[0.3]) < gini(loads[0.0]) - 0.2
+
+
+def test_gate_stats_reports_threshold_shift():
+    from neurocortex.experiments.run_homeostatic_select import gate_stats
+    m = _model(select_only=True)
+    x = torch.randint(0, 12, (3, 10))
+    assert gate_stats(m, x)["shifted_frac"] == 0.0
+    m.router.threshold[:] = torch.tensor([50.0, 50.0, -100.0, 0.0])
+    g = gate_stats(m, x)
+    with torch.no_grad():
+        _, _, _, h = m(x)
+        p2 = torch.softmax(m.router.linear(h), -1)[..., 2]
+    assert abs(g["gate_mean"] - float(p2.mean())) < 1e-6 and g["shifted_frac"] > 0
