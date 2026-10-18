@@ -318,3 +318,13 @@ seed=104 E32_L1/pb1_o0.5_r0.25_frz_b0 gini=0.288 used=31.0 base=0.3133 ratio=1.5
 seed=104 E32_L1/pb1_o0.5_r0.5_b0 gini=0.235 used=32.0 base=0.3147 ratio=1.39 gate=0.395 off_gini=0.235 agree=1.000 dce_off=0.0000 close=0.246 ret=+0.000
 seed=104 E32_L1/pb1_o0.5_r0.5_frz_b0.1 gini=0.208 used=31.0 base=0.3121 ratio=1.39 gate=0.392 off_gini=0.208 agree=1.000 dce_off=0.0000 close=0.202 ret=+0.000
 seed=104 E32_L1/pb1_o0.5_r0.5_frz_b0 gini=0.251 used=31.0 base=0.3150 ratio=1.53 gate=0.394 off_gini=0.251 agree=1.000 dce_off=0.0000 close=0.252 ret=+0.000
+seed=100 E16_L1/pb0.3_o0.25_r0.25_frz_bf0 gini=0.174 used=16.0 base=0.3125 ratio=1.11 gate=0.464 off_gini=0.174 agree=1.000 dce_off=0.0000 close=0.181 ret=+0.000
+seed=100 E32_L1/pb1_o0.25_r0.25_frz_bf0 gini=0.277 used=32.0 base=0.3108 ratio=1.59 gate=0.414 off_gini=0.277 agree=1.000 dce_off=0.0000 close=0.289 ret=+0.000
+seed=101 E16_L1/pb0.3_o0.25_r0.25_frz_bf0 gini=0.147 used=16.0 base=0.3046 ratio=1.54 gate=0.504 off_gini=0.147 agree=1.000 dce_off=0.0000 close=0.181 ret=+0.000
+seed=101 E32_L1/pb1_o0.25_r0.25_frz_bf0 gini=0.312 used=30.0 base=0.3100 ratio=1.94 gate=0.406 off_gini=0.312 agree=1.000 dce_off=0.0000 close=0.339 ret=+0.000
+seed=102 E16_L1/pb0.3_o0.25_r0.25_frz_bf0 gini=0.190 used=16.0 base=0.3154 ratio=1.77 gate=0.532 off_gini=0.190 agree=1.000 dce_off=0.0000 close=0.187 ret=+0.000
+seed=102 E32_L1/pb1_o0.25_r0.25_frz_bf0 gini=0.350 used=31.0 base=0.3182 ratio=1.74 gate=0.430 off_gini=0.350 agree=1.000 dce_off=0.0000 close=0.354 ret=+0.000
+seed=103 E16_L1/pb0.3_o0.25_r0.25_frz_bf0 gini=0.095 used=16.0 base=0.3178 ratio=2.00 gate=0.481 off_gini=0.095 agree=1.000 dce_off=0.0000 close=0.090 ret=+0.000
+seed=103 E32_L1/pb1_o0.25_r0.25_frz_bf0 gini=0.268 used=29.0 base=0.3154 ratio=1.55 gate=0.378 off_gini=0.268 agree=1.000 dce_off=0.0000 close=0.294 ret=+0.000
+seed=104 E16_L1/pb0.3_o0.25_r0.25_frz_bf0 gini=0.200 used=16.0 base=0.3171 ratio=1.76 gate=0.543 off_gini=0.200 agree=1.000 dce_off=0.0000 close=0.193 ret=+0.000
+seed=104 E32_L1/pb1_o0.25_r0.25_frz_bf0 gini=0.294 used=30.0 base=0.3158 ratio=1.66 gate=0.413 off_gini=0.294 agree=1.000 dce_off=0.0000 close=0.295 ret=+0.000
