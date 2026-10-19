@@ -41,7 +41,7 @@ from .run_moe_scale import run_one
 
 ETA = {"E16_L1": 0.3, "E32_L1": 1.0, "E32_L2": 0.3}  # 12.6.145節（1層）・12.6.141節（2層）で選んだ η
 LAMS = (0.1, 1.0)
-TEACH = ("cf", "cfs", "dist", "shuf")
+TEACH = ("cf", "cfs", "dist", "shuf", "self")  # self は修正1で足した対照
 CP_TEACH = ("cf", "cfs", "dist")
 TAU = 0.05
 ORDER_BETAS = {"": 0.1, "0": 0.0}  # (3) の β（接頭辞は run_moe_hier と同じ）
@@ -151,6 +151,10 @@ def judge_scale(sub: list[dict], summ: dict, lams: dict[str, float], args: argpa
     okg = lower(kc, ks, g_off)[0]
     oka = lower(ks, kc, agree)[0]
     v["H18c_トークンの情報が要る_cfがshufより偏らず一致率が高い"] = bool(okg and oka)
+    kself = f"self{lams['cf']:g}"
+    if kself in sub[0]:  # 修正1: 鋭くするだけの対照（新しい情報なし）
+        v["H18e_反実仮想の情報が要る_cfがselfより偏らず一致率が高い"] = bool(lower(kc, kself, g_off)[0]
+                                                                and lower(kself, kc, agree)[0])
     v["H19_蒸留で偏りとΔCE_offが下がる"] = v[f"dist{lams['dist']:g}"]["偏りとΔCE_offの低下"]["合格"]
     cps = {}
     for k in ["cp", *(f"cp_{t}{lams[t]:g}" for t in CP_TEACH)]:
@@ -199,7 +203,7 @@ def analyze(subs: dict[str, list[dict]], args: argparse.Namespace) -> tuple[dict
             lams = {t.partition("@")[0]: v for t, v in (args.lam or []) if t.partition("@")[2] in ("", n)}
             for t in CP_TEACH:
                 lams.setdefault(t, select_lam(summ[n], t))
-            lams["shuf"] = lams["cf"]  # 対照は cf と同じ λ
+            lams["shuf"] = lams["self"] = lams["cf"]  # 対照は cf と同じ λ
             verdict[n] = judge_scale(sub, summ[n], lams, args, ref)
             verdict[n]["H7*の正規化ΔCE_offの基準"] = ref
         else:

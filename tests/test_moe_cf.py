@@ -69,7 +69,7 @@ def test_forced_ce_matches_oracle():
 def test_teacher_grad_only_router():
     """補助損失の勾配はルータにだけ届く。教師の種類ごとの目標の形。"""
     x, y = PROBE[:, :-1], PROBE[:, 1:]
-    for t in ("cf", "cfs", "dist", "shuf"):
+    for t in ("cf", "cfs", "dist", "shuf", "self"):
         m = _make(CounterfactualLM, kind="select", eta=1.0, teacher=t, lam=1.0)
         m.threshold[0] = torch.linspace(-1, 1, 8)
         loss = m.teacher_loss(x, y)
@@ -95,6 +95,9 @@ def test_teacher_targets():
     s = _make(CounterfactualLM, kind="select", eta=1.0, teacher="shuf", lam=1.0, shuffle_seed=3)
     perm = torch.randperm(best.numel(), generator=torch.Generator().manual_seed(3))
     assert abs(s.teacher_loss(x, y).item() - F.cross_entropy(raw, best[perm]).item()) < 1e-5
+    o = _make(CounterfactualLM, kind="select", eta=1.0, teacher="self", lam=1.0)
+    o.threshold[0] = torch.linspace(-3, 3, 8)  # 閾値は使わない
+    assert abs(o.teacher_loss(x, y).item() - F.cross_entropy(raw, raw.argmax(-1)).item()) < 1e-5
 
 
 def test_teacher_changes_training_and_rejects():
@@ -115,7 +118,7 @@ def test_teacher_changes_training_and_rejects():
 def test_conditions():
     c16, c32, c2 = R.conditions(16, 1), R.conditions(32, 1), R.conditions(32, 2)
     assert R.conditions(8, 1) == {}
-    assert {"aux0", "aux0.05", "gate0.1", "sel1", "cf1", "cf0.1", "cfs1", "dist0.1", "shuf1", "p_cf1", "cp",
+    assert {"aux0", "aux0.05", "gate0.1", "sel1", "cf1", "cf0.1", "cfs1", "dist0.1", "shuf1", "self0.1", "p_cf1", "cp",
             "cp_cf1", "cp_dist0.1"} <= set(c32)
     assert c16["cf1"] == {"kind": "select", "eta": 0.3, "teacher": "cf", "lam": 1.0}
     assert c32["cp_cf1"]["freeze"] and c32["cp_cf1"]["open"] == 0.25 and "sched" not in c32["cp"]
@@ -146,7 +149,8 @@ def test_end_to_end_small():
                       for s in (0, 1)]
     summ, v = R.analyze(subs, args)
     j = v["E16_L1"]
-    assert j["選んだλ"]["cf"] == 1.0 and j["選んだλ"]["shuf"] == 1.0
+    assert j["選んだλ"]["cf"] == 1.0 and j["選んだλ"]["shuf"] == 1.0 and j["選んだλ"]["self"] == 1.0
+    assert isinstance(j["H18e_反実仮想の情報が要る_cfがselfより偏らず一致率が高い"], bool)
     for k in ("H18a_反実仮想の信号で偏りとΔCE_offが下がる", "H18b_反実仮想の信号でH7*",
               "H18c_トークンの情報が要る_cfがshufより偏らず一致率が高い", "H19_蒸留で偏りとΔCE_offが下がる",
               "H18d_閉じた後の取り込み_cp_cf"):

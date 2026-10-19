@@ -10,6 +10,7 @@
   - "cfs": 反実仮想の結果のソフトな教師 softmax(−CE_e/τ)（全選択肢の価値を同時に更新する）
   - "dist": 閾値ありの選択（argmax(raw − θ)）。閾値の割り当ての蒸留（価値によらず選んだ行動を強める習慣の学習）
   - "shuf": "cf" の教師をバッチ内のトークンで並べ替えたもの（教師の負荷の分布は同じで、トークンごとの情報がない対照）
+  - "self": 閾値なしのルータ自身の選択（argmax raw）。新しい情報を足さずにルータの確率を鋭くするだけの対照（12.6.157節の修正1）
   teacher=None（既定）では `HierBrakeLM` と同じ乱数の消費・同じ学習経過（同テスト）。
 - `train_cf`: `moe_hier.train_hier` と同じ手順・乱数の消費で、損失に補助損失を足す（"shuf" の並べ替えは別の乱数列）。
 """
@@ -21,7 +22,7 @@ import torch.nn.functional as F
 
 from .moe_hier import GROUPS, HierBrakeLM
 
-TEACHERS = ("cf", "cfs", "dist", "shuf")
+TEACHERS = ("cf", "cfs", "dist", "shuf", "self")
 
 
 def forced_ce(model, h: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
@@ -58,6 +59,8 @@ class CounterfactualLM(HierBrakeLM):
             raw0 = self.routers[0](h)
             if self.teacher == "dist":
                 target = (raw0 - self.threshold[0]).argmax(-1).reshape(-1)
+            elif self.teacher == "self":
+                target = raw0.argmax(-1).reshape(-1)
             else:
                 ce = forced_ce(self, h, y)
                 if self.teacher == "cfs":
