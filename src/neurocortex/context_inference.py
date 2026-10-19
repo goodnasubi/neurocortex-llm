@@ -85,7 +85,8 @@ EPISODIC_EXTRA_READOUTS = ("mix_rep", "switch_rep", "arb_bits", "arb_rep")  # 12
 RECON_READOUTS = ("recon_buf", "recon_all", "recon_all200", "recon_inter", "recon_hold")  # 12.6.159節
 RECON_EXTRA_READOUTS = ("recon_buf_inter", "recon_buf_err")  # 12.6.161節（バッファでの学び直しが効く理由の切り分け）
 WRITEBACKS = ("none", "all", "inter")  # 12.6.161節（学び直しの共有の重みへの書き戻し）
-REPLAY_RULES = ("gain", "need", "sleep", "ach", "ach_need", "ach_need2")  # 12.6.163節（海馬の痕跡のリプレイの配分）
+REPLAY_RULES = ("gain", "need", "sleep", "ach", "ach_need", "ach_need2",  # 12.6.163節（海馬の痕跡のリプレイの配分）
+                "ach_c", "nrem", "ach_c_nrem")  # 12.6.167節（連続的な新しさの信号・新しい記憶を優先する睡眠の段階）
 
 
 def episodic_readout(p_param: torch.Tensor, x: torch.Tensor, store_bits: torch.Tensor, store_labels: torch.Tensor,
@@ -150,7 +151,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          recon_batch: int = 32, recon_extra: bool = False, writeback: str = "",
                          writeback_at: int = 0, writeback_steps: int = 100, writeback_eval: int = 2000,
                          writeback_keep: bool = False, replay_rule: str = "", replay_beta: float = 0.5,
-                         replay_need: float = 0.5, sleep_every: int = 50, sleep_steps: int = 25) -> dict:
+                         replay_need: float = 0.5, sleep_every: int = 50, sleep_steps: int = 25,
+                         ach_ema: float = 0.98) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -343,9 +345,21 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
       "ach_need" … "ach" と同じ除外をした上で、"need" と同じ新旧の比率で取る。
       "ach_need2" … 驚きのあるステップでは従来と同じ（加えた痕跡を除いたバッファから一様に batch 個）、驚きのない
           ステップでは加えた痕跡を含めて "need" と同じ新旧の比率で取る（12.6.163節の修正2）。
+      "ach_c" … 連続的な新しさの信号（12.6.167節。アセチルコリンの連続的な調節）。文脈 c ごとに、学習したバッチの
+          損失のゆっくりした指数移動平均 L̄_c（減衰 ach_ema）を持ち、なじみの度合い f = clamp(1 − L̄_c/τ, 0, 1)
+          （驚きのあるステップでは 0）を求める。リプレイの round(f·batch) 個を "ach_need2" の驚きのないステップと
+          同じ取り方（加えた痕跡を含め、新旧の比率 replay_need）で、残りを加えた痕跡を除いたバッファから一様に取る。
+          確立した直後（L̄_c がまだ τ に近い）は従来のリプレイに近く、学習が進むにつれて痕跡の固定化の配分が増える。
+          f が常に 0 なら、痕跡を加えない場合と同じ学習になる。
+      "nrem" … 新しい記憶を優先する睡眠の段階（12.6.167節。Singh, Norman & Schapiro 2022）。覚醒中は "sleep" と同じ
+          （加えた痕跡を除いて一様）。sleep_every ステップごと（step > 0）に、新しい入力なしで sleep_steps ステップ、
+          NREM に似たステップ（新しい記憶 = 規則の適用を始めた後に作った文脈の痕跡から一様に batch 個）と、REM に似た
+          ステップ（古い記憶 = それ以前からある文脈の痕跡。加えた痕跡を含む）を、NREM から始めて1ステップずつ交互に
+          学習する。新しい文脈の痕跡がまだなければ睡眠の段階を置かない。
+      "ach_c_nrem" … 覚醒中は "ach_c"、睡眠の段階は "nrem"。
       diagnostics = True では diag["replay_mix"][k]（規則を適用したタスク k の、リプレイの痕跡のうちそのステップで
       選んだ文脈のものの割合 "own"、加えた痕跡の割合 "kept"、1ステップのリプレイの数の平均 "size"、睡眠のステップ数
-      "sleep"）を加える。
+      "sleep"、なじみの度合い f の平均 "fam"（ach_c のみ意味を持つ））を加える。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -385,9 +399,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                       or not 0 < writeback_at < len(specs) or writeback_steps < 0 or writeback_eval <= 0):
         raise ValueError("writeback は none・all・inter（inferred / inferred_gated のみ）、0 < writeback_at < タスク数")
     if replay_rule and (replay_rule not in REPLAY_RULES or not 0.0 <= replay_beta <= 1.0
-                        or not 0.0 < replay_need < 1.0 or sleep_every <= 0 or sleep_steps < 0):
-        raise ValueError("replay_rule は gain・need・sleep・ach・ach_need・ach_need2、replay_beta は [0, 1]、replay_need は (0, 1)、"
-                         "sleep_every は正、sleep_steps は 0 以上")
+                        or not 0.0 < replay_need < 1.0 or sleep_every <= 0 or sleep_steps < 0
+                        or not 0.0 <= ach_ema < 1.0):
+        raise ValueError("replay_rule は " + "・".join(REPLAY_RULES) + "、replay_beta は [0, 1]、replay_need は (0, 1)、"
+                         "sleep_every は正、sleep_steps は 0 以上、ach_ema は [0, 1)")
     rule_from = (writeback_at if writeback else 1) if replay_rule else len(specs)
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
@@ -614,6 +629,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         diag.update(cues_observed=[], switches=[], first_choice=[], reliability=[])
     buf_count: dict[int, int] = {}
     ema_loss: dict[int, float] = {}
+    nov_loss: dict[int, float] = {}  # 12.6.167節: ach_c のなじみの度合いに使う損失のゆっくりした移動平均
+    old_ctx: set[int] = set()  # 12.6.167節: 規則の適用を始めた時点にあった文脈（nrem の古い記憶）
     cur = 0
     used = [0]
     assign: list[tuple[int, int]] = []
@@ -772,7 +789,25 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
         bs = torch.cat(buf_src)
         novel = rule in ("ach", "ach_need", "ach_need2") and not gate["store"]
-        if rule == "sleep" or novel:
+        if rule in ("ach_c", "ach_c_nrem"):
+            f = max(0.0, min(1.0, 1 - nov_loss.get(ctx, math.inf) / tau)) if gate["store"] else 0.0
+            n_f = round(f * batch)
+            wake = (bs != -1).nonzero()[:, 0]
+            # 残りは加えた痕跡を除いたバッファから一様に（f = 0 なら痕跡を加えない場合と同じ乱数の消費と選択）
+            idx = wake[torch.randint(wake.numel(), (batch - n_f,), generator=generator)]
+            if n_f > 0:
+                own, oth = (bc == ctx).nonzero()[:, 0], (bc != ctx).nonzero()[:, 0]
+                n_own = round(replay_need * n_f)
+                if oth.numel() == 0:
+                    fam = torch.randint(bb.shape[0], (n_f,), generator=generator)
+                else:
+                    fam = oth[torch.randint(oth.numel(), (n_f - n_own,), generator=generator)]
+                    if own.numel() > 0:
+                        fam = torch.cat([own[torch.randint(own.numel(), (n_own,), generator=generator)], fam])
+                idx = torch.cat([fam, idx])
+            mix["fam"] += f
+            return with_ctx(bb[idx], bc[idx]), bl[idx], torch.stack([bc[idx] == ctx, bs[idx] == -1])
+        if rule in ("sleep", "nrem") or novel:
             wake = bs != -1
             bb, bl, bc, bs = bb[wake], bl[wake], bc[wake], bs[wake]
         n = bb.shape[0]
@@ -794,15 +829,26 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             idx = torch.randint(n, (batch,), generator=generator)
         return with_ctx(bb[idx], bc[idx]), bl[idx], torch.stack([bc[idx] == ctx, bs[idx] == -1])
 
-    def sleep_phase(o: torch.optim.Optimizer) -> None:
-        """12.6.163節: 新しい入力なしで、加えた痕跡を含むバッファ全体を交互にリプレイする（睡眠に似た段階）。"""
+    def sleep_phase(o: torch.optim.Optimizer, rule: str) -> int:
+        """12.6.163節: 新しい入力なしで、加えた痕跡を含むバッファ全体を交互にリプレイする（睡眠に似た段階）。
+        12.6.167節の nrem では、新しい文脈の痕跡（NREM）と古い文脈の痕跡（REM）を1ステップずつ交互に取る。
+        戻り値は学習したステップ数。"""
         bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
-        for _ in range(sleep_steps):
-            idx = torch.randint(bb.shape[0], (batch,), generator=generator)
+        pools = [torch.arange(bb.shape[0])]
+        if rule != "sleep":
+            is_old = torch.tensor([int(c) in old_ctx for c in bc.tolist()], dtype=torch.bool)
+            new, old = (~is_old).nonzero()[:, 0], is_old.nonzero()[:, 0]
+            if new.numel() == 0:
+                return 0
+            pools = [new, old if old.numel() > 0 else new]
+        for s_ in range(sleep_steps):
+            pool = pools[s_ % len(pools)]
+            idx = pool[torch.randint(pool.numel(), (batch,), generator=generator)]
             loss = F.cross_entropy(model(with_ctx(bb[idx], bc[idx])), bl[idx])
             o.zero_grad(set_to_none=True)
             loss.backward()
             o.step()
+        return sleep_steps
 
     upd_ref: list[float] = []  # plasticity_cap の ū（平常時の更新ノルムの移動平均）
     split = {"left": 0, "ctx": -1}  # split_window の残りステップと、対象の新しい文脈
@@ -817,11 +863,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         n_used_at_start = len(used)
         opt = make_opt(k)
         rule = replay_rule if k >= rule_from else ""
-        mix = {"own": 0.0, "kept": 0.0, "size": 0, "n": 0, "sleep": 0}
+        if rule and k == rule_from:
+            old_ctx.update(used)
+        mix = {"own": 0.0, "kept": 0.0, "size": 0, "n": 0, "sleep": 0, "fam": 0.0}
         for step in range(pretrain_steps if k == 0 else steps):
-            if rule == "sleep" and step > 0 and step % sleep_every == 0 and buf_bits:
-                sleep_phase(opt)
-                mix["sleep"] += sleep_steps
+            if rule in ("sleep", "nrem", "ach_c_nrem") and step > 0 and step % sleep_every == 0 and buf_bits:
+                mix["sleep"] += sleep_phase(opt, rule)
             bits, labels = make_batch(spec, batch, generator)
             src = None
             if k > 0 and step < transition_steps:
@@ -918,6 +965,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 with torch.no_grad():
                     cur_loss = loss_under(bits, labels, ctx_in)
                 ema_loss[ctx] = cur_loss if ctx not in ema_loss else ema * ema_loss[ctx] + (1 - ema) * cur_loss
+                nov_loss[ctx] = cur_loss if ctx not in nov_loss else ach_ema * nov_loss[ctx] + (1 - ach_ema) * cur_loss
                 if evidence_reliability and revised and reliability_source == "gated":
                     with torch.no_grad():
                         cur_acc = float((model(with_ctx(bits, ctx_in)).argmax(-1) == labels).float().mean())
@@ -986,7 +1034,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             if rule:
                 m_ = max(mix["n"], 1)
                 diag.setdefault("replay_mix", {})[k] = {"own": mix["own"] / m_, "kept": mix["kept"] / m_,
-                                                        "size": mix["size"] / m_, "sleep": mix["sleep"]}
+                                                        "size": mix["size"] / m_, "sleep": mix["sleep"],
+                                                        "fam": mix["fam"] / m_}
     selection_acc = None
     sel_choices: list[list[int]] = []
     sel_cues: list[list[int]] = []
