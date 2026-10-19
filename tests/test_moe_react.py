@@ -117,7 +117,7 @@ def test_react_loss_matches_forced_ce_on_niche():
     with torch.no_grad():
         m.off_usage.copy_(torch.tensor([0.0, 0.5, 0.2, 0.1, 0.1, 0.05, 0.03, 0.02]))
         m.off_usage[6] = 0.2  # 使われないのは 0 と 7
-    loss = float(m.react_loss(x, y))
+    loss = float(m.react_loss(x, y).detach())
     with torch.no_grad():
         h, _ = m.rnn(m.embed(x))
         raw0 = m.routers[0](h).reshape(-1, 8)
@@ -175,7 +175,38 @@ def test_small_run_and_judge(tmp_path):
     summ, verdict = R.analyze({"E16_L1": subs}, args)
     v = verdict["E16_L1"]
     for k in ("P1_教師の閾値で教師の偏りが下がる", "H25_教師の閾値で一致率が上がる", "H26_教師の閾値で閉じた後の取り込み",
-              "H27_再学習で閉じた後の取り込み", "H28_組み合わせ", "H29_参考_教師なしの再学習", "戻り", "費用"):
+              "H27_再学習で閉じた後の取り込み", "H28_組み合わせ", "P1_修正1_教師の負荷の移動平均のジニ",
+              "H26_修正1_θ_Tを閉じ始めで止める", "H27_修正1_使われない専門家を教師で評価", "H28_修正1_組み合わせ", "H29_参考_教師なしの再学習", "戻り", "費用"):
         assert k in v, k
     assert isinstance(v["H28_組み合わせ"]["合格"], bool)
     assert "react" in summ["E16_L1"]["cp_re"]
+
+
+def test_fix1_freeze_and_probe():
+    """修正1: θ_T は閉じ始めから積分を止める。react_probe は使われない専門家を教師の評価の組に加える。"""
+    m = _make(ReactCFLM, **{**KW, "total_steps": 40}, teacher="rand3", lam=1.0, teacher_homeo=True,
+              teacher_freeze=True)
+    _train(m, train_react, 40)
+    th_close = m.teacher_threshold.clone()
+    # 閉じ始め（10 ステップ）以後は変わらない: 同じ模型をさらに学習しても θ_T は同じ
+    _train(m, train_react, 5)
+    assert torch.equal(th_close, m.teacher_threshold) and not torch.equal(th_close, torch.zeros(8))
+    assert all("t_gini_ema" in s for s in m.teacher_stats)
+    p = _make(ReactCFLM, **KW, teacher="rand1", lam=1.0, react=True, react_probe=True)
+    with torch.no_grad():
+        p.off_usage.copy_(torch.tensor([0.0, 0.5, 0.01, 0.2, 0.1, 0.1, 0.05, 0.04]))
+    p.teacher_loss(*XY)
+    n = XY[1].numel()
+    assert 2 * n < p.cost["evals"] <= 4 * n  # c と無作為な1個に、使われない専門家 0・2 が加わる（重複は1つに数える）
+    q = _make(ReactCFLM, **KW, teacher="rand1", lam=1.0, react=True)
+    with torch.no_grad():
+        q.off_usage.copy_(p.off_usage)
+    q.teacher_loss(*XY)
+    assert q.cost["evals"] <= 2 * n
+    for bad in ({"teacher_freeze": True}, {"react_probe": True}, {"react_probe": True, "react": True, "teacher": "cf"}):
+        kw = {**KW, "teacher": "rand1", "lam": 1.0, **bad}
+        try:
+            _make(ReactCFLM, **kw)
+        except ValueError:
+            continue
+        raise AssertionError(bad)

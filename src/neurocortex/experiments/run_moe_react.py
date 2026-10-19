@@ -46,6 +46,10 @@ TEACHER = "rand3"
 TAU = 0.05
 VARIANTS = {"": {}, "_ht": {"teacher_homeo": True}, "_re": {"react": True},
             "_htre": {"teacher_homeo": True, "react": True}}
+# 修正1（開発用シードの後に追加）: θ_T を閉じ始めで止める htf、使われない専門家を教師の評価に必ず加える rep と、その組
+VARIANTS_FIX1 = {"_htf": {"teacher_homeo": True, "teacher_freeze": True}, "_rep": {"react": True, "react_probe": True},
+                 "_htfrep": {"teacher_homeo": True, "teacher_freeze": True, "react": True, "react_probe": True}}
+MODEL_FLAGS = ("teacher_homeo", "react", "teacher_freeze", "react_probe")
 LAST = 100  # 教師の統計を平均する学習の終わりのステップ数
 
 
@@ -64,6 +68,7 @@ def conditions(e: int, l: int) -> dict[str, dict]:
     c["cp"] = cp
     c.update({f"cp_{TEACHER}{v}": {**cp, **t, **kw} for v, kw in VARIANTS.items()})
     c["cp_re"] = {**cp, "react": True}  # 参考: 教師なしの再学習
+    c.update({f"cp_{TEACHER}{v}": {**cp, **t, **kw} for v, kw in VARIANTS_FIX1.items()})
     return c
 
 
@@ -92,6 +97,7 @@ def run_cond(seed: int, e: int, l: int, key: str, cond: dict, corpus: CharCorpus
             out["teacher_agree_last"] = _mean(t["agree"] for t in ts[-LAST:])
             out["teacher_gini_last"] = _mean(t.get("t_gini") for t in ts[-LAST:])
             out["teacher_gini_raw_last"] = _mean(t.get("t_gini_raw") for t in ts[-LAST:])
+            out["teacher_gini_ema_last"] = _mean(t.get("t_gini_ema") for t in ts[-LAST:])
         rs = model.react_stats
         if rs:
             ce_step = close_step(cond, args.train_steps)
@@ -109,8 +115,7 @@ def run_cond(seed: int, e: int, l: int, key: str, cond: dict, corpus: CharCorpus
           "probe": probe, "log_every": args.log_every, "vec_every": 10 ** 9, "freeze": cond.get("freeze", False),
           "teacher": cond.get("teacher"), "lam": cond.get("lam", 0.0), "tau": args.tau,
           "shuffle_seed": seed + 1000, "sample_seed": seed + 2000,
-          "teacher_homeo": cond.get("teacher_homeo", False), "react": cond.get("react", False),
-          "react_rho": args.rho, "react_mu": args.mu}
+          **{f: cond.get(f, False) for f in MODEL_FLAGS}, "react_rho": args.rho, "react_mu": args.mu}
     r = run_one(seed, e, l, cond, corpus, args, ReactCFLM, args.train_steps, post=post, train_fn=train_timed, **kw)
     return slim(r, False)
 
@@ -119,7 +124,7 @@ def summarize_react(sub: list[dict], key: str, cond: dict, total: int) -> dict:
     d = summarize_cfe(sub, key, cond, total)
     rs = [r[key] for r in sub]
     d["cost"]["react_evals_per_token"] = ms([r["cost"]["react_evals_per_token"] for r in rs])
-    for m in ("teacher_gini_last", "teacher_gini_raw_last"):
+    for m in ("teacher_gini_last", "teacher_gini_raw_last", "teacher_gini_ema_last"):
         if m in rs[0]:
             d[m] = ms([r[m] for r in rs])
     if "react" in rs[0]:
@@ -154,7 +159,10 @@ def judge_scale(sub: list[dict], summ: dict, conds: dict, args: argparse.Namespa
     v["H25_教師の閾値で一致率が上がる"]["合格"] = all(v["H25_教師の閾値で一致率が上がる"][k]
                                           for k in ("rand3より一致率が高い", "一致率≧0.85", "H3"))
     v["H25b_H7*"] = {k: judge_star(absorb_summary(sub, k), ref_norm) for k in (sel, base, ht)}
-    cps = {k: closed_ok(sub, k, args) for k in ["cp", "cp_re", *(f"cp_{TEACHER}{s}" for s in VARIANTS)]}
+    te = lambda k: [r[k]["teacher_gini_ema_last"] for r in sub]  # noqa: E731
+    v["P1_修正1_教師の負荷の移動平均のジニ"] = {"rand3_ht・rand3": [m(te(ht)), m(te(base))], "合格": _less(te(ht), te(base))}
+    fix1 = [f"cp_{TEACHER}{s}" for s in VARIANTS_FIX1]
+    cps = {k: closed_ok(sub, k, args) for k in ["cp", "cp_re", *(f"cp_{TEACHER}{s}" for s in VARIANTS), *fix1]}
     for k, d in cps.items():
         d["使用専門家の平均"] = m([r[k]["n_used"] for r in sub])
         d["全専門家が使われたシード数"] = sum(r[k]["all_used"] for r in sub)
@@ -168,6 +176,16 @@ def judge_scale(sub: list[dict], summ: dict, conds: dict, args: argparse.Namespa
     v["H28_組み合わせ"] = {"合格": bool(ok(f"{b}_htre") and m(gi(f"{b}_htre")) < m(gi(f"{b}_ht"))
                                      and m(gi(f"{b}_htre")) < m(gi(f"{b}_re"))),
                          "取り込み": ok(f"{b}_htre"), "ジニ": {k: m(gi(k)) for k in (b, f"{b}_ht", f"{b}_re", f"{b}_htre")}}
+    v["P1_修正1_閉じた後の教師の偏り"] = {k: m(te(k)) for k in (b, f"{b}_ht", f"{b}_htf")}
+    v["P1_修正1_閉じた後の教師の偏り"]["htfがcp_rand3より小さい"] = _less(te(f"{b}_htf"), te(b))
+    v["H26_修正1_θ_Tを閉じ始めで止める"] = {"合格": ok(f"{b}_htf"), "副_cp_rand3より偏りが小さい": _less(gi(f"{b}_htf"), gi(b))}
+    v["H27_修正1_使われない専門家を教師で評価"] = {
+        "合格": ok(f"{b}_rep"), "副_cp_rand3より偏りが小さい": _less(gi(f"{b}_rep"), gi(b)),
+        "副_全専門家が使われたシードが増える": cps[f"{b}_rep"]["全専門家が使われたシード数"] > cps[b]["全専門家が使われたシード数"]}
+    v["H28_修正1_組み合わせ"] = {"合格": bool(ok(f"{b}_htfrep") and m(gi(f"{b}_htfrep")) < m(gi(f"{b}_htf"))
+                                           and m(gi(f"{b}_htfrep")) < m(gi(f"{b}_rep"))),
+                               "取り込み": ok(f"{b}_htfrep"),
+                               "ジニ": {k: m(gi(k)) for k in (b, f"{b}_htf", f"{b}_rep", f"{b}_htfrep")}}
     v["H29_参考_教師なしの再学習"] = {"取り込み": ok("cp_re"), "cpより偏りが小さい": _less(gi("cp_re"), gi("cp"))}
     v["戻り"] = {k: m(bias_return(r[k], conds[k], args.train_steps)["return"] for r in sub)
                for k in cps}
@@ -259,7 +277,7 @@ def main() -> None:
     subs = {n: [pt["runs"] for pt in sorted((pt for pt in parts if pt["scale"] == n), key=lambda pt: pt["seed"])]
             for n in names}
     summ, verdict = analyze(subs, args)
-    keep = {"cp", f"cp_{TEACHER}", f"cp_{TEACHER}_ht", f"cp_{TEACHER}_re", f"cp_{TEACHER}_htre"}
+    keep = {"cp", *(f"cp_{TEACHER}{v}" for v in (*VARIANTS, *VARIANTS_FIX1))}
     for sub in subs.values():  # 結果ファイルを数 MB に収めるため、シード別の時系列は閉じる条件だけ残す
         for runs in sub:
             for k in list(runs):

@@ -14,6 +14,9 @@
     CE_c − CE_e の上位 N/E 個、自分の取り分）に強制的に送って学習させる。ゲートは c のゲート（勾配を切る）、
     勾配はその専門家の重みにだけ届く（h・出力層・ルータには届かない）。損失は μ·Σ CE / N（取り分のトークンを
     実際に割り当てられたときと同じ重み）。
+  修正1（12.6.171節）: `teacher_freeze=True` は θ_T の積分を閉じ始め（s < 1）から止める（選択の θ の freeze と同じ）。
+  `react_probe=True` は再学習が働く間（s > 0）、使われない専門家を部分評価の教師の評価の組に必ず加える（活動と教える
+  信号を対にする）。教師の負荷の移動平均 u_T は（閾値を掛けない場合も）常に更新し、そのジニを `t_gini_ema` に残す。
   teacher_homeo=False・react=False では `EstimatedCFLM` と同じ学習経過（`tests/test_moe_react.py`）。
   教師の目標の負荷の偏り（閾値を掛けた後と掛ける前のジニ）を `teacher_stats` に、使われない専門家の数と
   再学習の評価数を `react_stats`・`cost` に残す。
@@ -41,14 +44,17 @@ class ReactCFLM(EstimatedCFLM):
     """部分評価の教師に恒常性の閾値（teacher_homeo）と、閉じる前の使われない専門家の再学習（react）を足す。"""
 
     def __init__(self, *args, teacher_homeo: bool = False, react: bool = False, react_rho: float = 0.25,
-                 react_mu: float = 1.0, **kw) -> None:
+                 react_mu: float = 1.0, teacher_freeze: bool = False, react_probe: bool = False, **kw) -> None:
         super().__init__(*args, **kw)
         if teacher_homeo and self.kind_t not in ("top", "rand"):
             raise ValueError("教師の閾値は部分評価の教師（top・rand）だけ")
+        if (teacher_freeze and not teacher_homeo) or (react_probe and not (react and self.kind_t in ("top", "rand"))):
+            raise ValueError("teacher_freeze は teacher_homeo と、react_probe は react と部分評価の教師と組にする")
         if react and self.n_layers != 1:
             raise ValueError("再学習は1層の模型だけ")
         self.teacher_homeo, self.react = teacher_homeo, react
         self.react_rho, self.react_mu = react_rho, react_mu
+        self.teacher_freeze, self.react_probe = teacher_freeze, react_probe
         self.register_buffer("teacher_threshold", torch.zeros(self.n_experts))
         self.register_buffer("teacher_usage", torch.full((self.n_experts,), 1.0 / self.n_experts))
         self.register_buffer("off_usage", torch.full((self.n_experts,), 1.0 / self.n_experts))
@@ -66,6 +72,10 @@ class ReactCFLM(EstimatedCFLM):
             extra = (raw0.topk(self.m, dim=-1).indices if self.kind_t == "top"
                      else _random_others(chosen, self.n_experts, self.m, self.sample_gen))
             idx = torch.cat([chosen.unsqueeze(-1), extra], dim=-1)
+            if self.react_probe and self.strength > 0.0:  # 修正1: 使われない専門家を教師の評価に必ず加える
+                dormant = (self.off_usage < self.react_rho / self.n_experts).nonzero().squeeze(-1)
+                if dormant.numel():
+                    idx = torch.cat([idx, dormant.unsqueeze(0).expand(idx.shape[0], -1)], dim=-1)
             ce = subset_ce(self, h, y, idx)
             dup = _dup_mask(idx)
             pos_raw = ce.masked_fill(dup, float("inf")).argmin(-1)
@@ -82,12 +92,14 @@ class ReactCFLM(EstimatedCFLM):
         logits = raw.gather(-1, idx).masked_fill(dup, float("-inf"))
         loss = self.lam * F.cross_entropy(logits, pos)
         with torch.no_grad():
+            frac = torch.bincount(hard, minlength=self.n_experts).float() / n  # 教師の負荷の移動平均（修正1で常に記録）
+            self.teacher_usage.mul_(1 - self.alpha).add_(self.alpha * frac)
             self.teacher_stats.append({"agree": float((raw.argmax(-1) == hard).float().mean()),
                                        "t_gini": _gini_of(hard, self.n_experts),
-                                       "t_gini_raw": _gini_of(hard_raw, self.n_experts)})
-            if self.teacher_homeo:  # 選択の閾値と同じ積分則（η・α も同じ）
-                frac = torch.bincount(hard, minlength=self.n_experts).float() / n
-                self.teacher_usage.mul_(1 - self.alpha).add_(self.alpha * frac)
+                                       "t_gini_raw": _gini_of(hard_raw, self.n_experts),
+                                       "t_gini_ema": float(gini(self.teacher_usage.numpy().astype(float)))})
+            # 選択の閾値と同じ積分則（η・α も同じ）。teacher_freeze（修正1）では閉じ始めから積分を止める
+            if self.teacher_homeo and not (self.teacher_freeze and self.strength < 1.0):
                 self.teacher_threshold.add_(self.eta * (self.n_experts * self.teacher_usage - 1))
                 self.teacher_threshold.sub_(self.teacher_threshold.mean())
         self._count(evals, n, t0)
