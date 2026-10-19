@@ -13,6 +13,8 @@
   - "val{m}" / "valall": 価値の予測。ルータの対数を各専門家の CE の予測として学ぶ: 予測 CE_e = τ·(b(h) − raw_e)。
     b(h) はトークンごとの基準の価値（状態の価値、線形の読み出し、ゼロで初期化）。評価した専門家（c と無作為な m 個、
     "valall" は全専門家）だけで、価値の予測誤差 raw_e − (b(h) − CE_e/τ) に smooth L1 を掛ける。m=0 は実際の結果だけ
+  - "dval{m}" / "dvalall"（12.6.165節の修正1）: 実際の結果との差の予測。評価した専門家 e について
+    smooth L1((raw_e − raw_c) − (−(CE_e − CE_c)/τ))（c は実際に選ばれた専門家。トークンの難しさが打ち消し合う）
   - "cfg": 全専門家をゲート 1 で評価した CE の argmin（ゲートに依らない反実仮想の教師）
   費用として、教師が評価した専門家の数（トークンあたり、重複を除く）と教師の計算時間を `cost` に積む。
   teacher が既存の教師なら `CounterfactualLM` と同じ（同テスト）。
@@ -29,7 +31,7 @@ import torch.nn.functional as F
 
 from .moe_cf import TEACHERS, CounterfactualLM, forced_ce
 
-_PAT = re.compile(r"^(top|rand|val)(\d+)$|^(valall|cfg)$")
+_PAT = re.compile(r"^(top|rand|val|dval)(\d+)$|^(valall|dvalall|cfg)$")
 
 
 def parse_teacher(t: str) -> tuple[str, int]:
@@ -37,7 +39,7 @@ def parse_teacher(t: str) -> tuple[str, int]:
     if t in TEACHERS:
         return t, 0
     m = _PAT.match(t)
-    if m is None or (m.group(1) == "top" and int(m.group(2)) < 1):
+    if m is None or (m.group(1) in ("top", "dval") and int(m.group(2)) < 1):
         raise ValueError(t)
     return (m.group(1), int(m.group(2))) if m.group(1) else (m.group(3), 0)
 
@@ -118,7 +120,7 @@ class EstimatedCFLM(CounterfactualLM):
             chosen = (raw0 - self.threshold[0]).argmax(-1) if self.kind == "select" else _probs(self, raw0).argmax(-1)
             if self.kind_t == "cfg":
                 idx, ce = None, forced_ce_gate1(self, h, y)
-            elif self.kind_t == "valall":
+            elif self.kind_t in ("valall", "dvalall"):
                 idx, ce = None, forced_ce(self, h, y)
             else:
                 extra = (raw0.topk(self.m, dim=-1).indices if self.kind_t == "top"
@@ -134,6 +136,15 @@ class EstimatedCFLM(CounterfactualLM):
             target = base.unsqueeze(-1) - ce / self.tau
             loss = self.lam * F.smooth_l1_loss(pred, target)
             hard = ce.argmin(-1) if idx is None else idx.gather(-1, ce.argmin(-1, keepdim=True)).squeeze(-1)
+        elif self.kind_t in ("dval", "dvalall"):  # 修正1: 実際の結果との差（fictive な予測誤差）
+            if idx is None:  # 全専門家（c の項は 0）
+                idx = torch.arange(self.n_experts).expand(n, -1)
+                c_ce, oi, oce = ce.gather(-1, chosen.unsqueeze(-1)), idx, ce
+            else:  # 評価した c 以外の専門家
+                c_ce, oi, oce = ce[:, :1], idx[:, 1:], ce[:, 1:]
+            c_raw = raw.gather(-1, chosen.unsqueeze(-1))
+            loss = self.lam * F.smooth_l1_loss(raw.gather(-1, oi) - c_raw, -(oce - c_ce) / self.tau)
+            hard = idx.gather(-1, ce.argmin(-1, keepdim=True)).squeeze(-1)
         elif idx is None:
             hard = ce.argmin(-1)
             loss = self.lam * F.cross_entropy(raw, hard)

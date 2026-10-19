@@ -45,9 +45,9 @@ ETA = {"E16_L1": 0.3, "E32_L1": 1.0}  # 12.6.145節で選んだ η
 LAM_CF = {"E16_L1": 1.0, "E32_L1": 0.1}  # 12.6.158節で選んだ cf の λ
 LAMS = (0.1, 1.0)
 PARTIAL = ("top1", "top3", "rand1", "rand3")
-VALUES = ("val0", "val1", "valall")
+VALUES = ("val0", "val1", "valall", "dval1", "dval3", "dvalall")  # dval* は修正1（実際の結果との差の予測）
 CP_FIXED = ("cf", "top1", "rand1", "cfg")
-CP_VAL = ("val0", "val1")
+CP_VAL = ("val0", "val1", "dval1")
 TAU = 0.05
 
 
@@ -159,6 +159,9 @@ def judge_scale(sub: list[dict], summ: dict, lams: dict[str, float], args: argpa
     v["H21_一部の評価で取り込みが保たれる"] = {t: v[t]["保持"]["合格"] for t in PARTIAL}
     v["H21b_一部の評価でH7*"] = {t: v[t]["H7*"]["H7*"] for t in PARTIAL}
     v["H22_価値の予測で取り込みが保たれる_val1"] = v[keys["val1"]]["保持"]["合格"]
+    v["H22_修正1_差の予測_dval1"] = v[keys["dval1"]]["保持"]["合格"]
+    v["参考_dval3"] = v[keys["dval3"]]["保持"]["合格"]
+    v["参考_dvalall"] = v[keys["dvalall"]]["保持"]["合格"]
     v["H22'_実際の結果だけ_val0"] = v[keys["val0"]]["保持"]["合格"]
     v["参考_valall"] = v[keys["valall"]]["保持"]["合格"]
     v["H22b_価値の予測でH7*"] = {t: v[keys[t]]["H7*"]["H7*"] for t in VALUES}

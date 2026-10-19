@@ -38,7 +38,8 @@ def test_parse_teacher():
     assert parse_teacher("top3") == ("top", 3) and parse_teacher("rand1") == ("rand", 1)
     assert parse_teacher("val0") == ("val", 0) and parse_teacher("valall") == ("valall", 0)
     assert parse_teacher("cfg") == ("cfg", 0) and parse_teacher("cf") == ("cf", 0)
-    for t in ("top0", "x", "rand", "val-1"):
+    assert parse_teacher("dval1") == ("dval", 1) and parse_teacher("dvalall") == ("dvalall", 0)
+    for t in ("top0", "x", "rand", "val-1", "dval0"):
         try:
             parse_teacher(t)
         except ValueError:
@@ -85,7 +86,7 @@ def test_partial_teachers_grad_and_cost():
     x, y = XY
     n = y.numel()
     for t, lo, hi in (("top1", 1, 2), ("top3", 1, 4), ("rand1", 2, 2), ("rand3", 4, 4), ("val0", 1, 1),
-                      ("val1", 2, 2), ("valall", 8, 8), ("cfg", 8, 8)):
+                      ("val1", 2, 2), ("valall", 8, 8), ("cfg", 8, 8), ("dval1", 2, 2), ("dvalall", 8, 8)):
         m = _make(EstimatedCFLM, kind="select", eta=1.0, teacher=t, lam=1.0)
         m.threshold[0] = torch.linspace(-1, 1, 8)
         loss = m.teacher_loss(x, y)
@@ -150,6 +151,26 @@ def test_value_prediction_target():
     assert a.value_w.grad is not None and a.value_b.grad is not None
 
 
+def test_difference_prediction_target():
+    """修正1: (raw_e − raw_c) と −(CE_e − CE_c)/τ の smooth L1。全専門家の形は c の項が 0。"""
+    x, y = XY
+    m = _make(EstimatedCFLM, kind="select", eta=1.0, teacher="dvalall", lam=1.0, tau=0.5)
+    m.threshold[0] = torch.linspace(-2, 2, 8)
+    with torch.no_grad():
+        h, _ = m.rnn(m.embed(x))
+        raw = m.routers[0](h).reshape(-1, 8)
+        full = forced_ce(m, h, y)
+    c = (raw - m.threshold[0]).argmax(-1, keepdim=True)
+    want = F.smooth_l1_loss(raw - raw.gather(-1, c), -(full - full.gather(-1, c)) / 0.5)
+    assert abs(m.teacher_loss(x, y).item() - want.item()) < 1e-5
+    d = _make(EstimatedCFLM, kind="select", eta=1.0, teacher="dval1", lam=1.0, tau=0.5, sample_seed=4)
+    d.threshold[0] = m.threshold[0]
+    with torch.no_grad():
+        o = torch.rand(c.numel(), 8, generator=torch.Generator().manual_seed(4)).scatter_(1, c, -1.0).topk(1).indices
+    want = F.smooth_l1_loss(raw.gather(-1, o) - raw.gather(-1, c), -(full.gather(-1, o) - full.gather(-1, c)) / 0.5)
+    assert abs(d.teacher_loss(x, y).item() - want.item()) < 1e-5
+
+
 def test_training_changes_and_rejects():
     a = _make(EstimatedCFLM, **KW)
     b = _make(EstimatedCFLM, **KW, teacher="val1", lam=1.0)
@@ -168,7 +189,8 @@ def test_conditions_and_lam():
     c16, c32 = R.conditions(16, 1), R.conditions(32, 1)
     assert R.conditions(32, 2) == {}
     assert {"aux0", "aux0.05", "gate0.1", "sel1", "cf", "top1", "top3", "rand1", "rand3", "cfg", "val0_0.1",
-            "val1_1", "valall_1", "cp", "cp_cf", "cp_rand1", "cp_cfg", "cp_val1_0.1"} <= set(c32)
+            "val1_1", "valall_1", "dval1_1", "dval3_0.1", "dvalall_1", "cp", "cp_cf", "cp_rand1", "cp_cfg",
+            "cp_val1_0.1", "cp_dval1_1"} <= set(c32)
     assert c16["cf"]["lam"] == 1.0 and c32["cf"]["lam"] == 0.1 and c32["top1"]["lam"] == 0.1
     assert c16["val1_0.1"] == {"kind": "select", "eta": 0.3, "teacher": "val1", "lam": 0.1}
     assert c32["cp_top1"]["freeze"] and c32["cp_top1"]["open"] == 0.25
@@ -191,7 +213,7 @@ def test_end_to_end_small():
     j = v["E16_L1"]
     assert j["選んだλ_価値の予測"]["val1"] == 1.0 and j["条件のキー"]["val1"] == "val1_1"
     assert set(j["H21_一部の評価で取り込みが保たれる"]) == {"top1", "top3", "rand1", "rand3"}
-    for k in ("H22_価値の予測で取り込みが保たれる_val1", "H22'_実際の結果だけ_val0"):
+    for k in ("H22_価値の予測で取り込みが保たれる_val1", "H22'_実際の結果だけ_val0", "H22_修正1_差の予測_dval1"):
         assert isinstance(j[k], bool)
     assert isinstance(j["H24_ゲートに依らない教師"]["合格"], bool)
     assert "cp_val1_1" in j["H23_閉じた後の取り込み"]
