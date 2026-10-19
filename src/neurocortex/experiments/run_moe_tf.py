@@ -35,7 +35,8 @@ from .run_moe_hier import TH_SCHED, paired_less
 from .run_moe_scale import run_one
 
 BASE = "cp_rand3"
-TF = ("tf_rand3", "tf_srand3", "tf_cf", "tf_rand3e")  # tf_rand3e は修正1（評価のゲートをそろえる）
+# tf_rand3e は修正1（評価のゲートをそろえる）、tf_pg・tf_rand3pg は修正2（選んだ行動の適格性 × 反実仮想の RPE）
+TF = ("tf_rand3", "tf_srand3", "tf_cf", "tf_rand3e", "tf_pg", "tf_rand3pg")
 DROP = 0.03  # A の低下の基準（12.6.177節の原因の基準と同じ、事前に固定）
 CE_TOL = 0.005  # 学習を損なわない許容（検証 CE、事前に固定）
 
@@ -54,7 +55,9 @@ def conditions(e: int, l: int) -> dict[str, dict]:
             "tf_rand3": {**cp, **r3, "tf": True}, "tf_srand3": {**cp, **r3, "tf": True, "soft": True},
             "tf_cf": {**cp, "teacher": "cf", "lam": lam, "tf": True}, "tf_none": {**cp, "tf": True},
             # 修正1（12.6.181節）: 評価したすべての専門家を選ばれた専門家のゲートで評価する教師（三要素則だけ・LM の勾配あり）
-            "tf_rand3e": {**cp, **r3, "tf": True, "eq_gate": True}, "cp_rand3e": {**cp, **r3, "eq_gate": True}}
+            "tf_rand3e": {**cp, **r3, "tf": True, "eq_gate": True}, "cp_rand3e": {**cp, **r3, "eq_gate": True},
+            # 修正2（12.6.181節）: 選んだ専門家の適格性 × 反実仮想の報酬予測誤差の三要素則（だけ・教師に足す）
+            "tf_pg": {**cp, **r3, "tf": True, "pg": "only"}, "tf_rand3pg": {**cp, **r3, "tf": True, "pg": "add"}}
 
 
 def run_cond(seed: int, e: int, l: int, key: str, cond: dict, corpus: CharCorpus, args: argparse.Namespace) -> dict:
@@ -81,7 +84,7 @@ def run_cond(seed: int, e: int, l: int, key: str, cond: dict, corpus: CharCorpus
           "teacher": cond.get("teacher"), "lam": cond.get("lam", 0.0), "tau": args.tau,
           "shuffle_seed": seed + 1000, "sample_seed": seed + 2000,
           "gate_detach": cond.get("gate_detach", False), "tf": cond.get("tf", False), "soft": cond.get("soft", False),
-          "eq_gate": cond.get("eq_gate", False)}
+          "eq_gate": cond.get("eq_gate", False), "pg": cond.get("pg")}
     r = run_one(seed, e, l, cond, corpus, args, ThreeFactorLM, args.train_steps, post=post, train_fn=train_timed, **kw)
     return slim(r, False)
 
@@ -132,6 +135,9 @@ def judge_scale(sub: list[dict], conds: dict, args: argparse.Namespace) -> dict:
         "tf_rand3eがtf_rand3より偏らない": _less(gi("tf_rand3e"), gi("tf_rand3")),
         "tf_rand3eのAがtf_rand3より小さい": _less(av("tf_rand3e"), av("tf_rand3")),
         "cp_rand3e_H35": cps["cp_rand3e"]["取り込み_H1〜H3かつジニ≦0.3"]}
+    v["修正2_選んだ行動の適格性と反実仮想のRPE"] = {
+        k: {"H35": cps[k]["取り込み_H1〜H3かつジニ≦0.3"], "tf_rand3より偏らない": _less(gi(k), gi("tf_rand3")),
+            "Aがtf_rand3より小さい": _less(av(k), av("tf_rand3"))} for k in ("tf_pg", "tf_rand3pg")}
     v["戻り_プローブ"] = {k: m(bias_return(r[k], conds[k], args.train_steps)["return"] for r in sub) for k in cpk}
     v["教師との一致率_最後の50ステップ"] = {
         k: m([r[k]["teacher_agree_last"] for r in sub]) for k in cpk if sub[0][k]["teacher_agree_last"] is not None}

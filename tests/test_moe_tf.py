@@ -113,6 +113,33 @@ def test_eq_gate_evaluates_with_chosen_gate():
     _train(m)
 
 
+def test_pg_is_chosen_eligibility_times_counterfactual_rpe():
+    """pg="only" の勾配は ΔW_j ∝ Σ_n δ_n·(1[j=c_n] − p_nj)·h_n（δ = 代わりの平均 CE − 選んだ専門家の CE）。"""
+    x, y = XY
+    m = _make(ThreeFactorLM, **KW, teacher="rand3", lam=0.5, tf=True, pg="only")
+    gen = m.sample_gen.get_state()
+    g = _grads(m, m.teacher_loss(x, y))
+    m.sample_gen.set_state(gen)
+    with torch.no_grad():
+        h3 = m.rnn(m.embed(x))[0]
+        h = h3.reshape(-1, 8)
+        raw = m.routers[0](h)
+        chosen = (raw - m.threshold[0]).argmax(-1)
+        r = torch.rand(chosen.numel(), 8, generator=m.sample_gen)
+        r.scatter_(1, chosen.unsqueeze(-1), -1.0)
+        idx = torch.cat([chosen.unsqueeze(-1), r.topk(3, dim=-1).indices], dim=-1)
+        ce = subset_ce_eq(m, h3, y, idx)
+        delta = ce[:, 1:].mean(-1) - ce[:, 0]
+        elig = F.one_hot(chosen, 8).float() - F.softmax(raw, -1)
+        dw = -0.5 * (delta.unsqueeze(-1) * elig).T @ h / len(h)
+    assert torch.allclose(g["routers.0.weight"], dw, atol=1e-6)
+    assert all(float(v.abs().sum()) == 0.0 for n, v in g.items() if not n.startswith("routers"))
+    a = _make(ThreeFactorLM, **KW, teacher="rand3", lam=0.5, tf=True, pg="add")
+    _train(a)
+    with pytest.raises(ValueError):
+        _make(ThreeFactorLM, **KW, teacher="rand3", lam=0.5, pg="x")
+
+
 def test_soft_uses_same_evaluations_and_random_stream():
     x, y = XY
     a = _make(ThreeFactorLM, **KW, teacher="rand3", lam=1.0)
@@ -139,7 +166,8 @@ def test_tf_none_router_never_changes_and_tf_router_learns():
 def test_conditions():
     c = R.conditions(32, 1)
     assert set(c) == {"aux0", "aux0.05", "gate0.1", "cp", "cp_rand3", "cl_gate", "tf_rand3", "tf_srand3", "tf_cf",
-                      "tf_none", "tf_rand3e", "cp_rand3e"}
+                      "tf_none", "tf_rand3e", "cp_rand3e", "tf_pg", "tf_rand3pg"}
+    assert c["tf_pg"]["pg"] == "only" and c["tf_rand3pg"]["pg"] == "add" and c["tf_pg"]["tf"]
     assert c["tf_rand3e"]["eq_gate"] and c["tf_rand3e"]["tf"] and "tf" not in c["cp_rand3e"]
     assert c["tf_rand3"]["tf"] and c["tf_rand3"]["lam"] == 0.1 and c["tf_srand3"]["soft"]
     assert c["tf_cf"]["teacher"] == "cf" and "teacher" not in c["tf_none"] and c["cl_gate"]["gate_detach"]

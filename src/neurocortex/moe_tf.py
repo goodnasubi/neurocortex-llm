@@ -15,6 +15,10 @@ h·(1[j=k] − p_j) に第三因子 t_k を掛けて足した三要素則の形�
   - `eq_gate=True`（修正1、12.6.181節）: 部分評価の教師で、評価したすべての専門家を同じゲート（選ばれた専門家の
     実際のゲート）で評価する。第三因子がルータ自身の確信度（評価に使うゲートの大きさ）に依らず、専門家の出力の
     比較だけで決まる。
+  - `pg`（修正2、12.6.181節）: 実際に選ばれた専門家 c の適格性 h·(1[j=c] − p_j)（シナプス前 × 選んだ行動の
+    シナプス後の活動）に、反実仮想の報酬予測誤差 δ = mean_alt CE − CE_c（評価した他の専門家の結果の平均との差。
+    同じゲートで評価する）を掛ける古典的な三要素則（損失 −λ·mean δ·log p_c）。"only" はこれだけ、"add" は
+    教師の補助損失に足す。
   既定（tf=False・soft=False・eq_gate=False）では `ConsolLM`＋`train_consol` と同じ学習経過（`tests/test_moe_tf.py`）。
   学習は `moe_consol.train_consol` を使う（閉じる時点の保存と `cross_assignment` の分解もそのまま）。
 """
@@ -50,19 +54,22 @@ def subset_ce_eq(model, h: torch.Tensor, y: torch.Tensor, idx: torch.Tensor) -> 
 class ThreeFactorLM(ConsolLM):
     """学習の初めからゲートの勾配を切り（tf）、ルータを反実仮想の教師の三要素則だけで学習する。soft はソフトな目標。"""
 
-    def __init__(self, *args, tf: bool = False, soft: bool = False, eq_gate: bool = False, **kw) -> None:
+    def __init__(self, *args, tf: bool = False, soft: bool = False, eq_gate: bool = False,
+                 pg: str | None = None, **kw) -> None:
         super().__init__(*args, **kw)
         if tf and (self.kind != "select" or self.n_layers != 1):
             raise ValueError("tf は1層の選択専用（select）の模型だけ")
-        if (soft or eq_gate) and (self.kind_t not in ("top", "rand") or self.teacher_homeo or self.react_probe):
-            raise ValueError("soft・eq_gate は閾値・再学習の評価を足さない部分評価の教師（top・rand）だけ")
-        self.tf, self.soft, self.eq_gate = tf, soft, eq_gate
+        if pg not in (None, "only", "add"):
+            raise ValueError(f"未知の pg: {pg}")
+        if (soft or eq_gate or pg) and (self.kind_t not in ("top", "rand") or self.teacher_homeo or self.react_probe):
+            raise ValueError("soft・eq_gate・pg は閾値・再学習の評価を足さない部分評価の教師（top・rand）だけ")
+        self.tf, self.soft, self.eq_gate, self.pg = tf, soft, eq_gate, pg
 
     def detach_gate(self) -> bool:
         return getattr(self, "tf", False) or super().detach_gate()
 
     def teacher_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        if not (self.soft or self.eq_gate):
+        if not (self.soft or self.eq_gate or self.pg):
             return super().teacher_loss(x, y)
         t0 = time.perf_counter()
         with torch.no_grad():  # `ReactCFLM.teacher_loss` の部分評価と同じ評価の組・同じ乱数の消費
@@ -72,8 +79,12 @@ class ThreeFactorLM(ConsolLM):
             extra = (raw0.topk(self.m, dim=-1).indices if self.kind_t == "top"
                      else _random_others(chosen, self.n_experts, self.m, self.sample_gen))
             idx = torch.cat([chosen.unsqueeze(-1), extra], dim=-1)
-            ce = subset_ce_eq(self, h, y, idx) if self.eq_gate else subset_ce(self, h, y, idx)
+            ce_eq = subset_ce_eq(self, h, y, idx) if (self.eq_gate or self.pg) else None
+            ce = ce_eq if self.eq_gate else subset_ce(self, h, y, idx)
             dup = _dup_mask(idx)
+            if self.pg:  # 反実仮想の報酬予測誤差（代わりの専門家の結果の平均 − 選んだ専門家の結果）
+                alt = (~dup[:, 1:]).float()
+                delta = (ce_eq[:, 1:] * alt).sum(-1) / alt.sum(-1).clamp(min=1.0) - ce_eq[:, 0]
             if self.soft:
                 target = F.softmax((-ce / self.tau).masked_fill(dup, float("-inf")), dim=-1)
             else:
@@ -82,9 +93,14 @@ class ThreeFactorLM(ConsolLM):
         n = y.numel()
         evals = sum(len(set(r)) for r in idx.tolist())
         raw = self.routers[0](h).reshape(-1, self.n_experts)
-        logits = raw.gather(-1, idx).masked_fill(dup, float("-inf"))
-        logp = F.log_softmax(logits, dim=-1).masked_fill(dup, 0.0)
-        loss = -self.lam * (target * logp).sum(-1).mean()
+        loss = raw.new_zeros(())
+        if self.pg != "only":
+            logits = raw.gather(-1, idx).masked_fill(dup, float("-inf"))
+            logp = F.log_softmax(logits, dim=-1).masked_fill(dup, 0.0)
+            loss = loss - self.lam * (target * logp).sum(-1).mean()
+        if self.pg:  # 選んだ行動の適格性 × 第三因子 δ
+            logp_c = F.log_softmax(raw, dim=-1).gather(-1, idx[:, :1]).squeeze(-1)
+            loss = loss - self.lam * (delta * logp_c).mean()
         with torch.no_grad():
             self.teacher_stats.append({"agree": float((raw.argmax(-1) == hard).float().mean())})
         self._count(evals, n, t0)
