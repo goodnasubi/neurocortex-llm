@@ -1,0 +1,41 @@
+seed=102 aux0 gini=0.754 mom=4.17 used=3 top2=0.994 rho=1.00 gate=0.866 base=0.3155 dT=1.210 dR=0.004
+seed=102 aux0.01 gini=0.491 mom=3.00 used=8 top2=0.637 rho=0.98 gate=0.548 base=0.3171 dT=0.756 dR=0.085
+seed=102 aux0.05 gini=0.085 mom=1.32 used=8 top2=0.312 rho=0.21 gate=0.683 base=0.3156 dT=0.414 dR=0.282
+seed=102 point0.01 gini=0.108 mom=1.28 used=8 top2=0.306 rho=0.10 gate=0.469 base=0.3183 dT=0.149 dR=0.189
+seed=102 point0.03 gini=0.085 mom=1.32 used=8 top2=0.305 rho=0.74 gate=0.542 base=0.3143 dT=0.274 dR=0.173
+seed=102 point0.1 gini=0.030 mom=1.08 used=8 top2=0.268 rho=-0.21 gate=0.519 base=0.3144 dT=0.201 dR=0.178
+seed=102 band0.01 gini=0.334 mom=2.27 used=8 top2=0.492 rho=0.81 gate=0.433 base=0.3168 dT=0.385 dR=0.116
+seed=102 band0.03 gini=0.317 mom=2.37 used=8 top2=0.501 rho=0.52 gate=0.449 base=0.3270 dT=0.291 dR=0.137
+seed=102 band0.1 gini=0.228 mom=1.70 used=8 top2=0.411 rho=0.33 gate=0.546 base=0.3153 dT=0.241 dR=0.156
+seed=102 wide0.01 gini=0.483 mom=3.51 used=8 top2=0.611 rho=0.98 gate=0.410 base=0.3189 dT=0.478 dR=0.118
+seed=102 wide0.03 gini=0.429 mom=2.58 used=8 top2=0.538 rho=0.88 gate=0.484 base=0.3181 dT=0.399 dR=0.110
+seed=102 wide0.1 gini=0.460 mom=2.93 used=8 top2=0.590 rho=0.93 gate=0.563 base=0.3151 dT=0.412 dR=0.110
+{
+ "判定": {
+  "eta": 0.01,
+  "H1_負荷集中を下げる": true,
+  "H2_性能を保つ": true,
+  "H3_ハブを保つ": true,
+  "H3b_ハブの利点（帯域が一点の目標より CE が低い）": false,
+  "H4_ハブを壊したときの頑健さ": true,
+  "参考_ハブ除去のゲートの質量あたり_帯域÷補助損失なし": 1.2964465456301726,
+  "値": {
+   "gini_帯域": 0.3341064453125,
+   "gini_なし": 0.753662109375,
+   "max_over_mean_帯域": 2.2734375,
+   "max_over_mean_なし": 4.16796875,
+   "CE": {
+    "band0.01": 0.3167787790298462,
+    "point0.01": 0.3182903826236725,
+    "aux0": 0.3155331015586853,
+    "aux0.05": 0.31556937098503113
+   },
+   "topk_share_帯域": 0.492431640625,
+   "topk_share_一点": 0.305908203125,
+   "spearman_帯域": 0.8095238095238096,
+   "dT_帯域": 0.384522020816803,
+   "dT_なし": 1.2101802229881287
+  },
+  "eta_selected_on": "このシードでの選択（12.6.195節の選び方）"
+ }
+}

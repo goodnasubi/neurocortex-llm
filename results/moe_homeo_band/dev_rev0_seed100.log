@@ -1,0 +1,41 @@
+seed=100 aux0 gini=0.874 mom=7.97 used=2 top2=1.000 rho=1.00 gate=0.896 base=0.3129 dT=1.144 dR=0.000
+seed=100 aux0.01 gini=0.545 mom=3.15 used=8 top2=0.664 rho=0.95 gate=0.567 base=0.3197 dT=0.785 dR=0.090
+seed=100 aux0.05 gini=0.075 mom=1.24 used=8 top2=0.298 rho=0.69 gate=0.619 base=0.3119 dT=0.449 dR=0.241
+seed=100 point0.01 gini=0.232 mom=1.90 used=8 top2=0.401 rho=0.88 gate=0.429 base=0.3191 dT=0.322 dR=0.155
+seed=100 point0.03 gini=0.049 mom=1.13 used=8 top2=0.280 rho=-0.29 gate=0.454 base=0.3131 dT=0.105 dR=0.187
+seed=100 point0.1 gini=0.044 mom=1.10 used=8 top2=0.276 rho=-0.20 gate=0.537 base=0.3125 dT=0.150 dR=0.203
+seed=100 band0.01 gini=0.381 mom=2.39 used=8 top2=0.524 rho=0.93 gate=0.497 base=0.3126 dT=0.348 dR=0.130
+seed=100 band0.03 gini=0.320 mom=2.39 used=8 top2=0.465 rho=0.86 gate=0.536 base=0.3167 dT=0.337 dR=0.133
+seed=100 band0.1 gini=0.278 mom=2.12 used=8 top2=0.463 rho=0.55 gate=0.519 base=0.3143 dT=0.239 dR=0.147
+seed=100 wide0.01 gini=0.517 mom=3.16 used=8 top2=0.587 rho=0.93 gate=0.545 base=0.3176 dT=0.425 dR=0.140
+seed=100 wide0.03 gini=0.626 mom=5.21 used=8 top2=0.751 rho=0.83 gate=0.532 base=0.3194 dT=0.533 dR=0.069
+seed=100 wide0.1 gini=0.507 mom=3.10 used=8 top2=0.698 rho=0.64 gate=0.579 base=0.3140 dT=0.576 dR=0.063
+{
+ "判定": {
+  "eta": 0.01,
+  "H1_負荷集中を下げる": true,
+  "H2_性能を保つ": true,
+  "H3_ハブを保つ": true,
+  "H3b_ハブの利点（帯域が一点の目標より CE が低い）": false,
+  "H4_ハブを壊したときの頑健さ": true,
+  "参考_ハブ除去のゲートの質量あたり_帯域÷補助損失なし": 1.0819775660957196,
+  "値": {
+   "gini_帯域": 0.38128662109375,
+   "gini_なし": 0.8741455078125,
+   "max_over_mean_帯域": 2.392578125,
+   "max_over_mean_なし": 7.97265625,
+   "CE": {
+    "band0.01": 0.3126069903373718,
+    "point0.01": 0.3190787434577942,
+    "aux0": 0.31288307905197144,
+    "aux0.05": 0.31187009811401367
+   },
+   "topk_share_帯域": 0.52392578125,
+   "topk_share_一点": 0.400634765625,
+   "spearman_帯域": 0.9285714285714287,
+   "dT_帯域": 0.34794747829437256,
+   "dT_なし": 1.1437241435050964
+  },
+  "eta_selected_on": "このシードでの選択（12.6.195節の選び方）"
+ }
+}
