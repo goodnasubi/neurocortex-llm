@@ -83,6 +83,8 @@ EPISODIC_READOUTS = ("param", "mix_all", "switch_all", "mix_buf", "mix_hold", "m
                      "switch_all200")
 EPISODIC_EXTRA_READOUTS = ("mix_rep", "switch_rep", "arb_bits", "arb_rep")  # 12.6.159節
 RECON_READOUTS = ("recon_buf", "recon_all", "recon_all200", "recon_inter", "recon_hold")  # 12.6.159節
+RECON_EXTRA_READOUTS = ("recon_buf_inter", "recon_buf_err")  # 12.6.161節（バッファでの学び直しが効く理由の切り分け）
+WRITEBACKS = ("none", "all", "inter")  # 12.6.161節（学び直しの共有の重みへの書き戻し）
 
 
 def episodic_readout(p_param: torch.Tensor, x: torch.Tensor, store_bits: torch.Tensor, store_labels: torch.Tensor,
@@ -144,7 +146,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          active_verify: int = 0, verify_mode: str = "top2", episodic_eval: int = 0,
                          episodic_hold: int = 50, episodic_lambda: float = 0.5, episodic_kappa: float = 1.0,
                          episodic_extra: bool = False, recon_steps: int = 0, recon_lr: float = 0.01,
-                         recon_batch: int = 32) -> dict:
+                         recon_batch: int = 32, recon_extra: bool = False, writeback: str = "",
+                         writeback_at: int = 0, writeback_steps: int = 100, writeback_eval: int = 2000) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -298,6 +301,24 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
           だけ（12.6.159節の修正1。recon_buf と痕跡の数を揃えた対照）。diag["recon_side"][変種][c の順][j][c' の順] は、
           recon_all・recon_inter の複製で各タスク j を各文脈 c' で測った正確度から最終モデルの値を引いた差
           （学び直しが他の文脈に及ぼす影響）。
+
+    バッファでの学び直しが効く理由の切り分け（12.6.161節。recon_extra = True かつ recon_steps > 0 のとき。他の変種の
+    値は変えない）: RECON_EXTRA_READOUTS を加える。recon_buf_inter … c のバッファに他の文脈のバッファを同じ数だけ
+    交互に混ぜる（一つの文脈への集中を除く）。recon_buf_err … c のバッファのうち、複製が誤って予測するサンプルだけの
+    損失で学ぶ（正しく予測できているサンプルの確信度のマージンを広げる学習を除く。誤りのないバッチでは更新しない）。
+    diag["recon_margin"][c の順] は最終モデルでの c のバッファの損失・正確度・正解の確率の平均。
+
+    学び直しの書き戻し（系統的な再固定化。12.6.161節。writeback が空でないとき。inferred / inferred_gated のみ）:
+    タスク writeback_at の学習を始める前に、各文脈 c（used の順）を一度ずつ再活性化し、共有の重み（モデルそのもの）を
+    c の痕跡（バッファと保留サンプルの先頭 episodic_hold 個、recon_all と同じ）で writeback_steps ステップ学び直す
+    （文脈ごとに新しい Adam、学習率 recon_lr、バッチ recon_batch、専用の乱数）。
+      "none" … 書き戻さない（測定だけ）。"all" … c の痕跡だけで学ぶ（一つの文脈だけの書き戻し）。"inter" … c の痕跡に
+      他の文脈のバッファ（保存時の文脈つき）を同じ数だけ交互に混ぜる（recon_inter と同じ）。
+    バッファ・保留サンプルは変えず、その後の学習（新しいタスクとリプレイ）は従来どおり続ける。学習・評価・診断の乱数は
+    消費しないので、"none" の R と assign は writeback = "" と同じになる。diagnostics = True では
+    diag["writeback"] = {"at", "used", "pre", "post"} を加える。pre / post は書き戻しの前後で、タスク j < writeback_at を
+    専用の乱数による新しい入力 writeback_eval 個で各文脈 c で測った正確度（"fresh"[j][c の順]）と、c のバッファの入力を
+    タスク j の正解で測った正確度（"own_buf"[j][c の順]）。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -333,6 +354,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         raise ValueError("episodic_eval・episodic_hold は 0 以上、episodic_lambda・episodic_kappa は正")
     if recon_steps < 0 or recon_lr <= 0 or recon_batch <= 0:
         raise ValueError("recon_steps は 0 以上、recon_lr・recon_batch は正")
+    if writeback and (writeback not in WRITEBACKS or condition not in ("inferred", "inferred_gated")
+                      or not 0 < writeback_at < len(specs) or writeback_steps < 0 or writeback_eval <= 0):
+        raise ValueError("writeback は none・all・inter（inferred / inferred_gated のみ）、0 < writeback_at < タスク数")
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
     if split_ctx_lr > 0:
@@ -656,6 +680,52 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             return torch.optim.SGD(model.parameters(), lr=lr, weight_decay=wd)
         return torch.optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
 
+    @torch.no_grad()
+    def wb_measure(fresh: list, n_tasks: int) -> dict:
+        bb = torch.cat(buf_bits) if buf_bits else torch.zeros(0, n_bits)
+        bc = torch.cat(buf_ctx) if buf_ctx else torch.zeros(0, dtype=torch.long)
+        fr = [[float((model(with_ctx(x, c)).argmax(-1) == y).float().mean()) for c in used] for x, y in fresh]
+        ob = [[float((model(with_ctx(bb[bc == c], c)).argmax(-1) == task_labels(specs[j], bb[bc == c])).float().mean())
+               if bool((bc == c).any()) else None for c in used] for j in range(n_tasks)]
+        return {"fresh": fr, "own_buf": ob}
+
+    def writeback_phase(n_tasks: int) -> None:
+        """12.6.161節: 各文脈を一度ずつ再活性化し、その痕跡での学び直しを共有の重みに書き戻す（系統的な再固定化）。"""
+        egen = torch.Generator().manual_seed(5679)  # 書き戻しの前後の測定専用
+        fresh = [make_batch(specs[j], writeback_eval, egen) for j in range(n_tasks)]
+        pre = wb_measure(fresh, n_tasks) if diagnostics else None
+        if writeback != "none":
+            wgen = torch.Generator().manual_seed(6791)
+            bb = torch.cat(buf_bits) if buf_bits else torch.zeros(0, n_bits)
+            bl = torch.cat(buf_labels) if buf_labels else torch.zeros(0, dtype=torch.long)
+            bc = torch.cat(buf_ctx) if buf_ctx else torch.zeros(0, dtype=torch.long)
+            hb = torch.cat(hold_bits) if hold_bits else torch.zeros(0, n_bits)
+            hl = torch.cat(hold_labels) if hold_labels else torch.zeros(0, dtype=torch.long)
+            hc = torch.cat(hold_ctx) if hold_ctx else torch.zeros(0, dtype=torch.long)
+            h_rank = torch.zeros(hc.shape[0], dtype=torch.long)  # 保留サンプルの文脈ごとの保存の順
+            for c in hc.unique():
+                idx = (hc == c).nonzero()[:, 0]
+                h_rank[idx] = torch.arange(idx.shape[0])
+            for c in list(used):
+                mc, mh = bc == c, (hc == c) & (h_rank < episodic_hold)
+                sb, sl = torch.cat([bb[mc], hb[mh]]), torch.cat([bl[mc], hl[mh]])
+                if sb.shape[0] == 0:
+                    continue
+                ob, ol, oc = bb[~mc], bl[~mc], bc[~mc]
+                wopt = torch.optim.Adam(model.parameters(), lr=recon_lr)
+                for _ in range(writeback_steps):
+                    idx = torch.randint(sb.shape[0], (recon_batch,), generator=wgen)
+                    xr, yr = with_ctx(sb[idx], c), sl[idx]
+                    if writeback == "inter" and ob.shape[0] > 0:
+                        io = torch.randint(ob.shape[0], (recon_batch,), generator=wgen)
+                        xr, yr = torch.cat([xr, with_ctx(ob[io], oc[io])]), torch.cat([yr, ol[io]])
+                    loss = F.cross_entropy(model(xr), yr)
+                    wopt.zero_grad(set_to_none=True)
+                    loss.backward()
+                    wopt.step()
+        if diagnostics:
+            diag["writeback"] = {"at": n_tasks, "used": list(used), "pre": pre, "post": wb_measure(fresh, n_tasks)}
+
     upd_ref: list[float] = []  # plasticity_cap の ū（平常時の更新ノルムの移動平均）
     split = {"left": 0, "ctx": -1}  # split_window の残りステップと、対象の新しい文脈
     split_on = split_window > 0 and condition in ("inferred", "inferred_gated")
@@ -663,6 +733,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     n_bits = specs[0].n_inputs
     R: list[list[float]] = []
     for k, spec in enumerate(specs):
+        if writeback and k == writeback_at:
+            writeback_phase(k)
         trained: dict[tuple[int, int], int] = {}
         n_used_at_start = len(used)
         opt = make_opt(k)
@@ -959,6 +1031,42 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                                     loss.backward()
                                     ropt.step()
                             models[(name, c)] = m_
+                    if recon_extra:
+                        xgen = torch.Generator().manual_seed(6792)  # 12.6.161節の切り分け専用
+                        margin = []
+                        for c in used:
+                            sb, sl = store(c, True, "none")
+                            ob, ol, oc = bb_[bc != c], blab[bc != c], bc[bc != c]
+                            with torch.no_grad():
+                                lg = model(with_ctx(sb, c))
+                                margin.append({"loss": float(F.cross_entropy(lg, sl)) if sb.shape[0] else None,
+                                               "acc": float((lg.argmax(-1) == sl).float().mean()) if sb.shape[0] else None,
+                                               "p_correct": float(F.softmax(lg, -1).gather(1, sl[:, None]).mean())
+                                               if sb.shape[0] else None})
+                            for name in RECON_EXTRA_READOUTS:
+                                m_ = copy.deepcopy(model)
+                                if sb.shape[0] > 0:
+                                    ropt = torch.optim.Adam(m_.parameters(), lr=recon_lr)
+                                    for _ in range(recon_steps):
+                                        idx = torch.randint(sb.shape[0], (recon_batch,), generator=xgen)
+                                        xr, yr = with_ctx(sb[idx], c), sl[idx]
+                                        if name == "recon_buf_inter" and ob.shape[0] > 0:
+                                            io = torch.randint(ob.shape[0], (recon_batch,), generator=xgen)
+                                            xr = torch.cat([xr, with_ctx(ob[io], oc[io])])
+                                            yr = torch.cat([yr, ol[io]])
+                                        lg = m_(xr)
+                                        if name == "recon_buf_err":
+                                            wrong = lg.argmax(-1) != yr
+                                            if not bool(wrong.any()):
+                                                continue  # 誤りのないバッチでは学ばない（誤り駆動）
+                                            loss = (F.cross_entropy(lg, yr, reduction="none") * wrong).sum() / yr.shape[0]
+                                        else:
+                                            loss = F.cross_entropy(lg, yr)
+                                        ropt.zero_grad(set_to_none=True)
+                                        loss.backward()
+                                        ropt.step()
+                                models[(name, c)] = m_
+                        diag["recon_margin"] = margin
                     with torch.no_grad():
                         base = [[float((model(with_ctx(x, c2)).argmax(-1) == y).float().mean()) for c2 in used]
                                 for x, y in fresh]
@@ -995,7 +1103,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                             row_r.append(dict(e["arb"]))
                         if recon_steps > 0:
                             with torch.no_grad():
-                                for name in RECON_READOUTS:
+                                for name in RECON_READOUTS + (RECON_EXTRA_READOUTS if recon_extra else ()):
                                     accs[name] = float((models[(name, c)](with_ctx(x, c)).argmax(-1) == y)
                                                        .float().mean())
                         sb, sl = store(c, True, "small")
