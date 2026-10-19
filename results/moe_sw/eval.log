@@ -1,0 +1,60 @@
+seed=0 E32_L1/aux0 gini=0.937 used=5.0 base=0.3231 ratio=12575.26 gate=0.834 train_sec=98.3
+seed=0 E32_L1/aux0.05 gini=0.129 used=32.0 base=0.3218 ratio=1.31 gate=0.324 train_sec=115.1
+seed=0 E32_L1/gate0.1 gini=0.152 used=32.0 base=0.3258 ratio=0.81 gate=0.302 train_sec=110.2
+seed=0 E32_L1/cp gini=0.451 used=28.0 base=0.3201 ratio=2.49 gate=0.406 on_open=0.110 off_open=0.311 A=0.201 D=0.140 agree_open=0.764 dormant_end=7 train_sec=110.6
+seed=0 E32_L1/cp_rand3 gini=0.238 used=30.0 base=0.3198 ratio=1.38 gate=0.527 on_open=0.099 off_open=0.203 A=0.104 D=0.035 agree_open=0.786 dormant_end=2 train_sec=130.0
+seed=0 E32_L1/cl_gate gini=0.240 used=30.0 base=0.3237 ratio=1.55 gate=0.573 on_open=0.099 off_open=0.203 A=0.104 D=0.036 agree_open=0.786 dormant_end=2 train_sec=134.3
+seed=0 E32_L1/tf_rand3 gini=0.276 used=30.0 base=0.3242 ratio=1.69 gate=0.675 on_open=0.120 off_open=0.219 A=0.099 D=0.058 agree_open=0.801 dormant_end=2 train_sec=132.6
+seed=0 E32_L1/tf_srand3 gini=0.237 used=32.0 base=0.3242 ratio=1.70 gate=0.596 on_open=0.103 off_open=0.182 A=0.078 D=0.055 agree_open=0.833 dormant_end=2 train_sec=129.9
+seed=0 E32_L1/cp_srand3 gini=0.218 used=32.0 base=0.3187 ratio=1.14 gate=0.479 on_open=0.106 off_open=0.210 A=0.104 D=0.008 agree_open=0.766 dormant_end=2 train_sec=131.3
+seed=0 E32_L1/sw_srand3 gini=0.209 used=30.0 base=0.3217 ratio=1.23 gate=0.509 on_open=0.106 off_open=0.210 A=0.104 D=-0.001 agree_open=0.766 dormant_end=2 train_sec=130.6
+seed=0 E32_L1/sw_r3s gini=0.215 used=30.0 base=0.3218 ratio=1.32 gate=0.538 on_open=0.099 off_open=0.203 A=0.104 D=0.011 agree_open=0.786 dormant_end=2 train_sec=114.5
+seed=0 E32_L1/sw_srand3_late gini=0.208 used=30.0 base=0.3195 ratio=1.17 gate=0.503 on_open=0.106 off_open=0.210 A=0.104 D=-0.002 agree_open=0.766 dormant_end=2 train_sec=109.9
+seed=1 E32_L1/aux0 gini=0.922 used=4.0 base=0.3193 ratio=11887.46 gate=0.787 train_sec=115.5
+seed=1 E32_L1/aux0.05 gini=0.144 used=32.0 base=0.3265 ratio=1.26 gate=0.306 train_sec=92.5
+seed=1 E32_L1/gate0.1 gini=0.117 used=32.0 base=0.3223 ratio=1.04 gate=0.371 train_sec=89.0
+seed=1 E32_L1/cp gini=0.331 used=31.0 base=0.3274 ratio=1.96 gate=0.391 on_open=0.113 off_open=0.291 A=0.178 D=0.040 agree_open=0.719 dormant_end=3 train_sec=107.3
+seed=1 E32_L1/cp_rand3 gini=0.231 used=31.0 base=0.3227 ratio=1.25 gate=0.562 on_open=0.106 off_open=0.181 A=0.076 D=0.050 agree_open=0.846 dormant_end=1 train_sec=120.1
+seed=1 E32_L1/cl_gate gini=0.211 used=31.0 base=0.3207 ratio=1.29 gate=0.596 on_open=0.106 off_open=0.181 A=0.076 D=0.029 agree_open=0.846 dormant_end=1 train_sec=102.5
+seed=1 E32_L1/tf_rand3 gini=0.134 used=32.0 base=0.3227 ratio=1.15 gate=0.704 on_open=0.091 off_open=0.172 A=0.081 D=-0.039 agree_open=0.860 dormant_end=0 train_sec=102.0
+seed=1 E32_L1/tf_srand3 gini=0.241 used=31.0 base=0.3332 ratio=1.23 gate=0.539 on_open=0.109 off_open=0.265 A=0.156 D=-0.023 agree_open=0.786 dormant_end=2 train_sec=129.3
+seed=1 E32_L1/cp_srand3 gini=0.238 used=32.0 base=0.3228 ratio=1.40 gate=0.444 on_open=0.090 off_open=0.222 A=0.132 D=0.016 agree_open=0.807 dormant_end=3 train_sec=103.0
+seed=1 E32_L1/sw_srand3 gini=0.243 used=32.0 base=0.3206 ratio=1.53 gate=0.478 on_open=0.090 off_open=0.222 A=0.132 D=0.021 agree_open=0.807 dormant_end=2 train_sec=124.2
+seed=1 E32_L1/sw_r3s gini=0.249 used=30.0 base=0.3243 ratio=1.76 gate=0.542 on_open=0.106 off_open=0.181 A=0.076 D=0.068 agree_open=0.846 dormant_end=3 train_sec=117.6
+seed=1 E32_L1/sw_srand3_late gini=0.261 used=32.0 base=0.3232 ratio=1.45 gate=0.476 on_open=0.090 off_open=0.222 A=0.132 D=0.039 agree_open=0.807 dormant_end=3 train_sec=100.6
+seed=2 E32_L1/aux0 gini=0.964 used=3.0 base=0.3181 ratio=11757.63 gate=0.875 train_sec=101.2
+seed=2 E32_L1/aux0.05 gini=0.137 used=32.0 base=0.3248 ratio=1.29 gate=0.326 train_sec=97.2
+seed=2 E32_L1/gate0.1 gini=0.080 used=32.0 base=0.3176 ratio=1.17 gate=0.315 train_sec=96.2
+seed=2 E32_L1/cp gini=0.392 used=31.0 base=0.3139 ratio=1.93 gate=0.385 on_open=0.091 off_open=0.263 A=0.172 D=0.129 agree_open=0.782 dormant_end=5 train_sec=105.2
+seed=2 E32_L1/cp_rand3 gini=0.237 used=31.0 base=0.3143 ratio=1.90 gate=0.532 on_open=0.067 off_open=0.216 A=0.149 D=0.021 agree_open=0.823 dormant_end=3 train_sec=114.1
+seed=2 E32_L1/cl_gate gini=0.203 used=31.0 base=0.3198 ratio=1.19 gate=0.571 on_open=0.067 off_open=0.216 A=0.149 D=-0.013 agree_open=0.823 dormant_end=2 train_sec=112.9
+seed=2 E32_L1/tf_rand3 gini=0.218 used=31.0 base=0.3139 ratio=1.10 gate=0.664 on_open=0.076 off_open=0.309 A=0.234 D=-0.092 agree_open=0.763 dormant_end=1 train_sec=118.9
+seed=2 E32_L1/tf_srand3 gini=0.179 used=32.0 base=0.3169 ratio=1.33 gate=0.594 on_open=0.101 off_open=0.236 A=0.135 D=-0.057 agree_open=0.810 dormant_end=1 train_sec=132.3
+seed=2 E32_L1/cp_srand3 gini=0.322 used=31.0 base=0.3167 ratio=1.70 gate=0.452 on_open=0.089 off_open=0.283 A=0.195 D=0.039 agree_open=0.789 dormant_end=3 train_sec=116.1
+seed=2 E32_L1/sw_srand3 gini=0.303 used=30.0 base=0.3209 ratio=1.53 gate=0.486 on_open=0.089 off_open=0.283 A=0.195 D=0.019 agree_open=0.789 dormant_end=3 train_sec=115.8
+seed=2 E32_L1/sw_r3s gini=0.238 used=31.0 base=0.3195 ratio=1.59 gate=0.497 on_open=0.067 off_open=0.216 A=0.149 D=0.022 agree_open=0.823 dormant_end=4 train_sec=114.0
+seed=2 E32_L1/sw_srand3_late gini=0.249 used=32.0 base=0.3205 ratio=1.58 gate=0.473 on_open=0.089 off_open=0.283 A=0.195 D=-0.035 agree_open=0.789 dormant_end=1 train_sec=91.8
+seed=3 E32_L1/aux0 gini=0.965 used=4.0 base=0.3215 ratio=10868.93 gate=0.920 train_sec=99.3
+seed=3 E32_L1/aux0.05 gini=0.123 used=32.0 base=0.3182 ratio=1.22 gate=0.312 train_sec=99.3
+seed=3 E32_L1/gate0.1 gini=0.115 used=32.0 base=0.3243 ratio=1.92 gate=0.288 train_sec=90.6
+seed=3 E32_L1/cp gini=0.382 used=30.0 base=0.3190 ratio=2.20 gate=0.398 on_open=0.125 off_open=0.291 A=0.166 D=0.091 agree_open=0.703 dormant_end=4 train_sec=95.5
+seed=3 E32_L1/cp_rand3 gini=0.214 used=31.0 base=0.3136 ratio=1.33 gate=0.559 on_open=0.120 off_open=0.196 A=0.075 D=0.019 agree_open=0.877 dormant_end=1 train_sec=109.9
+seed=3 E32_L1/cl_gate gini=0.225 used=30.0 base=0.3169 ratio=1.42 gate=0.580 on_open=0.120 off_open=0.196 A=0.075 D=0.029 agree_open=0.877 dormant_end=2 train_sec=106.9
+seed=3 E32_L1/tf_rand3 gini=0.228 used=32.0 base=0.3197 ratio=1.27 gate=0.701 on_open=0.067 off_open=0.282 A=0.215 D=-0.054 agree_open=0.788 dormant_end=2 train_sec=111.6
+seed=3 E32_L1/tf_srand3 gini=0.241 used=32.0 base=0.3162 ratio=1.68 gate=0.642 on_open=0.099 off_open=0.219 A=0.119 D=0.022 agree_open=0.820 dormant_end=2 train_sec=121.2
+seed=3 E32_L1/cp_srand3 gini=0.248 used=31.0 base=0.3155 ratio=1.43 gate=0.499 on_open=0.073 off_open=0.198 A=0.125 D=0.050 agree_open=0.815 dormant_end=2 train_sec=114.0
+seed=3 E32_L1/sw_srand3 gini=0.168 used=32.0 base=0.3166 ratio=0.99 gate=0.539 on_open=0.073 off_open=0.198 A=0.125 D=-0.030 agree_open=0.815 dormant_end=0 train_sec=105.2
+seed=3 E32_L1/sw_r3s gini=0.227 used=32.0 base=0.3184 ratio=1.35 gate=0.521 on_open=0.120 off_open=0.196 A=0.075 D=0.032 agree_open=0.877 dormant_end=1 train_sec=107.9
+seed=3 E32_L1/sw_srand3_late gini=0.253 used=31.0 base=0.3181 ratio=1.33 gate=0.537 on_open=0.073 off_open=0.198 A=0.125 D=0.055 agree_open=0.815 dormant_end=2 train_sec=113.5
+seed=4 E32_L1/aux0 gini=0.901 used=6.0 base=0.3095 ratio=12145.53 gate=0.766 train_sec=99.8
+seed=4 E32_L1/aux0.05 gini=0.131 used=32.0 base=0.3116 ratio=2.12 gate=0.306 train_sec=105.2
+seed=4 E32_L1/gate0.1 gini=0.107 used=32.0 base=0.3156 ratio=1.84 gate=0.350 train_sec=104.2
+seed=4 E32_L1/cp gini=0.323 used=29.0 base=0.3099 ratio=1.70 gate=0.391 on_open=0.111 off_open=0.316 A=0.205 D=0.007 agree_open=0.748 dormant_end=3 train_sec=100.8
+seed=4 E32_L1/cp_rand3 gini=0.278 used=31.0 base=0.3094 ratio=1.36 gate=0.544 on_open=0.113 off_open=0.232 A=0.119 D=0.046 agree_open=0.783 dormant_end=3 train_sec=139.6
+seed=4 E32_L1/cl_gate gini=0.238 used=31.0 base=0.3124 ratio=1.24 gate=0.583 on_open=0.113 off_open=0.232 A=0.119 D=0.006 agree_open=0.783 dormant_end=1 train_sec=128.9
+seed=4 E32_L1/tf_rand3 gini=0.207 used=32.0 base=0.3111 ratio=1.43 gate=0.671 on_open=0.096 off_open=0.314 A=0.218 D=-0.107 agree_open=0.761 dormant_end=2 train_sec=130.7
+seed=4 E32_L1/tf_srand3 gini=0.164 used=32.0 base=0.3099 ratio=1.51 gate=0.631 on_open=0.065 off_open=0.212 A=0.147 D=-0.048 agree_open=0.832 dormant_end=1 train_sec=119.5
+seed=4 E32_L1/cp_srand3 gini=0.245 used=30.0 base=0.3129 ratio=1.54 gate=0.501 on_open=0.092 off_open=0.233 A=0.140 D=0.012 agree_open=0.838 dormant_end=2 train_sec=118.2
+seed=4 E32_L1/sw_srand3 gini=0.184 used=32.0 base=0.3153 ratio=1.63 gate=0.511 on_open=0.092 off_open=0.233 A=0.140 D=-0.049 agree_open=0.838 dormant_end=1 train_sec=120.5
+seed=4 E32_L1/sw_r3s gini=0.194 used=32.0 base=0.3132 ratio=1.46 gate=0.525 on_open=0.113 off_open=0.232 A=0.119 D=-0.037 agree_open=0.783 dormant_end=2 train_sec=109.7
+seed=4 E32_L1/sw_srand3_late gini=0.202 used=31.0 base=0.3130 ratio=1.69 gate=0.523 on_open=0.092 off_open=0.233 A=0.140 D=-0.031 agree_open=0.838 dormant_end=1 train_sec=95.8
