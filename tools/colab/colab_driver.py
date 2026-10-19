@@ -1,5 +1,5 @@
 """Colab CLI で ステップ44.4（③: 4エポック）を回し続けるドライバ。この環境（コンテナ）側で動かす。"""
-import json, os, shutil, subprocess, sys, time
+import fcntl, json, os, shutil, subprocess, sys, time
 from pathlib import Path
 
 os.environ['PATH'] = os.path.expanduser('~/.local/bin') + ':' + os.environ['PATH']
@@ -24,6 +24,15 @@ RECONNECT_NOW = Path(__file__).parent / 'RECONNECT_NOW'  # 置くと、次のチ
 # colab CLI のセッション記録（セッション名 → 接続先）。コンテナ再起動で空になるので、動いているときに退避しておく
 REG = Path.home() / '.config/colab-cli/sessions.json'
 REG_BACKUP = Path(os.environ.get('COLAB_REG_BACKUP', Path(__file__).parent / 'colab_sessions_backup.json'))
+# ドライバは同時に1つだけ動かす（2つ動くと、片方が作った VM をもう片方が復元なしで学習開始する）
+LOCK_FILE = open(Path(__file__).parent / 'driver.lock', 'w')
+try:
+    fcntl.flock(LOCK_FILE, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except OSError:
+    print('driver は既に動いているため終了する', flush=True)
+    sys.exit(0)
+# 復元（結果 JSON と途中経過の .pt を VM に戻す）が済んだ VM だけ、学習を始めてよい
+RESTORED = Path(__file__).parent / 'vm_restored.flag'
 RESUME_NOW = Path(__file__).parent / 'RESUME_NOW'  # 承認待ちで VM を止めたあと、置くと VM を作り直す
 DRIVE = '/content/drive/MyDrive/neurocortex/step44'
 # VM 上で 30 分ごとに結果とチェックポイントを Drive へ複製する（.part に書いてから rename。完了済み実行の削除も反映）
@@ -190,6 +199,7 @@ def new_session():
         SESSION_T0.write_text(str(time.time()))
         log('new', rc, out.strip()[-200:])
         if rc == 0 or session_alive():
+            RESTORED.unlink(missing_ok=True)
             save_reg()
             break
         time.sleep(60 * (i + 1))
@@ -426,6 +436,8 @@ else:
     print('drive not mounted')
 ''' % (DRIVE, VM), timeout=3600)
     log('restore', rc, out.strip()[-300:])
+    if rc == 0 and 'restored from drive' in out:
+        RESTORED.write_text(str(time.time()))
     # 完了済みの結果 JSON を exec 経由で戻す（contents API は 500 のため使えない）
     for f in LOCAL.glob('phase*_seed*.json'):
         rc, out = vm_exec('open(%r, "w").write(%r); print("restored")' % (VM + '/' + f.name, f.read_text()))
@@ -433,6 +445,9 @@ else:
 
 
 def start_training():
+    if not RESTORED.exists():
+        log('学習を始めない: この VM は Drive からの復元が済んでいない')
+        return
     rc, out = vm_exec('''
 import subprocess, os
 open('/content/step44/STOP','w').write('run')
