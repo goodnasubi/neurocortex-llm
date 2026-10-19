@@ -140,6 +140,24 @@ def test_pg_is_chosen_eligibility_times_counterfactual_rpe():
         _make(ThreeFactorLM, **KW, teacher="rand3", lam=0.5, pg="x")
 
 
+def test_pg_base_subtracts_running_expectation():
+    x, y = XY
+    a = _make(ThreeFactorLM, **KW, teacher="rand3", lam=0.5, tf=True, pg="only")
+    b = _make(ThreeFactorLM, **KW, teacher="rand3", lam=0.5, tf=True, pg="only", pg_base=True)
+    ga = _grads(a, a.teacher_loss(x, y))
+    gb = _grads(b, b.teacher_loss(x, y))
+    assert torch.allclose(ga["routers.0.weight"], gb["routers.0.weight"])  # 1回目は期待 0
+    assert float(b.rpe_base) != 0.0
+    b0 = float(b.rpe_base)
+    gb2 = _grads(b, b.teacher_loss(x, y))
+    ga2 = _grads(a, a.teacher_loss(x, y))
+    assert not torch.allclose(ga2["routers.0.weight"], gb2["routers.0.weight"])
+    assert float(b.rpe_base) != b0
+    with pytest.raises(ValueError):
+        _make(ThreeFactorLM, **KW, teacher="rand3", lam=0.5, pg_base=True)
+    _train(b)
+
+
 def test_soft_uses_same_evaluations_and_random_stream():
     x, y = XY
     a = _make(ThreeFactorLM, **KW, teacher="rand3", lam=1.0)
@@ -166,7 +184,8 @@ def test_tf_none_router_never_changes_and_tf_router_learns():
 def test_conditions():
     c = R.conditions(32, 1)
     assert set(c) == {"aux0", "aux0.05", "gate0.1", "cp", "cp_rand3", "cl_gate", "tf_rand3", "tf_srand3", "tf_cf",
-                      "tf_none", "tf_rand3e", "cp_rand3e", "tf_pg", "tf_rand3pg"}
+                      "tf_none", "tf_rand3e", "cp_rand3e", "tf_pg", "tf_rand3pg", "tf_pgb", "tf_rand3pgb"}
+    assert c["tf_pgb"]["pg_base"] and c["tf_rand3pgb"]["pg"] == "add"
     assert c["tf_pg"]["pg"] == "only" and c["tf_rand3pg"]["pg"] == "add" and c["tf_pg"]["tf"]
     assert c["tf_rand3e"]["eq_gate"] and c["tf_rand3e"]["tf"] and "tf" not in c["cp_rand3e"]
     assert c["tf_rand3"]["tf"] and c["tf_rand3"]["lam"] == 0.1 and c["tf_srand3"]["soft"]

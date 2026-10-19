@@ -19,6 +19,8 @@ h·(1[j=k] − p_j) に第三因子 t_k を掛けて足した三要素則の形�
     シナプス後の活動）に、反実仮想の報酬予測誤差 δ = mean_alt CE − CE_c（評価した他の専門家の結果の平均との差。
     同じゲートで評価する）を掛ける古典的な三要素則（損失 −λ·mean δ·log p_c）。"only" はこれだけ、"add" は
     教師の補助損失に足す。
+  - `pg_base=True`（修正3、12.6.181節）: δ から期待値 b（δ のバッチ平均の移動平均。α は選択の閾値と同じ）を引く
+    （報酬予測誤差 = 結果 − 期待。Schultz, Dayan & Montague, 1997）。b は引いた後に更新する。
   既定（tf=False・soft=False・eq_gate=False）では `ConsolLM`＋`train_consol` と同じ学習経過（`tests/test_moe_tf.py`）。
   学習は `moe_consol.train_consol` を使う（閉じる時点の保存と `cross_assignment` の分解もそのまま）。
 """
@@ -55,15 +57,16 @@ class ThreeFactorLM(ConsolLM):
     """学習の初めからゲートの勾配を切り（tf）、ルータを反実仮想の教師の三要素則だけで学習する。soft はソフトな目標。"""
 
     def __init__(self, *args, tf: bool = False, soft: bool = False, eq_gate: bool = False,
-                 pg: str | None = None, **kw) -> None:
+                 pg: str | None = None, pg_base: bool = False, **kw) -> None:
         super().__init__(*args, **kw)
         if tf and (self.kind != "select" or self.n_layers != 1):
             raise ValueError("tf は1層の選択専用（select）の模型だけ")
-        if pg not in (None, "only", "add"):
+        if pg not in (None, "only", "add") or (pg_base and pg is None):
             raise ValueError(f"未知の pg: {pg}")
         if (soft or eq_gate or pg) and (self.kind_t not in ("top", "rand") or self.teacher_homeo or self.react_probe):
             raise ValueError("soft・eq_gate・pg は閾値・再学習の評価を足さない部分評価の教師（top・rand）だけ")
-        self.tf, self.soft, self.eq_gate, self.pg = tf, soft, eq_gate, pg
+        self.tf, self.soft, self.eq_gate, self.pg, self.pg_base = tf, soft, eq_gate, pg, pg_base
+        self.register_buffer("rpe_base", torch.zeros(()))
 
     def detach_gate(self) -> bool:
         return getattr(self, "tf", False) or super().detach_gate()
@@ -85,6 +88,10 @@ class ThreeFactorLM(ConsolLM):
             if self.pg:  # 反実仮想の報酬予測誤差（代わりの専門家の結果の平均 − 選んだ専門家の結果）
                 alt = (~dup[:, 1:]).float()
                 delta = (ce_eq[:, 1:] * alt).sum(-1) / alt.sum(-1).clamp(min=1.0) - ce_eq[:, 0]
+                if self.pg_base:  # 修正3: 期待からのずれ
+                    d_mean = delta.mean()
+                    delta = delta - self.rpe_base
+                    self.rpe_base.mul_(1 - self.alpha).add_(self.alpha * d_mean)
             if self.soft:
                 target = F.softmax((-ce / self.tau).masked_fill(dup, float("-inf")), dim=-1)
             else:
