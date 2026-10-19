@@ -28,6 +28,9 @@ from torch import nn
 
 EPS = 0.02  # 予測の平滑化 p̃ = (1 − ε)·p + ε/V（12.6.135節の確定値）
 RULES = ("passive", "uniform", "active", "uniform_replay", "active_replay", "active_holdout")
+# 修正1（12.6.173節）: 事後分布を手がかりにした、文脈ごとのバッファからの想起。active_replay_own は本来の文脈の
+# バッファだけから取る診断用（本来の文脈を知っているので規則ではない）
+FIX1_RULES = ("active_replay_cued", "active_holdout_cued", "active_replay_own")
 
 
 @dataclass(frozen=True)
@@ -131,12 +134,14 @@ def batched_information(probs: torch.Tensor, prior: torch.Tensor) -> torch.Tenso
     return ((h_mix - (prior[:, None, :] * ent).sum(-1)) / math.log(probs.shape[-1])).clamp_min(0.0)
 
 
-def select_contexts(logp: torch.Tensor, answers: torch.Tensor, n_obs: int, active: bool) -> tuple[torch.Tensor, torch.Tensor]:
+def select_contexts(logp: torch.Tensor, answers: torch.Tensor, n_obs: int, active: bool,
+                    source: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
     """手がかりから文脈を選ぶ。
 
     logp [E, M, 文脈, V] は各候補の窓での各文脈の対数確率、answers [E, M] は情報源の答え（観測するまで使わない）。
     active=False は先頭 n_obs 個をそのまま観測する（batch）。active=True は1個ずつ、まだ観測していない候補のうち
-    現在の事後分布のもとで期待情報量が最大のものを選んで観測する。返り値は選んだ文脈 [E] と観測した手がかりの
+    現在の事後分布のもとで期待情報量が最大のものを選んで観測する。source [E, M]（候補の窓を保存した文脈）を与えると、
+    期待情報量にその文脈の現在の事後確率を掛けて選ぶ（修正1。信じている文脈の記憶ほど想起されやすい）。返り値は選んだ文脈 [E] と観測した手がかりの
     一様事前のもとでの情報量の平均 [E]。"""
     e_n, m_n, c_n, v_n = logp.shape
     probs = (1 - EPS) * logp.exp() + EPS / v_n
@@ -150,7 +155,10 @@ def select_contexts(logp: torch.Tensor, answers: torch.Tensor, n_obs: int, activ
     rows = torch.arange(e_n)
     for _ in range(n_obs):
         prior = torch.softmax(log_post, -1)
-        info = batched_information(probs, prior).masked_fill(seen, -1.0)
+        info = batched_information(probs, prior)
+        if source is not None:
+            info = info * prior.gather(1, source)
+        info = info.masked_fill(seen, -1.0)
         pick = info.argmax(-1)
         seen[rows, pick] = True
         log_post = log_post + loglik[rows, pick]
@@ -246,7 +254,7 @@ def kl_to_truth(model: ContextCharLM, trans: torch.Tensor, fam: LangFamily, x: t
 
 def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConfig, cue_ns: tuple[int, ...],
              generator: torch.Generator, episodes: int = 100, pool: int = 4, test_chains: int = 20,
-             rules: tuple[str, ...] = RULES) -> dict:
+             rules: tuple[str, ...] = RULES + FIX1_RULES) -> dict:
     """各言語・各手がかりの数・各規則で文脈を選び、選択精度と次の文字の CE（選んだヘッドの新しい文での CE）を測る。
 
     CE は言語 j・文脈 c ごとに新しい文の全窓で一度計算した表 CE[c, j] を、選んだ文脈で引く（選択の分布についての
@@ -280,6 +288,7 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
         out["ce_oracle"] = float(ce.diagonal().mean())
         out["ce_nocontext"] = float(ce_plain.mean())
         out["entropy"] = float(entropy.mean())
+        fix_gen = torch.Generator().manual_seed(generator.initial_seed() + 777)  # 修正1の候補専用
         all_buf = torch.cat(trained["buf_x"])
         all_hold = torch.cat(trained["hold_x"])
         res: dict = {}
@@ -291,9 +300,9 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
             per_lang = {r: [] for r in rules}
             for j in range(n_l):
                 # 情報源の答えは真の分布から引く（窓の出どころによらず同じ規則）
-                def answers(xw: torch.Tensor) -> torch.Tensor:
+                def answers(xw: torch.Tensor, gen: torch.Generator = generator) -> torch.Tensor:
                     p = trans[j][state_index(xw, v, fam.order)]
-                    return torch.multinomial(p.reshape(-1, v), 1, generator=generator).reshape(xw.shape[:-1])
+                    return torch.multinomial(p.reshape(-1, v), 1, generator=gen).reshape(xw.shape[:-1])
 
                 # 与えられる手がかりの窓は、言語 j の文から独立に取る（12.6.143節の batch の手がかりにあたる）
                 task_x = sample_text(trans[j], fam, episodes * m, k, generator).reshape(episodes, m, k)
@@ -303,15 +312,30 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                          "replay": all_buf[torch.randint(0, all_buf.shape[0], (episodes, m), generator=generator)],
                          "holdout": all_hold[torch.randint(0, all_hold.shape[0], (episodes, m), generator=generator)]}
                 ans = {key: answers(px) for key, px in pools.items() if key != "passage"}
+                # 修正1: 文脈ごとに max(1, round(P·n / 文脈の数)) 個ずつ、その文脈のバッファ（保留サンプル）から。
+                # 従来の規則の値を変えないよう、専用の乱数を使う
+                m_c = max(1, round(m / n_l))
+                src = torch.arange(n_l).repeat_interleave(m_c)[None].expand(episodes, -1)
+                fix = {}
+                for key, bank in (("replay_cued", trained["buf_x"]), ("holdout_cued", trained["hold_x"])):
+                    fix[key] = torch.cat([b[torch.randint(0, b.shape[0], (episodes, m_c), generator=fix_gen)]
+                                          for b in bank], dim=1)
+                own = trained["buf_x"][j]
+                fix["replay_own"] = own[torch.randint(0, own.shape[0], (episodes, m), generator=fix_gen)]
+                for key, px in fix.items():
+                    ans[key] = answers(px, fix_gen)
+                pools.update(fix)
                 ans["passage"] = py_.reshape(episodes, n)
                 logp = {key: model.logp_all(px.reshape(-1, k)).reshape(episodes, px.shape[1], n_l, v)
                         for key, px in pools.items()}
                 spec = {"passive": ("passage", False), "uniform": ("task", False), "active": ("task", True),
                         "uniform_replay": ("replay", False),
-                        "active_replay": ("replay", True), "active_holdout": ("holdout", True)}
+                        "active_replay": ("replay", True), "active_holdout": ("holdout", True),
+                        "active_replay_cued": ("replay_cued", True), "active_holdout_cued": ("holdout_cued", True),
+                        "active_replay_own": ("replay_own", True)}
                 for r in rules:
-                    src, act = spec[r]
-                    chosen, inf = select_contexts(logp[src], ans[src], n, act)
+                    key, act = spec[r]
+                    chosen, inf = select_contexts(logp[key], ans[key], n, act, src if key.endswith("_cued") else None)
                     a = float((chosen == j).float().mean())
                     acc[r] += a / n_l
                     ce_sel[r] += float(ce[chosen, j].mean()) / n_l

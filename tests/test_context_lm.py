@@ -6,7 +6,7 @@ import pytest
 import torch
 
 from neurocortex.context_inference import cue_information
-from neurocortex.context_lm import (RULES, LangFamily, TrainConfig, batched_information, evaluate, make_languages,
+from neurocortex.context_lm import (FIX1_RULES, RULES, LangFamily, TrainConfig, batched_information, evaluate, make_languages,
                                     sample_text, select_contexts, state_index, train_models, windows)
 from neurocortex.experiments.run_context_lm import analyze
 
@@ -102,7 +102,7 @@ def test_train_and_evaluate_small(regime):
     ev = evaluate(fam, trans, tr, cfg, (1, 2), g, episodes=10, test_chains=3)
     assert set(ev["cues"]) == {"1", "2"}
     for n in ("1", "2"):
-        assert set(ev["cues"][n]["acc"]) == set(RULES)
+        assert set(ev["cues"][n]["acc"]) == set(RULES + FIX1_RULES)
         assert all(0.0 <= a <= 1.0 for a in ev["cues"][n]["acc"].values())
         assert all(math.isfinite(c) for c in ev["cues"][n]["ce"].values())
     assert ev["entropy"] <= ev["ce_oracle"] + 1.0
@@ -143,3 +143,30 @@ def test_analyze_classifies_and_judges():
     assert v["H0"]["合格"] and v["H1"]["合格"]
     assert v["H2"]["H2a 合格（上書きありで利得・特異性）"] is True
     assert v["H2"]["H2b 合格（上書きなしで利得なし）"] is True
+
+
+def test_cued_recall_prefers_candidates_of_believed_context():
+    """修正1: 候補の期待情報量に、その候補を保存した文脈の事後確率を掛ける。2個目の観測では、1個目で信じた文脈の
+    候補を選ぶ。"""
+    logp, ans = _toy_logp(4)
+    # 候補 2 も候補 3 と同じだけ食い違うが、文脈0のバッファの窓（文脈1を信じた後は選ばれにくい）
+    logp = logp.clone()
+    logp[:, 2] = logp[:, 3]
+    source = torch.tensor([0, 0, 0, 1]).expand(4, 4)
+    chosen, _ = select_contexts(logp, ans, 1, active=True, source=source)
+    assert (chosen == 1).all()
+    plain_pick_info = select_contexts(logp, ans, 1, active=True)[1]
+    assert torch.allclose(plain_pick_info, select_contexts(logp, ans, 1, active=True, source=source)[1])
+
+
+def test_fix1_rules_do_not_change_original_rules():
+    fam = LangFamily(n_langs=3, vocab=4, order=1, diff_frac=0.5)
+    vals = []
+    for rules in (RULES, RULES + FIX1_RULES):
+        g = torch.Generator().manual_seed(0)
+        trans, _ = make_languages(fam, g)
+        cfg = TrainConfig(regime="seq", steps_per_lang=30, buffer=20, k=2, hidden=8)
+        tr = train_models(fam, trans, cfg, g)
+        vals.append(evaluate(fam, trans, tr, cfg, (2,), g, episodes=10, test_chains=3, rules=rules)["cues"]["2"])
+    assert all(vals[0]["acc"][r] == vals[1]["acc"][r] for r in RULES)
+    assert set(vals[1]["acc"]) == set(RULES + FIX1_RULES)

@@ -72,9 +72,9 @@ def analyze(runs: list[dict]) -> dict:
                "ce_oracle": _mean([r["ce_oracle"] for r in rs]), "ce_nocontext": _mean([r["ce_nocontext"] for r in rs]),
                "entropy": _mean([r["entropy"] for r in rs]), "acc": {}, "ce": {}, "info": {}}
         for n in rs[0]["cues"]:
-            row["acc"][n] = {rule: _mean([r["cues"][n]["acc"][rule] for r in rs]) for rule in RULES}
-            row["ce"][n] = {rule: _mean([r["cues"][n]["ce"][rule] for r in rs]) for rule in RULES}
-            row["info"][n] = {rule: _mean([r["cues"][n]["info"][rule] for r in rs]) for rule in RULES}
+            row["acc"][n] = {rule: _mean([r["cues"][n]["acc"][rule] for r in rs]) for rule in rs[0]["cues"][n]["acc"]}
+            row["ce"][n] = {rule: _mean([r["cues"][n]["ce"][rule] for r in rs]) for rule in rs[0]["cues"][n]["acc"]}
+            row["info"][n] = {rule: _mean([r["cues"][n]["info"][rule] for r in rs]) for rule in rs[0]["cues"][n]["acc"]}
         out["組"][name] = row
     g = out["組"]
     names = list(g)
@@ -110,7 +110,15 @@ def analyze(runs: list[dict]) -> dict:
     h1["合格"] = ok
     verdict["H1"] = h1
 
-    # H2: 海馬のバッファからの候補（手がかり 8・16 個）。上書きの有無で組を分ける
+    verdict["H2"] = _h2(runs, g, names, "active_replay", "active_holdout")
+    if "active_replay_cued" in runs[0]["cues"]["8"]["acc"]:
+        verdict["H2_修正1"] = _h2(runs, g, names, "active_replay_cued", "active_holdout_cued")
+    out["判定"] = verdict
+    return out
+
+
+def _h2(runs: list[dict], g: dict, names: list[str], replay: str, holdout: str) -> dict:
+    """H2: 海馬のバッファからの候補（手がかり 8・16 個）。上書きの有無で組を分ける。"""
     over = [nm for nm in names if g[nm]["分類"] == "上書きあり"]
     none = [nm for nm in names if g[nm]["分類"] == "上書きなし"]
     h2: dict = {"上書きあり": over, "上書きなし": none}
@@ -118,11 +126,11 @@ def analyze(runs: list[dict]) -> dict:
     ok_b = bool(none)
     ok_ce = bool(over)
     for n in ("8", "16"):
-        gr = {nm: g[nm]["acc"][n]["active_replay"] - g[nm]["acc"][n]["active"] for nm in names}
-        gh = {nm: g[nm]["acc"][n]["active_holdout"] - g[nm]["acc"][n]["active"] for nm in names}
-        gce = {nm: g[nm]["ce"][n]["active"] - g[nm]["ce"][n]["active_replay"] for nm in names}
+        gr = {nm: g[nm]["acc"][n][replay] - g[nm]["acc"][n]["active"] for nm in names}
+        gh = {nm: g[nm]["acc"][n][holdout] - g[nm]["acc"][n]["active"] for nm in names}
+        gce = {nm: g[nm]["ce"][n]["active"] - g[nm]["ce"][n][replay] for nm in names}
         over_runs = [r for r in runs if f"{r['family']}-{r['regime']}" in over]
-        bad = sum(r["cues"][n]["acc"]["active_replay"] - r["cues"][n]["acc"]["active"] < -0.02 for r in over_runs)
+        bad = sum(r["cues"][n]["acc"][replay] - r["cues"][n]["acc"]["active"] < -0.02 for r in over_runs)
         m_over = _mean([gr[nm] for nm in over])
         m_hold = _mean([gh[nm] for nm in over])
         m_none = _mean([gr[nm] for nm in none])
@@ -137,9 +145,7 @@ def analyze(runs: list[dict]) -> dict:
     h2["H2a 合格（上書きありで利得・特異性）"] = ok_a if over else "検証できず（上書きありの組がない）"
     h2["H2b 合格（上書きなしで利得なし）"] = ok_b if none else "検証できず"
     h2["H2-CE 合格（上書きありで CE も改善）"] = ok_ce if over else "検証できず"
-    verdict["H2"] = h2
-    out["判定"] = verdict
-    return out
+    return h2
 
 
 def main() -> None:
