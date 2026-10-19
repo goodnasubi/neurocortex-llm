@@ -445,9 +445,11 @@ else:
 
 
 def start_training():
-    if not RESTORED.exists():
-        log('学習を始めない: この VM は Drive からの復元が済んでいない')
-        return
+    if not RESTORED.exists():  # 復元が済んでいない VM（停止後に張り直した VM など）は、先に復元する
+        start_session_restore_only()
+        if not RESTORED.exists():
+            log('学習を始めない: この VM は Drive からの復元が済んでいない（Drive 未マウントなど）')
+            return
     rc, out = vm_exec('''
 import subprocess, os
 open('/content/step44/STOP','w').write('run')
