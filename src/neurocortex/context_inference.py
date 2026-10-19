@@ -152,7 +152,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          writeback_at: int = 0, writeback_steps: int = 100, writeback_eval: int = 2000,
                          writeback_keep: bool = False, replay_rule: str = "", replay_beta: float = 0.5,
                          replay_need: float = 0.5, sleep_every: int = 50, sleep_steps: int = 25,
-                         ach_ema: float = 0.98) -> dict:
+                         ach_ema: float = 0.98, nov_split: bool = False, nov_ctx_gain: float = 2.0,
+                         nov_shared_gain: float = 0.2) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -206,6 +207,15 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
           max(split_shared_gain, min(1, f / lr)) になる（土台の学習率より大きくはしない）。
       split_ctx_lr = η > 0 … 新しい文脈の列の利得を、土台の学習率に対する相対値ではなく実効学習率 η で決める
           （利得 η / lr。split_ctx_gain の代わり）。
+
+    nov_split = True（inferred / inferred_gated のみ。12.6.169節）では、文脈固有と共有の可塑性の分離を、固定の期間
+    ではなく連続的な新しさの信号で続ける（新しい記憶の割り当てと興奮性・メタ可塑性の単純化）。タスク writeback_at
+    （writeback がなければ 1）の時点になかった文脈（新しい文脈）で学習するステップでは、"ach_c" と同じなじみの度合い
+    f = clamp(1 − L̄_c/τ, 0, 1)（驚きのあるステップでは 0）から、新しい文脈の列の利得 1 + (nov_ctx_gain − 1)(1 − f)、
+    それ以外の重みの利得 nov_shared_gain + (1 − nov_shared_gain)·f を更新にかける。作った直後（f = 0）は 12.6.129節の
+    分離と同じ利得で、なじむにつれて利得は 1 に戻る。split_shared_lr_floor > 0 なら nov_shared_gain にも同じ下限を
+    設ける。split_window の期間中はそちらを優先する。最適化器の内部状態は変えない。既定の False では従来と同じ挙動。
+    diagnostics = True では diag["nov_split"][k]（利得をかけたステップ数 "steps" と共有の利得の平均 "g_shared"）を加える。
 
     cue_select はテスト時の文脈の選択の規則（inferred / inferred_gated のみ。12.6.135節）。
       "batch"（既定）… cue_n 個の手がかりの平均損失が最小の文脈を1回で選ぶ（従来と同じ）。
@@ -412,6 +422,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
     if split_ctx_lr > 0:
         split_ctx_gain = split_ctx_lr / lr
+    if nov_split and (nov_ctx_gain < 1.0 or not 0.0 <= nov_shared_gain <= 1.0):
+        raise ValueError("nov_ctx_gain は 1 以上、nov_shared_gain は [0, 1]")
+    if split_shared_lr_floor > 0:
+        nov_shared_gain = max(nov_shared_gain, min(1.0, split_shared_lr_floor / lr))
+    nov_from = (writeback_at if writeback else 1) if nov_split and condition in ("inferred", "inferred_gated") else len(specs)
+    nov_old: set[int] = set()  # 12.6.169節: nov_from の時点にあった文脈
     T = len(specs)
     C = 0 if condition == "none" else (T if condition == "oracle" else (n_slots or T + 2))
     model = make_model(specs[0].n_inputs + C, hidden_dim)
@@ -877,6 +893,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         if rule and k == rule_from:
             old_ctx.update(used)
         mix = {"own": 0.0, "kept": 0.0, "size": 0, "n": 0, "sleep": 0, "fam": 0.0}
+        if k == nov_from:
+            nov_old.update(used)
+        nov_d = {"steps": 0, "g_shared": 0.0}
         for step in range(pretrain_steps if k == 0 else steps):
             if rule in ("sleep", "nrem", "ach_c_nrem", "nrem2", "ach_c_nrem2") and step > 0 and step % sleep_every == 0 and buf_bits:
                 mix["sleep"] += sleep_phase(opt, rule)
@@ -902,6 +921,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 split["left"], split["ctx"] = split_window, ctx
             split_now = split["left"] > 0
             split["left"] = max(split["left"] - 1, 0)
+            nov_now = k >= nov_from and not split_now and ctx not in nov_old
+            if nov_now:
+                f_nov = max(0.0, min(1.0, 1 - nov_loss.get(ctx, math.inf) / tau)) if gate["store"] else 0.0
+                g_nov = (1 + (nov_ctx_gain - 1) * (1 - f_nov), nov_shared_gain + (1 - nov_shared_gain) * f_nov)
             ctx_in = src if (condition == "oracle" and src is not None) else ctx
             x = with_ctx(bits, ctx_in)
             y = labels
@@ -940,7 +963,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 loss = F.cross_entropy(model(x), y)
                 opt.zero_grad(set_to_none=True)
                 loss.backward()
-                if diagnostics or plasticity_cap > 0 or split_now:
+                if diagnostics or plasticity_cap > 0 or split_now or nov_now:
                     before = [q.detach().clone() for q in model.parameters()]
                 if diagnostics:
                     gnorm = float(torch.sqrt(sum((q.grad ** 2).sum() for q in model.parameters() if q.grad is not None)))
@@ -954,6 +977,18 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                             if q is fc1_w:
                                 col = n_bits + split["ctx"]
                                 d[:, col] = (q[:, col] - b[:, col]) * split_ctx_gain
+                            q.copy_(b + d)
+                elif nov_now:
+                    # 12.6.169節: 新しい文脈がなじむまで、その文脈の列の可塑性を上げ、共有の重みの可塑性を下げ続ける
+                    # （新しい記憶への興奮性の割り当てと、なじむにつれて戻るメタ可塑性の単純化）
+                    nov_d["steps"] += 1
+                    nov_d["g_shared"] += g_nov[1]
+                    with torch.no_grad():
+                        for q, b in zip(model.parameters(), before):
+                            d = (q - b) * g_nov[1]
+                            if q is fc1_w:
+                                col = n_bits + ctx
+                                d[:, col] = (q[:, col] - b[:, col]) * g_nov[0]
                             q.copy_(b + d)
                 if diagnostics or plasticity_cap > 0:
                     unorm = float(torch.sqrt(sum(((q.detach() - b) ** 2).sum() for q, b in zip(model.parameters(), before))))
@@ -1042,6 +1077,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             if informed:
                 diag.setdefault("cue_info", []).append(extra.get("info", []))
             diag["trained_src"].append({f"{c}<-{t}": n for (c, t), n in sorted(trained.items())})
+            if k >= nov_from:
+                diag.setdefault("nov_split", {})[k] = {"steps": nov_d["steps"],
+                                                       "g_shared": nov_d["g_shared"] / max(nov_d["steps"], 1)}
             if rule:
                 m_ = max(mix["n"], 1)
                 diag.setdefault("replay_mix", {})[k] = {"own": mix["own"] / m_, "kept": mix["kept"] / m_,
