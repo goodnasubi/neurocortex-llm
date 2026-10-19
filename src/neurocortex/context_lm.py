@@ -22,6 +22,8 @@
 ゲートする（アセチルコリンによる再帰結合の抑制: Hasselmo & Schnell 1994; Hasselmo 2006。active_*_ach の規則のときだけ）。
 12.6.191〜192節: 補完の強さ λ を CA1 の比較器（CA3 が想起した文脈と嗅内皮質からの入力の食い違い δ）で決める
 （Hasselmo, Wyble & Wallenstein 1996; Lisman & Grace 2005。active_*_cmp の規則のときだけ）。
+12.6.197〜198節: 痕跡を歯状回のパターン分離（疎な拡張と k-WTA。dg_codes）で符号化して CA3 に保存し、補完を
+その符号の空間で行う（手がかりは貫通路から生のタグで入る。ca3_recall_codes。active_*_dg・rp の規則のときだけ）。
 
 12.6.143節と違い、能動的な選択も打ち切りなしで n 個すべてを観測する（観測の数を規則の間で揃えるため）。
 """
@@ -29,6 +31,7 @@
 from __future__ import annotations
 
 import math
+import warnings
 from dataclasses import dataclass
 
 import torch
@@ -57,6 +60,10 @@ ACH_THRESHOLD = 0.5
 # 12.6.191節: CA1 の比較器のゲート。cmp は λ = 1 − δ（δ = ca1_mismatch）、cmp_shuf は同じ言語・手がかりの数のエピソードの
 # 間で λ を並べ替えた統制、cmp_u は不確かさと組み合わせた λ = u·(1 − δ)（参考）
 CMP_RULES = ("active_replay_cmp", "active_holdout_cmp", "active_replay_cmp_shuf", "active_replay_cmp_u")
+# 12.6.197節: 歯状回のパターン分離。dg は歯状回の符号で補完（λ = 1）、dgcmp はさらに比較器のゲート（λ = 1 − δ）、
+# rp・rpcmp は疎性を合わせた乱数射影（競合なし、入力の幾何を保つ）の対照
+DG_RULES = ("active_replay_dg", "active_replay_dgcmp", "active_holdout_dgcmp", "active_replay_rp",
+            "active_replay_rpcmp")
 
 
 @dataclass(frozen=True)
@@ -181,6 +188,101 @@ def ca1_mismatch(t: torch.Tensor, tags: torch.Tensor, iters: int, n_active: int)
     c1 = (ca3_complete(t, tags, 1, n_active) * t_hat).sum(-1)
     c_s = (ca3_complete(t, tags, iters, n_active) * t_hat).sum(-1)
     return (1 - c_s / c1.clamp_min(1e-12)).clamp(0.0, 1.0)
+
+
+def dg_weights(dim: int, n_units: int, conn: float, generator: torch.Generator) -> torch.Tensor:
+    """嗅内皮質 → 歯状回の結合 [n_units, dim]。各顆粒細胞は入力の割合 conn に無作為に結合する（0/1）。"""
+    return (torch.rand(n_units, dim, generator=generator) < conn).float()
+
+
+def dg_codes(tags: torch.Tensor, w: torch.Tensor, n_active: int, chunk: int = 2000) -> tuple:
+    """歯状回のパターン分離（12.6.197節）。タグ tags [N, D] を結合 w [M, D] で M 個の顆粒細胞へ拡張し、抑制性の
+    介在ニューロンによる競合（k-WTA）で上位 n_active 個だけを残す: c = relu(h − θ)、θ は (n_active + 1) 番目の
+    入力（減算の抑制）。共通の成分は閾値で消え、重なった入力の符号の重なりが下がる（Marr 1969・1971;
+    Treves & Rolls 1994）。疎な符号 (番号 [N, a], 値 [N, a]（行ごとに正規化）, M) を返す。"""
+    x = nn.functional.normalize(tags, dim=-1)
+    ind, val = [], []
+    for i in range(0, x.shape[0], chunk):
+        top = (x[i:i + chunk] @ w.T).topk(n_active + 1, dim=-1)
+        order = top.indices[:, :-1].sort(dim=-1)  # CSR の列の番号は行ごとに昇順
+        v = (top.values[:, :-1] - top.values[:, -1:]).clamp_min(0.0).gather(1, order.indices)
+        ind.append(order.values)
+        val.append(nn.functional.normalize(v, dim=-1))
+    return torch.cat(ind), torch.cat(val), w.shape[0]
+
+
+def rp_codes(tags: torch.Tensor, w: torch.Tensor, n_active: int, conn: float) -> torch.Tensor:
+    """疎性を合わせた乱数射影の対照（12.6.197節）。dg_codes と同じ結合から平均（conn）を引いて0平均にし、入力に
+    よらない固定の n_active 個の単位で読む線形の射影（競合なし。余弦の幾何をほぼ保つ: Johnson–Lindenstrauss）。
+    発火する単位の数は歯状回と同じ。符号 [N, n_active]（行ごとに正規化）。"""
+    x = nn.functional.normalize(tags, dim=-1)
+    return nn.functional.normalize(x @ (w[:n_active] - conn).T, dim=-1)
+
+
+def _code_ops(codes):
+    """符号の空間の演算（余弦の点数 [E, N] と、選んだ痕跡の符号の平均 [E, dim]）。codes は密な [N, dim] か、
+    dg_codes の疎な (番号, 値, dim)。"""
+    if isinstance(codes, tuple):
+        ind, val, dim = codes
+        n, a = ind.shape
+        with warnings.catch_warnings():  # CSR は beta の警告を出す
+            warnings.simplefilter("ignore", UserWarning)
+            csr = torch.sparse_csr_tensor(torch.arange(0, n * a + 1, a), ind.reshape(-1), val.reshape(-1), (n, dim),
+                                          check_invariants=False)
+
+        def score(s: torch.Tensor) -> torch.Tensor:
+            return (csr @ s.T).T
+
+        def mean(idx: torch.Tensor) -> torch.Tensor:
+            e = idx.shape[0]
+            out = torch.zeros(e, dim).scatter_add_(1, ind[idx].reshape(e, -1), val[idx].reshape(e, -1))
+            return out / idx.shape[1]
+        return score, mean
+    return (lambda s: s @ codes.T), (lambda idx: codes[idx].mean(1))
+
+
+def ca3_recall_codes(t: torch.Tensor, tags: torch.Tensor, codes, iters: int, n_active: int, m: int,
+                     lam: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
+    """CA3 の痕跡を符号 codes（歯状回の苔状線維が決めた CA3 の表現）で保存したときのパターン補完と想起（12.6.197節）。
+
+    手がかりは貫通路から入る（Treves & Rolls 1992: 苔状線維は保存、貫通路は想起）: 記憶の単位 i への入力は
+    p_i = cos(t̂, x̂_i)（x̂ は嗅内皮質の空間のタグ）。k-WTA で上位 n_active 個が発火し、CA3 の状態を
+    s ← normalize(mean{c_i}) と書き戻す。次の反復の入力は u_i = (1 − λ)·p_i + λ·cos(s, ĉ_i)（アセチルコリンは
+    再帰結合だけを抑える）。最後に u の上位 m 個を想起する。codes = 正規化したタグなら ca3_complete + tcm_recall と
+    同じ順位になる（テストで確認）。
+
+    返り値: 想起した番号 [E, m] と、比較器の食い違い δ [E]（λ = 1 の反復のときの定義どおり。CA3 の状態を
+    嗅内皮質の空間へ読み出した r = normalize(mean{x̂_i}) で δ = 1 − cos(r_S, t̂)/cos(r_1, t̂)）。"""
+    x = nn.functional.normalize(tags, dim=-1)
+    t_hat = nn.functional.normalize(t, dim=-1)
+    score, mean = _code_ops(codes)
+    p = t_hat @ x.T
+    u = p
+    n_active = min(n_active, x.shape[0])
+    c1 = c_s = torch.ones(t.shape[0])
+    for it in range(iters):
+        idx = u.topk(n_active, dim=-1).indices
+        s = nn.functional.normalize(mean(idx), dim=-1)
+        c_s = (nn.functional.normalize(x[idx].mean(1), dim=-1) * t_hat).sum(-1)
+        if it == 0:
+            c1 = c_s
+        rec = score(s)
+        u = rec if lam is None else (1 - lam[:, None]) * p + lam[:, None] * rec
+    delta = (1 - c_s / c1.clamp_min(1e-12)).clamp(0.0, 1.0)
+    return u.topk(min(m, x.shape[0]), dim=-1).indices, delta
+
+
+def code_overlap(codes, srcs: torch.Tensor, n: int, generator: torch.Generator) -> dict:
+    """符号の重なり（操作の確認、12.6.197節）。無作為な n 個の痕跡の対の余弦の平均を、同じ言語の対と違う言語の対で
+    分けて返す。比 between/within が小さいほど言語どうしが分かれている。"""
+    sel = torch.randperm(srcs.shape[0], generator=generator)[:n]
+    score, mean = _code_ops(codes)
+    c = nn.functional.normalize(mean(sel[:, None]), dim=-1)
+    sim = c @ c.T
+    same = srcs[sel][:, None] == srcs[sel][None]
+    off = ~torch.eye(len(sel), dtype=torch.bool)
+    w, b = float(sim[same & off].mean()), float(sim[~same].mean())
+    return {"within": w, "between": b, "ratio": b / w if w else float("nan")}
 
 
 def recall_uncertainty(idx: torch.Tensor, srcs: torch.Tensor, n_ctx: int) -> torch.Tensor:
@@ -353,6 +455,9 @@ class TrainConfig:
     tcm_item: int = 2  # TCM の項目の文字の組の長さ（初期設定 2、12.6.179節の修正1 で 3）
     ca3_iters: int = 3  # CA3 のパターン補完の反復の回数（active_*_ca3 の規則。12.6.183節）
     ca3_sparsity: float = 0.025  # 補完で発火する記憶の単位の割合（k-WTA。痕跡の総数に対する割合）
+    dg_expand: int = 4  # 歯状回の顆粒細胞の数（タグの次元の倍数。12.6.197節）
+    dg_conn: float = 0.05  # 各顆粒細胞が結合する嗅内皮質の入力の割合
+    dg_sparsity: float = 0.05  # 歯状回で発火する顆粒細胞の割合（k-WTA）。乱数射影の対照も同じ数の単位
 
 
 def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generator: torch.Generator,
@@ -482,7 +587,10 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
         shuf_gen = torch.Generator().manual_seed(generator.initial_seed() + 1212)  # ach_shuf の並べ替え専用
         cmp_gen = torch.Generator().manual_seed(generator.initial_seed() + 1313)  # 比較器のゲートの答え専用
         cshuf_gen = torch.Generator().manual_seed(generator.initial_seed() + 1414)  # cmp_shuf の並べ替え専用
-        tcm = [r for r in rules if r in TCM_RULES or r in CA3_RULES or r in ACH_RULES or r in CMP_RULES]
+        dg_gen = torch.Generator().manual_seed(generator.initial_seed() + 1515)  # 歯状回の結合・答え専用
+        tcm = [r for r in rules if r in TCM_RULES or r in CA3_RULES or r in ACH_RULES or r in CMP_RULES
+               or r in DG_RULES]
+        dg = [r for r in rules if r in DG_RULES]
         ca3 = [r for r in rules if r in CA3_RULES]
         ach = [r for r in rules if r in ACH_RULES]
         cmp = [r for r in rules if r in CMP_RULES]
@@ -492,6 +600,19 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
             buf_src = torch.cat([torch.full((b.shape[0],), a) for a, b in enumerate(trained["buf_x"])])
             hold_src = torch.cat([torch.full((b.shape[0],), a) for a, b in enumerate(trained["hold_x"])])
             all_buf_tag, all_hold_tag = torch.cat(trained["buf_tag"]), torch.cat(trained["hold_tag"])
+        if dg:  # 痕跡を歯状回の符号（と乱数射影の対照）で CA3 に保存する。結合は痕跡によらず1つ
+            d_in = all_buf_tag.shape[1]
+            w_dg = dg_weights(d_in, cfg.dg_expand * d_in, cfg.dg_conn, dg_gen)
+            n_dg = max(1, round(cfg.dg_sparsity * w_dg.shape[0]))
+            dg_bank = {"dg": {"replay": dg_codes(all_buf_tag, w_dg, n_dg),
+                              "holdout": dg_codes(all_hold_tag, w_dg, n_dg)},
+                       "rp": {"replay": rp_codes(all_buf_tag, w_dg, n_dg, cfg.dg_conn),
+                              "holdout": rp_codes(all_hold_tag, w_dg, n_dg, cfg.dg_conn)}}
+            # 操作の確認: 言語どうしの符号の重なり（同じ痕跡の標本で比べる）
+            out["dg_overlap"] = {name: code_overlap(c, buf_src, 600, torch.Generator().manual_seed(
+                generator.initial_seed() + 1616)) for name, c in
+                (("raw", nn.functional.normalize(all_buf_tag, dim=-1)), ("dg", dg_bank["dg"]["replay"]),
+                 ("rp", dg_bank["rp"]["replay"]))}
         all_buf = torch.cat(trained["buf_x"])
         all_hold = torch.cat(trained["hold_x"])
         res: dict = {}
@@ -502,8 +623,8 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
             info = {r: 0.0 for r in rules}
             per_lang = {r: [] for r in rules}
             purity = {"replay_tcm": 0.0, "holdout_tcm": 0.0}
-            purity.update({r.removeprefix("active_"): 0.0 for r in ca3 + ach + cmp})
-            lam_mean = {r.removeprefix("active_"): 0.0 for r in ach + cmp}
+            purity.update({r.removeprefix("active_"): 0.0 for r in ca3 + ach + cmp + dg})
+            lam_mean = {r.removeprefix("active_"): 0.0 for r in ach + cmp + [d for d in dg if d.endswith("cmp")]}
             for j in range(n_l):
                 # 情報源の答えは真の分布から引く（窓の出どころによらず同じ規則）
                 def answers(xw: torch.Tensor, gen: torch.Generator = generator) -> torch.Tensor:
@@ -580,6 +701,24 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                     ans[key] = answers(pools[key], cmp_gen)
                     purity[key] += float((srcs[idx] == j).float().mean()) / n_l
                     lam_mean[key] += float(lam.mean()) / n_l
+                for r in dg:  # 歯状回の符号（rp は乱数射影の対照）で補完してから想起する（12.6.197節）
+                    key = r.removeprefix("active_")
+                    bank_name, code = key.split("_")
+                    gated = code.endswith("cmp")
+                    code = code.removesuffix("cmp")
+                    bank, tags, srcs = ((all_buf, all_buf_tag, buf_src) if bank_name == "replay"
+                                        else (all_hold, all_hold_tag, hold_src))
+                    n_act = max(1, round(cfg.ca3_sparsity * tags.shape[0]))
+                    t_now = tcm_now(task_x, v, cfg.tcm_beta, cfg.tcm_item)
+                    codes = dg_bank[code][bank_name]
+                    idx, delta = ca3_recall_codes(t_now, tags, codes, cfg.ca3_iters, n_act, m)
+                    if gated:  # 比較器のゲート λ = 1 − δ（δ は同じ符号での λ = 1 の補完から）
+                        lam = 1 - delta
+                        idx, _ = ca3_recall_codes(t_now, tags, codes, cfg.ca3_iters, n_act, m, lam)
+                        lam_mean[key] += float(lam.mean()) / n_l
+                    pools[key] = bank[idx]
+                    ans[key] = answers(pools[key], dg_gen)
+                    purity[key] += float((srcs[idx] == j).float().mean()) / n_l
                 ans["passage"] = py_.reshape(episodes, n)
                 logp = {key: model.logp_all(px.reshape(-1, k)).reshape(episodes, px.shape[1], n_l, v)
                         for key, px in pools.items()}
@@ -589,7 +728,7 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                         "active_replay_cued": ("replay_cued", True), "active_holdout_cued": ("holdout_cued", True),
                         "active_replay_own": ("replay_own", True),
                         "active_replay_tcm": ("replay_tcm", True), "active_holdout_tcm": ("holdout_tcm", True),
-                        **{r: (r.removeprefix("active_"), True) for r in CA3_RULES + ACH_RULES + CMP_RULES}}
+                        **{r: (r.removeprefix("active_"), True) for r in CA3_RULES + ACH_RULES + CMP_RULES + DG_RULES}}
                 soft = [r for r in rules if r in SOFT_RULES]
                 for r in rules:
                     if r in SOFT_RULES:
@@ -616,7 +755,7 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
             res[str(n)] = {"acc": acc, "ce": ce_sel, "info": info, "acc_per_lang": per_lang}
             if tcm:  # 想起した痕跡のうち本来の文脈のものの割合（操作の確認）
                 res[str(n)]["tcm_purity"] = purity
-            if ach or cmp:  # ゲートの強さ λ の平均（操作の確認）
+            if ach or cmp or dg:  # ゲートの強さ λ の平均（操作の確認）
                 res[str(n)]["ach_lambda"] = lam_mean
         out["cues"] = res
     return out
