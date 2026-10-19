@@ -123,6 +123,39 @@ class ContextCharLM(nn.Module):
         return torch.log_softmax(torch.einsum("nch,chv->ncv", h, self.head_w) + self.head_b[None], -1)
 
 
+class GainCharLM(nn.Module):
+    """共有の表現に、文脈信号で乗算的なゲイン変調をかけるモデル（12.6.175節）。
+
+    窓の埋め込み → 隠れ層1（tanh, 共有）→ 文脈ごとのゲイン g_c ⊙ h1 → 隠れ層2（tanh, 共有）→ 出力（共有）。
+    g_c = 2·sigmoid(a_c) ∈ (0, 2) で、a_c = 0（ゲイン 1）から学習する。文脈ごとの独立したヘッドを持たず、文脈は
+    共有の特徴のどれを強め・弱めるかだけを決める（前頭前野のトップダウンのバイアス信号による選択的なゲーティング:
+    Miller & Cohen 2001、文脈による選択的な統合: Mante et al. 2013）。文脈なしの対照は文脈1個の同じモデル。"""
+
+    def __init__(self, vocab: int, k: int, n_ctx: int, emb: int = 16, hidden: int = 128):
+        super().__init__()
+        self.emb = nn.Embedding(vocab, emb)
+        self.inp = nn.Linear(k * emb, hidden)
+        self.gain_logit = nn.Parameter(torch.zeros(n_ctx, hidden))
+        self.mid = nn.Linear(hidden, hidden)
+        self.out = nn.Linear(hidden, vocab)
+
+    def gains(self) -> torch.Tensor:
+        """文脈ごとのゲイン [文脈, hidden]。"""
+        return 2 * torch.sigmoid(self.gain_logit)
+
+    def _logp(self, h1: torch.Tensor, g: torch.Tensor) -> torch.Tensor:
+        return torch.log_softmax(self.out(torch.tanh(self.mid(h1 * g))), -1)
+
+    def forward(self, x: torch.Tensor, c: torch.Tensor) -> torch.Tensor:
+        """窓 x [N, k] と文脈 c [N] の対数確率 [N, V]。"""
+        return self._logp(torch.tanh(self.inp(self.emb(x).flatten(1))), self.gains()[c])
+
+    def logp_all(self, x: torch.Tensor) -> torch.Tensor:
+        """全文脈の対数確率 [N, 文脈, V]。"""
+        h1 = torch.tanh(self.inp(self.emb(x).flatten(1)))
+        return self._logp(h1[:, None, :], self.gains()[None])
+
+
 def batched_information(probs: torch.Tensor, prior: torch.Tensor) -> torch.Tensor:
     """各エピソードの事前分布のもとでの各候補の期待情報量（文脈と答えの相互情報量 / log V）。
 
@@ -175,6 +208,7 @@ class TrainConfig:
     lr: float = 3e-3
     k: int = 3
     hidden: int = 128
+    arch: str = "head"  # head（文脈ごとのヘッド。12.6.173節）/ gain（共有の表現へのゲイン変調。12.6.175節）
 
 
 def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generator: torch.Generator,
@@ -195,8 +229,9 @@ def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generat
         train_y.append(y)
     with torch.random.fork_rng(devices=[]):  # 初期化の種も generator から決める
         torch.manual_seed(int(torch.randint(0, 2 ** 31 - 1, (1,), generator=generator)))
-        model = ContextCharLM(fam.vocab, cfg.k, n_l, hidden=cfg.hidden)
-        plain = ContextCharLM(fam.vocab, cfg.k, 1, hidden=cfg.hidden)
+        arch = {"head": ContextCharLM, "gain": GainCharLM}[cfg.arch]
+        model = arch(fam.vocab, cfg.k, n_l, hidden=cfg.hidden)
+        plain = arch(fam.vocab, cfg.k, 1, hidden=cfg.hidden)
     opt = torch.optim.Adam(list(model.parameters()) + list(plain.parameters()), lr=cfg.lr)
     buf_x, buf_y, hold_x, hold_y = [None] * n_l, [None] * n_l, [None] * n_l, [None] * n_l
 
@@ -243,7 +278,7 @@ def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generat
             "final_loss": sum(losses[-100:]) / 100}
 
 
-def kl_to_truth(model: ContextCharLM, trans: torch.Tensor, fam: LangFamily, x: torch.Tensor, c: int, j: int) -> float:
+def kl_to_truth(model: nn.Module, trans: torch.Tensor, fam: LangFamily, x: torch.Tensor, c: int, j: int) -> float:
     """文脈 c のヘッドの、言語 j の真の次の文字の分布からの KL（窓 x の平均, nats）。保存された答えではなく真の分布で
     測る（12.6.151節の「そのタスクの正解で測る」にあたる）。"""
     with torch.no_grad():
