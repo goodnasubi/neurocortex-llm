@@ -516,7 +516,8 @@ def _select(predictor, e: int, h: np.ndarray, k_pf: int, gate: float | None) -> 
 def simulate_prefetch_v2(choices: np.ndarray, hidden: np.ndarray, store: MultiPathExpertStore,
                          predictor, k_pf: int, compute_ms: float, oracle: bool = False,
                          gate: float | None = None, parallel_predictor: bool = False,
-                         x_batch: np.ndarray | None = None) -> PrefetchResult:
+                         x_batch: np.ndarray | None = None,
+                         adaptive_gate: "AdaptiveThresholdGate | None" = None) -> PrefetchResult:
     """12.6.189節の実効速度の模擬。`simulate_prefetch` との違い:
 
     - 読み込みは `store.n_paths` 本の経路で並列にできる（先読みは経路数ぶんのスレッドで読む）。
@@ -527,6 +528,8 @@ def simulate_prefetch_v2(choices: np.ndarray, hidden: np.ndarray, store: MultiPa
       情報と更新の順序は直列のときと同じ（observe(t−1) → rank(t)）なので、予測は直列と一致する。
       予測が計算より遅れても主の流れは待たない（その先読みが遅れて出るだけ）。
     - `x_batch` を与えると専門家の計算を実際の行列積にする（大きな専門家用）。
+    - `adaptive_gate` を与えると、固定の `gate` の代わりに `AdaptiveThresholdGate` で先読みを決め、
+      次の時刻に分かった正解でその閾値を更新する（12.6.193節）。
     `predictor_s` は予測器の計算時間の合計（並列のときは主の流れの外で使われた時間）。
     """
     n = len(choices)
@@ -544,7 +547,15 @@ def simulate_prefetch_v2(choices: np.ndarray, hidden: np.ndarray, store: MultiPa
         p0 = time.perf_counter()
         if predictor is not None and t > 0:
             predictor.observe(int(choices[t - 1]), hidden[t - 1], e)
-        if t + 1 < n:
+        if adaptive_gate is not None:
+            if t > 0:
+                adaptive_gate.feedback(e)  # 時刻 t−1 の予測の正誤（登上線維の誤差）
+            if t + 1 < n:
+                c = adaptive_gate.decide(predictor.prob(e, hidden[t]), e, store.is_resident_or_inflight)
+                cands = [] if c is None else [c]
+            else:
+                cands = []
+        elif t + 1 < n:
             cands = [int(choices[t + 1])] if oracle else _select(predictor, e, hidden[t], k_pf, gate)
         else:
             cands = []
@@ -581,3 +592,66 @@ def simulate_prefetch_v2(choices: np.ndarray, hidden: np.ndarray, store: MultiPa
     store.finish()
     return PrefetchResult(wall, stalls, stall_s, store.demand_loads, store.prefetch_loads,
                           store.wasted_loads, store.wasted_bytes, predictor_s[0])
+
+
+# --- 12.6.193節: 登上線維の誤差による先読みの閾値のオンライン適応 ------------------------
+
+class AdaptiveThresholdGate:
+    """予測の確信度に対する先読みの閾値を、外れ（登上線維の誤差）で上げ、当たりで下げる。
+
+    各時刻、予測確率が最大の候補 c（k_pf=1）について、c が常駐でも読み込み中でもなく
+    直前と同じでもない（＝先読みすれば実際に I/O が起きる）とき「対象」とする。
+    対象のとき、確信度 p_c が閾値 θ_c 以上なら先読みする。次の時刻に正解 e_{t+1} が分かると:
+
+    - 先読みして外れた（c ≠ e_{t+1}）: θ_c += eta_up（誤差信号による長期抑圧 LTD。その文脈の
+      平行線維 → プルキンエ細胞の結合を弱め、同じ確信度では次から先読みしにくくする）
+    - 先読みして当たった: θ_c −= eta_down
+    - 先読みしなかったが当たっていた: θ_c −= eta_down（誤差なしの平行線維の活動による長期増強 LTP）
+    - 先読みせず外れていた: 変えない（行動していないので誤差の帰結がない）
+
+    釣り合いでは eta_up × P(先読みして外れ) = eta_down × P(当たり) となり、外れた先読みの回数は
+    当たりの回数の eta_down / eta_up 倍に保たれる（無駄 I/O の予算を当たりに比例させる）。
+    `per_expert=False` は全候補で1つの閾値を共有する参考条件。
+    """
+
+    def __init__(self, n_experts: int, eta_up: float, eta_down: float, theta0: float = 0.5,
+                 per_expert: bool = True, lo: float = 0.0, hi: float = 1.5) -> None:
+        self.theta = np.full(n_experts if per_expert else 1, theta0, dtype=np.float64)
+        self.per_expert = per_expert
+        self.eta_up = eta_up
+        self.eta_down = eta_down
+        self.lo, self.hi = lo, hi
+        self._pending: tuple[int, bool] | None = None  # (候補, 先読みしたか)。対象のときだけ持つ
+        self.n_issued = self.n_issued_miss = self.n_skipped_hit = 0
+
+    def _idx(self, c: int) -> int:
+        return c if self.per_expert else 0
+
+    def decide(self, prob: np.ndarray, e_t: int, busy) -> int | None:
+        """先読みする専門家（なければ None）。busy(c) は常駐か読み込み中か。"""
+        c = int(np.lexsort((np.arange(len(prob)), -prob))[0])
+        if c == e_t or busy(c):
+            self._pending = None
+            return None
+        issue = bool(prob[c] >= self.theta[self._idx(c)])
+        self._pending = (c, issue)
+        return c if issue else None
+
+    def feedback(self, e_next: int) -> None:
+        if self._pending is None:
+            return
+        c, issued = self._pending
+        self._pending = None
+        i = self._idx(c)
+        hit = c == e_next
+        if issued:
+            self.n_issued += 1
+            if hit:
+                self.theta[i] -= self.eta_down
+            else:
+                self.n_issued_miss += 1
+                self.theta[i] += self.eta_up
+        elif hit:
+            self.n_skipped_hit += 1
+            self.theta[i] -= self.eta_down
+        self.theta[i] = min(max(self.theta[i], self.lo), self.hi)
