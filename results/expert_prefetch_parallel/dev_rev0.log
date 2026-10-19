@@ -1,0 +1,9 @@
+seed 100: ce=0.315 same=0.192 last=0.192 freq=0.164 cerebellum=0.533
+  small_ser_p1: none=1.76s/st423/w0 last=1.78s/st423/w0 freq=1.94s/st417/w129 cerebellum=1.78s/st388/w118 cerebellum_gated=1.72s/st402/w36 oracle=1.38s/st421/w0
+  small_ser_p2: none=1.75s/st423/w0 last=1.78s/st423/w0 freq=1.75s/st413/w129 cerebellum=1.58s/st388/w118 cerebellum_gated=1.66s/st401/w36 oracle=1.40s/st422/w0
+  small_par_p1: none=1.76s/st423/w0 last=1.78s/st423/w0 freq=1.95s/st415/w128 cerebellum=1.78s/st391/w115 cerebellum_gated=1.77s/st405/w36 oracle=1.44s/st422/w0
+  small_par_p2: none=1.76s/st423/w0 last=1.75s/st423/w0 freq=1.72s/st415/w128 cerebellum=1.56s/st393/w115 cerebellum_gated=1.76s/st405/w36 oracle=1.45s/st423/w0
+  large_ser_p1: none=3.76s/st423/w0 last=3.65s/st423/w0 freq=4.00s/st417/w128 cerebellum=3.66s/st388/w115 cerebellum_gated=3.55s/st404/w36 oracle=2.79s/st423/w0
+  large_ser_p2: none=3.58s/st423/w0 last=3.62s/st423/w0 freq=3.51s/st418/w128 cerebellum=3.19s/st391/w117 cerebellum_gated=3.38s/st404/w36 oracle=2.79s/st422/w0
+  large_par_p1: none=3.57s/st423/w0 last=3.77s/st423/w0 freq=3.95s/st415/w134 cerebellum=3.65s/st390/w117 cerebellum_gated=3.46s/st405/w36 oracle=2.78s/st421/w0
+  large_par_p2: none=3.61s/st423/w0 last=3.58s/st423/w0 freq=3.60s/st415/w133 cerebellum=3.13s/st389/w116 cerebellum_gated=3.29s/st402/w36 oracle=2.81s/st419/w0
