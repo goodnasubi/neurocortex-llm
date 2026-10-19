@@ -453,8 +453,10 @@ else:
         RESTORED.write_text(str(time.time()))
     # 完了済みの結果 JSON を exec 経由で戻す（contents API は 500 のため使えない）
     for f in LOCAL.glob('phase*_seed*.json'):
-        rc, out = vm_exec('open(%r, "w").write(%r); print("restored")' % (VM + '/' + f.name, f.read_text()))
+        rc, out = vm_exec('open(%r, "w").write(%r); print("restored")' % (VM + '/' + f.name, f.read_text()), timeout=120)
         log('restore', f.name, rc)
+        if rc == 124:  # カーネルが前の復元で塞がっている間は1ファイルごとに待たない（10-19 に1本10分×7本）
+            break
     if ok and not RESTORED.exists():
         # 一括の復元が応答待ちで失敗しても、コピー自体は終わっていることがある。Drive と VM のサイズが全て一致するなら復元済みとする
         rc, out = vm_exec('''
