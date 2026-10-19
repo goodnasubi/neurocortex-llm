@@ -34,8 +34,9 @@ def mirror(src, dst):
         a, b = os.path.join(src, n), os.path.join(dst, n)
         if not os.path.exists(b) or os.path.getmtime(a) > os.path.getmtime(b):
             shutil.copyfile(a, b + '.part'); os.replace(b + '.part', b)
+    # 完了した実行（結果 JSON あり）のチェックポイントだけ消す。復元漏れで VM に無いだけの .pt は消さない
     for n in os.listdir(dst):
-        if n.endswith('.pt') and n not in names:
+        if n.endswith('.pt') and n not in names and os.path.exists(os.path.join(SRC, n[:-3] + '.json')):
             os.remove(os.path.join(dst, n))
 def progress():
     # 進捗（Drive の progress.txt）と学習ログの末尾（run_tail.log）を書き出す。スマホの Drive アプリで見られるように
@@ -365,7 +366,14 @@ def reconnect(st):
 
 def start_session_restore_only():
     # Drive なしの VM では Drive からの復元は空振りなので飛ばす（10-02 11:51、この exec が接続切れで上限3600秒まで戻らなかった）
-    if not drive_mounted():
+    # マウント確認は一時的に失敗することがある（10-19 00:41、マウント済みなのに未マウント判定 → 復元を飛ばし、
+    # 直後の同期が VM にない phaseB_seed2.pt を Drive から削除した）。数回確かめてから判断する
+    ok = False
+    for _ in range(5):
+        if drive_mounted():
+            ok = True; break
+        time.sleep(30)
+    if not ok:
         rc, out = 0, 'skip（Drive 未マウント）'
     else:
         rc, out = vm_exec('''
