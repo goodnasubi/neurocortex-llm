@@ -34,3 +34,61 @@ seed 103: ce=0.316 same=0.119 last=0.119 freq=0.154 cerebellum=0.634
   large_ser_p2: none=4.02s/st494/w0 last=3.99s/st494/w0 freq=3.70s/st463/w115 cerebellum=3.43s/st475/w119 cerebellum_gated=3.67s/st491/w42 oracle=2.99s/st491/w0
   large_par_p1: none=4.01s/st494/w0 last=3.99s/st494/w0 freq=4.20s/st457/w117 cerebellum=3.89s/st470/w119 cerebellum_gated=3.80s/st486/w42 oracle=3.00s/st489/w0
   large_par_p2: none=3.95s/st494/w0 last=4.15s/st494/w0 freq=3.71s/st457/w117 cerebellum=3.43s/st473/w118 cerebellum_gated=3.63s/st487/w42 oracle=3.07s/st491/w0
+seed 104: ce=0.323 same=0.229 last=0.229 freq=0.160 cerebellum=0.561
+  small_ser_p1: none=1.81s/st439/w0 last=1.82s/st439/w0 freq=1.88s/st405/w106 cerebellum=1.79s/st412/w135 cerebellum_gated=1.76s/st429/w43 oracle=1.40s/st438/w0
+  small_ser_p2: none=1.79s/st439/w0 last=1.81s/st439/w0 freq=1.76s/st407/w107 cerebellum=1.60s/st409/w134 cerebellum_gated=1.71s/st431/w43 oracle=1.41s/st439/w0
+  small_par_p1: none=1.79s/st439/w0 last=1.84s/st439/w0 freq=1.93s/st405/w105 cerebellum=1.82s/st420/w132 cerebellum_gated=1.76s/st440/w43 oracle=1.44s/st439/w0
+  small_par_p2: none=1.80s/st439/w0 last=1.80s/st439/w0 freq=1.70s/st405/w104 cerebellum=1.60s/st418/w132 cerebellum_gated=1.72s/st439/w43 oracle=1.46s/st437/w0
+  large_ser_p1: none=3.66s/st439/w0 last=3.70s/st439/w0 freq=3.92s/st404/w104 cerebellum=3.79s/st416/w133 cerebellum_gated=3.63s/st437/w43 oracle=2.80s/st439/w0
+  large_ser_p2: none=3.67s/st439/w0 last=3.69s/st439/w0 freq=3.55s/st404/w104 cerebellum=3.21s/st413/w133 cerebellum_gated=3.50s/st438/w43 oracle=2.90s/st436/w0
+  large_par_p1: none=3.69s/st439/w0 last=3.72s/st439/w0 freq=3.86s/st408/w111 cerebellum=3.70s/st409/w134 cerebellum_gated=3.72s/st433/w43 oracle=2.86s/st433/w0
+  large_par_p2: none=3.67s/st439/w0 last=3.74s/st439/w0 freq=3.51s/st407/w110 cerebellum=3.17s/st409/w135 cerebellum_gated=3.37s/st432/w43 oracle=2.85s/st436/w0
+{
+ "H1_small": {
+  "cond": "cerebellum_gated",
+  "reduction": 0.04906908790414448,
+  "wall_cb": 1.7416613879999432,
+  "wall_simple_min": 1.7391158536000375,
+  "seeds_faster_than_none": 4,
+  "wasted_ok": true,
+  "oracle_reduction": 0.1919995847587191,
+  "share_of_oracle_gain": 0.25556871888972227,
+  "pass": false
+ },
+ "H2_large": {
+  "cond": "cerebellum_gated",
+  "reduction": 0.08591530960863654,
+  "wall_cb": 3.445237333200089,
+  "wall_simple_min": 3.5766016808000587,
+  "seeds_faster_than_none": 5,
+  "wasted_ok": true,
+  "oracle_reduction": 0.22762987548331481,
+  "share_of_oracle_gain": 0.3774342424350801,
+  "pass": false
+ },
+ "H3a_parallel": {
+  "gain_s": -0.017396111800121794,
+  "predictor_s_serial": 0.08274639740079692,
+  "pass": false
+ },
+ "H3b_paths": {
+  "red_p1": 0.015415747325808925,
+  "red_p2": 0.04906908790414448,
+  "pass": false
+ },
+ "H3c_size": {
+  "red_small": 0.04906908790414448,
+  "red_large": 0.08591530960863654,
+  "pass": true
+ },
+ "none_wall_by_config": {
+  "small_ser_p1": 1.8523068590000094,
+  "small_ser_p2": 1.824477665999916,
+  "small_par_p1": 1.8415403508000736,
+  "small_par_p2": 1.833325418000004,
+  "large_ser_p1": 3.7894354237999552,
+  "large_ser_p2": 3.7653068790000135,
+  "large_par_p1": 3.7624195380000174,
+  "large_par_p2": 3.768853740999975
+ }
+}
