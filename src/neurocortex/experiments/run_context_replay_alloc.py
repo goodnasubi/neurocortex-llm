@@ -39,11 +39,16 @@ CONFIGS: dict[str, dict] = {
     "sleep": {**KEEP, "replay_rule": "sleep", "sleep_every": 50, "sleep_steps": 25},
     "sleep_buf": {"writeback": "none", **WB_KW, "replay_rule": "sleep", "sleep_every": 50, "sleep_steps": 25},
 }
-RULES = ("keep", "gain", "need", "sleep", "sleep_buf")
+# 修正1（12.6.163節）: 初期設定の3つの規則はいずれも A2 で不合格（最悪の組は似たタスク7個・作り直し・L = 500）。
+# 新しさ（予測誤差）で、加えた痕跡のリプレイを止める規則（Hasselmo 1999 のアセチルコリンによる符号化と固定化の切り替え）と、
+# それに need の比率を組み合わせた規則を加える。判定条件と初期設定は変えない
+CONFIGS.update({"ach": {**KEEP, "replay_rule": "ach"}, "ach_need": {**KEEP, "replay_rule": "ach_need", "replay_need": 0.5}})
+FIX1 = ("ach", "ach_need")
+RULES = ("keep", "gain", "need", "sleep", "sleep_buf", *FIX1)
 # 修正は開発用シードの結果を見て追加する（上限3回）
 
 
-def jobs(configs=tuple(CONFIGS), families=FAMILIES) -> list[tuple]:
+def jobs(configs=tuple(c for c in CONFIGS if c not in FIX1), families=FAMILIES) -> list[tuple]:
     return [(f, m, L, cfg) for m in MECHS_USED for f in families for L in LS for cfg in configs]
 
 
@@ -149,7 +154,7 @@ def verdict(res: dict) -> dict:
         return None if x is None or y is None else x - y
 
     out: dict = {}
-    for w in ("gain", "need", "sleep"):
+    for w in ("gain", "need", "sleep", *FIX1):
         if o.get(f"end_{w}") is None:
             continue
         a1 = ge(o[f"end_{w}"], 0.10)
@@ -168,7 +173,7 @@ SUMMARY_KEYS = ("selection_acc", "exp_end", "new_nat", "new_exp", "mix_own", "mi
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--analyze", type=Path, nargs="+", help="結果ファイルを集計して判定に使う量を表示する")
-    ap.add_argument("--configs", nargs="+", default=list(CONFIGS))
+    ap.add_argument("--configs", nargs="+", default=[c for c in CONFIGS if c not in FIX1])
     ap.add_argument("--families", nargs="+", default=list(FAMILIES))
     ap.add_argument("--phase", choices=("dev", "eval"), default="dev")
     ap.add_argument("--seeds", type=int, nargs="+")

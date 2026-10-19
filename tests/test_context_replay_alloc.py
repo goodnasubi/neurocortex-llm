@@ -59,6 +59,16 @@ def test_sleep_separates_kept_traces_from_wake_replay():
     assert r["R"][2] != base["R"][2] or r["diag"]["ctx_acc"][2] != base["diag"]["ctx_acc"][2]
 
 
+def test_ach_replays_kept_traces_only_without_surprise():
+    """ach は驚きのあるステップで加えた痕跡を除く。驚きがない（store）ステップでは一様（keep と同じ割合）に取る。"""
+    uni = _run(writeback_keep=True, replay_rule="gain", replay_beta=1.0)["diag"]["replay_mix"][2]  # 一様なリプレイ
+    m = _run(writeback_keep=True, replay_rule="ach")["diag"]["replay_mix"][2]
+    mn = _run(writeback_keep=True, replay_rule="ach_need")["diag"]["replay_mix"][2]
+    assert m["size"] == 16 and 0.0 <= m["kept"] < 0.5 and mn["size"] < 9
+    # この小さな設定の新しいタスクは学習が終わらず驚きが続くので、加えた痕跡はほとんどリプレイされない
+    assert m["kept"] < uni["kept"]
+
+
 def test_replay_rule_rejects_bad_arguments():
     for kw in (dict(replay_rule="bad"), dict(replay_rule="gain", replay_beta=1.5),
                dict(replay_rule="need", replay_need=1.0), dict(replay_rule="sleep", sleep_every=0),
@@ -69,7 +79,9 @@ def test_replay_rule_rejects_bad_arguments():
 
 def test_experiment_jobs_analyze_and_verdict(tmp_path):
     from neurocortex.experiments.run_context_replay_alloc import CONFIGS, FAMILIES, RULES, analyze, jobs
-    assert len(jobs()) == len(FAMILIES) * 2 * 3 * len(CONFIGS) and set(RULES) < set(CONFIGS)
+    from neurocortex.experiments.run_context_replay_alloc import FIX1
+    assert len(jobs()) == len(FAMILIES) * 2 * 3 * (len(CONFIGS) - len(FIX1)) and set(RULES) < set(CONFIGS)
+    assert len(jobs(FIX1)) == len(FAMILIES) * 2 * 3 * len(FIX1)
 
     def row(end, new, seed=100):
         return {"seed": seed, "pre_nat": [0.4, 0.9], "end_nat": end, "gap": [0.2, 0.0], "exp_end": end[0],
