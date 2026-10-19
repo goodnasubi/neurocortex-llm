@@ -23,17 +23,20 @@ from pathlib import Path
 
 import torch
 
-from ..context_inference import EPISODIC_READOUTS, run_context_sequence
+from ..context_inference import EPISODIC_READOUTS, FlipSpec, run_context_sequence
 from ..continual_metrics import forgetting_metrics
 from ..run_env import env_info
 from .run_context_evidence_info import MECHS, SELECTION_TRIALS
 from .run_context_gated_long import DEV_SEEDS, EVAL_SEEDS, native_contexts
-from .run_context_replay_verify import ACTIVE, _mean, specs_for
+from .run_context_replay_verify import ACTIVE, _mean
+from .run_context_replay_verify import specs_for as _specs_for
 
 HOLD_SMALL = 50  # 保留サンプルの先頭（12.6.151〜152節の保留サンプルと同じ数）
 HOLD_LARGE = 200  # 痕跡の量を増やした場合（mix_all200）
 EPI_N = 2000  # 読み出しの評価に使う新しい入力の数（タスクごと）
-FAMILIES = ("flip_m1", "flip7_m1", "parity", "cue_q0.9")
+FAMILIES = ("flip_m1", "flip7_m1", "parity", "cue_q0.9", "flip8_m1")
+# 修正1（12.6.155節）: 設計は似たタスク m = 1 を 8 ビットと誤認していた（実際は 14 ビットで、痕跡は入力の 0.6% しか覆わない）。
+# H1〜H4(a) が想定した入力空間の小さい似たタスクとして、同じ構造の 8 ビット版 flip8_m1 を加える
 MECHS_USED = ("reset", "split")
 LS = (0, 250, 500)
 CUE_N = 16
@@ -43,6 +46,13 @@ SELECTS: dict[str, dict] = {
 }
 EPI_KW = {"episodic_eval": EPI_N, "episodic_hold": HOLD_SMALL, "episodic_lambda": 0.5, "episodic_kappa": 1.0}
 # 修正は開発用シードの結果を見て追加する（上限3回）
+
+
+def specs_for(family: str) -> list:
+    """flip8_m1 … 似たタスク m = 1 の 8 ビット版（基本タスクと、ビット 2・3・4 のそれぞれで反転する 3 個）。"""
+    if family == "flip8_m1":
+        return [FlipSpec(8)] + [FlipSpec(8, flip=(2 + i,)) for i in range(3)]
+    return _specs_for(family)
 
 
 def jobs(selects, families=FAMILIES) -> list[tuple]:
@@ -128,6 +138,8 @@ def analyze(paths: list[Path], sel: str = "gen_replay") -> dict:
     over = lambda k, v: v["gap"] is not None and v["gap"] >= 0.10  # noqa: E731
     return {"select": sel, "rows": rows,
             "flip_m1_reset": group(lambda k, v: k.startswith("flip_m1/reset")),
+            "flip8_m1_reset": group(lambda k, v: k.startswith("flip8_m1/reset")),
+            "over_14bit": group(lambda k, v: over(k, v) and k.startswith(("flip_m1", "flip7_m1"))),
             "over_flip7": group(lambda k, v: over(k, v) and k.startswith("flip7_m1")),
             "over": group(over),
             "not_over": group(lambda k, v: v["gap"] is not None and v["gap"] <= 0.03)}
