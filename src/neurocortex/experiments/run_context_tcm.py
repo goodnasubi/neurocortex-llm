@@ -28,6 +28,9 @@ from ..run_env import env_info
 from .run_context_lm import BUFFER, CUE_NS, DEV_SEEDS, EPISODES, EVAL_SEEDS, FAMILIES, POOL, REGIMES, _mean, analyze
 
 TCM_BETA = 0.02  # 文脈の漂流の速さ（時定数 約50文字。12.6.179節で計測前に固定）
+TCM_ITEM = 2  # 項目は2文字組
+# 修正1（12.6.179節）: 漂流を遅くし（時定数 約200文字）、項目を3文字組にする（タグの雑音を減らし想起の純度を上げる）
+FIX1_BETA, FIX1_ITEM = 0.005, 3
 TCM_ALL_RULES = RULES + ("active_replay_own",) + TCM_RULES
 
 # 判定条件（12.6.179節で計測前に固定）
@@ -104,13 +107,14 @@ def analyze_tcm(runs: list[dict]) -> dict:
 
 
 def run_one(args: tuple[str, str, int], steps: int = 1500, episodes: int = EPISODES, cue_ns=CUE_NS,
-            beta: float = TCM_BETA) -> dict:
+            beta: float = TCM_BETA, item: int = TCM_ITEM) -> dict:
     fam_name, regime, seed = args
     torch.set_num_threads(1)
     fam, k = FAMILIES[fam_name]
     g = torch.Generator().manual_seed(seed)
     trans, _ = make_languages(fam, g)
-    cfg = TrainConfig(regime=regime, steps_per_lang=steps, buffer=BUFFER, k=k, arch="gain", tcm_beta=beta)
+    cfg = TrainConfig(regime=regime, steps_per_lang=steps, buffer=BUFFER, k=k, arch="gain", tcm_beta=beta,
+                      tcm_item=item)
     trained = train_models(fam, trans, cfg, g)
     ev = evaluate(fam, trans, trained, cfg, tuple(cue_ns), g, episodes=episodes, pool=POOL, rules=TCM_ALL_RULES)
     ev.update({"family": fam_name, "regime": regime, "seed": seed, "final_loss": trained["final_loss"]})
@@ -125,6 +129,7 @@ def main() -> None:
     ap.add_argument("--families", nargs="+", default=list(FAMILIES))
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--out", type=Path)
+    ap.add_argument("--fix1", action="store_true", help="修正1（β = 0.005、3文字組の項目）で測る")
     args = ap.parse_args()
     if args.analyze:
         runs = [r for p in args.analyze for r in json.loads(p.read_text(encoding="utf-8"))["runs"]]
@@ -132,15 +137,16 @@ def main() -> None:
         return
     seeds = args.seeds or (DEV_SEEDS if args.phase == "dev" else EVAL_SEEDS)
     jobs = [(f, reg, s) for f in args.families for reg in REGIMES for s in seeds]
+    beta, item = (FIX1_BETA, FIX1_ITEM) if args.fix1 else (TCM_BETA, TCM_ITEM)
     with Pool(args.workers) as pool:
-        runs = pool.map(run_one, jobs)
-    out = {"環境": env_info(), "設定": {"arch": "gain", "tcm_beta": TCM_BETA, "item": "2文字組の one-hot",
+        runs = pool.starmap(run_one, [(job, 1500, EPISODES, CUE_NS, beta, item) for job in jobs])
+    out = {"環境": env_info(), "設定": {"arch": "gain", "tcm_beta": beta, "item": f"{item}文字組の one-hot",
                                      "families": {k: [v[0].__dict__, v[1]] for k, v in FAMILIES.items()},
                                      "buffer": BUFFER, "episodes": EPISODES, "pool": POOL, "cue_ns": CUE_NS,
                                      "rules": TCM_ALL_RULES, "seeds": list(seeds)},
            "runs": runs}
     out["集計"] = analyze_tcm(runs)
-    path = args.out or Path("results/context_lm") / f"context_tcm_{args.phase}.json"
+    path = args.out or Path("results/context_lm") / f"context_tcm_{'fix1_' if args.fix1 else ''}{args.phase}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(out["集計"]["判定"]["H2_TCM"], ensure_ascii=False, indent=1))

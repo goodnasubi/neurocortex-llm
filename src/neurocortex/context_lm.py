@@ -97,10 +97,14 @@ def sample_text(trans: torch.Tensor, fam: LangFamily, n_chains: int, length: int
     return torch.stack(out[burn:], dim=1)
 
 
-def tcm_items(x: torch.Tensor, vocab: int) -> torch.Tensor:
-    """文字列 x [..., L] の各位置 i ≥ 1 の項目（直前の文字との2文字組の番号）[..., L − 1]。TCM の項目の表現は
-    互いに直交する（ここでは2文字組の one-hot, vocab² 次元）。"""
-    return x[..., :-1] * vocab + x[..., 1:]
+def tcm_items(x: torch.Tensor, vocab: int, length: int = 2) -> torch.Tensor:
+    """文字列 x [..., L] の各位置 i ≥ length − 1 の項目（そこで終わる length 文字の組の番号）[..., L − length + 1]。
+    TCM の項目の表現は互いに直交する（length 文字の組の one-hot, vocab^length 次元）。"""
+    n = x.shape[-1] - length + 1
+    idx = torch.zeros(x.shape[:-1] + (n,), dtype=torch.long)
+    for i in range(length):
+        idx = idx * vocab + x[..., i:i + n]
+    return idx
 
 
 def tcm_drift(items: torch.Tensor, dim: int, beta: float) -> torch.Tensor:
@@ -118,19 +122,21 @@ def tcm_drift(items: torch.Tensor, dim: int, beta: float) -> torch.Tensor:
     return out
 
 
-def tcm_tags(text: torch.Tensor, k: int, vocab: int, beta: float) -> torch.Tensor:
-    """文 [n_chains, L] の各窓（windows() と同じ順）の時間文脈のタグ [窓, vocab²]。窓の最後の文字までの項目を
-    取り込んだ文脈で、次の文字（答え）は含まない。"""
-    ctx = tcm_drift(tcm_items(text, vocab), vocab * vocab, beta)  # 位置 i（≥ 1）の文脈は ctx[:, i − 1]
-    return ctx[:, k - 2:text.shape[1] - 2].reshape(-1, vocab * vocab)
+def tcm_tags(text: torch.Tensor, k: int, vocab: int, beta: float, length: int = 2) -> torch.Tensor:
+    """文 [n_chains, L] の各窓（windows() と同じ順）の時間文脈のタグ [窓, vocab^length]。窓の最後の文字までの
+    項目を取り込んだ文脈で、次の文字（答え）は含まない。length ≦ k。"""
+    dim = vocab ** length
+    ctx = tcm_drift(tcm_items(text, vocab, length), dim, beta)  # 位置 i の文脈は ctx[:, i − length + 1]
+    return ctx[:, k - length:text.shape[1] - length].reshape(-1, dim)
 
 
-def tcm_recall(cue_windows: torch.Tensor, tags: torch.Tensor, vocab: int, beta: float, m: int) -> torch.Tensor:
+def tcm_recall(cue_windows: torch.Tensor, tags: torch.Tensor, vocab: int, beta: float, m: int,
+               length: int = 2) -> torch.Tensor:
     """今の文脈に近い痕跡の想起。cue_windows [E, M0, k]（情報源が示したラベルなしの窓。答えは使わない）を順に聞いて
     漂流させた文脈 t_now と、各痕跡のタグ tags [N, D] の余弦が大きい順に m 個の痕跡の番号 [E, m] を返す。"""
     e_n = cue_windows.shape[0]
-    items = tcm_items(cue_windows, vocab).reshape(e_n, -1)
-    t_now = tcm_drift(items, vocab * vocab, beta)[:, -1]
+    items = tcm_items(cue_windows, vocab, length).reshape(e_n, -1)
+    t_now = tcm_drift(items, vocab ** length, beta)[:, -1]
     sim = nn.functional.normalize(t_now, dim=-1) @ nn.functional.normalize(tags, dim=-1).T  # [E, N]
     return sim.topk(min(m, tags.shape[0]), dim=-1).indices
 
@@ -276,6 +282,7 @@ class TrainConfig:
     hidden: int = 128
     arch: str = "head"  # head（文脈ごとのヘッド。12.6.173節）/ gain（共有の表現へのゲイン変調。12.6.175節）
     tcm_beta: float = 0.0  # > 0 で、保存する痕跡に時間文脈のタグをつける（12.6.179節）。乱数は使わない
+    tcm_item: int = 2  # TCM の項目の文字の組の長さ（初期設定 2、12.6.179節の修正1 で 3）
 
 
 def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generator: torch.Generator,
@@ -310,7 +317,7 @@ def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generat
         buf_x[j], buf_y[j] = train_x[j][perm[:cfg.buffer]], train_y[j][perm[:cfg.buffer]]
         hold_x[j], hold_y[j] = train_x[j][perm[cfg.buffer:]], train_y[j][perm[cfg.buffer:]]
         if cfg.tcm_beta > 0:  # 痕跡に、それを経験したときの時間文脈をタグとして結びつける
-            tags = tcm_tags(texts[j], cfg.k, fam.vocab, cfg.tcm_beta)
+            tags = tcm_tags(texts[j], cfg.k, fam.vocab, cfg.tcm_beta, cfg.tcm_item)
             buf_tag[j], hold_tag[j] = tags[perm[:cfg.buffer]], tags[perm[cfg.buffer:]]
 
     def step(x: torch.Tensor, y: torch.Tensor, c: torch.Tensor) -> float:
@@ -447,7 +454,7 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                 if tcm:  # 情報源が示したラベルなしの窓（active の候補と同じ）で今の文脈を作り、近い痕跡を想起する
                     for key, bank, tags, srcs in (("replay_tcm", all_buf, all_buf_tag, buf_src),
                                                   ("holdout_tcm", all_hold, all_hold_tag, hold_src)):
-                        idx = tcm_recall(task_x, tags, v, cfg.tcm_beta, m)
+                        idx = tcm_recall(task_x, tags, v, cfg.tcm_beta, m, cfg.tcm_item)
                         pools[key] = bank[idx]
                         ans[key] = answers(pools[key], tcm_gen)
                         purity[key] += float((srcs[idx] == j).float().mean()) / n_l

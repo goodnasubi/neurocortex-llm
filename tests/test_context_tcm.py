@@ -100,3 +100,19 @@ def test_h2_tcm_verdict():
     runs2 = [_run("C", "seq", s, harmful, 0.3, 0.45) for s in range(10)] + runs[10:]
     h2 = run_context_tcm.analyze_tcm(runs2)["判定"]["H2_TCM"]
     assert not h2["H2-T1"]["合格"] and not h2["失敗が解けた"]
+
+
+def test_longer_items_align_with_windows():
+    """修正1の3文字組の項目でも、タグは窓の最後の文字までの文脈になる。"""
+    g = torch.Generator().manual_seed(2)
+    text = torch.randint(0, 3, (2, 10), generator=g)
+    k, beta = 4, 0.2
+    x, _ = windows(text, k)
+    assert torch.equal(tcm_items(torch.tensor([[1, 2, 0, 1]]), 3, 3), torch.tensor([[15, 19]]))
+    tags = tcm_tags(text, k, 3, beta, 3)
+    n_w = text.shape[1] - k
+    assert tags.shape == (x.shape[0], 27)
+    for c in range(2):
+        for w in range(n_w):
+            want = tcm_drift(tcm_items(text[c:c + 1, :w + k], 3, 3), 27, beta)[0, -1]
+            assert torch.allclose(tags[c * n_w + w], want)
