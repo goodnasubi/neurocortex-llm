@@ -18,6 +18,8 @@
 12.6.179〜180節: tcm_* は痕跡に保存時の時間文脈のタグ（TCM）をつけ、今の文脈に近い痕跡を想起する（TrainConfig.tcm_beta > 0 のときだけ）。
 12.6.183〜184節: ca3_complete は、手がかりから作った部分的な今の文脈を、保存したタグへの CA3 の再帰結合のアトラクタの
 反復（k-WTA の抑制つき）で補完してから想起する（active_*_ca3 の規則のときだけ）。
+12.6.187〜188節: 補完の強さ λ を想起の不確かさ（補完なしで想起した痕跡の保存時の文脈の分布のエントロピー）で
+ゲートする（アセチルコリンによる再帰結合の抑制: Hasselmo & Schnell 1994; Hasselmo 2006。active_*_ach の規則のときだけ）。
 
 12.6.143節と違い、能動的な選択も打ち切りなしで n 個すべてを観測する（観測の数を規則の間で揃えるため）。
 """
@@ -44,6 +46,12 @@ TCM_RULES = ("active_replay_tcm", "active_holdout_tcm")
 # 12.6.183節: 今の文脈を CA3 のパターン補完（TrainConfig.ca3_iters 回の反復）で補完してから想起する。_s{S} は反復の
 # 回数を S に変えた対照
 CA3_RULES = ("active_replay_ca3", "active_holdout_ca3", "active_replay_ca3_s1", "active_replay_ca3_s10")
+# 12.6.187節: 補完の強さ λ を想起の不確かさ u でゲートする。ach は λ = u、ach_hard は λ = 1[u > ACH_THRESHOLD]、
+# ach_shuf は同じ言語・手がかりの数のエピソードの間で λ を並べ替えた統制（強さの分布は同じで、エピソードとの対応だけ壊す）、
+# ach_inv は逆向き λ = 1 − u（不確かなときほど再帰結合を抑える。Yu & Dayan 2005 を字義通りに当てはめた向き。参考）
+ACH_RULES = ("active_replay_ach", "active_holdout_ach", "active_replay_ach_hard", "active_replay_ach_shuf",
+             "active_replay_ach_inv")
+ACH_THRESHOLD = 0.5
 
 
 @dataclass(frozen=True)
@@ -137,30 +145,46 @@ def tcm_tags(text: torch.Tensor, k: int, vocab: int, beta: float, length: int = 
     return ctx[:, k - length:text.shape[1] - length].reshape(-1, dim)
 
 
-def ca3_complete(t: torch.Tensor, tags: torch.Tensor, iters: int, n_active: int) -> torch.Tensor:
+def ca3_complete(t: torch.Tensor, tags: torch.Tensor, iters: int, n_active: int,
+                 lam: torch.Tensor | None = None) -> torch.Tensor:
     """CA3 の再帰結合によるパターン補完（12.6.183節）。部分的な文脈 t [E, D] から始め、保存したタグ tags [N, D] を
     記憶したアトラクタの網を iters 回反復する: s ← normalize(mean{x̂_i : s との余弦が上位 n_active 個の痕跡})。
     痕跡ごとの記憶の単位が k-WTA の抑制で上位 n_active 個だけ発火し、その結合が CA3 の状態を書き戻す形
     （単位ごとに1つの痕跡を持つホップフィールド網）。反復は今の文脈の近くの痕跡の重心へ向かう（平均移動）。
-    文脈のラベルは使わない。iters = 0 なら t を正規化して返す（補完なし）。"""
+    文脈のラベルは使わない。iters = 0 なら t を正規化して返す（補完なし）。
+
+    lam [E]（12.6.187節）を与えると、嗅内皮質からの入力 t̂ を保ったまま再帰結合の寄与を λ 倍にする:
+    s ← normalize((1 − λ)·t̂ + λ·normalize(mean{...}))。λ = 1 は上の補完と同じ、λ = 0 は補完なし。"""
     x = nn.functional.normalize(tags, dim=-1)
     s = nn.functional.normalize(t, dim=-1)
+    t_in = s
     n_active = min(n_active, x.shape[0])
     for _ in range(iters):
         idx = (s @ x.T).topk(n_active, dim=-1).indices
         s = nn.functional.normalize(x[idx].mean(1), dim=-1)
+        if lam is not None:
+            s = nn.functional.normalize((1 - lam[:, None]) * t_in + lam[:, None] * s, dim=-1)
     return s
 
 
+def recall_uncertainty(idx: torch.Tensor, srcs: torch.Tensor, n_ctx: int) -> torch.Tensor:
+    """想起の不確かさ u [E]（12.6.187節）。痕跡 idx [E, m]（補完の前の k-WTA で発火する集団）の保存時の文脈 srcs[idx] の分布の正規化エントロピー
+    H(q)/log C（0〜1）。q は記憶が示す文脈の事後分布の推定、max q は想起の純度の推定にあたる。保存時の文脈は痕跡に
+    結びついた内部の索引で、今の情報源の言語のラベルではない。"""
+    q = nn.functional.one_hot(srcs[idx], n_ctx).float().mean(1)
+    return -(q * torch.log(q.clamp_min(1e-12))).sum(-1) / math.log(n_ctx)
+
+
 def tcm_recall(cue_windows: torch.Tensor, tags: torch.Tensor, vocab: int, beta: float, m: int,
-               length: int = 2, ca3_iters: int = 0, ca3_active: int = 1) -> torch.Tensor:
+               length: int = 2, ca3_iters: int = 0, ca3_active: int = 1,
+               ca3_lam: torch.Tensor | None = None) -> torch.Tensor:
     """今の文脈に近い痕跡の想起。cue_windows [E, M0, k]（情報源が示したラベルなしの窓。答えは使わない）を順に聞いて
     漂流させた文脈 t_now と、各痕跡のタグ tags [N, D] の余弦が大きい順に m 個の痕跡の番号 [E, m] を返す。
     ca3_iters > 0 なら、t_now を ca3_complete で補完してから比べる（12.6.183節）。"""
     e_n = cue_windows.shape[0]
     items = tcm_items(cue_windows, vocab, length).reshape(e_n, -1)
     t_now = tcm_drift(items, vocab ** length, beta)[:, -1]
-    s = ca3_complete(t_now, tags, ca3_iters, ca3_active)
+    s = ca3_complete(t_now, tags, ca3_iters, ca3_active, ca3_lam)
     sim = s @ nn.functional.normalize(tags, dim=-1).T  # [E, N]
     return sim.topk(min(m, tags.shape[0]), dim=-1).indices
 
@@ -434,8 +458,11 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
         fix_gen = torch.Generator().manual_seed(generator.initial_seed() + 777)  # 修正1の候補専用
         tcm_gen = torch.Generator().manual_seed(generator.initial_seed() + 888)  # TCM の想起の答え専用
         ca3_gen = torch.Generator().manual_seed(generator.initial_seed() + 999)  # CA3 の補完の答え専用
-        tcm = [r for r in rules if r in TCM_RULES or r in CA3_RULES]
+        ach_gen = torch.Generator().manual_seed(generator.initial_seed() + 1111)  # ゲートつき補完の答え専用
+        shuf_gen = torch.Generator().manual_seed(generator.initial_seed() + 1212)  # ach_shuf の並べ替え専用
+        tcm = [r for r in rules if r in TCM_RULES or r in CA3_RULES or r in ACH_RULES]
         ca3 = [r for r in rules if r in CA3_RULES]
+        ach = [r for r in rules if r in ACH_RULES]
         if tcm:
             if cfg.tcm_beta <= 0:
                 raise ValueError("TCM の規則には TrainConfig.tcm_beta > 0 が要る")
@@ -452,7 +479,8 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
             info = {r: 0.0 for r in rules}
             per_lang = {r: [] for r in rules}
             purity = {"replay_tcm": 0.0, "holdout_tcm": 0.0}
-            purity.update({r.removeprefix("active_"): 0.0 for r in ca3})
+            purity.update({r.removeprefix("active_"): 0.0 for r in ca3 + ach})
+            lam_mean = {r.removeprefix("active_"): 0.0 for r in ach}
             for j in range(n_l):
                 # 情報源の答えは真の分布から引く（窓の出どころによらず同じ規則）
                 def answers(xw: torch.Tensor, gen: torch.Generator = generator) -> torch.Tensor:
@@ -497,6 +525,21 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                     pools[key] = bank[idx]
                     ans[key] = answers(pools[key], ca3_gen)
                     purity[key] += float((srcs[idx] == j).float().mean()) / n_l
+                for r in ach:  # 補完の強さを想起の不確かさでゲートしてから想起する（12.6.187節）
+                    key = r.removeprefix("active_")
+                    bank, tags, srcs = ((all_buf, all_buf_tag, buf_src) if key.startswith("replay")
+                                        else (all_hold, all_hold_tag, hold_src))
+                    n_act = max(1, round(cfg.ca3_sparsity * tags.shape[0]))
+                    # 不確かさは、補完の前に今の文脈で最も強く発火する n_act 個（k-WTA の集団）の保存時の文脈の分布から
+                    u = recall_uncertainty(tcm_recall(task_x, tags, v, cfg.tcm_beta, n_act, cfg.tcm_item), srcs, n_l)
+                    lam = (u > ACH_THRESHOLD).float() if key.endswith("_hard") else 1 - u if key.endswith("_inv") else u
+                    if key.endswith("_shuf"):
+                        lam = lam[torch.randperm(lam.shape[0], generator=shuf_gen)]
+                    idx = tcm_recall(task_x, tags, v, cfg.tcm_beta, m, cfg.tcm_item, cfg.ca3_iters, n_act, lam)
+                    pools[key] = bank[idx]
+                    ans[key] = answers(pools[key], ach_gen)
+                    purity[key] += float((srcs[idx] == j).float().mean()) / n_l
+                    lam_mean[key] += float(lam.mean()) / n_l
                 ans["passage"] = py_.reshape(episodes, n)
                 logp = {key: model.logp_all(px.reshape(-1, k)).reshape(episodes, px.shape[1], n_l, v)
                         for key, px in pools.items()}
@@ -506,7 +549,7 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                         "active_replay_cued": ("replay_cued", True), "active_holdout_cued": ("holdout_cued", True),
                         "active_replay_own": ("replay_own", True),
                         "active_replay_tcm": ("replay_tcm", True), "active_holdout_tcm": ("holdout_tcm", True),
-                        **{r: (r.removeprefix("active_"), True) for r in CA3_RULES}}
+                        **{r: (r.removeprefix("active_"), True) for r in CA3_RULES + ACH_RULES}}
                 soft = [r for r in rules if r in SOFT_RULES]
                 for r in rules:
                     if r in SOFT_RULES:
@@ -533,5 +576,7 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
             res[str(n)] = {"acc": acc, "ce": ce_sel, "info": info, "acc_per_lang": per_lang}
             if tcm:  # 想起した痕跡のうち本来の文脈のものの割合（操作の確認）
                 res[str(n)]["tcm_purity"] = purity
+            if ach:  # ゲートの強さ λ の平均（操作の確認）
+                res[str(n)]["ach_lambda"] = lam_mean
         out["cues"] = res
     return out
