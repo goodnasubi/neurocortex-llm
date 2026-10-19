@@ -189,10 +189,12 @@ def test_conditions_and_lam():
     c16, c32 = R.conditions(16, 1), R.conditions(32, 1)
     assert R.conditions(32, 2) == {}
     assert {"aux0", "aux0.05", "gate0.1", "sel1", "cf", "top1", "top3", "rand1", "rand3", "cfg", "val0_0.1",
-            "val1_1", "valall_1", "dval1_1", "dval3_0.1", "dvalall_1", "cp", "cp_cf", "cp_rand1", "cp_cfg",
+            "val1_1", "valall_1", "dval1_1", "dval3_0.1", "dvalall_1", "dval1t1_0.1", "dvalallt1_1", "cp", "cp_cf",
+            "cp_rand1", "cp_cfg",
             "cp_val1_0.1", "cp_dval1_1"} <= set(c32)
     assert c16["cf"]["lam"] == 1.0 and c32["cf"]["lam"] == 0.1 and c32["top1"]["lam"] == 0.1
     assert c16["val1_0.1"] == {"kind": "select", "eta": 0.3, "teacher": "val1", "lam": 0.1}
+    assert c32["dvalallt1_1"] == {"kind": "select", "eta": 1.0, "teacher": "dvalall", "lam": 1.0, "tau": 1.0}
     assert c32["cp_top1"]["freeze"] and c32["cp_top1"]["open"] == 0.25
     s = {"aux0.05": {"base_ce": {"mean": 0.30}},
          "val1_0.1": {"base_ce": {"mean": 0.305}, "gini_off": {"mean": 0.2}},
@@ -213,7 +215,8 @@ def test_end_to_end_small():
     j = v["E16_L1"]
     assert j["選んだλ_価値の予測"]["val1"] == 1.0 and j["条件のキー"]["val1"] == "val1_1"
     assert set(j["H21_一部の評価で取り込みが保たれる"]) == {"top1", "top3", "rand1", "rand3"}
-    for k in ("H22_価値の予測で取り込みが保たれる_val1", "H22'_実際の結果だけ_val0", "H22_修正1_差の予測_dval1"):
+    for k in ("H22_価値の予測で取り込みが保たれる_val1", "H22'_実際の結果だけ_val0", "H22_修正1_差の予測_dval1",
+              "H22_修正2_差の予測τ1_dval1t1"):
         assert isinstance(j[k], bool)
     assert isinstance(j["H24_ゲートに依らない教師"]["合格"], bool)
     assert "cp_val1_1" in j["H23_閉じた後の取り込み"]

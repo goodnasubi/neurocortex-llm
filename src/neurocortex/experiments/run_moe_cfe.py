@@ -46,6 +46,7 @@ LAM_CF = {"E16_L1": 1.0, "E32_L1": 0.1}  # 12.6.158節で選んだ cf の λ
 LAMS = (0.1, 1.0)
 PARTIAL = ("top1", "top3", "rand1", "rand3")
 VALUES = ("val0", "val1", "valall", "dval1", "dval3", "dvalall")  # dval* は修正1（実際の結果との差の予測）
+VALUES_T1 = ("dval1t1", "dvalallt1")  # 修正2: 差の予測を τ=1 で（キーの名前。教師は dval1・dvalall）
 CP_FIXED = ("cf", "top1", "rand1", "cfg")
 CP_VAL = ("val0", "val1", "dval1")
 TAU = 0.05
@@ -62,6 +63,8 @@ def conditions(e: int, l: int) -> dict[str, dict]:
                           "gate0.1": {"kind": "gate", "eta": 0.1}, f"sel{eta:g}": sel}  # H1〜H3 の判定の基準
     c.update({t: {**sel, "teacher": t, "lam": lam} for t in ("cf", *PARTIAL, "cfg")})
     c.update({f"{t}_{lv:g}": {**sel, "teacher": t, "lam": lv} for t in VALUES for lv in LAMS})
+    # 修正2: 差の予測を CE の自然な単位（τ=1）で
+    c.update({f"{t}t1_{lv:g}": {**sel, "teacher": t, "lam": lv, "tau": 1.0} for t in ("dval1", "dvalall") for lv in LAMS})
     cp = {**sel, "open": TH_SCHED[0], "ramp": TH_SCHED[1], "freeze": True}
     c["cp"] = cp
     c.update({f"cp_{t}": {**cp, "teacher": t, "lam": lam} for t in CP_FIXED})
@@ -93,7 +96,7 @@ def run_cond(seed: int, e: int, l: int, key: str, cond: dict, corpus: CharCorpus
 
     kw = {"total_steps": args.train_steps, "open_frac": cond.get("open"), "ramp_frac": cond.get("ramp", 0.0),
           "probe": probe, "log_every": args.log_every, "vec_every": 10 ** 9, "freeze": cond.get("freeze", False),
-          "teacher": cond.get("teacher"), "lam": cond.get("lam", 0.0), "tau": args.tau,
+          "teacher": cond.get("teacher"), "lam": cond.get("lam", 0.0), "tau": cond.get("tau", args.tau),
           "shuffle_seed": seed + 1000, "sample_seed": seed + 2000}
     r = run_one(seed, e, l, cond, corpus, args, EstimatedCFLM, args.train_steps, post=post, train_fn=train_timed, **kw)
     return slim(r, False)
@@ -150,7 +153,7 @@ def judge_scale(sub: list[dict], summ: dict, lams: dict[str, float], args: argpa
                 ref_norm: float | None) -> dict:
     n = len(sub)
     sel = next(k for k in sub[0] if k.startswith("sel"))
-    keys = {t: t for t in (*PARTIAL, "cfg")} | {t: f"{t}_{lams[t]:g}" for t in VALUES}
+    keys = {t: t for t in (*PARTIAL, "cfg")} | {t: f"{t}_{lams[t]:g}" for t in (*VALUES, *VALUES_T1)}
     v: dict = {"選んだλ_価値の予測": lams, "条件のキー": keys}
     for t, k in keys.items():
         v[k] = {"保持": judge_retain(sub, summ, k, sel, args), "H7*": judge_star(absorb_summary(sub, k), ref_norm)}
@@ -162,6 +165,8 @@ def judge_scale(sub: list[dict], summ: dict, lams: dict[str, float], args: argpa
     v["H22_修正1_差の予測_dval1"] = v[keys["dval1"]]["保持"]["合格"]
     v["参考_dval3"] = v[keys["dval3"]]["保持"]["合格"]
     v["参考_dvalall"] = v[keys["dvalall"]]["保持"]["合格"]
+    v["H22_修正2_差の予測τ1_dval1t1"] = v[keys["dval1t1"]]["保持"]["合格"]
+    v["参考_dvalallt1"] = v[keys["dvalallt1"]]["保持"]["合格"]
     v["H22'_実際の結果だけ_val0"] = v[keys["val0"]]["保持"]["合格"]
     v["参考_valall"] = v[keys["valall"]]["保持"]["合格"]
     v["H22b_価値の予測でH7*"] = {t: v[keys[t]]["H7*"]["H7*"] for t in VALUES}
@@ -196,7 +201,7 @@ def analyze(subs: dict[str, list[dict]], args: argparse.Namespace) -> tuple[dict
         if not all(k in sub[0] for k in conds):
             continue
         lams = {t.partition("@")[0]: lv for t, lv in (args.lam or []) if t.partition("@")[2] in ("", n)}
-        for t in VALUES:
+        for t in (*VALUES, *VALUES_T1):
             lams.setdefault(t, select_val_lam(summ[n], t))
         verdict[n] = judge_scale(sub, summ[n], lams, args, ref)
         verdict[n]["H7*の正規化ΔCE_offの基準"] = ref
