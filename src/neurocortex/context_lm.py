@@ -31,6 +31,9 @@ RULES = ("passive", "uniform", "active", "uniform_replay", "active_replay", "act
 # 修正1（12.6.173節）: 事後分布を手がかりにした、文脈ごとのバッファからの想起。active_replay_own は本来の文脈の
 # バッファだけから取る診断用（本来の文脈を知っているので規則ではない）
 FIX1_RULES = ("active_replay_cued", "active_holdout_cued", "active_replay_own")
+# 12.6.175節の修正1: active と同じ手がかりの後の事後分布で、文脈を1つに決めずに予測する。active_soft は事後確率で
+# 重みづけたゲイン Σ_c p(c)·g_c（GainCharLM のみ）、active_mix は予測の混合 Σ_c p(c)·p_c(·|窓)（参考）
+SOFT_RULES = ("active_soft", "active_mix")
 
 
 @dataclass(frozen=True)
@@ -123,6 +126,39 @@ class ContextCharLM(nn.Module):
         return torch.log_softmax(torch.einsum("nch,chv->ncv", h, self.head_w) + self.head_b[None], -1)
 
 
+class GainCharLM(nn.Module):
+    """共有の表現に、文脈信号で乗算的なゲイン変調をかけるモデル（12.6.175節）。
+
+    窓の埋め込み → 隠れ層1（tanh, 共有）→ 文脈ごとのゲイン g_c ⊙ h1 → 隠れ層2（tanh, 共有）→ 出力（共有）。
+    g_c = 2·sigmoid(a_c) ∈ (0, 2) で、a_c = 0（ゲイン 1）から学習する。文脈ごとの独立したヘッドを持たず、文脈は
+    共有の特徴のどれを強め・弱めるかだけを決める（前頭前野のトップダウンのバイアス信号による選択的なゲーティング:
+    Miller & Cohen 2001、文脈による選択的な統合: Mante et al. 2013）。文脈なしの対照は文脈1個の同じモデル。"""
+
+    def __init__(self, vocab: int, k: int, n_ctx: int, emb: int = 16, hidden: int = 128):
+        super().__init__()
+        self.emb = nn.Embedding(vocab, emb)
+        self.inp = nn.Linear(k * emb, hidden)
+        self.gain_logit = nn.Parameter(torch.zeros(n_ctx, hidden))
+        self.mid = nn.Linear(hidden, hidden)
+        self.out = nn.Linear(hidden, vocab)
+
+    def gains(self) -> torch.Tensor:
+        """文脈ごとのゲイン [文脈, hidden]。"""
+        return 2 * torch.sigmoid(self.gain_logit)
+
+    def _logp(self, h1: torch.Tensor, g: torch.Tensor) -> torch.Tensor:
+        return torch.log_softmax(self.out(torch.tanh(self.mid(h1 * g))), -1)
+
+    def forward(self, x: torch.Tensor, c: torch.Tensor) -> torch.Tensor:
+        """窓 x [N, k] と文脈 c [N] の対数確率 [N, V]。"""
+        return self._logp(torch.tanh(self.inp(self.emb(x).flatten(1))), self.gains()[c])
+
+    def logp_all(self, x: torch.Tensor) -> torch.Tensor:
+        """全文脈の対数確率 [N, 文脈, V]。"""
+        h1 = torch.tanh(self.inp(self.emb(x).flatten(1)))
+        return self._logp(h1[:, None, :], self.gains()[None])
+
+
 def batched_information(probs: torch.Tensor, prior: torch.Tensor) -> torch.Tensor:
     """各エピソードの事前分布のもとでの各候補の期待情報量（文脈と答えの相互情報量 / log V）。
 
@@ -135,21 +171,22 @@ def batched_information(probs: torch.Tensor, prior: torch.Tensor) -> torch.Tenso
 
 
 def select_contexts(logp: torch.Tensor, answers: torch.Tensor, n_obs: int, active: bool,
-                    source: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
+                    source: torch.Tensor | None = None, return_post: bool = False) -> tuple[torch.Tensor, ...]:
     """手がかりから文脈を選ぶ。
 
     logp [E, M, 文脈, V] は各候補の窓での各文脈の対数確率、answers [E, M] は情報源の答え（観測するまで使わない）。
     active=False は先頭 n_obs 個をそのまま観測する（batch）。active=True は1個ずつ、まだ観測していない候補のうち
     現在の事後分布のもとで期待情報量が最大のものを選んで観測する。source [E, M]（候補の窓を保存した文脈）を与えると、
     期待情報量にその文脈の現在の事後確率を掛けて選ぶ（修正1。信じている文脈の記憶ほど想起されやすい）。返り値は選んだ文脈 [E] と観測した手がかりの
-    一様事前のもとでの情報量の平均 [E]。"""
+    一様事前のもとでの情報量の平均 [E]。return_post=True では、観測後の対数事後分布（正規化前）[E, 文脈] も返す。"""
     e_n, m_n, c_n, v_n = logp.shape
     probs = (1 - EPS) * logp.exp() + EPS / v_n
     loglik = torch.log(probs.gather(-1, answers[:, :, None, None].expand(e_n, m_n, c_n, 1)).squeeze(-1))  # [E, M, C]
     info_uniform = batched_information(probs, torch.full((e_n, c_n), 1.0 / c_n))  # [E, M]
     if not active:
         post = loglik[:, :n_obs].sum(1)
-        return post.argmax(-1), info_uniform[:, :n_obs].mean(-1)
+        res = (post.argmax(-1), info_uniform[:, :n_obs].mean(-1))
+        return res + (post,) if return_post else res
     log_post = torch.zeros(e_n, c_n)
     seen = torch.zeros(e_n, m_n, dtype=torch.bool)
     rows = torch.arange(e_n)
@@ -162,7 +199,28 @@ def select_contexts(logp: torch.Tensor, answers: torch.Tensor, n_obs: int, activ
         pick = info.argmax(-1)
         seen[rows, pick] = True
         log_post = log_post + loglik[rows, pick]
-    return log_post.argmax(-1), (info_uniform * seen).sum(-1) / n_obs
+    res = (log_post.argmax(-1), (info_uniform * seen).sum(-1) / n_obs)
+    return res + (log_post,) if return_post else res
+
+
+def soft_ce(model: nn.Module, x: torch.Tensor, y: torch.Tensor, post: torch.Tensor, mode: str,
+            chunk: int = 20) -> torch.Tensor:
+    """事後分布 post [E, 文脈]（正規化済み）のもとで、文脈を1つに決めずに予測したときの、窓 x [N, k] の次の文字 y の
+    CE [E]。mode="gain" は事後確率で重みづけたゲインで1回予測する（GainCharLM のみ）。mode="mix" は全文脈の予測を
+    事後確率で混ぜる。"""
+    out = []
+    if mode == "gain":
+        h1 = torch.tanh(model.inp(model.emb(x).flatten(1)))  # [N, H]
+        g = post @ model.gains()  # [E, H]
+        for i in range(0, post.shape[0], chunk):
+            lp = model._logp(h1[None], g[i:i + chunk, None, :])  # [e, N, V]
+            out.append(-lp.gather(-1, y[None, :, None].expand(lp.shape[0], -1, 1)).squeeze(-1).mean(1))
+    elif mode == "mix":
+        lp_y = model.logp_all(x).gather(-1, y[:, None, None].expand(-1, post.shape[1], 1)).squeeze(-1)  # [N, C]
+        out.append(-torch.logsumexp(torch.log(post.clamp_min(1e-30))[:, None, :] + lp_y[None], -1).mean(1))
+    else:
+        raise ValueError("mode は gain・mix")
+    return torch.cat(out)
 
 
 @dataclass
@@ -175,6 +233,7 @@ class TrainConfig:
     lr: float = 3e-3
     k: int = 3
     hidden: int = 128
+    arch: str = "head"  # head（文脈ごとのヘッド。12.6.173節）/ gain（共有の表現へのゲイン変調。12.6.175節）
 
 
 def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generator: torch.Generator,
@@ -195,8 +254,9 @@ def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generat
         train_y.append(y)
     with torch.random.fork_rng(devices=[]):  # 初期化の種も generator から決める
         torch.manual_seed(int(torch.randint(0, 2 ** 31 - 1, (1,), generator=generator)))
-        model = ContextCharLM(fam.vocab, cfg.k, n_l, hidden=cfg.hidden)
-        plain = ContextCharLM(fam.vocab, cfg.k, 1, hidden=cfg.hidden)
+        arch = {"head": ContextCharLM, "gain": GainCharLM}[cfg.arch]
+        model = arch(fam.vocab, cfg.k, n_l, hidden=cfg.hidden)
+        plain = arch(fam.vocab, cfg.k, 1, hidden=cfg.hidden)
     opt = torch.optim.Adam(list(model.parameters()) + list(plain.parameters()), lr=cfg.lr)
     buf_x, buf_y, hold_x, hold_y = [None] * n_l, [None] * n_l, [None] * n_l, [None] * n_l
 
@@ -243,7 +303,7 @@ def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generat
             "final_loss": sum(losses[-100:]) / 100}
 
 
-def kl_to_truth(model: ContextCharLM, trans: torch.Tensor, fam: LangFamily, x: torch.Tensor, c: int, j: int) -> float:
+def kl_to_truth(model: nn.Module, trans: torch.Tensor, fam: LangFamily, x: torch.Tensor, c: int, j: int) -> float:
     """文脈 c のヘッドの、言語 j の真の次の文字の分布からの KL（窓 x の平均, nats）。保存された答えではなく真の分布で
     測る（12.6.151節の「そのタスクの正解で測る」にあたる）。"""
     with torch.no_grad():
@@ -266,8 +326,10 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
         ce = torch.zeros(n_l, n_l)
         ce_plain = torch.zeros(n_l)
         entropy = torch.zeros(n_l)
+        test_xy = []
         for j in range(n_l):
             x, y = windows(sample_text(trans[j], fam, test_chains, 200, generator), k)
+            test_xy.append((x, y))
             lp = model.logp_all(x)  # [N, C, V]
             ce[:, j] = -lp.gather(-1, y[:, None, None].expand(-1, n_l, 1)).squeeze(-1).mean(0)
             ce_plain[j] = -plain(x, torch.zeros_like(y)).gather(-1, y[:, None]).mean()
@@ -333,14 +395,29 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                         "active_replay": ("replay", True), "active_holdout": ("holdout", True),
                         "active_replay_cued": ("replay_cued", True), "active_holdout_cued": ("holdout_cued", True),
                         "active_replay_own": ("replay_own", True)}
+                soft = [r for r in rules if r in SOFT_RULES]
                 for r in rules:
+                    if r in SOFT_RULES:
+                        continue
                     key, act = spec[r]
-                    chosen, inf = select_contexts(logp[key], ans[key], n, act, src if key.endswith("_cued") else None)
+                    sel = select_contexts(logp[key], ans[key], n, act, src if key.endswith("_cued") else None,
+                                          return_post=bool(soft) and r == "active")
+                    chosen, inf = sel[0], sel[1]
+                    if len(sel) == 3:
+                        post_active, inf_active = torch.softmax(sel[2], -1), inf
                     a = float((chosen == j).float().mean())
                     acc[r] += a / n_l
                     ce_sel[r] += float(ce[chosen, j].mean()) / n_l
                     info[r] += float(inf.mean()) / n_l
                     per_lang[r].append(a)
+                for r in soft:  # 選ぶ文脈（選択精度）と情報量は active と同じ。CE だけ事後分布で予測する
+                    if "active" not in rules:
+                        raise ValueError("active_soft・active_mix には active が要る")
+                    cs = soft_ce(model, *test_xy[j], post_active, "gain" if r == "active_soft" else "mix")
+                    acc[r] += per_lang["active"][-1] / n_l
+                    ce_sel[r] += float(cs.mean()) / n_l
+                    info[r] += float(inf_active.mean()) / n_l
+                    per_lang[r].append(per_lang["active"][-1])
             res[str(n)] = {"acc": acc, "ce": ce_sel, "info": info, "acc_per_lang": per_lang}
         out["cues"] = res
     return out
