@@ -69,7 +69,7 @@ class ConsolLM(ReactCFLM):
 
     def run(self, x: torch.Tensor, disabled=None, mode: str = "zero", gate_one: bool = False,
             use_threshold: bool = True) -> dict:
-        if not (getattr(self, "gate_detach", False) and self.closing and self.training):
+        if not (self.detach_gate() and self.training):
             return super().run(x, disabled, mode, gate_one, use_threshold)
         # 1層・閾値は選択だけ（select）の学習中の順伝播。ゲートは確率の値を使い、ルータへの勾配だけ切る
         h, _ = self.rnn(self.embed(x))
@@ -86,6 +86,10 @@ class ConsolLM(ReactCFLM):
         balance = self.n_experts * (frac * probs.mean(dim=(0, 1))).sum()
         return {"logits": self.head(h), "choice": choice.unsqueeze(0), "gate": gate.squeeze(-1).unsqueeze(0),
                 "contrib": gy.norm(dim=-1).unsqueeze(0), "router": raw.unsqueeze(0), "balance": balance}
+
+    def detach_gate(self) -> bool:
+        """ゲートからルータへの LM の勾配を切るか（閉じ始め以降の gate_detach）。"""
+        return getattr(self, "gate_detach", False) and self.closing
 
     def part_parameters(self) -> dict[str, list[torch.nn.Parameter]]:
         return {"router": list(self.routers.parameters()), "front": [*self.embed.parameters(), *self.rnn.parameters()],
