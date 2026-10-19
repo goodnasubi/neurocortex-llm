@@ -12,6 +12,7 @@
 
 from __future__ import annotations
 
+import copy
 import math
 
 import torch
@@ -78,6 +79,51 @@ def cue_information(probs: torch.Tensor, prior: torch.Tensor | None = None) -> t
     return ((h_mix - (pi[None] * ent).sum(1)) / math.log(probs.shape[-1])).clamp_min(0.0)
 
 
+EPISODIC_READOUTS = ("param", "mix_all", "switch_all", "mix_buf", "mix_hold", "mix_nogate", "mix_all200",
+                     "switch_all200")
+EPISODIC_EXTRA_READOUTS = ("mix_rep", "switch_rep", "arb_bits", "arb_rep")  # 12.6.159節
+RECON_READOUTS = ("recon_buf", "recon_all", "recon_all200", "recon_inter", "recon_hold")  # 12.6.159節
+
+
+def episodic_readout(p_param: torch.Tensor, x: torch.Tensor, store_bits: torch.Tensor, store_labels: torch.Tensor,
+                     lam: float = 0.5, kappa: float = 1.0, rule: str = "mix") -> torch.Tensor:
+    """記憶に基づく予測と、選んだ文脈のパラメトリックな予測の組み合わせ（12.6.155節）。
+
+    p_param は [N, K] の予測分布、x は [N, n] の ±1 入力、store_* は検索する痕跡（入力とその保存時のラベル）。
+    痕跡 i との類似度 s_i = exp(−d_i / λ)（d_i はハミング距離）、記憶の予測 p_epi = Σ s_i onehot(y_i) / Σ s_i、
+    記憶の重み w = Σ s_i / (Σ s_i + κ)（κ はパラメトリックな予測への擬似的な数）。
+      "mix"    … (1 − w)·p_param + w·p_epi（痕跡との近さで重み付けした混合）
+      "switch" … w ≥ 0.5 なら p_epi、そうでなければ p_param（記憶の信頼度による切り替え）
+    痕跡がなければ p_param をそのまま返す。"""
+    if rule not in ("mix", "switch"):
+        raise ValueError(rule)
+    if lam <= 0 or kappa <= 0:
+        raise ValueError("lam と kappa は正")
+    if store_bits.shape[0] == 0:
+        return p_param
+    d = (x.shape[1] - x @ store_bits.T) / 2  # [N, 痕跡]
+    return episodic_readout_dist(p_param, d, store_labels, lam, kappa, rule)
+
+
+def episodic_readout_dist(p_param: torch.Tensor, d: torch.Tensor, store_labels: torch.Tensor, lam: float = 0.5,
+                          kappa: float = 1.0, rule: str = "mix") -> torch.Tensor:
+    """episodic_readout の距離を与える版（12.6.159節）。d は [N, 痕跡] の距離（ハミング距離と同じ尺度）。"""
+    if rule not in ("mix", "switch"):
+        raise ValueError(rule)
+    if lam <= 0 or kappa <= 0:
+        raise ValueError("lam と kappa は正")
+    if d.shape[1] == 0:
+        return p_param
+    s = torch.exp(-d / lam)
+    onehot = F.one_hot(store_labels, p_param.shape[1]).float()
+    mass = s.sum(1, keepdim=True)
+    p_epi = (s @ onehot) / mass.clamp_min(1e-30)
+    w = mass / (mass + kappa)
+    if rule == "mix":
+        return (1 - w) * p_param + w * p_epi
+    return torch.where(w >= 0.5, p_epi, p_param)
+
+
 def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator: torch.Generator,
                          eval_generator: torch.Generator, n_slots: int | None = None, tau: float = 0.4,
                          ema: float = 0.9, pretrain_steps: int = 500, pretrain_weight_decay: float = 0.01,
@@ -95,7 +141,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          com_window: int = 0, reliability_lapse: bool = True,
                          reliability_source: str = "gated", reliability_holdout: int = 0,
                          cue_weight: str = "", active_pool: int = 0, active_source: str = "task",
-                         active_verify: int = 0, verify_mode: str = "top2") -> dict:
+                         active_verify: int = 0, verify_mode: str = "top2", episodic_eval: int = 0,
+                         episodic_hold: int = 50, episodic_lambda: float = 0.5, episodic_kappa: float = 1.0,
+                         episodic_extra: bool = False, recon_steps: int = 0, recon_lr: float = 0.01,
+                         recon_batch: int = 32) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -220,6 +269,35 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
       "selection_rival_share"・"selection_order"）。diagnostics = True では "origin_acc"（最終モデルで、各タスク j を
       各文脈 c で、入力の出どころ（own_buf: c のバッファ、other_buf: 他の文脈のバッファ、holdout: c の保留サンプル）
       ごとに、タスク j の正解で測った正確度）を加える。
+
+    記憶に基づく予測との組み合わせ（12.6.155節。diagnostics = True かつ episodic_eval = N > 0 のとき。学習・評価の
+    乱数は消費しない）: 最終モデルで、各タスク j を専用の乱数による新しい入力 N 個で、各文脈 c について
+    episodic_readout（λ = episodic_lambda、κ = episodic_kappa）の正確度を測り、diag["episodic_acc"][j][c の順][読み出し]
+    に入れる。読み出しは EPISODIC_READOUTS で、検索する痕跡は c の痕跡に限る（文脈に依存した検索）:
+      param … パラメトリックな予測だけ。mix_all / switch_all … c のバッファ（リプレイした痕跡）と保留サンプルの先頭
+      episodic_hold 個（保存だけでリプレイしなかった痕跡）。mix_buf … バッファだけ。mix_hold … 保留サンプルの先頭
+      episodic_hold 個だけ。mix_nogate … 全文脈のバッファと保留サンプルの先頭 episodic_hold 個（文脈に依存しない検索）。
+      mix_all200 / switch_all200 … c のバッファと保留サンプルのすべて（reliability_holdout 個まで）。
+    diag["episodic_cover"][j][c の順] は新しい入力のうち c の痕跡（mix_all と同じ）に完全に一致するものの割合、
+    diag["store_purity"][j][c の順] は同じ痕跡のラベルがタスク j の規則と一致する割合。
+
+    隠れ層の表現での近さ・保留サンプルの正確さによる調停・テスト時の再固定化（12.6.159節。episodic_eval > 0 のとき。
+    学習・評価の乱数は消費しない）:
+      episodic_extra = True … diag["episodic_acc"] に EPISODIC_EXTRA_READOUTS を加える。
+          mix_rep / switch_rep … mix_all / switch_all と同じ痕跡を、ネットワークの隠れ層の表現 h(x, c)
+              （嗅内皮質の表現にあたる）の二乗距離で検索する。尺度は c の痕跡の対について、二乗距離の平均がハミング
+              距離の平均に等しくなるように合わせる（h が入力そのものならハミング距離による検索と一致する）。
+          arb_bits / arb_rep … c の保留サンプルのうち検索に使わない残り（較正用）で param・mix・switch の正確度を
+              測り、最も正確なものを使う（同点は param、mix の順に優先）。diag["episodic_arb"][j][c の順] に選んだ
+              読み出しを入れる。
+      recon_steps = S > 0 … 各文脈 c について、最終モデルの複製を c の痕跡で S ステップ学び直し（Adam、学習率
+          recon_lr、バッチ recon_batch、痕跡から復元抽出）、その複製の正確度を RECON_READOUTS として加える。
+          recon_buf … c のバッファだけ。recon_all … c のバッファと保留サンプルの先頭 episodic_hold 個。
+          recon_all200 … c のバッファと保留サンプルのすべて。recon_inter … recon_all の痕跡に、他の文脈の
+          バッファ（保存時の文脈つき）を同じ数だけ交互に混ぜる。recon_hold … 保留サンプルの先頭 episodic_hold 個
+          だけ（12.6.159節の修正1。recon_buf と痕跡の数を揃えた対照）。diag["recon_side"][変種][c の順][j][c' の順] は、
+          recon_all・recon_inter の複製で各タスク j を各文脈 c' で測った正確度から最終モデルの値を引いた差
+          （学び直しが他の文脈に及ぼす影響）。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -251,6 +329,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         raise ValueError("verify_mode は top2・all・each")
     if active_source == "holdout" and reliability_holdout <= 0:
         raise ValueError("active_source='holdout' は reliability_holdout > 0 でのみ使う")
+    if episodic_eval < 0 or episodic_hold < 0 or episodic_lambda <= 0 or episodic_kappa <= 0:
+        raise ValueError("episodic_eval・episodic_hold は 0 以上、episodic_lambda・episodic_kappa は正")
+    if recon_steps < 0 or recon_lr <= 0 or recon_batch <= 0:
+        raise ValueError("recon_steps は 0 以上、recon_lr・recon_batch は正")
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
     if split_ctx_lr > 0:
@@ -801,6 +883,132 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
 
             diag["origin_acc"] = [[{"own_buf": acc_on(bb_[bc == c], j, c), "other_buf": acc_on(bb_[bc != c], j, c),
                                     "holdout": acc_on(hb[hc == c], j, c)} for c in used] for j in range(T)]
+            if episodic_eval > 0:
+                epi_gen = torch.Generator().manual_seed(5678)  # 12.6.155節の読み出し専用
+                blab = bl if bl.numel() else torch.zeros(0, dtype=torch.long)
+                hl = torch.cat(hold_labels) if hold_labels else torch.zeros(0, dtype=torch.long)
+                # 保留サンプルの先頭 episodic_hold 個（文脈ごと、保存の順）。reliability_holdout = episodic_hold の
+                # 場合の保留サンプルと同じになる
+                h_rank = torch.zeros(hc.shape[0], dtype=torch.long)
+                for c in hc.unique():
+                    idx = (hc == c).nonzero()[:, 0]
+                    h_rank[idx] = torch.arange(idx.shape[0])
+                h_small = h_rank < episodic_hold
+
+                def store(c: int | None, buf: bool, hold: str) -> tuple[torch.Tensor, torch.Tensor]:
+                    mb = (bc == c) if c is not None else torch.ones_like(bc, dtype=torch.bool)
+                    mh = (hc == c) if c is not None else torch.ones_like(hc, dtype=torch.bool)
+                    mh = mh & h_small if hold == "small" else (mh if hold == "all" else torch.zeros_like(mh))
+                    if not buf:
+                        mb = torch.zeros_like(mb)
+                    return torch.cat([bb_[mb], hb[mh]]), torch.cat([blab[mb], hl[mh]])
+
+                plans = {"mix_all": (True, "small", "mix", False), "switch_all": (True, "small", "switch", False),
+                         "mix_buf": (True, "none", "mix", False), "mix_hold": (False, "small", "mix", False),
+                         "mix_nogate": (True, "small", "mix", True), "mix_all200": (True, "all", "mix", False),
+                         "switch_all200": (True, "all", "switch", False)}
+                fresh = [make_batch(specs[j], episodic_eval, epi_gen) for j in range(T)]
+                ext: dict[int, dict] = {}  # 12.6.159節: 文脈ごとの尺度・調停の選択
+                if episodic_extra:
+                    for c in used:
+                        sb, sl = store(c, True, "small")
+                        mh = (hc == c) & ~h_small
+                        cal_x, cal_y = hb[mh], hl[mh]
+                        with torch.no_grad():
+                            hs = model.backbone(with_ctx(sb, c))
+                            ham = (n_bits - sb @ sb.T) / 2
+                            sq = torch.cdist(hs, hs) ** 2
+                        scale = float(ham.sum() / sq.sum()) if sb.shape[0] > 1 and float(sq.sum()) > 0 else 1.0
+                        ext[c] = {"sb": sb, "sl": sl, "hs": hs, "scale": scale, "arb": {}}
+                        if cal_x.shape[0] == 0:
+                            ext[c]["arb"] = {"bits": "param", "rep": "param"}
+                            continue
+                        with torch.no_grad():
+                            pc = F.softmax(model(with_ctx(cal_x, c)), dim=-1)
+                            dc = {"bits": (n_bits - cal_x @ sb.T) / 2,
+                                  "rep": scale * torch.cdist(model.backbone(with_ctx(cal_x, c)), hs) ** 2}
+                        for kind, dd in dc.items():
+                            cand = {"param": pc, **{r: episodic_readout_dist(pc, dd, sl, episodic_lambda,
+                                                                             episodic_kappa, r)
+                                                    for r in ("mix", "switch")}}
+                            ca = {r: float((v.argmax(-1) == cal_y).float().mean()) for r, v in cand.items()}
+                            ext[c]["arb"][kind] = max(("param", "mix", "switch"), key=lambda r: ca[r])  # 同点は先のもの
+                models = {}  # 12.6.159節: テスト時の再固定化（c の痕跡で学び直した複製）
+                if recon_steps > 0:
+                    rgen = torch.Generator().manual_seed(6789)
+                    hgen = torch.Generator().manual_seed(6790)  # recon_hold 専用（他の変種の乱数の消費を変えない）
+                    for c in used:
+                        for name, (ub, hold) in {"recon_buf": (True, "none"), "recon_all": (True, "small"),
+                                                 "recon_all200": (True, "all"), "recon_inter": (True, "small"),
+                                                 "recon_hold": (False, "small")}.items():
+                            sb, sl = store(c, ub, hold)
+                            m_ = copy.deepcopy(model)
+                            if sb.shape[0] > 0:
+                                ob, ol, oc = bb_[bc != c], blab[bc != c], bc[bc != c]
+                                ropt = torch.optim.Adam(m_.parameters(), lr=recon_lr)
+                                for _ in range(recon_steps):
+                                    g_ = hgen if name == "recon_hold" else rgen
+                                    idx = torch.randint(sb.shape[0], (recon_batch,), generator=g_)
+                                    xr, yr = with_ctx(sb[idx], c), sl[idx]
+                                    if name == "recon_inter" and ob.shape[0] > 0:
+                                        io = torch.randint(ob.shape[0], (recon_batch,), generator=rgen)
+                                        xr = torch.cat([xr, with_ctx(ob[io], oc[io])])
+                                        yr = torch.cat([yr, ol[io]])
+                                    loss = F.cross_entropy(m_(xr), yr)
+                                    ropt.zero_grad(set_to_none=True)
+                                    loss.backward()
+                                    ropt.step()
+                            models[(name, c)] = m_
+                    with torch.no_grad():
+                        base = [[float((model(with_ctx(x, c2)).argmax(-1) == y).float().mean()) for c2 in used]
+                                for x, y in fresh]
+                        diag["recon_side"] = {
+                            name: [[[float((models[(name, c)](with_ctx(x, c2)).argmax(-1) == y).float().mean())
+                                     - base[j][i2] for i2, c2 in enumerate(used)] for j, (x, y) in enumerate(fresh)]
+                                   for c in used] for name in ("recon_all", "recon_inter")}
+                epi_acc, epi_cover, purity, arb_rec = [], [], [], []
+                for j in range(T):
+                    x, y = fresh[j]
+                    row_a, row_c, row_p, row_r = [], [], [], []
+                    for c in used:
+                        with torch.no_grad():
+                            pp = F.softmax(model(with_ctx(x, c)), dim=-1)
+                        accs = {"param": float((pp.argmax(-1) == y).float().mean())}
+                        for name, (ub, hold, rule, nogate) in plans.items():
+                            sb, sl = store(None if nogate else c, ub, hold)
+                            pe = episodic_readout(pp, x, sb, sl, episodic_lambda, episodic_kappa, rule)
+                            accs[name] = float((pe.argmax(-1) == y).float().mean())
+                        if episodic_extra:
+                            e = ext[c]
+                            with torch.no_grad():
+                                d_rep = e["scale"] * torch.cdist(model.backbone(with_ctx(x, c)), e["hs"]) ** 2
+                            d_bits = (n_bits - x @ e["sb"].T) / 2
+                            outs = {}
+                            for kind, dd in (("bits", d_bits), ("rep", d_rep)):
+                                outs[kind] = {"param": pp, **{r: episodic_readout_dist(pp, dd, e["sl"], episodic_lambda,
+                                                                                      episodic_kappa, r)
+                                                              for r in ("mix", "switch")}}
+                            acc_of = lambda p_: float((p_.argmax(-1) == y).float().mean())  # noqa: E731
+                            accs.update(mix_rep=acc_of(outs["rep"]["mix"]), switch_rep=acc_of(outs["rep"]["switch"]),
+                                        arb_bits=acc_of(outs["bits"][e["arb"]["bits"]]),
+                                        arb_rep=acc_of(outs["rep"][e["arb"]["rep"]]))
+                            row_r.append(dict(e["arb"]))
+                        if recon_steps > 0:
+                            with torch.no_grad():
+                                for name in RECON_READOUTS:
+                                    accs[name] = float((models[(name, c)](with_ctx(x, c)).argmax(-1) == y)
+                                                       .float().mean())
+                        sb, sl = store(c, True, "small")
+                        row_a.append(accs)
+                        row_c.append(float(((x @ sb.T) == x.shape[1]).any(1).float().mean()) if sb.shape[0] else 0.0)
+                        row_p.append(float((task_labels(specs[j], sb) == sl).float().mean()) if sb.shape[0] else None)
+                    epi_acc.append(row_a)
+                    epi_cover.append(row_c)
+                    purity.append(row_p)
+                    arb_rec.append(row_r)
+                diag.update(episodic_acc=epi_acc, episodic_cover=epi_cover, store_purity=purity)
+                if episodic_extra:
+                    diag["episodic_arb"] = arb_rec
         diag["buffer_src"] = {int(c): {int(t): int(((bc == c) & (bs == t)).sum()) for t in bs[bc == c].unique()}
                               for c in bc.unique()}
         out["diag"] = diag
