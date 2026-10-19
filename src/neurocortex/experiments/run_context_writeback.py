@@ -43,10 +43,14 @@ WB_KW = {"writeback_steps": 100, "recon_lr": 0.01, "recon_batch": 32, "writeback
 SEP_KW = {**EPI_KW, "recon_steps": 100, "recon_lr": 0.01, "recon_batch": 32, "recon_extra": True}
 SEP_READOUTS = ("param", *RECON_READOUTS, *RECON_EXTRA_READOUTS)
 CONFIGS: dict[str, dict] = {**{f"wb_{w}": {"writeback": w, **WB_KW} for w in WRITEBACKS}, "sep": SEP_KW}
+# 修正1（12.6.161節）: 書き戻しの後、再活性化した痕跡（保留サンプルの先頭50個）をリプレイに加える変種を参考に加えた
+# （wb_inter_keep）。リプレイの点が増えるだけの効果と分けるため、書き戻さずに加える対照（wb_none_keep）も置く。判定条件は変えない
+CONFIGS.update({f"wb_{w}_keep": {"writeback": w, "writeback_keep": True, **WB_KW} for w in ("none", "inter")})
+FIX1 = ("wb_none_keep", "wb_inter_keep")
 # 修正は開発用シードの結果を見て追加する（上限3回）
 
 
-def jobs(configs=tuple(CONFIGS), families=FAMILIES) -> list[tuple]:
+def jobs(configs=tuple(c for c in CONFIGS if c not in FIX1), families=FAMILIES) -> list[tuple]:
     return [(f, m, L, cfg) for m in MECHS_USED for f in families for L in LS for cfg in configs]
 
 
@@ -130,8 +134,10 @@ def analyze(paths: list[Path]) -> dict:
             r["end_none"] = _avg([_avg(x["end_nat"]) for x in base.values()])
             r["exp_end_none"] = _avg([x["exp_end"] for x in base.values()])
             r["pre_identical"] = True
-            for w in ("all", "inter"):
+            for w in ("all", "inter", "none_keep", "inter_keep"):
                 per = {x["seed"]: x for x in runs.get(f"{cb}/wb_{w}", {}).get("per_seed", [])}
+                if not per:
+                    continue
                 post, end, exp, intact_post, intact_end, over_post, over_end, new_d, sel_d, newexp_d = ([] for _ in range(10))
                 for s, x in per.items():
                     b = base[s]
@@ -192,7 +198,7 @@ SUMMARY_KEYS = ("selection_acc", "exp_end", "new_nat", "new_exp", *(f"exp_{k}" f
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--analyze", type=Path, nargs="+", help="結果ファイルを集計して判定に使う量を表示する")
-    ap.add_argument("--configs", nargs="+", default=list(CONFIGS))
+    ap.add_argument("--configs", nargs="+", default=[c for c in CONFIGS if c not in FIX1])
     ap.add_argument("--families", nargs="+", default=list(FAMILIES))
     ap.add_argument("--phase", choices=("dev", "eval"), default="dev")
     ap.add_argument("--seeds", type=int, nargs="+")

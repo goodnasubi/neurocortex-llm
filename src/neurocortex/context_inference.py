@@ -147,7 +147,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          episodic_hold: int = 50, episodic_lambda: float = 0.5, episodic_kappa: float = 1.0,
                          episodic_extra: bool = False, recon_steps: int = 0, recon_lr: float = 0.01,
                          recon_batch: int = 32, recon_extra: bool = False, writeback: str = "",
-                         writeback_at: int = 0, writeback_steps: int = 100, writeback_eval: int = 2000) -> dict:
+                         writeback_at: int = 0, writeback_steps: int = 100, writeback_eval: int = 2000,
+                         writeback_keep: bool = False) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -319,6 +320,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     diag["writeback"] = {"at", "used", "pre", "post"} を加える。pre / post は書き戻しの前後で、タスク j < writeback_at を
     専用の乱数による新しい入力 writeback_eval 個で各文脈 c で測った正確度（"fresh"[j][c の順]）と、c のバッファの入力を
     タスク j の正解で測った正確度（"own_buf"[j][c の順]）。
+    writeback_keep = True（12.6.161節の修正1）では、書き戻しの後（"none" でも）、各文脈の保留サンプルの先頭
+    episodic_hold 個をその文脈のバッファに加え、以後のリプレイに使う（再活性化した痕跡が再び海馬のリプレイの対象に
+    なる。出どころは −1 として記録する）。post の測定はバッファに加える前に行う。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -725,6 +729,15 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                     wopt.step()
         if diagnostics:
             diag["writeback"] = {"at": n_tasks, "used": list(used), "pre": pre, "post": wb_measure(fresh, n_tasks)}
+        if writeback_keep and hold_ctx:
+            hc = torch.cat(hold_ctx)
+            keep = torch.zeros(hc.shape[0], dtype=torch.bool)
+            for c in hc.unique():
+                keep[(hc == c).nonzero()[:episodic_hold, 0]] = True
+            buf_bits.append(torch.cat(hold_bits)[keep])
+            buf_labels.append(torch.cat(hold_labels)[keep])
+            buf_ctx.append(hc[keep])
+            buf_src.append(torch.full((int(keep.sum()),), -1, dtype=torch.long))
 
     upd_ref: list[float] = []  # plasticity_cap の ū（平常時の更新ノルムの移動平均）
     split = {"left": 0, "ctx": -1}  # split_window の残りステップと、対象の新しい文脈

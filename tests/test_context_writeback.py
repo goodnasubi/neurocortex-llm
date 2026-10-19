@@ -50,6 +50,19 @@ def test_writeback_changes_shared_weights_but_not_before():
     assert r["diag"]["writeback"]["post"] == r["diag"]["writeback"]["pre"]
 
 
+def test_writeback_keep_adds_hold_samples_to_replay_after_measurement():
+    """修正1: 書き戻しの後に保留サンプルをバッファに加える。書き戻しまでと前後の測定は変わらず、その後の学習は変わる。"""
+    kw = dict(writeback="none", writeback_at=2, writeback_steps=5, writeback_eval=100)
+    base = _run(**kw)
+    r = _run(writeback_keep=True, **kw)
+    assert r["diag"]["writeback"] == base["diag"]["writeback"] and r["R"][:2] == base["R"][:2]
+    b0, b1 = base["diag"]["buffer"], r["diag"]["buffer"]
+    n_add = int((b1["src"] == -1).sum())
+    assert n_add > 0 and b1["labels"].shape[0] == b0["labels"].shape[0] + n_add
+    assert all(int(((b1["src"] == -1) & (b1["ctx"] == c)).sum()) <= 20 for c in b1["ctx"].unique())
+    assert r["R"][2] != base["R"][2] or r["diag"]["ctx_acc"][2] != base["diag"]["ctx_acc"][2]
+
+
 def test_writeback_rejects_bad_arguments():
     with pytest.raises(ValueError):
         _run(writeback="bad", writeback_at=1)
@@ -83,8 +96,9 @@ def test_recon_extra_does_not_change_other_readouts():
 
 
 def test_experiment_jobs_and_analyze(tmp_path):
-    from neurocortex.experiments.run_context_writeback import CONFIGS, FAMILIES, NEW_TASK, analyze, jobs
-    assert len(jobs()) == len(FAMILIES) * 2 * 3 * len(CONFIGS) and set(NEW_TASK) == set(FAMILIES)
+    from neurocortex.experiments.run_context_writeback import CONFIGS, FAMILIES, FIX1, NEW_TASK, analyze, jobs
+    assert len(jobs()) == len(FAMILIES) * 2 * 3 * (len(CONFIGS) - len(FIX1)) and set(NEW_TASK) == set(FAMILIES)
+    assert len(jobs(FIX1)) == len(FAMILIES) * 2 * 3 * len(FIX1)
 
     def wb(post, end, new):
         return {"seed": 100, "pre_nat": [0.4, 0.9], "post_nat": post, "end_nat": end, "gap": [0.2, 0.0],
