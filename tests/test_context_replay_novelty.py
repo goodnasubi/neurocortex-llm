@@ -105,7 +105,7 @@ def test_experiment_jobs_analyze_and_verdict(tmp_path):
     assert len(DEV_SEEDS) == len(EVAL_SEEDS) == 10 and not set(DEV_SEEDS) & set(EVAL_SEEDS)
 
     def row(end, new, seed):
-        return {"seed": seed, "pre_nat": [0.4, 0.9], "end_nat": end, "gap": [0.2, 0.0], "exp_end": end[0],
+        return {"seed": seed, "pre_nat": [0.4, 0.9], "end_nat": end, "gap": [0.3, 0.0], "exp_end": end[0],
                 "new_nat": new, "new_exp": new, "selection_acc": 0.9, "mix_own": 0.1, "mix_kept": 0.3,
                 "mix_fam": 0.5, "sleep_steps": 0}
 
