@@ -16,6 +16,8 @@
   窓から期待情報量で選ぶ。12.6.148・152節の gen_replay）、active_holdout（保存したがリプレイしなかった窓から。統制）。
 
 12.6.179〜180節: tcm_* は痕跡に保存時の時間文脈のタグ（TCM）をつけ、今の文脈に近い痕跡を想起する（TrainConfig.tcm_beta > 0 のときだけ）。
+12.6.183〜184節: ca3_complete は、手がかりから作った部分的な今の文脈を、保存したタグへの CA3 の再帰結合のアトラクタの
+反復（k-WTA の抑制つき）で補完してから想起する（active_*_ca3 の規則のときだけ）。
 
 12.6.143節と違い、能動的な選択も打ち切りなしで n 個すべてを観測する（観測の数を規則の間で揃えるため）。
 """
@@ -39,6 +41,9 @@ SOFT_RULES = ("active_soft", "active_mix")
 # 12.6.179節: 痕跡に保存時の時間文脈のタグ（TCM: Howard & Kahana 2002）をつけ、今の文脈に近い痕跡を想起して候補に
 # する。active_replay_tcm はバッファ、active_holdout_tcm は保留サンプル（リプレイしていない。統制）から想起する
 TCM_RULES = ("active_replay_tcm", "active_holdout_tcm")
+# 12.6.183節: 今の文脈を CA3 のパターン補完（TrainConfig.ca3_iters 回の反復）で補完してから想起する。_s{S} は反復の
+# 回数を S に変えた対照
+CA3_RULES = ("active_replay_ca3", "active_holdout_ca3", "active_replay_ca3_s1", "active_replay_ca3_s10")
 
 
 @dataclass(frozen=True)
@@ -132,14 +137,31 @@ def tcm_tags(text: torch.Tensor, k: int, vocab: int, beta: float, length: int = 
     return ctx[:, k - length:text.shape[1] - length].reshape(-1, dim)
 
 
+def ca3_complete(t: torch.Tensor, tags: torch.Tensor, iters: int, n_active: int) -> torch.Tensor:
+    """CA3 の再帰結合によるパターン補完（12.6.183節）。部分的な文脈 t [E, D] から始め、保存したタグ tags [N, D] を
+    記憶したアトラクタの網を iters 回反復する: s ← normalize(mean{x̂_i : s との余弦が上位 n_active 個の痕跡})。
+    痕跡ごとの記憶の単位が k-WTA の抑制で上位 n_active 個だけ発火し、その結合が CA3 の状態を書き戻す形
+    （単位ごとに1つの痕跡を持つホップフィールド網）。反復は今の文脈の近くの痕跡の重心へ向かう（平均移動）。
+    文脈のラベルは使わない。iters = 0 なら t を正規化して返す（補完なし）。"""
+    x = nn.functional.normalize(tags, dim=-1)
+    s = nn.functional.normalize(t, dim=-1)
+    n_active = min(n_active, x.shape[0])
+    for _ in range(iters):
+        idx = (s @ x.T).topk(n_active, dim=-1).indices
+        s = nn.functional.normalize(x[idx].mean(1), dim=-1)
+    return s
+
+
 def tcm_recall(cue_windows: torch.Tensor, tags: torch.Tensor, vocab: int, beta: float, m: int,
-               length: int = 2) -> torch.Tensor:
+               length: int = 2, ca3_iters: int = 0, ca3_active: int = 1) -> torch.Tensor:
     """今の文脈に近い痕跡の想起。cue_windows [E, M0, k]（情報源が示したラベルなしの窓。答えは使わない）を順に聞いて
-    漂流させた文脈 t_now と、各痕跡のタグ tags [N, D] の余弦が大きい順に m 個の痕跡の番号 [E, m] を返す。"""
+    漂流させた文脈 t_now と、各痕跡のタグ tags [N, D] の余弦が大きい順に m 個の痕跡の番号 [E, m] を返す。
+    ca3_iters > 0 なら、t_now を ca3_complete で補完してから比べる（12.6.183節）。"""
     e_n = cue_windows.shape[0]
     items = tcm_items(cue_windows, vocab, length).reshape(e_n, -1)
     t_now = tcm_drift(items, vocab ** length, beta)[:, -1]
-    sim = nn.functional.normalize(t_now, dim=-1) @ nn.functional.normalize(tags, dim=-1).T  # [E, N]
+    s = ca3_complete(t_now, tags, ca3_iters, ca3_active)
+    sim = s @ nn.functional.normalize(tags, dim=-1).T  # [E, N]
     return sim.topk(min(m, tags.shape[0]), dim=-1).indices
 
 
@@ -285,6 +307,8 @@ class TrainConfig:
     arch: str = "head"  # head（文脈ごとのヘッド。12.6.173節）/ gain（共有の表現へのゲイン変調。12.6.175節）
     tcm_beta: float = 0.0  # > 0 で、保存する痕跡に時間文脈のタグをつける（12.6.179節）。乱数は使わない
     tcm_item: int = 2  # TCM の項目の文字の組の長さ（初期設定 2、12.6.179節の修正1 で 3）
+    ca3_iters: int = 3  # CA3 のパターン補完の反復の回数（active_*_ca3 の規則。12.6.183節）
+    ca3_sparsity: float = 0.025  # 補完で発火する記憶の単位の割合（k-WTA。痕跡の総数に対する割合）
 
 
 def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generator: torch.Generator,
@@ -409,7 +433,9 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
         out["entropy"] = float(entropy.mean())
         fix_gen = torch.Generator().manual_seed(generator.initial_seed() + 777)  # 修正1の候補専用
         tcm_gen = torch.Generator().manual_seed(generator.initial_seed() + 888)  # TCM の想起の答え専用
-        tcm = [r for r in rules if r in TCM_RULES]
+        ca3_gen = torch.Generator().manual_seed(generator.initial_seed() + 999)  # CA3 の補完の答え専用
+        tcm = [r for r in rules if r in TCM_RULES or r in CA3_RULES]
+        ca3 = [r for r in rules if r in CA3_RULES]
         if tcm:
             if cfg.tcm_beta <= 0:
                 raise ValueError("TCM の規則には TrainConfig.tcm_beta > 0 が要る")
@@ -426,6 +452,7 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
             info = {r: 0.0 for r in rules}
             per_lang = {r: [] for r in rules}
             purity = {"replay_tcm": 0.0, "holdout_tcm": 0.0}
+            purity.update({r.removeprefix("active_"): 0.0 for r in ca3})
             for j in range(n_l):
                 # 情報源の答えは真の分布から引く（窓の出どころによらず同じ規則）
                 def answers(xw: torch.Tensor, gen: torch.Generator = generator) -> torch.Tensor:
@@ -460,6 +487,16 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                         pools[key] = bank[idx]
                         ans[key] = answers(pools[key], tcm_gen)
                         purity[key] += float((srcs[idx] == j).float().mean()) / n_l
+                for r in ca3:  # 今の文脈を CA3 のパターン補完で補完してから想起する（12.6.183節）
+                    key = r.removeprefix("active_")
+                    bank, tags, srcs = ((all_buf, all_buf_tag, buf_src) if key.startswith("replay")
+                                        else (all_hold, all_hold_tag, hold_src))
+                    iters = int(key.rsplit("_s", 1)[1]) if "_s" in key else cfg.ca3_iters
+                    n_act = max(1, round(cfg.ca3_sparsity * tags.shape[0]))
+                    idx = tcm_recall(task_x, tags, v, cfg.tcm_beta, m, cfg.tcm_item, iters, n_act)
+                    pools[key] = bank[idx]
+                    ans[key] = answers(pools[key], ca3_gen)
+                    purity[key] += float((srcs[idx] == j).float().mean()) / n_l
                 ans["passage"] = py_.reshape(episodes, n)
                 logp = {key: model.logp_all(px.reshape(-1, k)).reshape(episodes, px.shape[1], n_l, v)
                         for key, px in pools.items()}
@@ -468,7 +505,8 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                         "active_replay": ("replay", True), "active_holdout": ("holdout", True),
                         "active_replay_cued": ("replay_cued", True), "active_holdout_cued": ("holdout_cued", True),
                         "active_replay_own": ("replay_own", True),
-                        "active_replay_tcm": ("replay_tcm", True), "active_holdout_tcm": ("holdout_tcm", True)}
+                        "active_replay_tcm": ("replay_tcm", True), "active_holdout_tcm": ("holdout_tcm", True),
+                        **{r: (r.removeprefix("active_"), True) for r in CA3_RULES}}
                 soft = [r for r in rules if r in SOFT_RULES]
                 for r in rules:
                     if r in SOFT_RULES:
