@@ -408,3 +408,176 @@ def simulate_prefetch(choices: np.ndarray, hidden: np.ndarray, store: ExpertDisk
     store.finish()
     return PrefetchResult(wall, stalls, stall_s, store.demand_loads, store.prefetch_loads,
                           store.wasted_loads, store.wasted_bytes, predictor_s)
+
+
+# --- 12.6.189節: 予測器の並列化・複数の読み込み経路・大きな専門家 ------------------
+
+class MultiPathExpertStore(ExpertDiskStore):
+    """`ExpertDiskStore` の読み込み経路を `n_paths` 本にし、読み込み中の専門家を追跡する版。
+
+    - 経路はセマフォで表す（`n_paths=1` は `ExpertDiskStore` と同じく1本を取り合う）。
+    - 読み込み中（先読み・同期とも）の専門家を `inflight` に持ち、同じ専門家を二重に読まず、
+      使う側はその読み込みの終わりを待つ（先読み中の待ちとして数える）。
+    - 遅延は `io_ms`（固定の待ち時間）＋実ファイルの読み込み。大きな専門家では後者も実時間を持つ。
+    """
+
+    def __init__(self, weights: list[np.ndarray], persist_dir: str | Path, capacity: int,
+                 io_ms: float, n_paths: int = 1) -> None:
+        super().__init__(weights, persist_dir, capacity, io_ms)
+        self.n_paths = n_paths
+        self.paths = threading.Semaphore(n_paths)
+        self.inflight: dict[int, threading.Event] = {}
+
+    def _read(self, e: int) -> np.ndarray:
+        with self.paths:
+            time.sleep(self.io_s)
+            return np.load(self.dir / f"expert_{e}.npy")
+
+    def is_resident_or_inflight(self, e: int) -> bool:
+        with self.lock:
+            return e in self.resident or e in self.inflight
+
+    def _claim(self, e: int) -> threading.Event | None:
+        """読み込みの権利を取る。既に常駐・読み込み中なら None。"""
+        with self.lock:
+            if e in self.resident or e in self.inflight:
+                return None
+            ev = threading.Event()
+            self.inflight[e] = ev
+            return ev
+
+    def _load_claimed(self, e: int, ev: threading.Event, prefetched: bool) -> np.ndarray:
+        try:
+            w = self._read(e)
+            if prefetched:
+                self.prefetch_loads += 1
+            else:
+                self.demand_loads += 1
+            self._insert(e, w, prefetched=prefetched)
+            return w
+        finally:
+            with self.lock:
+                self.inflight.pop(e, None)
+            ev.set()
+
+    def try_prefetch(self, e: int) -> bool:
+        """常駐でも読み込み中でもなければ先読みする（呼び出したスレッドで読む）。"""
+        ev = self._claim(e)
+        if ev is None:
+            return False
+        self._load_claimed(e, ev, prefetched=True)
+        return True
+
+    def use_tracked(self, e: int) -> tuple[np.ndarray, bool]:
+        """(重み, 待ったか)。読み込み中なら終わりを待ち、どこにもなければ同期読み込み。"""
+        stalled = False
+        while True:
+            with self.lock:
+                if e in self.resident:
+                    self.resident.move_to_end(e)
+                    self.prefetched_unused.discard(e)
+                    return self.resident[e], stalled
+                ev = self.inflight.get(e)
+            stalled = True
+            if ev is not None:
+                ev.wait()
+                continue  # 読み終わった直後に追い出されていれば、もう一度確かめる
+            ev = self._claim(e)
+            if ev is None:
+                continue
+            w = self._load_claimed(e, ev, prefetched=False)
+            with self.lock:
+                self.prefetched_unused.discard(e)
+            return w, stalled
+
+
+def expert_compute(w: np.ndarray, x: np.ndarray | None, compute_ms: float) -> None:
+    """専門家の計算。x を与えると w を (2, d, d_ff) と見て x @ w1 → relu → @ w2 を実際に計算し、
+    合計が compute_ms に満たなければ残りを待つ（`simulate_prefetch` と同じ下限つきの計算時間）。"""
+    c0 = time.perf_counter()
+    if x is None:
+        _ = float(np.tanh(w[:4] @ w[:4].T).sum())
+    else:
+        y = np.maximum(x @ w[0], 0.0) @ w[1].T
+        _ = float(y[0, 0])
+    rest = compute_ms / 1000.0 - (time.perf_counter() - c0)
+    if rest > 0:
+        time.sleep(rest)
+
+
+def _select(predictor, e: int, h: np.ndarray, k_pf: int, gate: float | None) -> list[int]:
+    if gate is not None:
+        pr = predictor.prob(e, h)
+        order = np.lexsort((np.arange(len(pr)), -pr))[:k_pf]
+        return [int(c) for c in order if pr[c] >= gate]
+    return [int(c) for c in predictor.rank(e, h)[:k_pf]]
+
+
+def simulate_prefetch_v2(choices: np.ndarray, hidden: np.ndarray, store: MultiPathExpertStore,
+                         predictor, k_pf: int, compute_ms: float, oracle: bool = False,
+                         gate: float | None = None, parallel_predictor: bool = False,
+                         x_batch: np.ndarray | None = None) -> PrefetchResult:
+    """12.6.189節の実効速度の模擬。`simulate_prefetch` との違い:
+
+    - 読み込みは `store.n_paths` 本の経路で並列にできる（先読みは経路数ぶんのスレッドで読む）。
+    - `parallel_predictor=True` では、予測器（rank と observe）を専用のスレッドで動かし、
+      専門家の計算と重ねる。時刻 t の (e_t, h_t) はルーティングの直後に分かるので、
+      専門家 e_t の計算を待たずに e_{t+1} の予測を始められる（小脳の順モデルが遅れて届く
+      感覚の帰還を待たずに予測を出す Smith predictor 仮説の対応物）。予測器が受け取る
+      情報と更新の順序は直列のときと同じ（observe(t−1) → rank(t)）なので、予測は直列と一致する。
+      予測が計算より遅れても主の流れは待たない（その先読みが遅れて出るだけ）。
+    - `x_batch` を与えると専門家の計算を実際の行列積にする（大きな専門家用）。
+    `predictor_s` は予測器の計算時間の合計（並列のときは主の流れの外で使われた時間）。
+    """
+    n = len(choices)
+    use_pred = predictor is not None or oracle
+    pf_pool = ThreadPoolExecutor(max_workers=max(store.n_paths, 1))
+    pred_pool = ThreadPoolExecutor(max_workers=1) if parallel_predictor else None
+    predictor_s = [0.0]
+    stalls = 0
+    stall_s = 0.0
+    pf_futs: list[Future] = []
+
+    def issue(t: int) -> None:
+        """時刻 t の予測を出し、先読みを投げる（直列なら主の流れ、並列なら予測器のスレッド）。"""
+        e = int(choices[t])
+        p0 = time.perf_counter()
+        if predictor is not None and t > 0:
+            predictor.observe(int(choices[t - 1]), hidden[t - 1], e)
+        if t + 1 < n:
+            cands = [int(choices[t + 1])] if oracle else _select(predictor, e, hidden[t], k_pf, gate)
+        else:
+            cands = []
+        predictor_s[0] += time.perf_counter() - p0
+        for c in cands[:k_pf]:
+            if c == e or store.is_resident_or_inflight(c):
+                continue
+            pf_futs.append(pf_pool.submit(store.try_prefetch, c))
+
+    try:
+        t0 = time.perf_counter()
+        for t in range(n):
+            e = int(choices[t])
+            s0 = time.perf_counter()
+            w, stalled = store.use_tracked(e)
+            stall_s += time.perf_counter() - s0
+            stalls += stalled
+            # 予測と先読みは同期読み込みが経路を取った後に出す（`simulate_prefetch` と同じ順）
+            if use_pred:
+                if pred_pool is not None:
+                    pred_pool.submit(issue, t)
+                else:
+                    issue(t)
+            expert_compute(w, x_batch, compute_ms)
+        if pred_pool is not None:
+            pred_pool.shutdown(wait=True)
+        for f in list(pf_futs):
+            f.result()
+        wall = time.perf_counter() - t0
+    finally:
+        if pred_pool is not None:
+            pred_pool.shutdown(wait=True)
+        pf_pool.shutdown(wait=True)
+    store.finish()
+    return PrefetchResult(wall, stalls, stall_s, store.demand_loads, store.prefetch_loads,
+                          store.wasted_loads, store.wasted_bytes, predictor_s[0])
