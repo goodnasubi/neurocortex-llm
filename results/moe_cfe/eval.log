@@ -1,0 +1,400 @@
+## evalA_s0_E16L1.log
+seed=0 E16_L1/aux0 gini=0.906 used=3.0 base=0.3232 ratio=12066.74 gate=0.848 evals=0.00 t_sec=0.0 train_sec=59.1
+seed=0 E16_L1/aux0.05 gini=0.072 used=16.0 base=0.3262 ratio=1.51 gate=0.465 evals=0.00 t_sec=0.0 train_sec=61.8
+seed=0 E16_L1/gate0.1 gini=0.085 used=16.0 base=0.3242 ratio=0.77 gate=0.469 off_gini=0.694 off_dce=+4.2124 agree=0.339 evals=0.00 t_sec=0.0 train_sec=66.7
+seed=0 E16_L1/sel0.3 gini=0.095 used=16.0 base=0.3260 ratio=0.90 gate=0.468 off_gini=0.140 off_dce=+0.0051 agree=0.886 evals=0.00 t_sec=0.0 train_sec=64.3
+seed=0 E16_L1/cf gini=0.074 used=16.0 base=0.3239 ratio=0.94 gate=0.875 off_gini=0.072 off_dce=-0.0004 agree=0.984 t_agree=0.929 evals=16.00 t_sec=20.1 train_sec=80.0
+seed=0 E16_L1/top1 gini=0.061 used=16.0 base=0.3295 ratio=0.92 gate=0.414 off_gini=0.092 off_dce=+0.0152 agree=0.915 t_agree=0.954 evals=1.17 t_sec=8.6 train_sec=73.7
+seed=0 E16_L1/top3 gini=0.052 used=16.0 base=0.3257 ratio=0.65 gate=0.790 off_gini=0.128 off_dce=+0.0218 agree=0.918 t_agree=0.902 evals=3.07 t_sec=10.9 train_sec=75.2
+seed=0 E16_L1/rand1 gini=0.056 used=16.0 base=0.3267 ratio=1.19 gate=0.602 off_gini=0.088 off_dce=+0.0024 agree=0.903 t_agree=0.882 evals=2.00 t_sec=8.5 train_sec=72.1
+seed=0 E16_L1/rand3 gini=0.114 used=16.0 base=0.3285 ratio=1.20 gate=0.710 off_gini=0.071 off_dce=-0.0028 agree=0.901 t_agree=0.892 evals=4.00 t_sec=11.3 train_sec=75.8
+seed=0 E16_L1/cfg gini=0.178 used=16.0 base=0.3255 ratio=1.40 gate=0.613 off_gini=0.117 off_dce=+0.0016 agree=0.862 t_agree=0.690 evals=16.00 t_sec=18.4 train_sec=77.9
+seed=0 E16_L1/val0_0.1 gini=0.119 used=16.0 base=0.3264 ratio=1.36 gate=0.324 off_gini=0.527 off_dce=+0.1619 agree=0.577 t_agree=0.540 evals=1.00 t_sec=7.1 train_sec=73.6
+seed=0 E16_L1/val0_1 gini=0.115 used=16.0 base=0.3340 ratio=0.71 gate=0.295 off_gini=0.611 off_dce=+0.1290 agree=0.386 t_agree=0.392 evals=1.00 t_sec=6.4 train_sec=68.2
+## evalA_s0_E32L1.log
+seed=0 E32_L1/aux0 gini=0.937 used=5.0 base=0.3231 ratio=12575.26 gate=0.834 evals=0.00 t_sec=0.0 train_sec=60.7
+seed=0 E32_L1/aux0.05 gini=0.129 used=32.0 base=0.3218 ratio=1.31 gate=0.324 evals=0.00 t_sec=0.0 train_sec=68.4
+seed=0 E32_L1/gate0.1 gini=0.152 used=32.0 base=0.3258 ratio=0.81 gate=0.302 off_gini=0.729 off_dce=+5.8467 agree=0.335 evals=0.00 t_sec=0.0 train_sec=73.1
+seed=0 E32_L1/sel1 gini=0.096 used=32.0 base=0.3208 ratio=0.95 gate=0.351 off_gini=0.270 off_dce=+0.0704 agree=0.773 evals=0.00 t_sec=0.0 train_sec=68.7
+seed=0 E32_L1/cf gini=0.082 used=32.0 base=0.3307 ratio=0.89 gate=0.702 off_gini=0.189 off_dce=+0.0427 agree=0.854 t_agree=0.865 evals=32.00 t_sec=28.0 train_sec=84.1
+seed=0 E32_L1/top1 gini=0.067 used=32.0 base=0.3232 ratio=0.88 gate=0.373 off_gini=0.274 off_dce=+0.0480 agree=0.803 t_agree=0.954 evals=1.25 t_sec=10.3 train_sec=71.1
+seed=0 E32_L1/top3 gini=0.089 used=32.0 base=0.3266 ratio=0.92 gate=0.560 off_gini=0.257 off_dce=+0.0140 agree=0.797 t_agree=0.878 evals=3.08 t_sec=12.8 train_sec=70.6
+seed=0 E32_L1/rand1 gini=0.100 used=32.0 base=0.3209 ratio=1.14 gate=0.408 off_gini=0.222 off_dce=+0.0210 agree=0.847 t_agree=0.822 evals=2.00 t_sec=10.3 train_sec=67.1
+seed=0 E32_L1/rand3 gini=0.083 used=32.0 base=0.3232 ratio=1.04 gate=0.511 off_gini=0.192 off_dce=+0.0455 agree=0.862 t_agree=0.847 evals=4.00 t_sec=13.0 train_sec=69.4
+seed=0 E32_L1/cfg gini=0.086 used=32.0 base=0.3278 ratio=1.27 gate=0.476 off_gini=0.337 off_dce=+0.0547 agree=0.740 t_agree=0.665 evals=32.00 t_sec=27.3 train_sec=83.8
+seed=0 E32_L1/val0_0.1 gini=0.136 used=32.0 base=0.3264 ratio=0.82 gate=0.237 off_gini=0.628 off_dce=+0.1649 agree=0.394 t_agree=0.406 evals=1.00 t_sec=8.4 train_sec=67.4
+seed=0 E32_L1/val0_1 gini=0.138 used=32.0 base=0.3266 ratio=0.89 gate=0.272 off_gini=0.616 off_dce=+0.0665 agree=0.412 t_agree=0.429 evals=1.00 t_sec=7.6 train_sec=63.7
+## evalA_s1_E16L1.log
+seed=1 E16_L1/aux0 gini=0.928 used=3.0 base=0.3230 ratio=11032.41 gate=0.874 evals=0.00 t_sec=0.0 train_sec=56.3
+seed=1 E16_L1/aux0.05 gini=0.066 used=16.0 base=0.3213 ratio=1.18 gate=0.473 evals=0.00 t_sec=0.0 train_sec=59.4
+seed=1 E16_L1/gate0.1 gini=0.048 used=16.0 base=0.3248 ratio=1.02 gate=0.492 off_gini=0.832 off_dce=+6.7539 agree=0.233 evals=0.00 t_sec=0.0 train_sec=67.5
+seed=1 E16_L1/sel0.3 gini=0.045 used=16.0 base=0.3203 ratio=0.84 gate=0.471 off_gini=0.173 off_dce=+0.0285 agree=0.888 evals=0.00 t_sec=0.0 train_sec=64.4
+seed=1 E16_L1/cf gini=0.127 used=16.0 base=0.3368 ratio=1.18 gate=0.822 off_gini=0.106 off_dce=+0.0136 agree=0.917 t_agree=0.885 evals=16.00 t_sec=16.2 train_sec=84.7
+seed=1 E16_L1/top1 gini=0.108 used=16.0 base=0.3253 ratio=1.51 gate=0.405 off_gini=0.088 off_dce=+0.0013 agree=0.952 t_agree=0.970 evals=1.14 t_sec=8.4 train_sec=77.8
+seed=1 E16_L1/top3 gini=0.079 used=16.0 base=0.3254 ratio=0.93 gate=0.800 off_gini=0.059 off_dce=+0.0026 agree=0.941 t_agree=0.902 evals=3.04 t_sec=11.0 train_sec=83.3
+seed=1 E16_L1/rand1 gini=0.069 used=16.0 base=0.3212 ratio=1.06 gate=0.606 off_gini=0.094 off_dce=+0.0028 agree=0.924 t_agree=0.876 evals=2.00 t_sec=8.5 train_sec=78.0
+seed=1 E16_L1/rand3 gini=0.087 used=16.0 base=0.3219 ratio=0.79 gate=0.731 off_gini=0.099 off_dce=-0.0025 agree=0.876 t_agree=0.870 evals=4.00 t_sec=10.3 train_sec=75.8
+seed=1 E16_L1/cfg gini=0.141 used=16.0 base=0.3354 ratio=1.07 gate=0.604 off_gini=0.198 off_dce=-0.0008 agree=0.839 t_agree=0.672 evals=16.00 t_sec=14.9 train_sec=80.6
+seed=1 E16_L1/val0_0.1 gini=0.138 used=16.0 base=0.3322 ratio=0.93 gate=0.367 off_gini=0.431 off_dce=+0.0737 agree=0.581 t_agree=0.605 evals=1.00 t_sec=6.6 train_sec=75.6
+seed=1 E16_L1/val0_1 gini=0.083 used=16.0 base=0.3275 ratio=1.50 gate=0.326 off_gini=0.468 off_dce=+0.0416 agree=0.524 t_agree=0.544 evals=1.00 t_sec=6.4 train_sec=74.8
+## evalA_s1_E32L1.log
+seed=1 E32_L1/aux0 gini=0.922 used=4.0 base=0.3193 ratio=11887.46 gate=0.787 evals=0.00 t_sec=0.0 train_sec=54.9
+seed=1 E32_L1/aux0.05 gini=0.144 used=32.0 base=0.3265 ratio=1.26 gate=0.306 evals=0.00 t_sec=0.0 train_sec=49.3
+seed=1 E32_L1/gate0.1 gini=0.117 used=32.0 base=0.3223 ratio=1.04 gate=0.371 off_gini=0.783 off_dce=+7.5714 agree=0.323 evals=0.00 t_sec=0.0 train_sec=52.3
+seed=1 E32_L1/sel1 gini=0.095 used=32.0 base=0.3220 ratio=1.04 gate=0.353 off_gini=0.266 off_dce=+0.0328 agree=0.757 evals=0.00 t_sec=0.0 train_sec=50.2
+seed=1 E32_L1/cf gini=0.115 used=32.0 base=0.3242 ratio=0.93 gate=0.710 off_gini=0.204 off_dce=+0.0141 agree=0.862 t_agree=0.852 evals=32.00 t_sec=27.0 train_sec=77.9
+seed=1 E32_L1/top1 gini=0.073 used=32.0 base=0.3238 ratio=0.95 gate=0.395 off_gini=0.176 off_dce=+0.0371 agree=0.845 t_agree=0.970 evals=1.19 t_sec=9.7 train_sec=61.7
+seed=1 E32_L1/top3 gini=0.071 used=32.0 base=0.3194 ratio=0.76 gate=0.586 off_gini=0.137 off_dce=+0.0037 agree=0.915 t_agree=0.874 evals=3.06 t_sec=12.2 train_sec=62.9
+seed=1 E32_L1/rand1 gini=0.077 used=32.0 base=0.3237 ratio=1.00 gate=0.412 off_gini=0.190 off_dce=+0.0036 agree=0.846 t_agree=0.838 evals=2.00 t_sec=10.1 train_sec=62.3
+seed=1 E32_L1/rand3 gini=0.114 used=32.0 base=0.3218 ratio=1.26 gate=0.511 off_gini=0.235 off_dce=+0.0229 agree=0.818 t_agree=0.826 evals=4.00 t_sec=12.9 train_sec=65.8
+seed=1 E32_L1/cfg gini=0.144 used=32.0 base=0.3329 ratio=0.81 gate=0.470 off_gini=0.353 off_dce=+0.0275 agree=0.708 t_agree=0.615 evals=32.00 t_sec=28.9 train_sec=85.9
+seed=1 E32_L1/val0_0.1 gini=0.200 used=32.0 base=0.3308 ratio=1.41 gate=0.206 off_gini=0.749 off_dce=+0.3411 agree=0.307 t_agree=0.312 evals=1.00 t_sec=8.4 train_sec=63.7
+seed=1 E32_L1/val0_1 gini=0.164 used=32.0 base=0.3288 ratio=1.51 gate=0.222 off_gini=0.727 off_dce=+0.1918 agree=0.301 t_agree=0.298 evals=1.00 t_sec=8.1 train_sec=62.1
+## evalA_s2_E16L1.log
+seed=2 E16_L1/aux0 gini=0.853 used=5.0 base=0.3169 ratio=859.52 gate=0.781 evals=0.00 t_sec=0.0 train_sec=54.3
+seed=2 E16_L1/aux0.05 gini=0.070 used=16.0 base=0.3181 ratio=1.06 gate=0.465 evals=0.00 t_sec=0.0 train_sec=62.6
+seed=2 E16_L1/gate0.1 gini=0.068 used=16.0 base=0.3167 ratio=1.05 gate=0.489 off_gini=0.592 off_dce=+2.3643 agree=0.438 evals=0.00 t_sec=0.0 train_sec=65.8
+seed=2 E16_L1/sel0.3 gini=0.057 used=16.0 base=0.3118 ratio=0.84 gate=0.484 off_gini=0.105 off_dce=+0.0016 agree=0.917 evals=0.00 t_sec=0.0 train_sec=69.1
+seed=2 E16_L1/cf gini=0.065 used=16.0 base=0.3233 ratio=1.18 gate=0.798 off_gini=0.123 off_dce=+0.0107 agree=0.889 t_agree=0.872 evals=16.00 t_sec=13.9 train_sec=67.3
+seed=2 E16_L1/top1 gini=0.066 used=16.0 base=0.3143 ratio=1.16 gate=0.367 off_gini=0.114 off_dce=+0.0103 agree=0.927 t_agree=0.967 evals=1.14 t_sec=8.3 train_sec=64.9
+seed=2 E16_L1/top3 gini=0.092 used=16.0 base=0.3201 ratio=0.82 gate=0.773 off_gini=0.166 off_dce=+0.0034 agree=0.908 t_agree=0.885 evals=3.05 t_sec=11.0 train_sec=68.6
+seed=2 E16_L1/rand1 gini=0.039 used=16.0 base=0.3169 ratio=1.08 gate=0.613 off_gini=0.091 off_dce=+0.0019 agree=0.926 t_agree=0.894 evals=2.00 t_sec=8.9 train_sec=68.4
+seed=2 E16_L1/rand3 gini=0.066 used=16.0 base=0.3217 ratio=0.72 gate=0.754 off_gini=0.088 off_dce=+0.0104 agree=0.924 t_agree=0.895 evals=4.00 t_sec=11.1 train_sec=67.8
+seed=2 E16_L1/cfg gini=0.076 used=16.0 base=0.3307 ratio=1.16 gate=0.549 off_gini=0.222 off_dce=+0.0145 agree=0.798 t_agree=0.635 evals=16.00 t_sec=13.8 train_sec=69.4
+seed=2 E16_L1/val0_0.1 gini=0.152 used=16.0 base=0.3305 ratio=0.88 gate=0.380 off_gini=0.411 off_dce=+0.1050 agree=0.594 t_agree=0.619 evals=1.00 t_sec=6.9 train_sec=63.9
+seed=2 E16_L1/val0_1 gini=0.123 used=16.0 base=0.3227 ratio=0.96 gate=0.362 off_gini=0.535 off_dce=+0.0830 agree=0.500 t_agree=0.518 evals=1.00 t_sec=6.6 train_sec=63.3
+## evalA_s2_E32L1.log
+seed=2 E32_L1/aux0 gini=0.964 used=3.0 base=0.3181 ratio=11757.63 gate=0.875 evals=0.00 t_sec=0.0 train_sec=55.6
+seed=2 E32_L1/aux0.05 gini=0.137 used=32.0 base=0.3248 ratio=1.29 gate=0.326 evals=0.00 t_sec=0.0 train_sec=54.0
+seed=2 E32_L1/gate0.1 gini=0.080 used=32.0 base=0.3176 ratio=1.17 gate=0.315 off_gini=0.851 off_dce=+6.8717 agree=0.181 evals=0.00 t_sec=0.0 train_sec=66.4
+seed=2 E32_L1/sel1 gini=0.106 used=32.0 base=0.3167 ratio=1.00 gate=0.342 off_gini=0.320 off_dce=+0.0261 agree=0.745 evals=0.00 t_sec=0.0 train_sec=56.2
+seed=2 E32_L1/cf gini=0.112 used=32.0 base=0.3236 ratio=1.29 gate=0.680 off_gini=0.203 off_dce=+0.0278 agree=0.842 t_agree=0.861 evals=32.00 t_sec=27.0 train_sec=76.6
+seed=2 E32_L1/top1 gini=0.087 used=32.0 base=0.3204 ratio=1.07 gate=0.359 off_gini=0.201 off_dce=+0.0559 agree=0.810 t_agree=0.948 evals=1.19 t_sec=10.0 train_sec=65.4
+seed=2 E32_L1/top3 gini=0.125 used=32.0 base=0.3216 ratio=0.82 gate=0.537 off_gini=0.228 off_dce=+0.0505 agree=0.805 t_agree=0.865 evals=3.07 t_sec=12.2 train_sec=66.6
+seed=2 E32_L1/rand1 gini=0.092 used=32.0 base=0.3121 ratio=0.91 gate=0.387 off_gini=0.195 off_dce=+0.0232 agree=0.814 t_agree=0.818 evals=2.00 t_sec=9.9 train_sec=64.6
+seed=2 E32_L1/rand3 gini=0.108 used=32.0 base=0.3215 ratio=1.11 gate=0.513 off_gini=0.183 off_dce=+0.0032 agree=0.831 t_agree=0.830 evals=4.00 t_sec=12.7 train_sec=67.4
+seed=2 E32_L1/cfg gini=0.142 used=32.0 base=0.3232 ratio=1.36 gate=0.461 off_gini=0.259 off_dce=+0.0248 agree=0.737 t_agree=0.588 evals=32.00 t_sec=28.1 train_sec=83.3
+seed=2 E32_L1/val0_0.1 gini=0.183 used=32.0 base=0.3245 ratio=1.07 gate=0.220 off_gini=0.609 off_dce=+0.1044 agree=0.428 t_agree=0.401 evals=1.00 t_sec=7.7 train_sec=63.0
+seed=2 E32_L1/val0_1 gini=0.172 used=32.0 base=0.3199 ratio=1.42 gate=0.258 off_gini=0.685 off_dce=+0.0998 agree=0.343 t_agree=0.352 evals=1.00 t_sec=7.8 train_sec=63.9
+## evalA_s3_E16L1.log
+seed=3 E16_L1/aux0 gini=0.918 used=3.0 base=0.3239 ratio=10283.96 gate=0.855 evals=0.00 t_sec=0.0 train_sec=57.9
+seed=3 E16_L1/aux0.05 gini=0.156 used=16.0 base=0.3200 ratio=1.52 gate=0.466 evals=0.00 t_sec=0.0 train_sec=66.2
+seed=3 E16_L1/gate0.1 gini=0.063 used=16.0 base=0.3202 ratio=1.00 gate=0.481 off_gini=0.710 off_dce=+3.1320 agree=0.384 evals=0.00 t_sec=0.0 train_sec=70.0
+seed=3 E16_L1/sel0.3 gini=0.052 used=16.0 base=0.3146 ratio=1.15 gate=0.487 off_gini=0.125 off_dce=+0.0286 agree=0.884 evals=0.00 t_sec=0.0 train_sec=67.7
+seed=3 E16_L1/cf gini=0.043 used=16.0 base=0.3169 ratio=1.34 gate=0.848 off_gini=0.124 off_dce=+0.0060 agree=0.930 t_agree=0.905 evals=16.00 t_sec=14.8 train_sec=70.9
+seed=3 E16_L1/top1 gini=0.103 used=16.0 base=0.3225 ratio=0.64 gate=0.394 off_gini=0.176 off_dce=+0.0697 agree=0.851 t_agree=0.948 evals=1.21 t_sec=8.3 train_sec=64.9
+seed=3 E16_L1/top3 gini=0.086 used=16.0 base=0.3170 ratio=0.90 gate=0.811 off_gini=0.088 off_dce=+0.0041 agree=0.967 t_agree=0.903 evals=3.04 t_sec=11.0 train_sec=68.8
+seed=3 E16_L1/rand1 gini=0.061 used=16.0 base=0.3166 ratio=0.96 gate=0.611 off_gini=0.149 off_dce=+0.0026 agree=0.885 t_agree=0.885 evals=2.00 t_sec=8.5 train_sec=65.9
+seed=3 E16_L1/rand3 gini=0.095 used=16.0 base=0.3250 ratio=0.96 gate=0.717 off_gini=0.087 off_dce=+0.0015 agree=0.923 t_agree=0.873 evals=4.00 t_sec=10.7 train_sec=65.9
+seed=3 E16_L1/cfg gini=0.115 used=16.0 base=0.3243 ratio=1.07 gate=0.586 off_gini=0.151 off_dce=+0.0178 agree=0.868 t_agree=0.697 evals=16.00 t_sec=13.9 train_sec=68.1
+seed=3 E16_L1/val0_0.1 gini=0.100 used=16.0 base=0.3233 ratio=0.69 gate=0.391 off_gini=0.399 off_dce=+0.1274 agree=0.629 t_agree=0.620 evals=1.00 t_sec=6.5 train_sec=61.5
+seed=3 E16_L1/val0_1 gini=0.109 used=16.0 base=0.3249 ratio=0.54 gate=0.331 off_gini=0.538 off_dce=+0.0282 agree=0.496 t_agree=0.498 evals=1.00 t_sec=6.3 train_sec=60.6
+## evalA_s3_E32L1.log
+seed=3 E32_L1/aux0 gini=0.965 used=4.0 base=0.3215 ratio=10868.93 gate=0.920 evals=0.00 t_sec=0.0 train_sec=61.2
+seed=3 E32_L1/aux0.05 gini=0.123 used=32.0 base=0.3182 ratio=1.22 gate=0.312 evals=0.00 t_sec=0.0 train_sec=71.3
+seed=3 E32_L1/gate0.1 gini=0.115 used=32.0 base=0.3243 ratio=1.92 gate=0.288 off_gini=0.825 off_dce=+9.0980 agree=0.248 evals=0.00 t_sec=0.0 train_sec=78.5
+seed=3 E32_L1/sel1 gini=0.092 used=32.0 base=0.3166 ratio=1.12 gate=0.367 off_gini=0.266 off_dce=+0.0188 agree=0.802 evals=0.00 t_sec=0.0 train_sec=69.4
+seed=3 E32_L1/cf gini=0.120 used=32.0 base=0.3170 ratio=1.08 gate=0.682 off_gini=0.144 off_dce=+0.0261 agree=0.860 t_agree=0.842 evals=32.00 t_sec=29.5 train_sec=94.3
+seed=3 E32_L1/top1 gini=0.090 used=32.0 base=0.3167 ratio=0.87 gate=0.389 off_gini=0.311 off_dce=+0.0542 agree=0.781 t_agree=0.946 evals=1.22 t_sec=10.7 train_sec=78.5
+seed=3 E32_L1/top3 gini=0.127 used=32.0 base=0.3328 ratio=1.04 gate=0.545 off_gini=0.193 off_dce=-0.0065 agree=0.817 t_agree=0.861 evals=3.07 t_sec=12.6 train_sec=76.9
+seed=3 E32_L1/rand1 gini=0.081 used=32.0 base=0.3172 ratio=0.95 gate=0.415 off_gini=0.198 off_dce=+0.0059 agree=0.824 t_agree=0.819 evals=2.00 t_sec=10.3 train_sec=74.8
+seed=3 E32_L1/rand3 gini=0.109 used=32.0 base=0.3190 ratio=1.23 gate=0.522 off_gini=0.181 off_dce=+0.0174 agree=0.855 t_agree=0.838 evals=4.00 t_sec=13.3 train_sec=79.2
+seed=3 E32_L1/cfg gini=0.137 used=32.0 base=0.3267 ratio=1.26 gate=0.446 off_gini=0.323 off_dce=+0.0419 agree=0.696 t_agree=0.629 evals=32.00 t_sec=29.6 train_sec=94.8
+seed=3 E32_L1/val0_0.1 gini=0.159 used=32.0 base=0.3206 ratio=1.06 gate=0.250 off_gini=0.663 off_dce=+0.1830 agree=0.409 t_agree=0.409 evals=1.00 t_sec=8.9 train_sec=78.1
+seed=3 E32_L1/val0_1 gini=0.163 used=32.0 base=0.3172 ratio=1.49 gate=0.279 off_gini=0.582 off_dce=+0.0438 agree=0.494 t_agree=0.429 evals=1.00 t_sec=7.6 train_sec=71.2
+## evalA_s4_E16L1.log
+seed=4 E16_L1/aux0 gini=0.936 used=3.0 base=0.3083 ratio=11603.92 gate=0.938 evals=0.00 t_sec=0.0 train_sec=56.4
+seed=4 E16_L1/aux0.05 gini=0.125 used=16.0 base=0.3102 ratio=1.75 gate=0.493 evals=0.00 t_sec=0.0 train_sec=62.0
+seed=4 E16_L1/gate0.1 gini=0.114 used=16.0 base=0.3139 ratio=1.44 gate=0.475 off_gini=0.726 off_dce=+4.6141 agree=0.319 evals=0.00 t_sec=0.0 train_sec=61.9
+seed=4 E16_L1/sel0.3 gini=0.057 used=16.0 base=0.3104 ratio=0.83 gate=0.461 off_gini=0.180 off_dce=+0.0371 agree=0.839 evals=0.00 t_sec=0.0 train_sec=64.2
+seed=4 E16_L1/cf gini=0.049 used=16.0 base=0.3120 ratio=0.83 gate=0.798 off_gini=0.155 off_dce=+0.0321 agree=0.889 t_agree=0.891 evals=16.00 t_sec=14.6 train_sec=63.9
+seed=4 E16_L1/top1 gini=0.096 used=16.0 base=0.3146 ratio=1.13 gate=0.414 off_gini=0.105 off_dce=+0.0166 agree=0.935 t_agree=0.963 evals=1.15 t_sec=7.8 train_sec=55.1
+seed=4 E16_L1/top3 gini=0.078 used=16.0 base=0.3103 ratio=1.07 gate=0.824 off_gini=0.060 off_dce=+0.0021 agree=0.940 t_agree=0.918 evals=3.04 t_sec=9.9 train_sec=56.7
+seed=4 E16_L1/rand1 gini=0.055 used=16.0 base=0.3139 ratio=0.92 gate=0.621 off_gini=0.092 off_dce=-0.0025 agree=0.917 t_agree=0.903 evals=2.00 t_sec=8.6 train_sec=58.8
+seed=4 E16_L1/rand3 gini=0.086 used=16.0 base=0.3176 ratio=0.89 gate=0.724 off_gini=0.115 off_dce=+0.0010 agree=0.892 t_agree=0.887 evals=4.00 t_sec=10.9 train_sec=60.1
+seed=4 E16_L1/cfg gini=0.155 used=16.0 base=0.3245 ratio=1.88 gate=0.589 off_gini=0.158 off_dce=+0.0007 agree=0.789 t_agree=0.648 evals=16.00 t_sec=13.9 train_sec=62.8
+seed=4 E16_L1/val0_0.1 gini=0.059 used=16.0 base=0.3219 ratio=0.69 gate=0.339 off_gini=0.476 off_dce=+0.0719 agree=0.525 t_agree=0.541 evals=1.00 t_sec=6.7 train_sec=56.5
+seed=4 E16_L1/val0_1 gini=0.080 used=16.0 base=0.3164 ratio=1.24 gate=0.323 off_gini=0.561 off_dce=+0.0442 agree=0.462 t_agree=0.462 evals=1.00 t_sec=6.8 train_sec=57.6
+## evalA_s4_E32L1.log
+seed=4 E32_L1/aux0 gini=0.901 used=6.0 base=0.3095 ratio=12145.53 gate=0.766 evals=0.00 t_sec=0.0 train_sec=56.2
+seed=4 E32_L1/aux0.05 gini=0.131 used=32.0 base=0.3116 ratio=2.12 gate=0.306 evals=0.00 t_sec=0.0 train_sec=63.6
+seed=4 E32_L1/gate0.1 gini=0.107 used=32.0 base=0.3156 ratio=1.84 gate=0.350 off_gini=0.903 off_dce=+13.3352 agree=0.122 evals=0.00 t_sec=0.0 train_sec=65.7
+seed=4 E32_L1/sel1 gini=0.114 used=32.0 base=0.3151 ratio=1.16 gate=0.353 off_gini=0.214 off_dce=-0.0017 agree=0.786 evals=0.00 t_sec=0.0 train_sec=63.3
+seed=4 E32_L1/cf gini=0.105 used=32.0 base=0.3124 ratio=1.08 gate=0.665 off_gini=0.221 off_dce=+0.0362 agree=0.809 t_agree=0.855 evals=32.00 t_sec=27.4 train_sec=86.3
+seed=4 E32_L1/top1 gini=0.089 used=32.0 base=0.3125 ratio=1.38 gate=0.370 off_gini=0.197 off_dce=+0.0110 agree=0.830 t_agree=0.948 evals=1.21 t_sec=9.7 train_sec=66.0
+seed=4 E32_L1/top3 gini=0.079 used=32.0 base=0.3097 ratio=0.80 gate=0.585 off_gini=0.165 off_dce=+0.0218 agree=0.865 t_agree=0.879 evals=3.07 t_sec=12.8 train_sec=68.5
+seed=4 E32_L1/rand1 gini=0.080 used=32.0 base=0.3140 ratio=0.92 gate=0.420 off_gini=0.229 off_dce=+0.1062 agree=0.845 t_agree=0.829 evals=2.00 t_sec=9.8 train_sec=63.5
+seed=4 E32_L1/rand3 gini=0.090 used=32.0 base=0.3111 ratio=0.85 gate=0.512 off_gini=0.171 off_dce=+0.0054 agree=0.863 t_agree=0.843 evals=4.00 t_sec=12.7 train_sec=66.9
+seed=4 E32_L1/cfg gini=0.102 used=32.0 base=0.3251 ratio=0.76 gate=0.467 off_gini=0.304 off_dce=+0.0746 agree=0.708 t_agree=0.649 evals=32.00 t_sec=26.3 train_sec=81.2
+seed=4 E32_L1/val0_0.1 gini=0.111 used=32.0 base=0.3172 ratio=1.95 gate=0.250 off_gini=0.548 off_dce=+0.1493 agree=0.499 t_agree=0.488 evals=1.00 t_sec=7.7 train_sec=56.3
+seed=4 E32_L1/val0_1 gini=0.165 used=32.0 base=0.3121 ratio=0.65 gate=0.252 off_gini=0.751 off_dce=+0.4424 agree=0.338 t_agree=0.320 evals=1.00 t_sec=7.2 train_sec=59.6
+## evalB_s0_E16L1.log
+seed=0 E16_L1/val1_0.1 gini=0.066 used=16.0 base=0.3281 ratio=0.95 gate=0.571 off_gini=0.369 off_dce=+0.2068 agree=0.677 t_agree=0.672 evals=2.00 t_sec=8.6 train_sec=69.3
+seed=0 E16_L1/val1_1 gini=0.072 used=16.0 base=0.3294 ratio=0.92 gate=0.566 off_gini=0.359 off_dce=+0.0668 agree=0.674 t_agree=0.656 evals=2.00 t_sec=8.1 train_sec=73.0
+seed=0 E16_L1/valall_0.1 gini=0.096 used=16.0 base=0.3263 ratio=1.11 gate=0.579 off_gini=0.266 off_dce=+0.0337 agree=0.796 t_agree=0.762 evals=16.00 t_sec=15.6 train_sec=82.0
+seed=0 E16_L1/valall_1 gini=0.071 used=16.0 base=0.3267 ratio=0.95 gate=0.568 off_gini=0.380 off_dce=+0.1420 agree=0.669 t_agree=0.717 evals=16.00 t_sec=15.7 train_sec=80.0
+seed=0 E16_L1/cp gini=0.204 used=16.0 base=0.3239 ratio=1.59 gate=0.499 off_gini=0.204 off_dce=+0.0000 agree=1.000 close=0.213 ret=+0.014 evals=0.00 t_sec=0.0 train_sec=70.0
+seed=0 E16_L1/cp_cf gini=0.073 used=16.0 base=0.3225 ratio=1.56 gate=0.877 off_gini=0.073 off_dce=+0.0000 agree=1.000 close=0.104 ret=-0.012 t_agree=0.934 evals=16.00 t_sec=15.8 train_sec=83.0
+seed=0 E16_L1/cp_top1 gini=0.147 used=16.0 base=0.3257 ratio=1.06 gate=0.391 off_gini=0.147 off_dce=+0.0000 agree=1.000 close=0.146 ret=+0.024 t_agree=1.000 evals=1.10 t_sec=8.0 train_sec=75.6
+seed=0 E16_L1/cp_rand1 gini=0.206 used=16.0 base=0.3260 ratio=1.87 gate=0.609 off_gini=0.206 off_dce=+0.0000 agree=1.000 close=0.193 ret=+0.034 t_agree=0.937 evals=2.00 t_sec=8.7 train_sec=78.6
+seed=0 E16_L1/cp_cfg gini=0.175 used=16.0 base=0.3238 ratio=1.46 gate=0.657 off_gini=0.175 off_dce=+0.0000 agree=1.000 close=0.188 ret=+0.003 t_agree=0.711 evals=16.00 t_sec=16.8 train_sec=91.8
+seed=0 E16_L1/cp_val0_0.1 gini=0.325 used=16.0 base=0.3246 ratio=2.65 gate=0.369 off_gini=0.325 off_dce=+0.0000 agree=1.000 close=0.371 ret=-0.042 t_agree=1.000 evals=1.00 t_sec=7.1 train_sec=83.1
+seed=0 E16_L1/cp_val0_1 gini=0.394 used=16.0 base=0.3293 ratio=3.86 gate=0.391 off_gini=0.394 off_dce=+0.0000 agree=1.000 close=0.503 ret=-0.116 t_agree=1.000 evals=1.00 t_sec=7.0 train_sec=78.6
+seed=0 E16_L1/cp_val1_0.1 gini=0.531 used=14.0 base=0.3284 ratio=3.87 gate=0.705 off_gini=0.531 off_dce=+0.0000 agree=1.000 close=0.407 ret=+0.158 t_agree=0.915 evals=2.00 t_sec=8.2 train_sec=77.9
+seed=0 E16_L1/cp_val1_1 gini=0.508 used=14.0 base=0.3258 ratio=4.38 gate=0.719 off_gini=0.508 off_dce=+0.0000 agree=1.000 close=0.399 ret=+0.124 t_agree=0.899 evals=2.00 t_sec=8.7 train_sec=81.2
+## evalB_s0_E32L1.log
+seed=0 E32_L1/val1_0.1 gini=0.100 used=32.0 base=0.3227 ratio=1.15 gate=0.410 off_gini=0.528 off_dce=+0.1987 agree=0.539 t_agree=0.527 evals=2.00 t_sec=10.9 train_sec=74.7
+seed=0 E32_L1/val1_1 gini=0.135 used=32.0 base=0.3282 ratio=1.39 gate=0.373 off_gini=0.565 off_dce=+0.1554 agree=0.449 t_agree=0.477 evals=2.00 t_sec=10.5 train_sec=70.9
+seed=0 E32_L1/valall_0.1 gini=0.104 used=32.0 base=0.3215 ratio=0.94 gate=0.410 off_gini=0.338 off_dce=+0.0309 agree=0.707 t_agree=0.714 evals=32.00 t_sec=31.1 train_sec=86.7
+seed=0 E32_L1/valall_1 gini=0.094 used=32.0 base=0.3272 ratio=0.95 gate=0.378 off_gini=0.528 off_dce=+0.1121 agree=0.552 t_agree=0.607 evals=32.00 t_sec=31.7 train_sec=92.6
+seed=0 E32_L1/cp gini=0.451 used=28.0 base=0.3201 ratio=2.49 gate=0.406 off_gini=0.451 off_dce=+0.0000 agree=1.000 close=0.298 ret=+0.149 evals=0.00 t_sec=0.0 train_sec=57.5
+seed=0 E32_L1/cp_cf gini=0.298 used=31.0 base=0.3197 ratio=1.53 gate=0.793 off_gini=0.298 off_dce=+0.0000 agree=1.000 close=0.296 ret=+0.011 t_agree=0.911 evals=32.00 t_sec=29.8 train_sec=85.4
+seed=0 E32_L1/cp_top1 gini=0.383 used=29.0 base=0.3204 ratio=2.34 gate=0.391 off_gini=0.383 off_dce=+0.0000 agree=1.000 close=0.272 ret=+0.128 t_agree=1.000 evals=1.12 t_sec=9.8 train_sec=65.6
+seed=0 E32_L1/cp_rand1 gini=0.272 used=30.0 base=0.3181 ratio=1.74 gate=0.421 off_gini=0.272 off_dce=+0.0000 agree=1.000 close=0.292 ret=-0.016 t_agree=0.946 evals=2.00 t_sec=10.4 train_sec=66.6
+seed=0 E32_L1/cp_cfg gini=0.432 used=29.0 base=0.3254 ratio=2.39 gate=0.578 off_gini=0.432 off_dce=+0.0000 agree=1.000 close=0.414 ret=+0.024 t_agree=0.677 evals=32.00 t_sec=29.3 train_sec=86.0
+seed=0 E32_L1/cp_val0_0.1 gini=0.481 used=30.0 base=0.3269 ratio=2.46 gate=0.304 off_gini=0.481 off_dce=+0.0000 agree=1.000 close=0.431 ret=+0.052 t_agree=1.000 evals=1.00 t_sec=7.9 train_sec=73.2
+seed=0 E32_L1/cp_val0_1 gini=0.607 used=29.0 base=0.3244 ratio=6.53 gate=0.349 off_gini=0.607 off_dce=+0.0000 agree=1.000 close=0.593 ret=+0.015 t_agree=1.000 evals=1.00 t_sec=8.1 train_sec=65.7
+seed=0 E32_L1/cp_val1_0.1 gini=0.631 used=25.0 base=0.3269 ratio=5.43 gate=0.581 off_gini=0.631 off_dce=+0.0000 agree=1.000 close=0.468 ret=+0.172 t_agree=0.911 evals=2.00 t_sec=9.6 train_sec=63.1
+seed=0 E32_L1/cp_val1_1 gini=0.558 used=26.0 base=0.3271 ratio=6.39 gate=0.499 off_gini=0.558 off_dce=+0.0000 agree=1.000 close=0.531 ret=+0.024 t_agree=0.883 evals=2.00 t_sec=10.1 train_sec=67.7
+## evalB_s1_E16L1.log
+seed=1 E16_L1/val1_0.1 gini=0.105 used=16.0 base=0.3280 ratio=1.00 gate=0.596 off_gini=0.308 off_dce=+0.1752 agree=0.724 t_agree=0.719 evals=2.00 t_sec=8.6 train_sec=66.5
+seed=1 E16_L1/val1_1 gini=0.124 used=16.0 base=0.3403 ratio=1.20 gate=0.486 off_gini=0.448 off_dce=+0.0937 agree=0.566 t_agree=0.593 evals=2.00 t_sec=8.4 train_sec=70.9
+seed=1 E16_L1/valall_0.1 gini=0.055 used=16.0 base=0.3217 ratio=0.92 gate=0.599 off_gini=0.239 off_dce=+0.0375 agree=0.828 t_agree=0.799 evals=16.00 t_sec=16.1 train_sec=71.8
+seed=1 E16_L1/valall_1 gini=0.067 used=16.0 base=0.3274 ratio=1.41 gate=0.677 off_gini=0.261 off_dce=+0.0783 agree=0.808 t_agree=0.779 evals=16.00 t_sec=15.3 train_sec=70.7
+seed=1 E16_L1/cp gini=0.289 used=16.0 base=0.3261 ratio=1.65 gate=0.492 off_gini=0.289 off_dce=+0.0000 agree=1.000 close=0.232 ret=+0.045 evals=0.00 t_sec=0.0 train_sec=57.8
+seed=1 E16_L1/cp_cf gini=0.086 used=16.0 base=0.3250 ratio=1.38 gate=0.848 off_gini=0.086 off_dce=+0.0000 agree=1.000 close=0.099 ret=-0.001 t_agree=0.903 evals=16.00 t_sec=14.9 train_sec=69.3
+seed=1 E16_L1/cp_top1 gini=0.148 used=16.0 base=0.3205 ratio=0.88 gate=0.379 off_gini=0.148 off_dce=+0.0000 agree=1.000 close=0.120 ret=+0.053 t_agree=1.000 evals=1.08 t_sec=7.9 train_sec=61.2
+seed=1 E16_L1/cp_rand1 gini=0.167 used=16.0 base=0.3232 ratio=1.12 gate=0.614 off_gini=0.167 off_dce=+0.0000 agree=1.000 close=0.130 ret=+0.033 t_agree=0.938 evals=2.00 t_sec=8.3 train_sec=62.1
+seed=1 E16_L1/cp_cfg gini=0.230 used=16.0 base=0.3259 ratio=1.37 gate=0.656 off_gini=0.230 off_dce=+0.0000 agree=1.000 close=0.197 ret=+0.062 t_agree=0.730 evals=16.00 t_sec=14.0 train_sec=65.7
+seed=1 E16_L1/cp_val0_0.1 gini=0.272 used=16.0 base=0.3319 ratio=2.60 gate=0.402 off_gini=0.272 off_dce=+0.0000 agree=1.000 close=0.345 ret=-0.078 t_agree=1.000 evals=1.00 t_sec=6.6 train_sec=62.0
+seed=1 E16_L1/cp_val0_1 gini=0.356 used=16.0 base=0.3297 ratio=2.88 gate=0.419 off_gini=0.356 off_dce=+0.0000 agree=1.000 close=0.409 ret=-0.063 t_agree=1.000 evals=1.00 t_sec=6.5 train_sec=59.2
+seed=1 E16_L1/cp_val1_0.1 gini=0.371 used=15.0 base=0.3278 ratio=2.39 gate=0.687 off_gini=0.371 off_dce=+0.0000 agree=1.000 close=0.262 ret=+0.121 t_agree=0.924 evals=2.00 t_sec=8.4 train_sec=64.4
+seed=1 E16_L1/cp_val1_1 gini=0.523 used=13.0 base=0.3398 ratio=3.43 gate=0.676 off_gini=0.523 off_dce=+0.0000 agree=1.000 close=0.456 ret=+0.059 t_agree=0.896 evals=2.00 t_sec=8.8 train_sec=65.3
+## evalB_s1_E32L1.log
+seed=1 E32_L1/val1_0.1 gini=0.120 used=32.0 base=0.3236 ratio=0.91 gate=0.394 off_gini=0.558 off_dce=+0.2983 agree=0.487 t_agree=0.488 evals=2.00 t_sec=10.1 train_sec=70.5
+seed=1 E32_L1/val1_1 gini=0.139 used=32.0 base=0.3248 ratio=1.49 gate=0.367 off_gini=0.576 off_dce=+0.1164 agree=0.477 t_agree=0.437 evals=2.00 t_sec=9.4 train_sec=67.4
+seed=1 E32_L1/valall_0.1 gini=0.092 used=32.0 base=0.3202 ratio=1.43 gate=0.362 off_gini=0.379 off_dce=+0.0507 agree=0.745 t_agree=0.686 evals=32.00 t_sec=30.2 train_sec=86.3
+seed=1 E32_L1/valall_1 gini=0.122 used=32.0 base=0.3266 ratio=1.33 gate=0.352 off_gini=0.425 off_dce=+0.1973 agree=0.589 t_agree=0.627 evals=32.00 t_sec=31.7 train_sec=88.6
+seed=1 E32_L1/cp gini=0.331 used=31.0 base=0.3274 ratio=1.96 gate=0.391 off_gini=0.331 off_dce=+0.0000 agree=1.000 close=0.273 ret=+0.073 evals=0.00 t_sec=0.0 train_sec=57.1
+seed=1 E32_L1/cp_cf gini=0.204 used=32.0 base=0.3242 ratio=0.89 gate=0.771 off_gini=0.204 off_dce=+0.0000 agree=1.000 close=0.221 ret=+0.008 t_agree=0.891 evals=32.00 t_sec=30.0 train_sec=83.3
+seed=1 E32_L1/cp_top1 gini=0.228 used=31.0 base=0.3212 ratio=1.32 gate=0.388 off_gini=0.228 off_dce=+0.0000 agree=1.000 close=0.220 ret=+0.027 t_agree=1.000 evals=1.11 t_sec=10.0 train_sec=66.3
+seed=1 E32_L1/cp_rand1 gini=0.317 used=30.0 base=0.3207 ratio=2.03 gate=0.447 off_gini=0.317 off_dce=+0.0000 agree=1.000 close=0.288 ret=+0.044 t_agree=0.951 evals=2.00 t_sec=10.5 train_sec=67.0
+seed=1 E32_L1/cp_cfg gini=0.353 used=32.0 base=0.3254 ratio=1.71 gate=0.583 off_gini=0.353 off_dce=+0.0000 agree=1.000 close=0.367 ret=-0.002 t_agree=0.685 evals=32.00 t_sec=30.2 train_sec=87.2
+seed=1 E32_L1/cp_val0_0.1 gini=0.535 used=28.0 base=0.3255 ratio=3.94 gate=0.280 off_gini=0.535 off_dce=+0.0000 agree=1.000 close=0.546 ret=-0.010 t_agree=1.000 evals=1.00 t_sec=8.5 train_sec=67.5
+seed=1 E32_L1/cp_val0_1 gini=0.629 used=31.0 base=0.3247 ratio=7.52 gate=0.326 off_gini=0.629 off_dce=+0.0000 agree=1.000 close=0.567 ret=+0.067 t_agree=1.000 evals=1.00 t_sec=7.9 train_sec=64.8
+seed=1 E32_L1/cp_val1_0.1 gini=0.604 used=24.0 base=0.3258 ratio=4.96 gate=0.550 off_gini=0.604 off_dce=+0.0000 agree=1.000 close=0.566 ret=+0.042 t_agree=0.903 evals=2.00 t_sec=9.7 train_sec=64.8
+seed=1 E32_L1/cp_val1_1 gini=0.637 used=25.0 base=0.3239 ratio=10.87 gate=0.537 off_gini=0.637 off_dce=+0.0000 agree=1.000 close=0.587 ret=+0.066 t_agree=0.879 evals=2.00 t_sec=10.2 train_sec=67.1
+## evalB_s2_E16L1.log
+seed=2 E16_L1/val1_0.1 gini=0.100 used=16.0 base=0.3170 ratio=1.08 gate=0.596 off_gini=0.281 off_dce=+0.1649 agree=0.714 t_agree=0.697 evals=2.00 t_sec=8.3 train_sec=64.0
+seed=2 E16_L1/val1_1 gini=0.108 used=16.0 base=0.3252 ratio=1.14 gate=0.532 off_gini=0.404 off_dce=+0.0844 agree=0.624 t_agree=0.588 evals=2.00 t_sec=8.6 train_sec=69.1
+seed=2 E16_L1/valall_0.1 gini=0.063 used=16.0 base=0.3154 ratio=1.13 gate=0.608 off_gini=0.127 off_dce=+0.0052 agree=0.875 t_agree=0.815 evals=16.00 t_sec=17.0 train_sec=72.2
+seed=2 E16_L1/valall_1 gini=0.051 used=16.0 base=0.3209 ratio=0.78 gate=0.586 off_gini=0.432 off_dce=+0.1255 agree=0.672 t_agree=0.703 evals=16.00 t_sec=17.0 train_sec=75.4
+seed=2 E16_L1/cp gini=0.188 used=16.0 base=0.3165 ratio=1.37 gate=0.495 off_gini=0.188 off_dce=+0.0000 agree=1.000 close=0.175 ret=+0.016 evals=0.00 t_sec=0.0 train_sec=63.9
+seed=2 E16_L1/cp_cf gini=0.089 used=16.0 base=0.3135 ratio=0.92 gate=0.849 off_gini=0.089 off_dce=+0.0000 agree=1.000 close=0.092 ret=-0.002 t_agree=0.911 evals=16.00 t_sec=16.0 train_sec=72.7
+seed=2 E16_L1/cp_top1 gini=0.110 used=16.0 base=0.3128 ratio=0.54 gate=0.348 off_gini=0.110 off_dce=+0.0000 agree=1.000 close=0.114 ret=+0.003 t_agree=1.000 evals=1.09 t_sec=9.1 train_sec=69.5
+seed=2 E16_L1/cp_rand1 gini=0.202 used=16.0 base=0.3161 ratio=1.40 gate=0.615 off_gini=0.202 off_dce=+0.0000 agree=1.000 close=0.132 ret=+0.066 t_agree=0.948 evals=2.00 t_sec=9.6 train_sec=70.5
+seed=2 E16_L1/cp_cfg gini=0.189 used=16.0 base=0.3279 ratio=1.59 gate=0.595 off_gini=0.189 off_dce=+0.0000 agree=1.000 close=0.268 ret=-0.073 t_agree=0.671 evals=16.00 t_sec=16.1 train_sec=74.5
+seed=2 E16_L1/cp_val0_0.1 gini=0.235 used=16.0 base=0.3251 ratio=2.43 gate=0.418 off_gini=0.235 off_dce=+0.0000 agree=1.000 close=0.253 ret=+0.004 t_agree=1.000 evals=1.00 t_sec=6.9 train_sec=62.9
+seed=2 E16_L1/cp_val0_1 gini=0.411 used=15.0 base=0.3212 ratio=2.45 gate=0.460 off_gini=0.411 off_dce=+0.0000 agree=1.000 close=0.434 ret=-0.027 t_agree=1.000 evals=1.00 t_sec=7.3 train_sec=65.4
+seed=2 E16_L1/cp_val1_0.1 gini=0.488 used=16.0 base=0.3155 ratio=3.74 gate=0.688 off_gini=0.488 off_dce=+0.0000 agree=1.000 close=0.309 ret=+0.174 t_agree=0.912 evals=2.00 t_sec=8.4 train_sec=64.0
+seed=2 E16_L1/cp_val1_1 gini=0.527 used=14.0 base=0.3281 ratio=3.40 gate=0.711 off_gini=0.527 off_dce=+0.0000 agree=1.000 close=0.407 ret=+0.114 t_agree=0.902 evals=2.00 t_sec=9.2 train_sec=69.4
+## evalB_s2_E32L1.log
+seed=2 E32_L1/val1_0.1 gini=0.117 used=32.0 base=0.3213 ratio=0.75 gate=0.409 off_gini=0.494 off_dce=+0.2015 agree=0.571 t_agree=0.555 evals=2.00 t_sec=10.1 train_sec=68.3
+seed=2 E32_L1/val1_1 gini=0.119 used=32.0 base=0.3191 ratio=1.26 gate=0.344 off_gini=0.635 off_dce=+0.1529 agree=0.402 t_agree=0.419 evals=2.00 t_sec=10.1 train_sec=69.7
+seed=2 E32_L1/valall_0.1 gini=0.098 used=32.0 base=0.3200 ratio=1.34 gate=0.364 off_gini=0.384 off_dce=+0.0743 agree=0.672 t_agree=0.654 evals=32.00 t_sec=27.5 train_sec=78.6
+seed=2 E32_L1/valall_1 gini=0.112 used=32.0 base=0.3162 ratio=1.10 gate=0.332 off_gini=0.518 off_dce=+0.1324 agree=0.523 t_agree=0.567 evals=32.00 t_sec=28.4 train_sec=80.7
+seed=2 E32_L1/cp gini=0.392 used=31.0 base=0.3139 ratio=1.93 gate=0.385 off_gini=0.392 off_dce=+0.0000 agree=1.000 close=0.252 ret=+0.128 evals=0.00 t_sec=0.0 train_sec=56.8
+seed=2 E32_L1/cp_cf gini=0.268 used=30.0 base=0.3148 ratio=1.43 gate=0.763 off_gini=0.268 off_dce=+0.0000 agree=1.000 close=0.234 ret=+0.025 t_agree=0.879 evals=32.00 t_sec=28.0 train_sec=80.2
+seed=2 E32_L1/cp_top1 gini=0.238 used=32.0 base=0.3140 ratio=1.66 gate=0.366 off_gini=0.238 off_dce=+0.0000 agree=1.000 close=0.143 ret=+0.094 t_agree=1.000 evals=1.10 t_sec=9.5 train_sec=62.6
+seed=2 E32_L1/cp_rand1 gini=0.292 used=32.0 base=0.3128 ratio=1.46 gate=0.417 off_gini=0.292 off_dce=+0.0000 agree=1.000 close=0.259 ret=+0.047 t_agree=0.939 evals=2.00 t_sec=11.0 train_sec=70.0
+seed=2 E32_L1/cp_cfg gini=0.377 used=31.0 base=0.3169 ratio=2.17 gate=0.550 off_gini=0.377 off_dce=+0.0000 agree=1.000 close=0.325 ret=+0.051 t_agree=0.660 evals=32.00 t_sec=27.9 train_sec=83.0
+seed=2 E32_L1/cp_val0_0.1 gini=0.398 used=31.0 base=0.3226 ratio=2.87 gate=0.279 off_gini=0.398 off_dce=+0.0000 agree=1.000 close=0.373 ret=+0.023 t_agree=1.000 evals=1.00 t_sec=8.0 train_sec=65.3
+seed=2 E32_L1/cp_val0_1 gini=0.583 used=28.0 base=0.3170 ratio=8.80 gate=0.310 off_gini=0.583 off_dce=+0.0000 agree=1.000 close=0.584 ret=-0.001 t_agree=1.000 evals=1.00 t_sec=7.6 train_sec=64.0
+seed=2 E32_L1/cp_val1_0.1 gini=0.506 used=27.0 base=0.3261 ratio=3.75 gate=0.543 off_gini=0.506 off_dce=+0.0000 agree=1.000 close=0.378 ret=+0.128 t_agree=0.907 evals=2.00 t_sec=10.0 train_sec=67.4
+seed=2 E32_L1/cp_val1_1 gini=0.574 used=23.0 base=0.3219 ratio=5.52 gate=0.499 off_gini=0.574 off_dce=+0.0000 agree=1.000 close=0.485 ret=+0.075 t_agree=0.877 evals=2.00 t_sec=10.2 train_sec=68.5
+## evalB_s3_E16L1.log
+seed=3 E16_L1/val1_0.1 gini=0.076 used=16.0 base=0.3198 ratio=0.88 gate=0.627 off_gini=0.342 off_dce=+0.0700 agree=0.741 t_agree=0.688 evals=2.00 t_sec=8.6 train_sec=66.7
+seed=3 E16_L1/val1_1 gini=0.075 used=16.0 base=0.3245 ratio=0.64 gate=0.457 off_gini=0.513 off_dce=+0.2072 agree=0.509 t_agree=0.507 evals=2.00 t_sec=8.3 train_sec=79.1
+seed=3 E16_L1/valall_0.1 gini=0.067 used=16.0 base=0.3237 ratio=1.15 gate=0.596 off_gini=0.245 off_dce=+0.0366 agree=0.795 t_agree=0.791 evals=16.00 t_sec=16.1 train_sec=83.9
+seed=3 E16_L1/valall_1 gini=0.096 used=16.0 base=0.3178 ratio=1.09 gate=0.611 off_gini=0.183 off_dce=+0.0875 agree=0.779 t_agree=0.759 evals=16.00 t_sec=16.6 train_sec=87.4
+seed=3 E16_L1/cp gini=0.222 used=16.0 base=0.3163 ratio=1.82 gate=0.492 off_gini=0.222 off_dce=+0.0000 agree=1.000 close=0.204 ret=+0.013 evals=0.00 t_sec=0.0 train_sec=69.1
+seed=3 E16_L1/cp_cf gini=0.121 used=16.0 base=0.3216 ratio=1.13 gate=0.882 off_gini=0.121 off_dce=+0.0000 agree=1.000 close=0.114 ret=+0.013 t_agree=0.939 evals=16.00 t_sec=15.7 train_sec=82.0
+seed=3 E16_L1/cp_top1 gini=0.218 used=15.0 base=0.3195 ratio=1.05 gate=0.378 off_gini=0.218 off_dce=+0.0000 agree=1.000 close=0.248 ret=+0.008 t_agree=1.000 evals=1.10 t_sec=7.7 train_sec=74.7
+seed=3 E16_L1/cp_rand1 gini=0.152 used=16.0 base=0.3156 ratio=1.34 gate=0.623 off_gini=0.152 off_dce=+0.0000 agree=1.000 close=0.196 ret=-0.028 t_agree=0.948 evals=2.00 t_sec=8.2 train_sec=75.8
+seed=3 E16_L1/cp_cfg gini=0.183 used=16.0 base=0.3191 ratio=1.74 gate=0.644 off_gini=0.183 off_dce=+0.0000 agree=1.000 close=0.175 ret=+0.025 t_agree=0.714 evals=16.00 t_sec=15.0 train_sec=82.5
+seed=3 E16_L1/cp_val0_0.1 gini=0.287 used=16.0 base=0.3306 ratio=2.19 gate=0.411 off_gini=0.287 off_dce=+0.0000 agree=1.000 close=0.369 ret=-0.079 t_agree=1.000 evals=1.00 t_sec=6.5 train_sec=76.0
+seed=3 E16_L1/cp_val0_1 gini=0.386 used=16.0 base=0.3213 ratio=4.75 gate=0.446 off_gini=0.386 off_dce=+0.0000 agree=1.000 close=0.494 ret=-0.109 t_agree=1.000 evals=1.00 t_sec=6.4 train_sec=73.8
+seed=3 E16_L1/cp_val1_0.1 gini=0.407 used=15.0 base=0.3215 ratio=2.63 gate=0.710 off_gini=0.407 off_dce=+0.0000 agree=1.000 close=0.362 ret=+0.075 t_agree=0.920 evals=2.00 t_sec=8.0 train_sec=77.4
+seed=3 E16_L1/cp_val1_1 gini=0.530 used=13.0 base=0.3216 ratio=3.94 gate=0.663 off_gini=0.530 off_dce=+0.0000 agree=1.000 close=0.488 ret=+0.052 t_agree=0.898 evals=2.00 t_sec=7.9 train_sec=75.7
+## evalB_s3_E32L1.log
+seed=3 E32_L1/val1_0.1 gini=0.124 used=32.0 base=0.3211 ratio=1.27 gate=0.420 off_gini=0.458 off_dce=+0.1068 agree=0.555 t_agree=0.542 evals=2.00 t_sec=10.8 train_sec=77.4
+seed=3 E32_L1/val1_1 gini=0.131 used=32.0 base=0.3275 ratio=0.92 gate=0.401 off_gini=0.466 off_dce=+0.1447 agree=0.534 t_agree=0.509 evals=2.00 t_sec=11.2 train_sec=91.2
+seed=3 E32_L1/valall_0.1 gini=0.119 used=32.0 base=0.3258 ratio=1.14 gate=0.419 off_gini=0.293 off_dce=+0.0295 agree=0.799 t_agree=0.737 evals=32.00 t_sec=28.3 train_sec=86.1
+seed=3 E32_L1/valall_1 gini=0.096 used=32.0 base=0.3180 ratio=0.93 gate=0.366 off_gini=0.496 off_dce=+0.1854 agree=0.531 t_agree=0.613 evals=32.00 t_sec=28.8 train_sec=85.7
+seed=3 E32_L1/cp gini=0.382 used=30.0 base=0.3190 ratio=2.20 gate=0.398 off_gini=0.382 off_dce=+0.0000 agree=1.000 close=0.245 ret=+0.148 evals=0.00 t_sec=0.0 train_sec=69.7
+seed=3 E32_L1/cp_cf gini=0.239 used=31.0 base=0.3195 ratio=1.42 gate=0.771 off_gini=0.239 off_dce=+0.0000 agree=1.000 close=0.202 ret=+0.058 t_agree=0.899 evals=32.00 t_sec=28.7 train_sec=91.2
+seed=3 E32_L1/cp_top1 gini=0.320 used=31.0 base=0.3186 ratio=1.90 gate=0.389 off_gini=0.320 off_dce=+0.0000 agree=1.000 close=0.346 ret=+0.007 t_agree=1.000 evals=1.11 t_sec=9.8 train_sec=67.1
+seed=3 E32_L1/cp_rand1 gini=0.282 used=30.0 base=0.3142 ratio=1.73 gate=0.447 off_gini=0.282 off_dce=+0.0000 agree=1.000 close=0.271 ret=+0.016 t_agree=0.953 evals=2.00 t_sec=10.4 train_sec=67.6
+seed=3 E32_L1/cp_cfg gini=0.326 used=32.0 base=0.3271 ratio=1.83 gate=0.565 off_gini=0.326 off_dce=+0.0000 agree=1.000 close=0.302 ret=+0.032 t_agree=0.658 evals=32.00 t_sec=27.6 train_sec=84.7
+seed=3 E32_L1/cp_val0_0.1 gini=0.449 used=30.0 base=0.3228 ratio=6.09 gate=0.311 off_gini=0.449 off_dce=+0.0000 agree=1.000 close=0.477 ret=-0.011 t_agree=1.000 evals=1.00 t_sec=8.6 train_sec=67.9
+seed=3 E32_L1/cp_val0_1 gini=0.503 used=29.0 base=0.3197 ratio=4.75 gate=0.362 off_gini=0.503 off_dce=+0.0000 agree=1.000 close=0.514 ret=-0.005 t_agree=1.000 evals=1.00 t_sec=8.4 train_sec=67.3
+seed=3 E32_L1/cp_val1_0.1 gini=0.652 used=23.0 base=0.3177 ratio=5.81 gate=0.628 off_gini=0.652 off_dce=+0.0000 agree=1.000 close=0.572 ret=+0.086 t_agree=0.918 evals=2.00 t_sec=10.0 train_sec=66.4
+seed=3 E32_L1/cp_val1_1 gini=0.647 used=24.0 base=0.3213 ratio=7.19 gate=0.609 off_gini=0.647 off_dce=+0.0000 agree=1.000 close=0.627 ret=+0.036 t_agree=0.886 evals=2.00 t_sec=10.0 train_sec=67.2
+## evalB_s4_E16L1.log
+seed=4 E16_L1/val1_0.1 gini=0.111 used=16.0 base=0.3156 ratio=0.93 gate=0.532 off_gini=0.449 off_dce=+0.1300 agree=0.646 t_agree=0.648 evals=2.00 t_sec=8.5 train_sec=67.2
+seed=4 E16_L1/val1_1 gini=0.125 used=16.0 base=0.3157 ratio=1.75 gate=0.466 off_gini=0.446 off_dce=+0.0962 agree=0.587 t_agree=0.547 evals=2.00 t_sec=8.1 train_sec=68.4
+seed=4 E16_L1/valall_0.1 gini=0.055 used=16.0 base=0.3135 ratio=0.76 gate=0.573 off_gini=0.276 off_dce=+0.0673 agree=0.775 t_agree=0.773 evals=16.00 t_sec=14.6 train_sec=63.6
+seed=4 E16_L1/valall_1 gini=0.062 used=16.0 base=0.3164 ratio=0.93 gate=0.574 off_gini=0.423 off_dce=+0.0983 agree=0.631 t_agree=0.701 evals=16.00 t_sec=15.2 train_sec=66.5
+seed=4 E16_L1/cp gini=0.396 used=16.0 base=0.3115 ratio=1.98 gate=0.516 off_gini=0.396 off_dce=+0.0000 agree=1.000 close=0.305 ret=+0.097 evals=0.00 t_sec=0.0 train_sec=54.0
+seed=4 E16_L1/cp_cf gini=0.100 used=16.0 base=0.3111 ratio=0.87 gate=0.852 off_gini=0.100 off_dce=+0.0000 agree=1.000 close=0.096 ret=+0.020 t_agree=0.907 evals=16.00 t_sec=15.1 train_sec=66.8
+seed=4 E16_L1/cp_top1 gini=0.256 used=16.0 base=0.3124 ratio=0.98 gate=0.385 off_gini=0.256 off_dce=+0.0000 agree=1.000 close=0.144 ret=+0.113 t_agree=1.000 evals=1.08 t_sec=8.6 train_sec=61.7
+seed=4 E16_L1/cp_rand1 gini=0.114 used=16.0 base=0.3145 ratio=1.03 gate=0.632 off_gini=0.114 off_dce=+0.0000 agree=1.000 close=0.086 ret=+0.023 t_agree=0.951 evals=2.00 t_sec=8.9 train_sec=62.1
+seed=4 E16_L1/cp_cfg gini=0.197 used=16.0 base=0.3166 ratio=1.38 gate=0.655 off_gini=0.197 off_dce=+0.0000 agree=1.000 close=0.200 ret=+0.006 t_agree=0.724 evals=16.00 t_sec=15.1 train_sec=68.0
+seed=4 E16_L1/cp_val0_0.1 gini=0.473 used=15.0 base=0.3173 ratio=2.89 gate=0.413 off_gini=0.473 off_dce=+0.0000 agree=1.000 close=0.372 ret=+0.119 t_agree=1.000 evals=1.00 t_sec=6.5 train_sec=57.4
+seed=4 E16_L1/cp_val0_1 gini=0.354 used=16.0 base=0.3190 ratio=3.87 gate=0.401 off_gini=0.354 off_dce=+0.0000 agree=1.000 close=0.372 ret=-0.019 t_agree=1.000 evals=1.00 t_sec=7.2 train_sec=58.4
+seed=4 E16_L1/cp_val1_0.1 gini=0.568 used=14.0 base=0.3173 ratio=4.34 gate=0.663 off_gini=0.568 off_dce=+0.0000 agree=1.000 close=0.393 ret=+0.173 t_agree=0.917 evals=2.00 t_sec=8.8 train_sec=63.1
+seed=4 E16_L1/cp_val1_1 gini=0.620 used=15.0 base=0.3139 ratio=6.69 gate=0.650 off_gini=0.620 off_dce=+0.0000 agree=1.000 close=0.597 ret=+0.020 t_agree=0.900 evals=2.00 t_sec=8.6 train_sec=61.9
+## evalB_s4_E32L1.log
+seed=4 E32_L1/val1_0.1 gini=0.145 used=32.0 base=0.3292 ratio=1.11 gate=0.410 off_gini=0.488 off_dce=+0.1019 agree=0.602 t_agree=0.564 evals=2.00 t_sec=9.8 train_sec=74.8
+seed=4 E32_L1/val1_1 gini=0.137 used=32.0 base=0.3141 ratio=1.35 gate=0.385 off_gini=0.482 off_dce=+0.0705 agree=0.513 t_agree=0.487 evals=2.00 t_sec=9.3 train_sec=77.9
+seed=4 E32_L1/valall_0.1 gini=0.112 used=32.0 base=0.3112 ratio=1.17 gate=0.389 off_gini=0.341 off_dce=+0.0405 agree=0.740 t_agree=0.708 evals=32.00 t_sec=26.4 train_sec=82.6
+seed=4 E32_L1/valall_1 gini=0.106 used=32.0 base=0.3213 ratio=1.16 gate=0.402 off_gini=0.417 off_dce=+0.1402 agree=0.624 t_agree=0.655 evals=32.00 t_sec=28.0 train_sec=88.4
+seed=4 E32_L1/cp gini=0.323 used=29.0 base=0.3099 ratio=1.70 gate=0.391 off_gini=0.323 off_dce=+0.0000 agree=1.000 close=0.227 ret=+0.083 evals=0.00 t_sec=0.0 train_sec=63.8
+seed=4 E32_L1/cp_cf gini=0.214 used=32.0 base=0.3097 ratio=1.00 gate=0.759 off_gini=0.214 off_dce=+0.0000 agree=1.000 close=0.190 ret=+0.041 t_agree=0.894 evals=32.00 t_sec=28.2 train_sec=89.8
+seed=4 E32_L1/cp_top1 gini=0.215 used=32.0 base=0.3082 ratio=1.14 gate=0.362 off_gini=0.215 off_dce=+0.0000 agree=1.000 close=0.216 ret=-0.010 t_agree=1.000 evals=1.09 t_sec=9.4 train_sec=72.6
+seed=4 E32_L1/cp_rand1 gini=0.246 used=32.0 base=0.3127 ratio=1.74 gate=0.441 off_gini=0.246 off_dce=+0.0000 agree=1.000 close=0.215 ret=+0.025 t_agree=0.960 evals=2.00 t_sec=10.1 train_sec=72.0
+seed=4 E32_L1/cp_cfg gini=0.316 used=30.0 base=0.3120 ratio=1.70 gate=0.584 off_gini=0.316 off_dce=+0.0000 agree=1.000 close=0.263 ret=+0.051 t_agree=0.697 evals=32.00 t_sec=26.5 train_sec=79.1
+seed=4 E32_L1/cp_val0_0.1 gini=0.478 used=28.0 base=0.3161 ratio=3.57 gate=0.318 off_gini=0.478 off_dce=+0.0000 agree=1.000 close=0.411 ret=+0.066 t_agree=1.000 evals=1.00 t_sec=7.2 train_sec=59.3
+seed=4 E32_L1/cp_val0_1 gini=0.570 used=30.0 base=0.3143 ratio=7.58 gate=0.346 off_gini=0.570 off_dce=+0.0000 agree=1.000 close=0.601 ret=-0.049 t_agree=1.000 evals=1.00 t_sec=7.5 train_sec=62.9
+seed=4 E32_L1/cp_val1_0.1 gini=0.738 used=19.0 base=0.3233 ratio=12.18 gate=0.602 off_gini=0.738 off_dce=+0.0000 agree=1.000 close=0.498 ret=+0.230 t_agree=0.906 evals=2.00 t_sec=10.0 train_sec=66.2
+seed=4 E32_L1/cp_val1_1 gini=0.703 used=27.0 base=0.3123 ratio=14.40 gate=0.553 off_gini=0.703 off_dce=+0.0000 agree=1.000 close=0.648 ret=+0.049 t_agree=0.884 evals=2.00 t_sec=9.8 train_sec=64.2
+## evalC_s0_E16L1.log
+seed=0 E16_L1/dval1_0.1 gini=0.092 used=16.0 base=0.3287 ratio=1.04 gate=0.792 off_gini=0.224 off_dce=+0.0163 agree=0.839 t_agree=0.809 evals=2.00 t_sec=8.6 train_sec=67.6
+seed=0 E16_L1/dval1_1 gini=0.071 used=16.0 base=0.3447 ratio=0.91 gate=0.708 off_gini=0.297 off_dce=+0.3616 agree=0.731 t_agree=0.735 evals=2.00 t_sec=8.1 train_sec=70.7
+seed=0 E16_L1/dval3_0.1 gini=0.088 used=16.0 base=0.3294 ratio=0.90 gate=0.784 off_gini=0.225 off_dce=+0.0334 agree=0.834 t_agree=0.800 evals=4.00 t_sec=10.3 train_sec=72.1
+seed=0 E16_L1/dval3_1 gini=0.159 used=16.0 base=0.3346 ratio=1.35 gate=0.827 off_gini=0.201 off_dce=+0.0148 agree=0.881 t_agree=0.834 evals=4.00 t_sec=10.6 train_sec=71.9
+seed=0 E16_L1/dvalall_0.1 gini=0.107 used=16.0 base=0.3292 ratio=1.28 gate=0.818 off_gini=0.173 off_dce=+0.0065 agree=0.857 t_agree=0.848 evals=16.00 t_sec=15.6 train_sec=70.9
+seed=0 E16_L1/dvalall_1 gini=0.056 used=16.0 base=0.3296 ratio=1.09 gate=0.851 off_gini=0.161 off_dce=+0.0070 agree=0.878 t_agree=0.874 evals=16.00 t_sec=15.0 train_sec=68.0
+seed=0 E16_L1/dval1t1_0.1 gini=0.185 used=16.0 base=0.3374 ratio=0.86 gate=0.152 off_gini=0.382 off_dce=+0.0110 agree=0.660 t_agree=0.591 evals=2.00 t_sec=8.3 train_sec=63.2
+seed=0 E16_L1/dval1t1_1 gini=0.090 used=16.0 base=0.3257 ratio=1.28 gate=0.179 off_gini=0.500 off_dce=+0.0274 agree=0.560 t_agree=0.514 evals=2.00 t_sec=8.2 train_sec=63.0
+seed=0 E16_L1/dvalallt1_0.1 gini=0.182 used=16.0 base=0.3363 ratio=0.75 gate=0.157 off_gini=0.472 off_dce=+0.0045 agree=0.594 t_agree=0.482 evals=16.00 t_sec=15.7 train_sec=72.5
+seed=0 E16_L1/dvalallt1_1 gini=0.086 used=16.0 base=0.3282 ratio=1.38 gate=0.177 off_gini=0.525 off_dce=+0.0612 agree=0.527 t_agree=0.447 evals=16.00 t_sec=16.8 train_sec=77.5
+seed=0 E16_L1/cp_dval1_0.1 gini=0.256 used=15.0 base=0.3237 ratio=1.77 gate=0.875 off_gini=0.256 off_dce=+0.0000 agree=1.000 close=0.225 ret=+0.030 t_agree=0.959 evals=2.00 t_sec=8.7 train_sec=66.8
+seed=0 E16_L1/cp_dval1_1 gini=0.310 used=14.0 base=0.3242 ratio=1.58 gate=0.912 off_gini=0.310 off_dce=+0.0000 agree=1.000 close=0.330 ret=-0.011 t_agree=0.960 evals=2.00 t_sec=8.6 train_sec=65.9
+## evalC_s0_E32L1.log
+seed=0 E32_L1/dval1_0.1 gini=0.106 used=32.0 base=0.3357 ratio=1.10 gate=0.722 off_gini=0.251 off_dce=+0.0371 agree=0.759 t_agree=0.791 evals=2.00 t_sec=11.1 train_sec=73.3
+seed=0 E32_L1/dval1_1 gini=0.109 used=32.0 base=0.3359 ratio=0.98 gate=0.586 off_gini=0.476 off_dce=+0.3095 agree=0.590 t_agree=0.621 evals=2.00 t_sec=10.5 train_sec=80.7
+seed=0 E32_L1/dval3_0.1 gini=0.087 used=32.0 base=0.3271 ratio=1.35 gate=0.734 off_gini=0.307 off_dce=+0.1427 agree=0.771 t_agree=0.759 evals=4.00 t_sec=13.2 train_sec=76.4
+seed=0 E32_L1/dval3_1 gini=0.125 used=32.0 base=0.3356 ratio=1.08 gate=0.678 off_gini=0.399 off_dce=+0.2238 agree=0.705 t_agree=0.672 evals=4.00 t_sec=13.1 train_sec=78.5
+seed=0 E32_L1/dvalall_0.1 gini=0.109 used=32.0 base=0.3309 ratio=0.84 gate=0.722 off_gini=0.272 off_dce=+0.2324 agree=0.758 t_agree=0.831 evals=32.00 t_sec=29.6 train_sec=84.3
+seed=0 E32_L1/dvalall_1 gini=0.134 used=32.0 base=0.3388 ratio=1.17 gate=0.674 off_gini=0.397 off_dce=+0.2870 agree=0.702 t_agree=0.793 evals=32.00 t_sec=29.5 train_sec=85.0
+seed=0 E32_L1/dval1t1_0.1 gini=0.273 used=31.0 base=0.3325 ratio=1.66 gate=0.089 off_gini=0.647 off_dce=+0.0403 agree=0.470 t_agree=0.422 evals=2.00 t_sec=10.1 train_sec=67.3
+seed=0 E32_L1/dval1t1_1 gini=0.951 used=2.0 base=0.3280 ratio=153.69 gate=0.032 off_gini=0.675 off_dce=+0.0059 agree=0.041 t_agree=0.033 evals=2.00 t_sec=9.8 train_sec=66.6
+seed=0 E32_L1/dvalallt1_0.1 gini=0.451 used=26.0 base=0.3333 ratio=1.23 gate=0.068 off_gini=0.638 off_dce=+0.0115 agree=0.441 t_agree=0.376 evals=32.00 t_sec=30.4 train_sec=88.8
+seed=0 E32_L1/dvalallt1_1 gini=0.968 used=2.0 base=0.3332 ratio=97.89 gate=0.032 off_gini=0.804 off_dce=-0.0055 agree=0.001 t_agree=0.073 evals=32.00 t_sec=28.9 train_sec=90.5
+seed=0 E32_L1/cp_dval1_0.1 gini=0.303 used=28.0 base=0.3243 ratio=2.39 gate=0.863 off_gini=0.303 off_dce=+0.0000 agree=1.000 close=0.292 ret=+0.019 t_agree=0.964 evals=2.00 t_sec=9.8 train_sec=66.1
+seed=0 E32_L1/cp_dval1_1 gini=0.466 used=26.0 base=0.3237 ratio=3.33 gate=0.848 off_gini=0.466 off_dce=+0.0000 agree=1.000 close=0.460 ret=+0.003 t_agree=0.952 evals=2.00 t_sec=9.6 train_sec=65.0
+## evalC_s1_E16L1.log
+seed=1 E16_L1/dval1_0.1 gini=0.089 used=16.0 base=0.3278 ratio=0.85 gate=0.853 off_gini=0.125 off_dce=+0.0005 agree=0.898 t_agree=0.875 evals=2.00 t_sec=8.2 train_sec=67.7
+seed=1 E16_L1/dval1_1 gini=0.049 used=16.0 base=0.3209 ratio=0.86 gate=0.826 off_gini=0.171 off_dce=+0.0174 agree=0.868 t_agree=0.841 evals=2.00 t_sec=8.2 train_sec=68.9
+seed=1 E16_L1/dval3_0.1 gini=0.052 used=16.0 base=0.3255 ratio=1.15 gate=0.843 off_gini=0.159 off_dce=+0.0126 agree=0.885 t_agree=0.858 evals=4.00 t_sec=11.0 train_sec=76.6
+seed=1 E16_L1/dval3_1 gini=0.067 used=16.0 base=0.3219 ratio=1.17 gate=0.853 off_gini=0.143 off_dce=+0.0094 agree=0.900 t_agree=0.860 evals=4.00 t_sec=10.8 train_sec=73.8
+seed=1 E16_L1/dvalall_0.1 gini=0.039 used=16.0 base=0.3267 ratio=0.82 gate=0.833 off_gini=0.180 off_dce=+0.0367 agree=0.862 t_agree=0.877 evals=16.00 t_sec=15.8 train_sec=71.1
+seed=1 E16_L1/dvalall_1 gini=0.045 used=16.0 base=0.3284 ratio=0.91 gate=0.820 off_gini=0.140 off_dce=+0.0775 agree=0.863 t_agree=0.859 evals=16.00 t_sec=14.9 train_sec=67.8
+seed=1 E16_L1/dval1t1_0.1 gini=0.089 used=16.0 base=0.3279 ratio=1.34 gate=0.165 off_gini=0.414 off_dce=+0.0116 agree=0.686 t_agree=0.619 evals=2.00 t_sec=8.0 train_sec=60.5
+seed=1 E16_L1/dval1t1_1 gini=0.109 used=16.0 base=0.3270 ratio=1.13 gate=0.170 off_gini=0.407 off_dce=+0.0046 agree=0.633 t_agree=0.577 evals=2.00 t_sec=7.9 train_sec=60.3
+seed=1 E16_L1/dvalallt1_0.1 gini=0.121 used=16.0 base=0.3258 ratio=0.77 gate=0.147 off_gini=0.325 off_dce=+0.0082 agree=0.656 t_agree=0.577 evals=16.00 t_sec=15.2 train_sec=67.5
+seed=1 E16_L1/dvalallt1_1 gini=0.116 used=16.0 base=0.3238 ratio=0.92 gate=0.161 off_gini=0.418 off_dce=+0.0116 agree=0.622 t_agree=0.482 evals=16.00 t_sec=14.8 train_sec=66.4
+seed=1 E16_L1/cp_dval1_0.1 gini=0.253 used=16.0 base=0.3211 ratio=1.84 gate=0.912 off_gini=0.253 off_dce=+0.0000 agree=1.000 close=0.170 ret=+0.063 t_agree=0.963 evals=2.00 t_sec=8.4 train_sec=64.0
+seed=1 E16_L1/cp_dval1_1 gini=0.274 used=15.0 base=0.3228 ratio=1.82 gate=0.896 off_gini=0.274 off_dce=+0.0000 agree=1.000 close=0.300 ret=-0.008 t_agree=0.958 evals=2.00 t_sec=8.3 train_sec=63.9
+## evalC_s1_E32L1.log
+seed=1 E32_L1/dval1_0.1 gini=0.161 used=32.0 base=0.3389 ratio=0.93 gate=0.669 off_gini=0.367 off_dce=+0.0380 agree=0.702 t_agree=0.705 evals=2.00 t_sec=10.0 train_sec=80.9
+seed=1 E32_L1/dval1_1 gini=0.151 used=32.0 base=0.3304 ratio=0.95 gate=0.597 off_gini=0.421 off_dce=+0.1238 agree=0.633 t_agree=0.620 evals=2.00 t_sec=9.8 train_sec=81.4
+seed=1 E32_L1/dval3_0.1 gini=0.109 used=32.0 base=0.3321 ratio=0.94 gate=0.640 off_gini=0.418 off_dce=+0.0736 agree=0.669 t_agree=0.670 evals=4.00 t_sec=12.3 train_sec=82.6
+seed=1 E32_L1/dval3_1 gini=0.109 used=32.0 base=0.3284 ratio=0.92 gate=0.621 off_gini=0.444 off_dce=+0.5060 agree=0.652 t_agree=0.640 evals=4.00 t_sec=12.2 train_sec=82.6
+seed=1 E32_L1/dvalall_0.1 gini=0.163 used=32.0 base=0.3275 ratio=1.30 gate=0.640 off_gini=0.378 off_dce=+0.4646 agree=0.676 t_agree=0.766 evals=32.00 t_sec=36.3 train_sec=104.3
+seed=1 E32_L1/dvalall_1 gini=0.127 used=32.0 base=0.3382 ratio=0.95 gate=0.525 off_gini=0.547 off_dce=+1.0510 agree=0.539 t_agree=0.675 evals=32.00 t_sec=37.3 train_sec=106.9
+seed=1 E32_L1/dval1t1_0.1 gini=0.664 used=26.0 base=0.3487 ratio=1.50 gate=0.075 off_gini=0.686 off_dce=+0.0252 agree=0.299 t_agree=0.339 evals=2.00 t_sec=9.6 train_sec=79.3
+seed=1 E32_L1/dval1t1_1 gini=0.969 used=1.0 base=0.3322 ratio=147.81 gate=0.032 off_gini=0.691 off_dce=-0.0008 agree=0.026 t_agree=0.037 evals=2.00 t_sec=9.3 train_sec=77.7
+seed=1 E32_L1/dvalallt1_0.1 gini=0.722 used=24.0 base=0.3323 ratio=1.89 gate=0.068 off_gini=0.679 off_dce=+0.0016 agree=0.329 t_agree=0.342 evals=32.00 t_sec=35.1 train_sec=100.5
+seed=1 E32_L1/dvalallt1_1 gini=0.939 used=2.0 base=0.3313 ratio=123.59 gate=0.032 off_gini=0.684 off_dce=+0.0003 agree=0.002 t_agree=0.061 evals=32.00 t_sec=35.5 train_sec=101.2
+seed=1 E32_L1/cp_dval1_0.1 gini=0.389 used=27.0 base=0.3232 ratio=2.69 gate=0.810 off_gini=0.389 off_dce=+0.0000 agree=1.000 close=0.331 ret=+0.062 t_agree=0.960 evals=2.00 t_sec=9.9 train_sec=82.5
+seed=1 E32_L1/cp_dval1_1 gini=0.465 used=26.0 base=0.3202 ratio=3.54 gate=0.825 off_gini=0.465 off_dce=+0.0000 agree=1.000 close=0.473 ret=+0.015 t_agree=0.953 evals=2.00 t_sec=9.8 train_sec=80.4
+## evalC_s2_E16L1.log
+seed=2 E16_L1/dval1_0.1 gini=0.078 used=16.0 base=0.3178 ratio=0.86 gate=0.870 off_gini=0.161 off_dce=+0.0121 agree=0.894 t_agree=0.879 evals=2.00 t_sec=8.5 train_sec=66.8
+seed=2 E16_L1/dval1_1 gini=0.043 used=16.0 base=0.3253 ratio=1.23 gate=0.834 off_gini=0.193 off_dce=+0.1066 agree=0.847 t_agree=0.835 evals=2.00 t_sec=8.8 train_sec=70.2
+seed=2 E16_L1/dval3_0.1 gini=0.123 used=16.0 base=0.3297 ratio=1.47 gate=0.826 off_gini=0.243 off_dce=+0.0151 agree=0.837 t_agree=0.860 evals=4.00 t_sec=12.4 train_sec=81.5
+seed=2 E16_L1/dval3_1 gini=0.051 used=16.0 base=0.3205 ratio=0.97 gate=0.812 off_gini=0.190 off_dce=+0.0539 agree=0.852 t_agree=0.847 evals=4.00 t_sec=11.2 train_sec=73.7
+seed=2 E16_L1/dvalall_0.1 gini=0.054 used=16.0 base=0.3215 ratio=1.08 gate=0.795 off_gini=0.212 off_dce=+0.0321 agree=0.818 t_agree=0.894 evals=16.00 t_sec=17.1 train_sec=75.5
+seed=2 E16_L1/dvalall_1 gini=0.071 used=16.0 base=0.3179 ratio=1.62 gate=0.834 off_gini=0.148 off_dce=+0.0230 agree=0.865 t_agree=0.868 evals=16.00 t_sec=17.4 train_sec=75.8
+seed=2 E16_L1/dval1t1_0.1 gini=0.176 used=16.0 base=0.3214 ratio=0.73 gate=0.143 off_gini=0.331 off_dce=+0.0070 agree=0.696 t_agree=0.602 evals=2.00 t_sec=8.8 train_sec=66.0
+seed=2 E16_L1/dval1t1_1 gini=0.110 used=16.0 base=0.3237 ratio=0.73 gate=0.163 off_gini=0.408 off_dce=+0.0080 agree=0.572 t_agree=0.562 evals=2.00 t_sec=8.5 train_sec=65.1
+seed=2 E16_L1/dvalallt1_0.1 gini=0.101 used=16.0 base=0.3174 ratio=1.16 gate=0.152 off_gini=0.401 off_dce=+0.0183 agree=0.651 t_agree=0.512 evals=16.00 t_sec=16.6 train_sec=71.8
+seed=2 E16_L1/dvalallt1_1 gini=0.121 used=16.0 base=0.3206 ratio=0.96 gate=0.167 off_gini=0.444 off_dce=+0.0054 agree=0.584 t_agree=0.431 evals=16.00 t_sec=17.2 train_sec=74.9
+seed=2 E16_L1/cp_dval1_0.1 gini=0.350 used=15.0 base=0.3141 ratio=1.75 gate=0.924 off_gini=0.350 off_dce=+0.0000 agree=1.000 close=0.277 ret=+0.072 t_agree=0.958 evals=2.00 t_sec=8.8 train_sec=67.3
+seed=2 E16_L1/cp_dval1_1 gini=0.183 used=16.0 base=0.3194 ratio=1.16 gate=0.927 off_gini=0.183 off_dce=+0.0000 agree=1.000 close=0.186 ret=-0.001 t_agree=0.957 evals=2.00 t_sec=9.1 train_sec=69.0
+## evalC_s2_E32L1.log
+seed=2 E32_L1/dval1_0.1 gini=0.160 used=32.0 base=0.3260 ratio=1.41 gate=0.680 off_gini=0.382 off_dce=+0.2163 agree=0.701 t_agree=0.688 evals=2.00 t_sec=9.8 train_sec=67.7
+seed=2 E32_L1/dval1_1 gini=0.090 used=32.0 base=0.3291 ratio=0.81 gate=0.614 off_gini=0.475 off_dce=+0.3374 agree=0.620 t_agree=0.611 evals=2.00 t_sec=9.8 train_sec=68.1
+seed=2 E32_L1/dval3_0.1 gini=0.125 used=32.0 base=0.3254 ratio=0.98 gate=0.689 off_gini=0.308 off_dce=+0.1241 agree=0.716 t_agree=0.731 evals=4.00 t_sec=11.7 train_sec=59.4
+seed=2 E32_L1/dval3_1 gini=0.120 used=32.0 base=0.3421 ratio=1.03 gate=0.620 off_gini=0.480 off_dce=+0.2331 agree=0.617 t_agree=0.621 evals=4.00 t_sec=12.1 train_sec=70.2
+seed=2 E32_L1/dvalall_0.1 gini=0.124 used=32.0 base=0.3269 ratio=0.72 gate=0.668 off_gini=0.362 off_dce=+0.2282 agree=0.688 t_agree=0.758 evals=32.00 t_sec=28.9 train_sec=82.3
+seed=2 E32_L1/dvalall_1 gini=0.084 used=32.0 base=0.3253 ratio=1.24 gate=0.639 off_gini=0.430 off_dce=+0.4696 agree=0.649 t_agree=0.751 evals=32.00 t_sec=28.6 train_sec=80.5
+seed=2 E32_L1/dval1t1_0.1 gini=0.463 used=27.0 base=0.3262 ratio=1.65 gate=0.082 off_gini=0.698 off_dce=+0.0300 agree=0.443 t_agree=0.353 evals=2.00 t_sec=9.9 train_sec=65.2
+seed=2 E32_L1/dval1t1_1 gini=0.969 used=1.0 base=0.3243 ratio=47.96 gate=0.031 off_gini=0.808 off_dce=+0.0034 agree=0.005 t_agree=0.033 evals=2.00 t_sec=10.3 train_sec=69.2
+seed=2 E32_L1/dvalallt1_0.1 gini=0.376 used=31.0 base=0.3199 ratio=1.43 gate=0.097 off_gini=0.654 off_dce=+0.0348 agree=0.458 t_agree=0.384 evals=32.00 t_sec=29.4 train_sec=82.7
+seed=2 E32_L1/dvalallt1_1 gini=0.969 used=1.0 base=0.3236 ratio=70.20 gate=0.032 off_gini=0.580 off_dce=+0.0218 agree=0.034 t_agree=0.049 evals=32.00 t_sec=29.4 train_sec=82.9
+seed=2 E32_L1/cp_dval1_0.1 gini=0.452 used=24.0 base=0.3187 ratio=2.48 gate=0.832 off_gini=0.452 off_dce=+0.0000 agree=1.000 close=0.411 ret=+0.039 t_agree=0.947 evals=2.00 t_sec=9.7 train_sec=65.0
+seed=2 E32_L1/cp_dval1_1 gini=0.402 used=27.0 base=0.3254 ratio=2.28 gate=0.851 off_gini=0.402 off_dce=+0.0000 agree=1.000 close=0.306 ret=+0.100 t_agree=0.955 evals=2.00 t_sec=10.0 train_sec=66.7
+## evalC_s3_E16L1.log
+seed=3 E16_L1/dval1_0.1 gini=0.054 used=16.0 base=0.3284 ratio=0.75 gate=0.776 off_gini=0.235 off_dce=+0.0264 agree=0.798 t_agree=0.767 evals=2.00 t_sec=8.4 train_sec=77.1
+seed=3 E16_L1/dval1_1 gini=0.047 used=16.0 base=0.3241 ratio=1.29 gate=0.849 off_gini=0.185 off_dce=+0.0925 agree=0.870 t_agree=0.847 evals=2.00 t_sec=8.4 train_sec=71.6
+seed=3 E16_L1/dval3_0.1 gini=0.061 used=16.0 base=0.3287 ratio=1.04 gate=0.758 off_gini=0.293 off_dce=+0.1166 agree=0.778 t_agree=0.749 evals=4.00 t_sec=11.2 train_sec=73.9
+seed=3 E16_L1/dval3_1 gini=0.048 used=16.0 base=0.3258 ratio=1.51 gate=0.836 off_gini=0.144 off_dce=+0.0111 agree=0.878 t_agree=0.854 evals=4.00 t_sec=11.2 train_sec=77.5
+seed=3 E16_L1/dvalall_0.1 gini=0.066 used=16.0 base=0.3312 ratio=1.06 gate=0.772 off_gini=0.231 off_dce=+0.0866 agree=0.818 t_agree=0.811 evals=16.00 t_sec=15.6 train_sec=70.5
+seed=3 E16_L1/dvalall_1 gini=0.049 used=16.0 base=0.3267 ratio=1.12 gate=0.809 off_gini=0.163 off_dce=+0.0386 agree=0.854 t_agree=0.846 evals=16.00 t_sec=15.5 train_sec=68.7
+seed=3 E16_L1/dval1t1_0.1 gini=0.111 used=16.0 base=0.3190 ratio=1.24 gate=0.169 off_gini=0.445 off_dce=+0.0284 agree=0.624 t_agree=0.580 evals=2.00 t_sec=8.1 train_sec=61.4
+seed=3 E16_L1/dval1t1_1 gini=0.122 used=16.0 base=0.3203 ratio=0.66 gate=0.136 off_gini=0.491 off_dce=+0.0313 agree=0.527 t_agree=0.513 evals=2.00 t_sec=8.0 train_sec=61.4
+seed=3 E16_L1/dvalallt1_0.1 gini=0.099 used=16.0 base=0.3199 ratio=0.45 gate=0.157 off_gini=0.485 off_dce=+0.0531 agree=0.535 t_agree=0.491 evals=16.00 t_sec=15.2 train_sec=69.9
+seed=3 E16_L1/dvalallt1_1 gini=0.129 used=16.0 base=0.3244 ratio=0.71 gate=0.137 off_gini=0.397 off_dce=+0.0275 agree=0.633 t_agree=0.491 evals=16.00 t_sec=15.7 train_sec=70.1
+seed=3 E16_L1/cp_dval1_0.1 gini=0.395 used=15.0 base=0.3209 ratio=2.35 gate=0.878 off_gini=0.395 off_dce=+0.0000 agree=1.000 close=0.315 ret=+0.081 t_agree=0.960 evals=2.00 t_sec=7.9 train_sec=61.0
+seed=3 E16_L1/cp_dval1_1 gini=0.222 used=16.0 base=0.3202 ratio=1.15 gate=0.919 off_gini=0.222 off_dce=+0.0000 agree=1.000 close=0.227 ret=-0.003 t_agree=0.971 evals=2.00 t_sec=7.8 train_sec=60.6
+## evalC_s3_E32L1.log
+seed=3 E32_L1/dval1_0.1 gini=0.141 used=32.0 base=0.3357 ratio=0.96 gate=0.775 off_gini=0.256 off_dce=+0.0360 agree=0.792 t_agree=0.793 evals=2.00 t_sec=10.9 train_sec=75.5
+seed=3 E32_L1/dval1_1 gini=0.130 used=32.0 base=0.3352 ratio=1.32 gate=0.718 off_gini=0.371 off_dce=+0.1516 agree=0.751 t_agree=0.720 evals=2.00 t_sec=11.1 train_sec=75.6
+seed=3 E32_L1/dval3_0.1 gini=0.124 used=32.0 base=0.3441 ratio=1.26 gate=0.726 off_gini=0.330 off_dce=+0.0183 agree=0.759 t_agree=0.734 evals=4.00 t_sec=12.6 train_sec=71.9
+seed=3 E32_L1/dval3_1 gini=0.127 used=32.0 base=0.3357 ratio=1.33 gate=0.701 off_gini=0.342 off_dce=+0.3508 agree=0.717 t_agree=0.725 evals=4.00 t_sec=13.1 train_sec=72.3
+seed=3 E32_L1/dvalall_0.1 gini=0.112 used=32.0 base=0.3334 ratio=1.16 gate=0.733 off_gini=0.242 off_dce=+0.0769 agree=0.790 t_agree=0.815 evals=32.00 t_sec=30.7 train_sec=84.8
+seed=3 E32_L1/dvalall_1 gini=0.103 used=32.0 base=0.3281 ratio=0.93 gate=0.693 off_gini=0.364 off_dce=+0.6678 agree=0.710 t_agree=0.778 evals=32.00 t_sec=29.5 train_sec=81.9
+seed=3 E32_L1/dval1t1_0.1 gini=0.512 used=29.0 base=0.3265 ratio=1.10 gate=0.074 off_gini=0.680 off_dce=+0.0183 agree=0.335 t_agree=0.374 evals=2.00 t_sec=10.4 train_sec=67.4
+seed=3 E32_L1/dval1t1_1 gini=0.969 used=1.0 base=0.3206 ratio=79.17 gate=0.031 off_gini=0.663 off_dce=+0.0056 agree=0.027 t_agree=0.028 evals=2.00 t_sec=10.3 train_sec=69.1
+seed=3 E32_L1/dvalallt1_0.1 gini=0.354 used=32.0 base=0.3212 ratio=0.98 gate=0.078 off_gini=0.660 off_dce=+0.0307 agree=0.398 t_agree=0.379 evals=32.00 t_sec=29.7 train_sec=82.5
+seed=3 E32_L1/dvalallt1_1 gini=0.961 used=2.0 base=0.3239 ratio=66.67 gate=0.033 off_gini=0.653 off_dce=+0.0074 agree=0.085 t_agree=0.072 evals=32.00 t_sec=29.6 train_sec=81.0
+seed=3 E32_L1/cp_dval1_0.1 gini=0.301 used=30.0 base=0.3220 ratio=1.77 gate=0.873 off_gini=0.301 off_dce=+0.0000 agree=1.000 close=0.255 ret=+0.050 t_agree=0.968 evals=2.00 t_sec=9.7 train_sec=64.4
+seed=3 E32_L1/cp_dval1_1 gini=0.376 used=28.0 base=0.3326 ratio=2.11 gate=0.877 off_gini=0.376 off_dce=+0.0000 agree=1.000 close=0.384 ret=-0.013 t_agree=0.963 evals=2.00 t_sec=9.5 train_sec=63.9
+## evalC_s4_E16L1.log
+seed=4 E16_L1/dval1_0.1 gini=0.056 used=16.0 base=0.3133 ratio=0.85 gate=0.800 off_gini=0.141 off_dce=+0.0148 agree=0.863 t_agree=0.835 evals=2.00 t_sec=8.3 train_sec=68.0
+seed=4 E16_L1/dval1_1 gini=0.125 used=16.0 base=0.3264 ratio=0.69 gate=0.794 off_gini=0.181 off_dce=+0.0249 agree=0.842 t_agree=0.849 evals=2.00 t_sec=8.4 train_sec=73.1
+seed=4 E16_L1/dval3_0.1 gini=0.093 used=16.0 base=0.3177 ratio=1.05 gate=0.896 off_gini=0.101 off_dce=-0.0036 agree=0.910 t_agree=0.919 evals=4.00 t_sec=11.0 train_sec=85.9
+seed=4 E16_L1/dval3_1 gini=0.106 used=16.0 base=0.3239 ratio=1.38 gate=0.821 off_gini=0.167 off_dce=+0.0122 agree=0.874 t_agree=0.840 evals=4.00 t_sec=11.2 train_sec=78.1
+seed=4 E16_L1/dvalall_0.1 gini=0.083 used=16.0 base=0.3133 ratio=1.21 gate=0.867 off_gini=0.106 off_dce=+0.0144 agree=0.926 t_agree=0.905 evals=16.00 t_sec=16.9 train_sec=82.4
+seed=4 E16_L1/dvalall_1 gini=0.114 used=16.0 base=0.3150 ratio=1.31 gate=0.843 off_gini=0.181 off_dce=+0.0449 agree=0.869 t_agree=0.857 evals=16.00 t_sec=16.0 train_sec=81.1
+seed=4 E16_L1/dval1t1_0.1 gini=0.132 used=16.0 base=0.3173 ratio=0.64 gate=0.137 off_gini=0.474 off_dce=+0.0291 agree=0.578 t_agree=0.541 evals=2.00 t_sec=8.7 train_sec=74.4
+seed=4 E16_L1/dval1t1_1 gini=0.131 used=16.0 base=0.3137 ratio=0.86 gate=0.185 off_gini=0.469 off_dce=+0.0165 agree=0.571 t_agree=0.542 evals=2.00 t_sec=8.9 train_sec=77.3
+seed=4 E16_L1/dvalallt1_0.1 gini=0.146 used=16.0 base=0.3201 ratio=1.04 gate=0.151 off_gini=0.387 off_dce=+0.0098 agree=0.606 t_agree=0.513 evals=16.00 t_sec=19.3 train_sec=81.5
+seed=4 E16_L1/dvalallt1_1 gini=0.103 used=16.0 base=0.3143 ratio=1.04 gate=0.175 off_gini=0.434 off_dce=+0.0188 agree=0.570 t_agree=0.479 evals=16.00 t_sec=18.8 train_sec=78.7
+seed=4 E16_L1/cp_dval1_0.1 gini=0.372 used=14.0 base=0.3119 ratio=2.42 gate=0.896 off_gini=0.372 off_dce=+0.0000 agree=1.000 close=0.383 ret=-0.009 t_agree=0.960 evals=2.00 t_sec=7.9 train_sec=70.1
+seed=4 E16_L1/cp_dval1_1 gini=0.274 used=16.0 base=0.3124 ratio=1.79 gate=0.918 off_gini=0.274 off_dce=+0.0000 agree=1.000 close=0.209 ret=+0.065 t_agree=0.960 evals=2.00 t_sec=7.9 train_sec=69.7
+## evalC_s4_E32L1.log
+seed=4 E32_L1/dval1_0.1 gini=0.133 used=32.0 base=0.3217 ratio=1.37 gate=0.708 off_gini=0.346 off_dce=+0.0926 agree=0.748 t_agree=0.708 evals=2.00 t_sec=9.8 train_sec=66.1
+seed=4 E32_L1/dval1_1 gini=0.108 used=32.0 base=0.3201 ratio=1.20 gate=0.643 off_gini=0.415 off_dce=+0.0853 agree=0.665 t_agree=0.667 evals=2.00 t_sec=9.6 train_sec=79.3
+seed=4 E32_L1/dval3_0.1 gini=0.099 used=32.0 base=0.3153 ratio=0.81 gate=0.697 off_gini=0.364 off_dce=+0.0334 agree=0.721 t_agree=0.736 evals=4.00 t_sec=12.7 train_sec=85.3
+seed=4 E32_L1/dval3_1 gini=0.144 used=32.0 base=0.3288 ratio=1.31 gate=0.668 off_gini=0.431 off_dce=+0.2145 agree=0.688 t_agree=0.674 evals=4.00 t_sec=11.9 train_sec=80.6
+seed=4 E32_L1/dvalall_0.1 gini=0.123 used=32.0 base=0.3207 ratio=1.42 gate=0.714 off_gini=0.322 off_dce=+0.0318 agree=0.759 t_agree=0.788 evals=32.00 t_sec=37.1 train_sec=105.8
+seed=4 E32_L1/dvalall_1 gini=0.084 used=32.0 base=0.3247 ratio=0.88 gate=0.681 off_gini=0.370 off_dce=+0.2462 agree=0.716 t_agree=0.769 evals=32.00 t_sec=36.4 train_sec=102.9
+seed=4 E32_L1/dval1t1_0.1 gini=0.419 used=32.0 base=0.3183 ratio=1.66 gate=0.098 off_gini=0.655 off_dce=+0.0458 agree=0.439 t_agree=0.406 evals=2.00 t_sec=9.6 train_sec=79.9
+seed=4 E32_L1/dval1t1_1 gini=0.965 used=2.0 base=0.3201 ratio=136.84 gate=0.031 off_gini=0.603 off_dce=-0.0002 agree=0.075 t_agree=0.032 evals=2.00 t_sec=9.4 train_sec=78.6
+seed=4 E32_L1/dvalallt1_0.1 gini=0.289 used=32.0 base=0.3145 ratio=0.93 gate=0.102 off_gini=0.601 off_dce=+0.0509 agree=0.481 t_agree=0.436 evals=32.00 t_sec=36.0 train_sec=102.7
+seed=4 E32_L1/dvalallt1_1 gini=0.969 used=1.0 base=0.3239 ratio=147.85 gate=0.032 off_gini=0.684 off_dce=+0.0006 agree=0.011 t_agree=0.083 evals=32.00 t_sec=37.8 train_sec=107.3
+seed=4 E32_L1/cp_dval1_0.1 gini=0.435 used=25.0 base=0.3120 ratio=2.95 gate=0.863 off_gini=0.435 off_dce=+0.0000 agree=1.000 close=0.425 ret=+0.020 t_agree=0.964 evals=2.00 t_sec=10.2 train_sec=86.1
+seed=4 E32_L1/cp_dval1_1 gini=0.524 used=26.0 base=0.3120 ratio=4.87 gate=0.855 off_gini=0.524 off_dce=+0.0000 agree=1.000 close=0.475 ret=+0.064 t_agree=0.955 evals=2.00 t_sec=10.4 train_sec=87.7
