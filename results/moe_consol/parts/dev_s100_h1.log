@@ -1,1 +1,4 @@
 seed=100 E32_L1/aux0 gini=0.955 used=5.0 base=0.3213 ratio=11138.57 gate=0.819 train_sec=50.8
+seed=100 E32_L1/aux0.05 gini=0.170 used=32.0 base=0.3123 ratio=1.86 gate=0.302 train_sec=56.8
+seed=100 E32_L1/gate0.1 gini=0.110 used=32.0 base=0.3132 ratio=0.58 gate=0.347 train_sec=113.2
+seed=100 E32_L1/cp gini=0.392 used=30.0 base=0.3119 ratio=1.76 gate=0.402 on_open=0.113 off_open=0.248 R_end_F_open=0.384 R_open_F_end=0.238 close=0.299 end=0.392 dormant_end=4 train_sec=116.7
