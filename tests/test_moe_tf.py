@@ -12,7 +12,7 @@ from neurocortex.data import CharCorpus, synthetic_corpus
 from neurocortex.experiments import run_moe_tf as R
 from neurocortex.moe_cfe import _dup_mask, subset_ce
 from neurocortex.moe_consol import ConsolLM, train_consol
-from neurocortex.moe_tf import ThreeFactorLM
+from neurocortex.moe_tf import ThreeFactorLM, subset_ce_eq
 
 V = 12
 PROBE = (torch.arange(64) % V).reshape(4, 16)
@@ -95,6 +95,24 @@ def test_teacher_gradient_is_local_three_factor_rule():
         assert torch.allclose(g["routers.0.weight"], dw, atol=1e-6)
 
 
+def test_eq_gate_evaluates_with_chosen_gate():
+    x, y = XY
+    m = _make(ThreeFactorLM, **KW, teacher="rand3", lam=1.0, tf=True, eq_gate=True)
+    h = m.rnn(m.embed(x))[0].detach()
+    idx = torch.stack([torch.arange(60) % 8, (torch.arange(60) + 3) % 8], -1)
+    a, b = subset_ce_eq(m, h, y, idx), subset_ce(m, h, y, idx)
+    assert torch.allclose(a[:, 0], b[:, 0]) and not torch.allclose(a[:, 1], b[:, 1])
+    # 同じ専門家なら同じ CE（ゲートがそろう）
+    same = torch.stack([torch.arange(60) % 8, torch.arange(60) % 8], -1)
+    c = subset_ce_eq(m, h, y, same)
+    assert torch.allclose(c[:, 0], c[:, 1])
+    a0 = _make(ThreeFactorLM, **KW, teacher="rand3", lam=1.0)
+    a0.teacher_loss(x, y)
+    m.teacher_loss(x, y)
+    assert torch.equal(a0.sample_gen.get_state(), m.sample_gen.get_state())
+    _train(m)
+
+
 def test_soft_uses_same_evaluations_and_random_stream():
     x, y = XY
     a = _make(ThreeFactorLM, **KW, teacher="rand3", lam=1.0)
@@ -121,7 +139,8 @@ def test_tf_none_router_never_changes_and_tf_router_learns():
 def test_conditions():
     c = R.conditions(32, 1)
     assert set(c) == {"aux0", "aux0.05", "gate0.1", "cp", "cp_rand3", "cl_gate", "tf_rand3", "tf_srand3", "tf_cf",
-                      "tf_none"}
+                      "tf_none", "tf_rand3e", "cp_rand3e"}
+    assert c["tf_rand3e"]["eq_gate"] and c["tf_rand3e"]["tf"] and "tf" not in c["cp_rand3e"]
     assert c["tf_rand3"]["tf"] and c["tf_rand3"]["lam"] == 0.1 and c["tf_srand3"]["soft"]
     assert c["tf_cf"]["teacher"] == "cf" and "teacher" not in c["tf_none"] and c["cl_gate"]["gate_detach"]
     assert R.conditions(8, 1) == {}

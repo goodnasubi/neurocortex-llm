@@ -12,7 +12,10 @@ h·(1[j=k] − p_j) に第三因子 t_k を掛けて足した三要素則の形�
     流れる勾配もなくなる）。12.6.177節の d_gate（閉じ始めから）を学習の初めから掛けるのと同じ順伝播。
   - `soft=True`: 部分評価の教師（top・rand）の目標を、評価した選択肢の中のソフトな分布 softmax(−CE/τ) にする
     （評価する専門家と乱数の消費はハードな教師と同じ。評価した選択肢ごとの相対的な結果を第三因子にする）。
-  既定（tf=False・soft=False）では `ConsolLM`＋`train_consol` と同じ学習経過（`tests/test_moe_tf.py`）。
+  - `eq_gate=True`（修正1、12.6.181節）: 部分評価の教師で、評価したすべての専門家を同じゲート（選ばれた専門家の
+    実際のゲート）で評価する。第三因子がルータ自身の確信度（評価に使うゲートの大きさ）に依らず、専門家の出力の
+    比較だけで決まる。
+  既定（tf=False・soft=False・eq_gate=False）では `ConsolLM`＋`train_consol` と同じ学習経過（`tests/test_moe_tf.py`）。
   学習は `moe_consol.train_consol` を使う（閉じる時点の保存と `cross_assignment` の分解もそのまま）。
 """
 
@@ -27,22 +30,39 @@ from .moe_cfe import _dup_mask, _probs, _random_others, subset_ce
 from .moe_consol import ConsolLM
 
 
+def subset_ce_eq(model, h: torch.Tensor, y: torch.Tensor, idx: torch.Tensor) -> torch.Tensor:
+    """`moe_cfe.subset_ce` と同じ CE [N,m] だが、ゲートはどの専門家も idx[:,0]（選ばれた専門家）の確率にそろえる。"""
+    hf = h.reshape(-1, h.shape[-1])
+    yf = y.reshape(-1)
+    probs = _probs(model, model.routers[0](hf))
+    n, m = idx.shape
+    tok = torch.arange(n).unsqueeze(-1).expand(n, m).reshape(-1)
+    ex = idx.reshape(-1)
+    ye = hf.new_zeros(n * m, hf.shape[-1])
+    for e in ex.unique().tolist():
+        sel = (ex == e).nonzero().squeeze(-1)
+        ye[sel] = (hf[tok[sel]] @ model.w1[0][e]).relu() @ model.w2[0][e]
+    g = probs.gather(-1, idx[:, :1]).squeeze(-1)[tok]
+    ce = F.cross_entropy(model.head(hf[tok] + g.unsqueeze(-1) * ye), yf[tok], reduction="none")
+    return ce.reshape(n, m)
+
+
 class ThreeFactorLM(ConsolLM):
     """学習の初めからゲートの勾配を切り（tf）、ルータを反実仮想の教師の三要素則だけで学習する。soft はソフトな目標。"""
 
-    def __init__(self, *args, tf: bool = False, soft: bool = False, **kw) -> None:
+    def __init__(self, *args, tf: bool = False, soft: bool = False, eq_gate: bool = False, **kw) -> None:
         super().__init__(*args, **kw)
         if tf and (self.kind != "select" or self.n_layers != 1):
             raise ValueError("tf は1層の選択専用（select）の模型だけ")
-        if soft and (self.kind_t not in ("top", "rand") or self.teacher_homeo or self.react_probe):
-            raise ValueError("soft は閾値・再学習の評価を足さない部分評価の教師（top・rand）だけ")
-        self.tf, self.soft = tf, soft
+        if (soft or eq_gate) and (self.kind_t not in ("top", "rand") or self.teacher_homeo or self.react_probe):
+            raise ValueError("soft・eq_gate は閾値・再学習の評価を足さない部分評価の教師（top・rand）だけ")
+        self.tf, self.soft, self.eq_gate = tf, soft, eq_gate
 
     def detach_gate(self) -> bool:
         return getattr(self, "tf", False) or super().detach_gate()
 
     def teacher_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        if not self.soft:
+        if not (self.soft or self.eq_gate):
             return super().teacher_loss(x, y)
         t0 = time.perf_counter()
         with torch.no_grad():  # `ReactCFLM.teacher_loss` の部分評価と同じ評価の組・同じ乱数の消費
@@ -52,9 +72,12 @@ class ThreeFactorLM(ConsolLM):
             extra = (raw0.topk(self.m, dim=-1).indices if self.kind_t == "top"
                      else _random_others(chosen, self.n_experts, self.m, self.sample_gen))
             idx = torch.cat([chosen.unsqueeze(-1), extra], dim=-1)
-            ce = subset_ce(self, h, y, idx)
+            ce = subset_ce_eq(self, h, y, idx) if self.eq_gate else subset_ce(self, h, y, idx)
             dup = _dup_mask(idx)
-            target = F.softmax((-ce / self.tau).masked_fill(dup, float("-inf")), dim=-1)
+            if self.soft:
+                target = F.softmax((-ce / self.tau).masked_fill(dup, float("-inf")), dim=-1)
+            else:
+                target = F.one_hot(ce.masked_fill(dup, float("inf")).argmin(-1), idx.shape[1]).float()
             hard = idx.gather(-1, target.argmax(-1, keepdim=True)).squeeze(-1)
         n = y.numel()
         evals = sum(len(set(r)) for r in idx.tolist())
