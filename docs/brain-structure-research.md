@@ -10229,3 +10229,10 @@ CE（選んだ文脈のゲインでの次の文字の CE）は、修正1で手�
 **シードと修正**: 開発用シード 100〜104 で全条件を測り、設計（条件・指標の実装）を確定する（修正は3回まで。定数は上の値で固定し、修正で変えた場合はその旨と理由を記録する）。評価用シード 0〜4 は全条件を一度だけ測る。1スレッドで、シードを別プロセスで並行し、`--merge` で結合する。結果は `results/moe_sw/`（結合した JSON とログ、`env_info()` 付き。数 MB に収めるため、シード別の時系列は土台と比べる条件だけ残す）。
 
 **構成**: `src/neurocortex/moe_sw.py`（`SwitchLM`。`moe_tf.ThreeFactorLM` の継承）、`src/neurocortex/experiments/run_moe_sw.py`（条件・判定。分解は `run_moe_consol.decompose`、閉じる条件は `run_moe_cfe.closed_ok`、A・D は `run_moe_tf.a_d` を流用）、`tests/test_moe_sw.py`。
+
+**開発用シード（100〜104）の結果**（`results/moe_sw/dev.json`・`dev.log`。判定には使わない傾向）:
+- 12.6.181節の開発用シードと同じ条件（cp・cp_rand3・cl_gate・tf_rand3・tf_srand3）は同じ値を再現した（例: seed 100 の cp_rand3 のジニ 0.161、tf_srand3 0.272）。
+- 予想と違い、ソフトな教師にゲートの勾配を足した開いている期間（cp_srand3）の A は 0.175 で、cp_rand3 と tf_srand3（どちらも 0.140）より大きかった。よって sw_srand3・sw_srand3_late は H39 を満たさない。閉じた後の漂流は sw_srand3 で最も負（D −0.065）で、学習の終わりのジニは 0.210（cp_rand3 0.219、tf_srand3 0.277）。cp_rand3 より小さいのは5本中3本。全専門家が使われたシードは sw_srand3 が 3本、sw_srand3_late が 4本。sw_r3s（閉じる前はハードな教師）は A 0.140 だが D +0.017・ジニ 0.239 で、cl_gate（0.221）より偏った。
+- 実装の確認: `tests/test_moe_sw.py` で、閉じ始めまでの学習経過が対照と一致すること、切る時期、教師の目標の切り替えを確かめた。不合格の傾向は実装の不具合ではない。
+
+**設計の確定**: 修正は行わない（0回）。定数・条件・仮説 H39〜H43 は計測前に固定したままで、評価用シード 0〜4 は全 12 条件を一度だけ測る。
