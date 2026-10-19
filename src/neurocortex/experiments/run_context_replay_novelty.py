@@ -50,13 +50,18 @@ CONFIGS: dict[str, dict] = {
     "nrem_buf": {"writeback": "none", **WB_KW, "replay_rule": "nrem", **SLEEP},
     "ach_c_nrem": {**KEEP, "replay_rule": "ach_c_nrem", "replay_need": 0.5, "ach_ema": 0.98, **SLEEP},
 }
-NEW_RULES = ("ach_c", "nrem", "ach_c_nrem")
+# 修正1（12.6.167節）: nrem は加えた痕跡（まだ学習していない保留サンプル）を REM のステップでまとめて学び、新しいタスクを
+# 大きく損なった（nrem_buf は中立）。睡眠の段階の痕跡の出どころを Singh et al. の海馬と新皮質の分業に合わせる
+CONFIGS.update({"nrem2": {**CONFIGS["nrem"], "replay_rule": "nrem2"},
+                "ach_c_nrem2": {**CONFIGS["ach_c_nrem"], "replay_rule": "ach_c_nrem2"}})
+FIX1 = ("nrem2", "ach_c_nrem2")
+NEW_RULES = ("ach_c", "nrem", "ach_c_nrem", *FIX1)
 RULES = ("keep", "ach_need2", *NEW_RULES, "nrem_buf")
 BAD = -0.10  # 1回ごとの新しいタスクの差がこれを下回ると「大きく損なった」回とする
 # 修正は開発用シードの結果を見て追加する（上限3回）
 
 
-def jobs(configs=tuple(CONFIGS), families=FAMILIES) -> list[tuple]:
+def jobs(configs=tuple(c for c in CONFIGS if c not in FIX1), families=FAMILIES) -> list[tuple]:
     return [(f, m, L, cfg) for m in MECHS_USED for f in families for L in LS for cfg in configs]
 
 
@@ -208,7 +213,9 @@ def verdict(res: dict) -> dict:
         v["H3_split"] = sp
         out[w] = v
     if o.get("end_nrem") is not None and o.get("end_nrem_buf") is not None:
-        out["nrem"]["B5"] = bool(o["end_nrem"] - o["end_nrem_buf"] >= 0.05)
+        for w in ("nrem", "nrem2"):  # nrem2 の痕跡なしの版は nrem_buf と同じ学習になる
+            if w in out:
+                out[w]["B5"] = bool(o[f"end_{w}"] - o["end_nrem_buf"] >= 0.05)
     out["H1"] = out.get("ach_c", {}).get("success")
     out["H2"] = out.get("nrem", {}).get("success")
     out["H"] = any(out.get(w, {}).get("success") for w in NEW_RULES)
@@ -222,7 +229,7 @@ SUMMARY_KEYS = ("selection_acc", "exp_end", "new_nat", "new_exp", "mix_own", "mi
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--analyze", type=Path, nargs="+", help="結果ファイルを集計して判定に使う量を表示する")
-    ap.add_argument("--configs", nargs="+", default=list(CONFIGS))
+    ap.add_argument("--configs", nargs="+", default=[c for c in CONFIGS if c not in FIX1])
     ap.add_argument("--families", nargs="+", default=list(FAMILIES))
     ap.add_argument("--phase", choices=("dev", "eval"), default="dev")
     ap.add_argument("--seeds", type=int, nargs="+")

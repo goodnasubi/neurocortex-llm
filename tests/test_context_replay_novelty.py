@@ -81,6 +81,13 @@ def test_nrem_sleeps_when_new_context_has_traces():
     assert r["R"][2] != base["R"][2] or r["diag"]["ctx_acc"][2] != base["diag"]["ctx_acc"][2]
     c = _run2(writeback_keep=True, replay_rule="ach_c_nrem", sleep_every=20, sleep_steps=4)["diag"]["replay_mix"][2]
     assert c["sleep"] == m["sleep"] and c["fam"] > 0.0
+    # 修正1の nrem2: 加えた痕跡がなければ nrem と同じ（NREM は新しい文脈、REM は古い文脈の痕跡）
+    nb = _run2(replay_rule="nrem", sleep_every=20, sleep_steps=4)
+    n2b = _run2(replay_rule="nrem2", sleep_every=20, sleep_steps=4)
+    assert n2b["R"] == nb["R"] and n2b["diag"]["ctx_acc"] == nb["diag"]["ctx_acc"]
+    n2 = _run2(writeback_keep=True, replay_rule="nrem2", sleep_every=20, sleep_steps=4)
+    assert n2["diag"]["replay_mix"][2]["sleep"] == m["sleep"]
+    # （この小さな設定は正確度が飽和するので、加えた痕跡による違いは計測では確かめない）
 
 
 def test_new_rules_reject_bad_arguments():
@@ -91,9 +98,10 @@ def test_new_rules_reject_bad_arguments():
 
 
 def test_experiment_jobs_analyze_and_verdict(tmp_path):
-    from neurocortex.experiments.run_context_replay_novelty import (CONFIGS, DEV_SEEDS, EVAL_SEEDS, FAMILIES,
+    from neurocortex.experiments.run_context_replay_novelty import (CONFIGS, DEV_SEEDS, EVAL_SEEDS, FAMILIES, FIX1,
                                                                     NEW_RULES, analyze, jobs)
-    assert len(jobs()) == len(FAMILIES) * 2 * 3 * len(CONFIGS) and set(NEW_RULES) < set(CONFIGS)
+    assert len(jobs()) == len(FAMILIES) * 2 * 3 * (len(CONFIGS) - len(FIX1)) and set(NEW_RULES) < set(CONFIGS)
+    assert len(jobs(FIX1)) == len(FAMILIES) * 2 * 3 * len(FIX1)
     assert len(DEV_SEEDS) == len(EVAL_SEEDS) == 10 and not set(DEV_SEEDS) & set(EVAL_SEEDS)
 
     def row(end, new, seed):

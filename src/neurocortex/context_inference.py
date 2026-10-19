@@ -86,7 +86,7 @@ RECON_READOUTS = ("recon_buf", "recon_all", "recon_all200", "recon_inter", "reco
 RECON_EXTRA_READOUTS = ("recon_buf_inter", "recon_buf_err")  # 12.6.161節（バッファでの学び直しが効く理由の切り分け）
 WRITEBACKS = ("none", "all", "inter")  # 12.6.161節（学び直しの共有の重みへの書き戻し）
 REPLAY_RULES = ("gain", "need", "sleep", "ach", "ach_need", "ach_need2",  # 12.6.163節（海馬の痕跡のリプレイの配分）
-                "ach_c", "nrem", "ach_c_nrem")  # 12.6.167節（連続的な新しさの信号・新しい記憶を優先する睡眠の段階）
+                "ach_c", "nrem", "ach_c_nrem", "nrem2", "ach_c_nrem2")  # 12.6.167節（連続的な新しさの信号・新しい記憶を優先する睡眠の段階）
 
 
 def episodic_readout(p_param: torch.Tensor, x: torch.Tensor, store_bits: torch.Tensor, store_labels: torch.Tensor,
@@ -357,6 +357,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
           ステップ（古い記憶 = それ以前からある文脈の痕跡。加えた痕跡を含む）を、NREM から始めて1ステップずつ交互に
           学習する。新しい文脈の痕跡がまだなければ睡眠の段階を置かない。
       "ach_c_nrem" … 覚醒中は "ach_c"、睡眠の段階は "nrem"。
+      "nrem2" / "ach_c_nrem2" … 12.6.167節の修正1。睡眠の段階の痕跡の出どころを Singh et al. の海馬と新皮質の分業に
+          合わせる。NREM に似たステップは海馬の痕跡（新しい文脈の痕跡と、加えた痕跡（再活性化した保留サンプル）を
+          batch の半分ずつ。加えた痕跡がなければ新しい文脈の痕跡だけ）、REM に似たステップは古い文脈の固定化済みの
+          バッファ（加えた痕跡を除く）から取る。覚醒中はそれぞれ "nrem" / "ach_c" と同じ。
       diagnostics = True では diag["replay_mix"][k]（規則を適用したタスク k の、リプレイの痕跡のうちそのステップで
       選んだ文脈のものの割合 "own"、加えた痕跡の割合 "kept"、1ステップのリプレイの数の平均 "size"、睡眠のステップ数
       "sleep"、なじみの度合い f の平均 "fam"（ach_c のみ意味を持つ））を加える。
@@ -789,7 +793,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
         bs = torch.cat(buf_src)
         novel = rule in ("ach", "ach_need", "ach_need2") and not gate["store"]
-        if rule in ("ach_c", "ach_c_nrem"):
+        if rule in ("ach_c", "ach_c_nrem", "ach_c_nrem2"):
             f = max(0.0, min(1.0, 1 - nov_loss.get(ctx, math.inf) / tau)) if gate["store"] else 0.0
             n_f = round(f * batch)
             wake = (bs != -1).nonzero()[:, 0]
@@ -807,7 +811,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 idx = torch.cat([fam, idx])
             mix["fam"] += f
             return with_ctx(bb[idx], bc[idx]), bl[idx], torch.stack([bc[idx] == ctx, bs[idx] == -1])
-        if rule in ("sleep", "nrem") or novel:
+        if rule in ("sleep", "nrem", "nrem2") or novel:
             wake = bs != -1
             bb, bl, bc, bs = bb[wake], bl[wake], bc[wake], bs[wake]
         n = bb.shape[0]
@@ -834,16 +838,23 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         12.6.167節の nrem では、新しい文脈の痕跡（NREM）と古い文脈の痕跡（REM）を1ステップずつ交互に取る。
         戻り値は学習したステップ数。"""
         bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
-        pools = [torch.arange(bb.shape[0])]
+        pools = [[torch.arange(bb.shape[0])]]
         if rule != "sleep":
             is_old = torch.tensor([int(c) in old_ctx for c in bc.tolist()], dtype=torch.bool)
             new, old = (~is_old).nonzero()[:, 0], is_old.nonzero()[:, 0]
             if new.numel() == 0:
                 return 0
-            pools = [new, old if old.numel() > 0 else new]
+            if rule in ("nrem2", "ach_c_nrem2"):
+                # 修正1: NREM は海馬の痕跡（新しい文脈の痕跡と加えた痕跡を半分ずつ）、REM は新皮質の固定化済みの痕跡
+                kept = torch.cat(buf_src) == -1
+                hip, cort = kept.nonzero()[:, 0], (is_old & ~kept).nonzero()[:, 0]
+                pools = [[new, hip] if hip.numel() > 0 else [new], [cort if cort.numel() > 0 else new]]
+            else:
+                pools = [[new], [old if old.numel() > 0 else new]]
         for s_ in range(sleep_steps):
-            pool = pools[s_ % len(pools)]
-            idx = pool[torch.randint(pool.numel(), (batch,), generator=generator)]
+            parts = pools[s_ % len(pools)]
+            sizes = [batch - batch // 2, batch // 2] if len(parts) == 2 else [batch]
+            idx = torch.cat([q[torch.randint(q.numel(), (m,), generator=generator)] for q, m in zip(parts, sizes)])
             loss = F.cross_entropy(model(with_ctx(bb[idx], bc[idx])), bl[idx])
             o.zero_grad(set_to_none=True)
             loss.backward()
@@ -867,7 +878,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             old_ctx.update(used)
         mix = {"own": 0.0, "kept": 0.0, "size": 0, "n": 0, "sleep": 0, "fam": 0.0}
         for step in range(pretrain_steps if k == 0 else steps):
-            if rule in ("sleep", "nrem", "ach_c_nrem") and step > 0 and step % sleep_every == 0 and buf_bits:
+            if rule in ("sleep", "nrem", "ach_c_nrem", "nrem2", "ach_c_nrem2") and step > 0 and step % sleep_every == 0 and buf_bits:
                 mix["sleep"] += sleep_phase(opt, rule)
             bits, labels = make_batch(spec, batch, generator)
             src = None
