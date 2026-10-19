@@ -1,5 +1,0 @@
-seed=101 E32_L1/d_teacher gini=0.268 used=31.0 base=0.3076 ratio=1.77 gate=0.420 on_open=0.078 off_open=0.223 R_end_F_open=0.277 R_open_F_end=0.214 close=0.230 end=0.268 dormant_end=3 train_sec=57.7
-seed=101 E32_L1/cp_d_router gini=0.226 used=31.0 base=0.3069 ratio=1.59 gate=0.359 on_open=0.089 off_open=0.260 R_end_F_open=0.261 R_open_F_end=0.224 close=0.233 end=0.226 dormant_end=1 train_sec=57.6
-seed=101 E32_L1/cp_d_front gini=0.448 used=27.0 base=0.3201 ratio=2.53 gate=0.466 on_open=0.089 off_open=0.260 R_end_F_open=0.460 R_open_F_end=0.259 close=0.367 end=0.448 dormant_end=7 train_sec=113.0
-seed=101 E32_L1/cp_d_experts gini=0.346 used=30.0 base=0.3099 ratio=1.95 gate=0.511 on_open=0.089 off_open=0.260 R_end_F_open=0.404 R_open_F_end=0.271 close=0.289 end=0.346 dormant_end=5 train_sec=110.8
-seed=101 E32_L1/cp_d_both gini=0.258 used=31.0 base=0.3164 ratio=1.49 gate=0.371 on_open=0.089 off_open=0.260 R_end_F_open=0.261 R_open_F_end=0.259 close=0.258 end=0.258 dormant_end=2 train_sec=77.0
