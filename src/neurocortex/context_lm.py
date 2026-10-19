@@ -15,6 +15,8 @@
   ものを1個ずつ選ぶ）、uniform_replay（バッファの窓から無作為に n 個）、active_replay（バッファの
   窓から期待情報量で選ぶ。12.6.148・152節の gen_replay）、active_holdout（保存したがリプレイしなかった窓から。統制）。
 
+12.6.179〜180節: tcm_* は痕跡に保存時の時間文脈のタグ（TCM）をつけ、今の文脈に近い痕跡を想起する（TrainConfig.tcm_beta > 0 のときだけ）。
+
 12.6.143節と違い、能動的な選択も打ち切りなしで n 個すべてを観測する（観測の数を規則の間で揃えるため）。
 """
 
@@ -34,6 +36,9 @@ FIX1_RULES = ("active_replay_cued", "active_holdout_cued", "active_replay_own")
 # 12.6.175節の修正1: active と同じ手がかりの後の事後分布で、文脈を1つに決めずに予測する。active_soft は事後確率で
 # 重みづけたゲイン Σ_c p(c)·g_c（GainCharLM のみ）、active_mix は予測の混合 Σ_c p(c)·p_c(·|窓)（参考）
 SOFT_RULES = ("active_soft", "active_mix")
+# 12.6.179節: 痕跡に保存時の時間文脈のタグ（TCM: Howard & Kahana 2002）をつけ、今の文脈に近い痕跡を想起して候補に
+# する。active_replay_tcm はバッファ、active_holdout_tcm は保留サンプル（リプレイしていない。統制）から想起する
+TCM_RULES = ("active_replay_tcm", "active_holdout_tcm")
 
 
 @dataclass(frozen=True)
@@ -92,6 +97,50 @@ def sample_text(trans: torch.Tensor, fam: LangFamily, n_chains: int, length: int
             s = s * fam.vocab + out[-fam.order + i]
         out.append(torch.multinomial(trans[s], 1, generator=generator).squeeze(1))
     return torch.stack(out[burn:], dim=1)
+
+
+def tcm_items(x: torch.Tensor, vocab: int, length: int = 2) -> torch.Tensor:
+    """文字列 x [..., L] の各位置 i ≥ length − 1 の項目（そこで終わる length 文字の組の番号）[..., L − length + 1]。
+    TCM の項目の表現は互いに直交する（length 文字の組の one-hot, vocab^length 次元）。"""
+    n = x.shape[-1] - length + 1
+    idx = torch.zeros(x.shape[:-1] + (n,), dtype=torch.long)
+    for i in range(length):
+        idx = idx * vocab + x[..., i:i + n]
+    return idx
+
+
+def tcm_drift(items: torch.Tensor, dim: int, beta: float) -> torch.Tensor:
+    """時間文脈の漂流 t_i = (1 − β)·t_{i−1} + β·e(item_i)（t_0 = 0）。items [B, T] → 各時点の文脈 [B, T, dim]。
+
+    Howard & Kahana 2002 の t_i = ρ_i·t_{i−1} + β·t^IN_i で、ノルムの正規化を比較時の余弦に回した形。"""
+    b, t_n = items.shape
+    out = torch.empty(b, t_n, dim)
+    t = torch.zeros(b, dim)
+    rows = torch.arange(b)
+    for i in range(t_n):
+        t = t * (1 - beta)
+        t[rows, items[:, i]] += beta
+        out[:, i] = t
+    return out
+
+
+def tcm_tags(text: torch.Tensor, k: int, vocab: int, beta: float, length: int = 2) -> torch.Tensor:
+    """文 [n_chains, L] の各窓（windows() と同じ順）の時間文脈のタグ [窓, vocab^length]。窓の最後の文字までの
+    項目を取り込んだ文脈で、次の文字（答え）は含まない。length ≦ k。"""
+    dim = vocab ** length
+    ctx = tcm_drift(tcm_items(text, vocab, length), dim, beta)  # 位置 i の文脈は ctx[:, i − length + 1]
+    return ctx[:, k - length:text.shape[1] - length].reshape(-1, dim)
+
+
+def tcm_recall(cue_windows: torch.Tensor, tags: torch.Tensor, vocab: int, beta: float, m: int,
+               length: int = 2) -> torch.Tensor:
+    """今の文脈に近い痕跡の想起。cue_windows [E, M0, k]（情報源が示したラベルなしの窓。答えは使わない）を順に聞いて
+    漂流させた文脈 t_now と、各痕跡のタグ tags [N, D] の余弦が大きい順に m 個の痕跡の番号 [E, m] を返す。"""
+    e_n = cue_windows.shape[0]
+    items = tcm_items(cue_windows, vocab, length).reshape(e_n, -1)
+    t_now = tcm_drift(items, vocab ** length, beta)[:, -1]
+    sim = nn.functional.normalize(t_now, dim=-1) @ nn.functional.normalize(tags, dim=-1).T  # [E, N]
+    return sim.topk(min(m, tags.shape[0]), dim=-1).indices
 
 
 def windows(text: torch.Tensor, k: int) -> tuple[torch.Tensor, torch.Tensor]:
@@ -234,6 +283,8 @@ class TrainConfig:
     k: int = 3
     hidden: int = 128
     arch: str = "head"  # head（文脈ごとのヘッド。12.6.173節）/ gain（共有の表現へのゲイン変調。12.6.175節）
+    tcm_beta: float = 0.0  # > 0 で、保存する痕跡に時間文脈のタグをつける（12.6.179節）。乱数は使わない
+    tcm_item: int = 2  # TCM の項目の文字の組の長さ（初期設定 2、12.6.179節の修正1 で 3）
 
 
 def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generator: torch.Generator,
@@ -247,11 +298,13 @@ def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generat
         raise ValueError("regime は joint・seq")
     n_l = fam.n_langs
     n_chains = max(1, cfg.steps_per_lang * cfg.batch * (n_l if cfg.regime == "joint" else 1) // (n_l * text_len))
-    train_x, train_y = [], []
+    train_x, train_y, texts = [], [], []
     for j in range(n_l):
-        x, y = windows(sample_text(trans[j], fam, n_chains, text_len, generator), cfg.k)
+        text = sample_text(trans[j], fam, n_chains, text_len, generator)
+        x, y = windows(text, cfg.k)
         train_x.append(x)
         train_y.append(y)
+        texts.append(text)
     with torch.random.fork_rng(devices=[]):  # 初期化の種も generator から決める
         torch.manual_seed(int(torch.randint(0, 2 ** 31 - 1, (1,), generator=generator)))
         arch = {"head": ContextCharLM, "gain": GainCharLM}[cfg.arch]
@@ -259,11 +312,15 @@ def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generat
         plain = arch(fam.vocab, cfg.k, 1, hidden=cfg.hidden)
     opt = torch.optim.Adam(list(model.parameters()) + list(plain.parameters()), lr=cfg.lr)
     buf_x, buf_y, hold_x, hold_y = [None] * n_l, [None] * n_l, [None] * n_l, [None] * n_l
+    buf_tag, hold_tag = [None] * n_l, [None] * n_l
 
     def store(j: int) -> None:
         perm = torch.randperm(train_x[j].shape[0], generator=generator)[:2 * cfg.buffer]
         buf_x[j], buf_y[j] = train_x[j][perm[:cfg.buffer]], train_y[j][perm[:cfg.buffer]]
         hold_x[j], hold_y[j] = train_x[j][perm[cfg.buffer:]], train_y[j][perm[cfg.buffer:]]
+        if cfg.tcm_beta > 0:  # 痕跡に、それを経験したときの時間文脈をタグとして結びつける
+            tags = tcm_tags(texts[j], cfg.k, fam.vocab, cfg.tcm_beta, cfg.tcm_item)
+            buf_tag[j], hold_tag[j] = tags[perm[:cfg.buffer]], tags[perm[cfg.buffer:]]
 
     def step(x: torch.Tensor, y: torch.Tensor, c: torch.Tensor) -> float:
         opt.zero_grad()
@@ -300,7 +357,7 @@ def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generat
                 losses.append(step(x, y, c))
             store(j)
     return {"model": model, "plain": plain, "buf_x": buf_x, "buf_y": buf_y, "hold_x": hold_x, "hold_y": hold_y,
-            "final_loss": sum(losses[-100:]) / 100}
+            "buf_tag": buf_tag, "hold_tag": hold_tag, "final_loss": sum(losses[-100:]) / 100}
 
 
 def kl_to_truth(model: nn.Module, trans: torch.Tensor, fam: LangFamily, x: torch.Tensor, c: int, j: int) -> float:
@@ -351,6 +408,14 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
         out["ce_nocontext"] = float(ce_plain.mean())
         out["entropy"] = float(entropy.mean())
         fix_gen = torch.Generator().manual_seed(generator.initial_seed() + 777)  # 修正1の候補専用
+        tcm_gen = torch.Generator().manual_seed(generator.initial_seed() + 888)  # TCM の想起の答え専用
+        tcm = [r for r in rules if r in TCM_RULES]
+        if tcm:
+            if cfg.tcm_beta <= 0:
+                raise ValueError("TCM の規則には TrainConfig.tcm_beta > 0 が要る")
+            buf_src = torch.cat([torch.full((b.shape[0],), a) for a, b in enumerate(trained["buf_x"])])
+            hold_src = torch.cat([torch.full((b.shape[0],), a) for a, b in enumerate(trained["hold_x"])])
+            all_buf_tag, all_hold_tag = torch.cat(trained["buf_tag"]), torch.cat(trained["hold_tag"])
         all_buf = torch.cat(trained["buf_x"])
         all_hold = torch.cat(trained["hold_x"])
         res: dict = {}
@@ -360,6 +425,7 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
             ce_sel = {r: 0.0 for r in rules}
             info = {r: 0.0 for r in rules}
             per_lang = {r: [] for r in rules}
+            purity = {"replay_tcm": 0.0, "holdout_tcm": 0.0}
             for j in range(n_l):
                 # 情報源の答えは真の分布から引く（窓の出どころによらず同じ規則）
                 def answers(xw: torch.Tensor, gen: torch.Generator = generator) -> torch.Tensor:
@@ -387,6 +453,13 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                 for key, px in fix.items():
                     ans[key] = answers(px, fix_gen)
                 pools.update(fix)
+                if tcm:  # 情報源が示したラベルなしの窓（active の候補と同じ）で今の文脈を作り、近い痕跡を想起する
+                    for key, bank, tags, srcs in (("replay_tcm", all_buf, all_buf_tag, buf_src),
+                                                  ("holdout_tcm", all_hold, all_hold_tag, hold_src)):
+                        idx = tcm_recall(task_x, tags, v, cfg.tcm_beta, m, cfg.tcm_item)
+                        pools[key] = bank[idx]
+                        ans[key] = answers(pools[key], tcm_gen)
+                        purity[key] += float((srcs[idx] == j).float().mean()) / n_l
                 ans["passage"] = py_.reshape(episodes, n)
                 logp = {key: model.logp_all(px.reshape(-1, k)).reshape(episodes, px.shape[1], n_l, v)
                         for key, px in pools.items()}
@@ -394,7 +467,8 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                         "uniform_replay": ("replay", False),
                         "active_replay": ("replay", True), "active_holdout": ("holdout", True),
                         "active_replay_cued": ("replay_cued", True), "active_holdout_cued": ("holdout_cued", True),
-                        "active_replay_own": ("replay_own", True)}
+                        "active_replay_own": ("replay_own", True),
+                        "active_replay_tcm": ("replay_tcm", True), "active_holdout_tcm": ("holdout_tcm", True)}
                 soft = [r for r in rules if r in SOFT_RULES]
                 for r in rules:
                     if r in SOFT_RULES:
@@ -419,5 +493,7 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                     info[r] += float(inf_active.mean()) / n_l
                     per_lang[r].append(per_lang["active"][-1])
             res[str(n)] = {"acc": acc, "ce": ce_sel, "info": info, "acc_per_lang": per_lang}
+            if tcm:  # 想起した痕跡のうち本来の文脈のものの割合（操作の確認）
+                res[str(n)]["tcm_purity"] = purity
         out["cues"] = res
     return out
