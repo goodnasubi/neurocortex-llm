@@ -1,0 +1,1 @@
+seed=100 E32_L1/d_teacher gini=0.268 used=31.0 base=0.3164 ratio=1.35 gate=0.411 on_open=0.077 off_open=0.159 R_end_F_open=0.267 R_open_F_end=0.190 close=0.244 end=0.268 dormant_end=3 train_sec=57.4
