@@ -8,6 +8,7 @@
     base_nov       … 保留サンプルを加えずに nov_split だけ（対照）
     ach_c_nov_ctx  … 新しい文脈の列の可塑性を上げるだけ（切り分け）
     ach_c_nov_sh   … 共有の重みの可塑性を下げるだけ（切り分け）
+    ach_c_nov_half … 修正2（共有の利得 0.5）
 base・keep・ach_c は 12.6.167〜168節の結果ファイル（同じシード・同じ実装で再現する）と対にして使う。
 
     --phase dev（開発用シード 100〜109）/ eval（評価用シード 0〜9 で一度だけ）
@@ -50,8 +51,12 @@ CONFIGS: dict[str, dict] = {
 }
 REUSED = ("base", "keep", "ach_c")  # 12.6.167〜168節の結果ファイルから読む
 NEW = ("ach_c_nov", "base_nov", "ach_c_nov_ctx", "ach_c_nov_sh")
-FIXES: tuple[str, ...] = ()  # 修正は開発用シードの結果を見て追加する（上限3回）
-RULES = ("keep", "ach_c", *NEW)
+# 修正（12.6.169節。上限3回）。修正1: 切り分けとして測った ach_c_nov_ctx（新しい文脈の列の可塑性を上げるだけ）を
+# 候補にする（追加の計測なし）。修正2: 共有の利得を 0.2 と 1 の中間の 0.5 にする（新しいタスクの学習の遅れを減らし、
+# 共有を抑えることによる一般化の上積みを一部残す）
+CONFIGS["ach_c_nov_half"] = {**CONFIGS["ach_c_nov"], "nov_shared_gain": 0.5}
+FIXES: tuple[str, ...] = ("ach_c_nov_ctx", "ach_c_nov_half")
+RULES = ("keep", "ach_c", *NEW, "ach_c_nov_half")
 BAD = -0.10  # 1回ごとの新しいタスクの差がこれを下回ると「大きく損なった」回とする（12.6.167節と同じ）
 
 
@@ -196,7 +201,7 @@ def verdict(res: dict) -> dict:
     """12.6.169節で計測前に固定した判定条件。"""
     o, n, a = res["over_14bit"], res["not_over"], res["all"]
     out: dict = {}
-    for w in ("ach_c", "ach_c_nov", "ach_c_nov_ctx", "ach_c_nov_sh", *FIXES):
+    for w in dict.fromkeys(("ach_c", "ach_c_nov", "ach_c_nov_ctx", "ach_c_nov_sh", *FIXES)):
         if o.get(f"end_{w}") is None:
             continue
         v = _criteria(o, n, a, w)
