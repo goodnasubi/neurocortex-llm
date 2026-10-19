@@ -550,6 +550,24 @@ if session_alive():
     if not SESSION_T0.exists():  # 現在の VM の作成時刻（driver.log の new）
         SESSION_T0.write_text(str(time.time()))
 restore_reg()
+def _keepalive_loop():
+    # Colab は keep-alive が来ない VM を回収する。CLI は呼ばないため、Web 画面と同じ API を5分おきに叩く（10-19）
+    py = os.path.expanduser('~/.local/share/uv/tools/google-colab-cli/bin/python')
+    ka = Path(__file__).resolve().parent / 'ka_api.py'
+    while True:
+        try:
+            r = subprocess.run([py, str(ka)], capture_output=True, text=True, timeout=60)
+            if r.stdout.strip().split('\n')[-1:] != ['200']:
+                log('keepalive', r.stdout.strip()[-80:], r.stderr.strip()[-80:])
+        except Exception as e:
+            log('keepalive error', repr(e)[:80])
+        time.sleep(300)
+
+
+import threading
+if (Path(__file__).resolve().parent / 'ka_api.py').exists():
+    threading.Thread(target=_keepalive_loop, daemon=True).start()
+
 while done_count() < 9:
     b = balance()
     log('balance', b, 'done', done_count())
