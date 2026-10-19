@@ -85,6 +85,7 @@ EPISODIC_EXTRA_READOUTS = ("mix_rep", "switch_rep", "arb_bits", "arb_rep")  # 12
 RECON_READOUTS = ("recon_buf", "recon_all", "recon_all200", "recon_inter", "recon_hold")  # 12.6.159節
 RECON_EXTRA_READOUTS = ("recon_buf_inter", "recon_buf_err")  # 12.6.161節（バッファでの学び直しが効く理由の切り分け）
 WRITEBACKS = ("none", "all", "inter")  # 12.6.161節（学び直しの共有の重みへの書き戻し）
+REPLAY_RULES = ("gain", "need", "sleep", "ach", "ach_need", "ach_need2")  # 12.6.163節（海馬の痕跡のリプレイの配分）
 
 
 def episodic_readout(p_param: torch.Tensor, x: torch.Tensor, store_bits: torch.Tensor, store_labels: torch.Tensor,
@@ -148,7 +149,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          episodic_extra: bool = False, recon_steps: int = 0, recon_lr: float = 0.01,
                          recon_batch: int = 32, recon_extra: bool = False, writeback: str = "",
                          writeback_at: int = 0, writeback_steps: int = 100, writeback_eval: int = 2000,
-                         writeback_keep: bool = False) -> dict:
+                         writeback_keep: bool = False, replay_rule: str = "", replay_beta: float = 0.5,
+                         replay_need: float = 0.5, sleep_every: int = 50, sleep_steps: int = 25) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -323,6 +325,27 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     writeback_keep = True（12.6.161節の修正1）では、書き戻しの後（"none" でも）、各文脈の保留サンプルの先頭
     episodic_hold 個をその文脈のバッファに加え、以後のリプレイに使う（再活性化した痕跡が再び海馬のリプレイの対象に
     なる。出どころは −1 として記録する）。post の測定はバッファに加える前に行う。
+
+    リプレイの配分（12.6.163節。replay_rule が空でないとき。writeback があればタスク writeback_at から、なければタスク 1
+    から適用する。既定の "" では従来どおり、バッファ全体から一様に batch 個を取る）:
+      "gain" … 優先度つきのリプレイ（Mattar & Daw 2018 の gain の単純化）。バッファの各痕跡 i の現在のモデルでの損失
+          ℓ_i（保存時の文脈、予測誤差）から、確率 p_i = β/N + (1 − β)·ℓ_i/Σℓ（β = replay_beta）で復元抽出する。
+      "need" … 新旧の比率（Mattar & Daw 2018 の need の単純化）。リプレイのうち round(replay_need·batch) 個を、その
+          ステップで選んだ文脈のバッファから、残りを他の文脈のバッファから一様に取る。選んだ文脈の痕跡がまだなければ
+          他の文脈の分だけを取り（古い文脈のリプレイの量は変えない）、他の文脈の痕跡がなければ全体から一様に取る。
+      "sleep" … 覚醒と睡眠に似た段階の交互。覚醒中（通常のステップ）のリプレイは、writeback_keep で加えた痕跡
+          （出どころ −1）を除いたバッファから一様に取る。sleep_every ステップごと（step > 0）に、新しい入力なしで
+          sleep_steps ステップ、加えた痕跡を含むバッファ全体（新しい文脈の痕跡も含む）から一様に batch 個を取って、
+          同じ最適化器で学習する（オフラインの交互の固定化）。
+      "ach" … 新しさによる符号化と固定化の切り替え（12.6.163節の修正1。Hasselmo 1999 のアセチルコリン）。そのステップの
+          バッチが確立した文脈で驚きなく予測できる（gate の store、損失 ≦ τ）ときだけ、加えた痕跡を含むバッファ全体から
+          一様に取る。驚きのある（新しい）ステップでは加えた痕跡を除いたバッファから一様に取る。
+      "ach_need" … "ach" と同じ除外をした上で、"need" と同じ新旧の比率で取る。
+      "ach_need2" … 驚きのあるステップでは従来と同じ（加えた痕跡を除いたバッファから一様に batch 個）、驚きのない
+          ステップでは加えた痕跡を含めて "need" と同じ新旧の比率で取る（12.6.163節の修正2）。
+      diagnostics = True では diag["replay_mix"][k]（規則を適用したタスク k の、リプレイの痕跡のうちそのステップで
+      選んだ文脈のものの割合 "own"、加えた痕跡の割合 "kept"、1ステップのリプレイの数の平均 "size"、睡眠のステップ数
+      "sleep"）を加える。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -361,6 +384,11 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     if writeback and (writeback not in WRITEBACKS or condition not in ("inferred", "inferred_gated")
                       or not 0 < writeback_at < len(specs) or writeback_steps < 0 or writeback_eval <= 0):
         raise ValueError("writeback は none・all・inter（inferred / inferred_gated のみ）、0 < writeback_at < タスク数")
+    if replay_rule and (replay_rule not in REPLAY_RULES or not 0.0 <= replay_beta <= 1.0
+                        or not 0.0 < replay_need < 1.0 or sleep_every <= 0 or sleep_steps < 0):
+        raise ValueError("replay_rule は gain・need・sleep・ach・ach_need・ach_need2、replay_beta は [0, 1]、replay_need は (0, 1)、"
+                         "sleep_every は正、sleep_steps は 0 以上")
+    rule_from = (writeback_at if writeback else 1) if replay_rule else len(specs)
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
     if split_ctx_lr > 0:
@@ -739,6 +767,43 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             buf_ctx.append(hc[keep])
             buf_src.append(torch.full((int(keep.sum()),), -1, dtype=torch.long))
 
+    def replay_draw(rule: str, ctx: int) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """12.6.163節: リプレイする痕跡（入力に文脈を付けたもの、ラベル、出どころ）を取る。rule = "" は従来と同じ。"""
+        bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
+        bs = torch.cat(buf_src)
+        novel = rule in ("ach", "ach_need", "ach_need2") and not gate["store"]
+        if rule == "sleep" or novel:
+            wake = bs != -1
+            bb, bl, bc, bs = bb[wake], bl[wake], bc[wake], bs[wake]
+        n = bb.shape[0]
+        idx = None
+        if rule == "gain" and n > 0:
+            with torch.no_grad():
+                li = F.cross_entropy(model(with_ctx(bb, bc)), bl, reduction="none")
+            p = replay_beta / n + (1 - replay_beta) * li / li.sum().clamp_min(1e-12)
+            idx = torch.multinomial(p, batch, replacement=True, generator=generator)
+        elif rule in ("need", "ach_need") or (rule == "ach_need2" and not novel):
+            own, oth = (bc == ctx).nonzero()[:, 0], (bc != ctx).nonzero()[:, 0]
+            n_own = round(replay_need * batch)
+            if oth.numel() > 0:
+                # 古い文脈のリプレイは常に batch − n_own 個まで。今の文脈の痕跡がまだなければ、その分は取らない
+                idx = oth[torch.randint(oth.numel(), (batch - n_own,), generator=generator)]
+                if own.numel() > 0:
+                    idx = torch.cat([own[torch.randint(own.numel(), (n_own,), generator=generator)], idx])
+        if idx is None:
+            idx = torch.randint(n, (batch,), generator=generator)
+        return with_ctx(bb[idx], bc[idx]), bl[idx], torch.stack([bc[idx] == ctx, bs[idx] == -1])
+
+    def sleep_phase(o: torch.optim.Optimizer) -> None:
+        """12.6.163節: 新しい入力なしで、加えた痕跡を含むバッファ全体を交互にリプレイする（睡眠に似た段階）。"""
+        bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
+        for _ in range(sleep_steps):
+            idx = torch.randint(bb.shape[0], (batch,), generator=generator)
+            loss = F.cross_entropy(model(with_ctx(bb[idx], bc[idx])), bl[idx])
+            o.zero_grad(set_to_none=True)
+            loss.backward()
+            o.step()
+
     upd_ref: list[float] = []  # plasticity_cap の ū（平常時の更新ノルムの移動平均）
     split = {"left": 0, "ctx": -1}  # split_window の残りステップと、対象の新しい文脈
     split_on = split_window > 0 and condition in ("inferred", "inferred_gated")
@@ -751,7 +816,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         trained: dict[tuple[int, int], int] = {}
         n_used_at_start = len(used)
         opt = make_opt(k)
+        rule = replay_rule if k >= rule_from else ""
+        mix = {"own": 0.0, "kept": 0.0, "size": 0, "n": 0, "sleep": 0}
         for step in range(pretrain_steps if k == 0 else steps):
+            if rule == "sleep" and step > 0 and step % sleep_every == 0 and buf_bits:
+                sleep_phase(opt)
+                mix["sleep"] += sleep_steps
             bits, labels = make_batch(spec, batch, generator)
             src = None
             if k > 0 and step < transition_steps:
@@ -796,10 +866,18 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                     trained[(ctx, t)] = trained.get((ctx, t), 0) + int((s_ == t).sum())
             n_new = y.shape[0]
             if buf_bits and k > 0:
-                bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
-                idx = torch.randint(bb.shape[0], (batch,), generator=generator)
-                x = torch.cat([x, with_ctx(bb[idx], bc[idx])])
-                y = torch.cat([y, bl[idx]])
+                if rule:
+                    xr, yr, flags = replay_draw(rule, ctx)
+                    mix["own"] += float(flags[0].float().mean())
+                    mix["kept"] += float(flags[1].float().mean())
+                    mix["size"] += yr.shape[0]
+                    mix["n"] += 1
+                else:
+                    bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
+                    idx = torch.randint(bb.shape[0], (batch,), generator=generator)
+                    xr, yr = with_ctx(bb[idx], bc[idx]), bl[idx]
+                x = torch.cat([x, xr])
+                y = torch.cat([y, yr])
             if y.numel() > 0:
                 loss = F.cross_entropy(model(x), y)
                 opt.zero_grad(set_to_none=True)
@@ -905,6 +983,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             if informed:
                 diag.setdefault("cue_info", []).append(extra.get("info", []))
             diag["trained_src"].append({f"{c}<-{t}": n for (c, t), n in sorted(trained.items())})
+            if rule:
+                m_ = max(mix["n"], 1)
+                diag.setdefault("replay_mix", {})[k] = {"own": mix["own"] / m_, "kept": mix["kept"] / m_,
+                                                        "size": mix["size"] / m_, "sleep": mix["sleep"]}
     selection_acc = None
     sel_choices: list[list[int]] = []
     sel_cues: list[list[int]] = []
