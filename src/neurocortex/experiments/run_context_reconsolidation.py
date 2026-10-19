@@ -36,6 +36,7 @@ SELECT = "gen_replay"  # 12.6.151節の設定（P = 4、バッファから候補
 READOUTS = ("param", "mix_all", "switch_all", "mix_all200", *EPISODIC_EXTRA_READOUTS, *RECON_READOUTS)
 RECON_KW = {"episodic_extra": True, "recon_steps": 100, "recon_lr": 0.01, "recon_batch": 32}
 CONFIGS: dict[str, dict] = {"base": RECON_KW}
+# 修正1（12.6.159節）: recon_hold（保留サンプル50個だけで学び直す。recon_buf と数を揃えた対照）を参考に加えた。判定条件は変えない
 # 修正は開発用シードの結果を見て追加する（上限3回）
 
 

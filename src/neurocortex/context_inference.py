@@ -82,7 +82,7 @@ def cue_information(probs: torch.Tensor, prior: torch.Tensor | None = None) -> t
 EPISODIC_READOUTS = ("param", "mix_all", "switch_all", "mix_buf", "mix_hold", "mix_nogate", "mix_all200",
                      "switch_all200")
 EPISODIC_EXTRA_READOUTS = ("mix_rep", "switch_rep", "arb_bits", "arb_rep")  # 12.6.159節
-RECON_READOUTS = ("recon_buf", "recon_all", "recon_all200", "recon_inter")  # 12.6.159節
+RECON_READOUTS = ("recon_buf", "recon_all", "recon_all200", "recon_inter", "recon_hold")  # 12.6.159節
 
 
 def episodic_readout(p_param: torch.Tensor, x: torch.Tensor, store_bits: torch.Tensor, store_labels: torch.Tensor,
@@ -294,7 +294,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
           recon_lr、バッチ recon_batch、痕跡から復元抽出）、その複製の正確度を RECON_READOUTS として加える。
           recon_buf … c のバッファだけ。recon_all … c のバッファと保留サンプルの先頭 episodic_hold 個。
           recon_all200 … c のバッファと保留サンプルのすべて。recon_inter … recon_all の痕跡に、他の文脈の
-          バッファ（保存時の文脈つき）を同じ数だけ交互に混ぜる。diag["recon_side"][変種][c の順][j][c' の順] は、
+          バッファ（保存時の文脈つき）を同じ数だけ交互に混ぜる。recon_hold … 保留サンプルの先頭 episodic_hold 個
+          だけ（12.6.159節の修正1。recon_buf と痕跡の数を揃えた対照）。diag["recon_side"][変種][c の順][j][c' の順] は、
           recon_all・recon_inter の複製で各タスク j を各文脈 c' で測った正確度から最終モデルの値を引いた差
           （学び直しが他の文脈に及ぼす影響）。
     """
@@ -935,16 +936,19 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 models = {}  # 12.6.159節: テスト時の再固定化（c の痕跡で学び直した複製）
                 if recon_steps > 0:
                     rgen = torch.Generator().manual_seed(6789)
+                    hgen = torch.Generator().manual_seed(6790)  # recon_hold 専用（他の変種の乱数の消費を変えない）
                     for c in used:
                         for name, (ub, hold) in {"recon_buf": (True, "none"), "recon_all": (True, "small"),
-                                                 "recon_all200": (True, "all"), "recon_inter": (True, "small")}.items():
+                                                 "recon_all200": (True, "all"), "recon_inter": (True, "small"),
+                                                 "recon_hold": (False, "small")}.items():
                             sb, sl = store(c, ub, hold)
                             m_ = copy.deepcopy(model)
                             if sb.shape[0] > 0:
                                 ob, ol, oc = bb_[bc != c], blab[bc != c], bc[bc != c]
                                 ropt = torch.optim.Adam(m_.parameters(), lr=recon_lr)
                                 for _ in range(recon_steps):
-                                    idx = torch.randint(sb.shape[0], (recon_batch,), generator=rgen)
+                                    g_ = hgen if name == "recon_hold" else rgen
+                                    idx = torch.randint(sb.shape[0], (recon_batch,), generator=g_)
                                     xr, yr = with_ctx(sb[idx], c), sl[idx]
                                     if name == "recon_inter" and ob.shape[0] > 0:
                                         io = torch.randint(ob.shape[0], (recon_batch,), generator=rgen)
