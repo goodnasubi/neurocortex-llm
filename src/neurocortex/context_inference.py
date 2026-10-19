@@ -78,6 +78,37 @@ def cue_information(probs: torch.Tensor, prior: torch.Tensor | None = None) -> t
     return ((h_mix - (pi[None] * ent).sum(1)) / math.log(probs.shape[-1])).clamp_min(0.0)
 
 
+EPISODIC_READOUTS = ("param", "mix_all", "switch_all", "mix_buf", "mix_hold", "mix_nogate", "mix_all200",
+                     "switch_all200")
+
+
+def episodic_readout(p_param: torch.Tensor, x: torch.Tensor, store_bits: torch.Tensor, store_labels: torch.Tensor,
+                     lam: float = 0.5, kappa: float = 1.0, rule: str = "mix") -> torch.Tensor:
+    """記憶に基づく予測と、選んだ文脈のパラメトリックな予測の組み合わせ（12.6.155節）。
+
+    p_param は [N, K] の予測分布、x は [N, n] の ±1 入力、store_* は検索する痕跡（入力とその保存時のラベル）。
+    痕跡 i との類似度 s_i = exp(−d_i / λ)（d_i はハミング距離）、記憶の予測 p_epi = Σ s_i onehot(y_i) / Σ s_i、
+    記憶の重み w = Σ s_i / (Σ s_i + κ)（κ はパラメトリックな予測への擬似的な数）。
+      "mix"    … (1 − w)·p_param + w·p_epi（痕跡との近さで重み付けした混合）
+      "switch" … w ≥ 0.5 なら p_epi、そうでなければ p_param（記憶の信頼度による切り替え）
+    痕跡がなければ p_param をそのまま返す。"""
+    if rule not in ("mix", "switch"):
+        raise ValueError(rule)
+    if lam <= 0 or kappa <= 0:
+        raise ValueError("lam と kappa は正")
+    if store_bits.shape[0] == 0:
+        return p_param
+    d = (x.shape[1] - x @ store_bits.T) / 2  # [N, 痕跡]
+    s = torch.exp(-d / lam)
+    onehot = F.one_hot(store_labels, p_param.shape[1]).float()
+    mass = s.sum(1, keepdim=True)
+    p_epi = (s @ onehot) / mass.clamp_min(1e-30)
+    w = mass / (mass + kappa)
+    if rule == "mix":
+        return (1 - w) * p_param + w * p_epi
+    return torch.where(w >= 0.5, p_epi, p_param)
+
+
 def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator: torch.Generator,
                          eval_generator: torch.Generator, n_slots: int | None = None, tau: float = 0.4,
                          ema: float = 0.9, pretrain_steps: int = 500, pretrain_weight_decay: float = 0.01,
@@ -95,7 +126,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          com_window: int = 0, reliability_lapse: bool = True,
                          reliability_source: str = "gated", reliability_holdout: int = 0,
                          cue_weight: str = "", active_pool: int = 0, active_source: str = "task",
-                         active_verify: int = 0, verify_mode: str = "top2") -> dict:
+                         active_verify: int = 0, verify_mode: str = "top2", episodic_eval: int = 0,
+                         episodic_hold: int = 50, episodic_lambda: float = 0.5, episodic_kappa: float = 1.0) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -220,6 +252,17 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
       "selection_rival_share"・"selection_order"）。diagnostics = True では "origin_acc"（最終モデルで、各タスク j を
       各文脈 c で、入力の出どころ（own_buf: c のバッファ、other_buf: 他の文脈のバッファ、holdout: c の保留サンプル）
       ごとに、タスク j の正解で測った正確度）を加える。
+
+    記憶に基づく予測との組み合わせ（12.6.155節。diagnostics = True かつ episodic_eval = N > 0 のとき。学習・評価の
+    乱数は消費しない）: 最終モデルで、各タスク j を専用の乱数による新しい入力 N 個で、各文脈 c について
+    episodic_readout（λ = episodic_lambda、κ = episodic_kappa）の正確度を測り、diag["episodic_acc"][j][c の順][読み出し]
+    に入れる。読み出しは EPISODIC_READOUTS で、検索する痕跡は c の痕跡に限る（文脈に依存した検索）:
+      param … パラメトリックな予測だけ。mix_all / switch_all … c のバッファ（リプレイした痕跡）と保留サンプルの先頭
+      episodic_hold 個（保存だけでリプレイしなかった痕跡）。mix_buf … バッファだけ。mix_hold … 保留サンプルの先頭
+      episodic_hold 個だけ。mix_nogate … 全文脈のバッファと保留サンプルの先頭 episodic_hold 個（文脈に依存しない検索）。
+      mix_all200 / switch_all200 … c のバッファと保留サンプルのすべて（reliability_holdout 個まで）。
+    diag["episodic_cover"][j][c の順] は新しい入力のうち c の痕跡（mix_all と同じ）に完全に一致するものの割合、
+    diag["store_purity"][j][c の順] は同じ痕跡のラベルがタスク j の規則と一致する割合。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -251,6 +294,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         raise ValueError("verify_mode は top2・all・each")
     if active_source == "holdout" and reliability_holdout <= 0:
         raise ValueError("active_source='holdout' は reliability_holdout > 0 でのみ使う")
+    if episodic_eval < 0 or episodic_hold < 0 or episodic_lambda <= 0 or episodic_kappa <= 0:
+        raise ValueError("episodic_eval・episodic_hold は 0 以上、episodic_lambda・episodic_kappa は正")
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
     if split_ctx_lr > 0:
@@ -801,6 +846,50 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
 
             diag["origin_acc"] = [[{"own_buf": acc_on(bb_[bc == c], j, c), "other_buf": acc_on(bb_[bc != c], j, c),
                                     "holdout": acc_on(hb[hc == c], j, c)} for c in used] for j in range(T)]
+            if episodic_eval > 0:
+                epi_gen = torch.Generator().manual_seed(5678)  # 12.6.155節の読み出し専用
+                blab = bl if bl.numel() else torch.zeros(0, dtype=torch.long)
+                hl = torch.cat(hold_labels) if hold_labels else torch.zeros(0, dtype=torch.long)
+                # 保留サンプルの先頭 episodic_hold 個（文脈ごと、保存の順）。reliability_holdout = episodic_hold の
+                # 場合の保留サンプルと同じになる
+                h_rank = torch.zeros(hc.shape[0], dtype=torch.long)
+                for c in hc.unique():
+                    idx = (hc == c).nonzero()[:, 0]
+                    h_rank[idx] = torch.arange(idx.shape[0])
+                h_small = h_rank < episodic_hold
+
+                def store(c: int | None, buf: bool, hold: str) -> tuple[torch.Tensor, torch.Tensor]:
+                    mb = (bc == c) if c is not None else torch.ones_like(bc, dtype=torch.bool)
+                    mh = (hc == c) if c is not None else torch.ones_like(hc, dtype=torch.bool)
+                    mh = mh & h_small if hold == "small" else (mh if hold == "all" else torch.zeros_like(mh))
+                    if not buf:
+                        mb = torch.zeros_like(mb)
+                    return torch.cat([bb_[mb], hb[mh]]), torch.cat([blab[mb], hl[mh]])
+
+                plans = {"mix_all": (True, "small", "mix", False), "switch_all": (True, "small", "switch", False),
+                         "mix_buf": (True, "none", "mix", False), "mix_hold": (False, "small", "mix", False),
+                         "mix_nogate": (True, "small", "mix", True), "mix_all200": (True, "all", "mix", False),
+                         "switch_all200": (True, "all", "switch", False)}
+                epi_acc, epi_cover, purity = [], [], []
+                for j in range(T):
+                    x, y = make_batch(specs[j], episodic_eval, epi_gen)
+                    row_a, row_c, row_p = [], [], []
+                    for c in used:
+                        with torch.no_grad():
+                            pp = F.softmax(model(with_ctx(x, c)), dim=-1)
+                        accs = {"param": float((pp.argmax(-1) == y).float().mean())}
+                        for name, (ub, hold, rule, nogate) in plans.items():
+                            sb, sl = store(None if nogate else c, ub, hold)
+                            pe = episodic_readout(pp, x, sb, sl, episodic_lambda, episodic_kappa, rule)
+                            accs[name] = float((pe.argmax(-1) == y).float().mean())
+                        sb, sl = store(c, True, "small")
+                        row_a.append(accs)
+                        row_c.append(float(((x @ sb.T) == x.shape[1]).any(1).float().mean()) if sb.shape[0] else 0.0)
+                        row_p.append(float((task_labels(specs[j], sb) == sl).float().mean()) if sb.shape[0] else None)
+                    epi_acc.append(row_a)
+                    epi_cover.append(row_c)
+                    purity.append(row_p)
+                diag.update(episodic_acc=epi_acc, episodic_cover=epi_cover, store_purity=purity)
         diag["buffer_src"] = {int(c): {int(t): int(((bc == c) & (bs == t)).sum()) for t in bs[bc == c].unique()}
                               for c in bc.unique()}
         out["diag"] = diag
