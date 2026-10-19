@@ -56,6 +56,9 @@ NEW = ("ach_c_nov", "base_nov", "ach_c_nov_ctx", "ach_c_nov_sh")
 # 共有を抑えることによる一般化の上積みを一部残す）
 CONFIGS["ach_c_nov_half"] = {**CONFIGS["ach_c_nov"], "nov_shared_gain": 0.5}
 FIXES: tuple[str, ...] = ("ach_c_nov_ctx", "ach_c_nov_half")
+# 確定の規則（修正2の計測の前に決めた）: 開発用シードで D1〜D3 を満たした修正だけを H_fix の候補にする。
+# 修正2は −0.10 未満が 7 回で D2 不合格だったので、評価用シードでは参考として測るだけ
+FIX_CANDIDATES: tuple[str, ...] = ("ach_c_nov_ctx",)
 RULES = ("keep", "ach_c", *NEW, "ach_c_nov_half")
 BAD = -0.10  # 1回ごとの新しいタスクの差がこれを下回ると「大きく損なった」回とする（12.6.167節と同じ）
 
@@ -212,14 +215,14 @@ def verdict(res: dict) -> dict:
     if o.get("end_ach_c_nov") is not None and o.get("end_base_nov") is not None:
         out["ach_c_nov"]["D5"] = bool(o["end_ach_c_nov"] - o["end_base_nov"] >= 0.05)
     out["H"] = out.get("ach_c_nov", {}).get("success")
-    out["H_fix"] = any(out.get(w, {}).get("success") for w in FIXES) if FIXES else None
+    out["H_fix"] = any(out.get(w, {}).get("success") for w in FIX_CANDIDATES) if FIX_CANDIDATES else None
     return out
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--analyze", type=Path, nargs="+", help="結果ファイル（12.6.167〜168節のものも）を集計して判定する")
-    ap.add_argument("--configs", nargs="+", default=list(NEW))
+    ap.add_argument("--configs", nargs="+", default=[*NEW, "ach_c_nov_half"])
     ap.add_argument("--families", nargs="+", default=list(FAMILIES))
     ap.add_argument("--phase", choices=("dev", "eval"), default="dev")
     ap.add_argument("--seeds", type=int, nargs="+")

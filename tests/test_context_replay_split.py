@@ -110,5 +110,5 @@ def test_experiment_jobs_analyze_and_verdict(tmp_path):
     assert v["ach_c_nov"]["D4"] and v["ach_c_nov"]["D5"]
     # 切り分けの ach_c_nov_ctx は上積み 0 なので D4 不合格。上書きなしの組がないので D3 は判定しない
     assert not v["ach_c_nov_ctx"]["D4"] and v["ach_c_nov_ctx"]["D3"] is None
-    # 修正の候補（ach_c_nov_ctx・ach_c_nov_half）のどれかが D1〜D3 を満たすか。ach_c_nov_ctx は D1 不合格（+0.04）
+    # 修正の候補（開発用シードで合格した ach_c_nov_ctx）が D1〜D3 を満たすか。ここでは D1 不合格（+0.04）
     assert v["H_fix"] is False and "ach_c_nov_half" not in v
