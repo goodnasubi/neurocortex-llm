@@ -175,6 +175,19 @@ def mount_drive():
             rc = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=1800).returncode
         except subprocess.TimeoutExpired:  # 承認待ちが上限を超えて戻らないことがある（09-30 22:20〜22:50）。ドライバごと落とさない
             rc = -1
+    for _ in range(3):  # 接続断（Connection was lost）で承認画面に進めないことがある（10-19）。URL が出るまでやり直す
+        try:
+            lost = 'Connection was lost' in (Path(__file__).resolve().parent / 'dm_auto.log').read_text(errors='ignore')
+        except OSError:
+            lost = False
+        if drive_mounted() or not lost:
+            break
+        time.sleep(20)
+        with open(Path(__file__).resolve().parent / 'dm_auto.log', 'w') as f:
+            try:
+                rc = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=1800).returncode
+            except subprocess.TimeoutExpired:
+                rc = -1
     if not drive_mounted():
         # 承認後の1回目が 'mount failed' で終わり、すぐやり直すと再承認なしで通ることがある（09-29 に2回）。短い待ちで1回だけ再試行
         with open(Path(__file__).resolve().parent / 'dm_retry.log', 'w') as f:
