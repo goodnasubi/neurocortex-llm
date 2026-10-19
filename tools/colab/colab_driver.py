@@ -6,7 +6,7 @@ os.environ['PATH'] = os.path.expanduser('~/.local/bin') + ':' + os.environ['PATH
 S = 'step44'
 VM = '/content/step44/results'
 LOCAL = Path('/home/user/neurocortex-llm/results/step44_full_scale_rerun')
-TMP = Path(__file__).parent / 'colab_tmp'
+TMP = Path(__file__).resolve().parent / 'colab_tmp'
 RUN = ['python', 'colab_step44_full_scale_experiment.py', '--phases', 'A', 'B', 'C', '--epochs', '4',
        '--batch-size', '8', '--grad-accum', '8', '--max-hours', '200',
        '--results-dir', VM, '--checkpoint-dir', VM + '/checkpoints', '--token-cache-dir', '/content/step44/token_cache',
@@ -19,21 +19,21 @@ MIN_BALANCE = 5.0
 MAX_SESSION_H = float(os.environ.get('MAX_SESSION_H', 12))
 MARGIN_H = 1.0
 EPOCH_H_DEFAULT = 6.0  # 実測できないときのエポック所要時間（実測: B 約4.9時間、C 約5.7時間の見込み）
-SESSION_T0 = Path(__file__).parent / 'session_started'
-RECONNECT_NOW = Path(__file__).parent / 'RECONNECT_NOW'  # 置くと、次のチェックポイント保存直後に張り直す
+SESSION_T0 = Path(__file__).resolve().parent / 'session_started'
+RECONNECT_NOW = Path(__file__).resolve().parent / 'RECONNECT_NOW'  # 置くと、次のチェックポイント保存直後に張り直す
 # colab CLI のセッション記録（セッション名 → 接続先）。コンテナ再起動で空になるので、動いているときに退避しておく
 REG = Path.home() / '.config/colab-cli/sessions.json'
-REG_BACKUP = Path(os.environ.get('COLAB_REG_BACKUP', Path(__file__).parent / 'colab_sessions_backup.json'))
+REG_BACKUP = Path(os.environ.get('COLAB_REG_BACKUP', Path(__file__).resolve().parent / 'colab_sessions_backup.json'))
 # ドライバは同時に1つだけ動かす（2つ動くと、片方が作った VM をもう片方が復元なしで学習開始する）
-LOCK_FILE = open(Path(__file__).parent / 'driver.lock', 'w')
+LOCK_FILE = open(Path(__file__).resolve().parent / 'driver.lock', 'w')
 try:
     fcntl.flock(LOCK_FILE, fcntl.LOCK_EX | fcntl.LOCK_NB)
 except OSError:
     print('driver は既に動いているため終了する', flush=True)
     sys.exit(0)
 # 復元（結果 JSON と途中経過の .pt を VM に戻す）が済んだ VM だけ、学習を始めてよい
-RESTORED = Path(__file__).parent / 'vm_restored.flag'
-RESUME_NOW = Path(__file__).parent / 'RESUME_NOW'  # 承認待ちで VM を止めたあと、置くと VM を作り直す
+RESTORED = Path(__file__).resolve().parent / 'vm_restored.flag'
+RESUME_NOW = Path(__file__).resolve().parent / 'RESUME_NOW'  # 承認待ちで VM を止めたあと、置くと VM を作り直す
 DRIVE = '/content/drive/MyDrive/neurocortex/step44'
 # VM 上で 30 分ごとに結果とチェックポイントを Drive へ複製する（.part に書いてから rename。完了済み実行の削除も反映）
 SYNC = r'''
@@ -168,16 +168,16 @@ def drive_mounted():
 
 def mount_drive():
     # 新しい VM では Drive の承認がやり直しになる。承認 URL は dm_auto.log に出る（ユーザーに渡す）
-    cmd = [os.path.expanduser('~/.local/share/uv/tools/google-colab-cli/bin/python'), str(Path(__file__).parent / 'colab_dm.py'),
+    cmd = [os.path.expanduser('~/.local/share/uv/tools/google-colab-cli/bin/python'), str(Path(__file__).resolve().parent / 'colab_dm.py'),
            '--auth', 'oauth2', 'drivemount', '-s', S]
-    with open(Path(__file__).parent / 'dm_auto.log', 'w') as f:
+    with open(Path(__file__).resolve().parent / 'dm_auto.log', 'w') as f:
         try:
             rc = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=1800).returncode
         except subprocess.TimeoutExpired:  # 承認待ちが上限を超えて戻らないことがある（09-30 22:20〜22:50）。ドライバごと落とさない
             rc = -1
     if not drive_mounted():
         # 承認後の1回目が 'mount failed' で終わり、すぐやり直すと再承認なしで通ることがある（09-29 に2回）。短い待ちで1回だけ再試行
-        with open(Path(__file__).parent / 'dm_retry.log', 'w') as f:
+        with open(Path(__file__).resolve().parent / 'dm_retry.log', 'w') as f:
             try:
                 rc = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=900,
                                     env=dict(os.environ, DM_WAIT_SEC='120')).returncode
@@ -442,6 +442,24 @@ else:
     for f in LOCAL.glob('phase*_seed*.json'):
         rc, out = vm_exec('open(%r, "w").write(%r); print("restored")' % (VM + '/' + f.name, f.read_text()))
         log('restore', f.name, rc)
+    if ok and not RESTORED.exists():
+        # 一括の復元が応答待ちで失敗しても、コピー自体は終わっていることがある。Drive と VM のサイズが全て一致するなら復元済みとする
+        rc, out = vm_exec('''
+import os
+D, V = %r, %r
+ng = []
+for sub in ['', '/checkpoints']:
+    if os.path.isdir(D + sub):
+        for n in os.listdir(D + sub):
+            if n.endswith(('.json', '.pt')):
+                p = f'{V}{sub}/{n}'
+                if not os.path.exists(p) or os.path.getsize(p) != os.path.getsize(f'{D}{sub}/{n}'):
+                    ng.append(n)
+print('VERIFY_' + ('OK' if not ng else 'NG ' + ','.join(ng)))
+''' % (DRIVE, VM), timeout=600)
+        log('restore verify', rc, out.strip()[-200:])
+        if rc == 0 and 'VERIFY_OK' in out:
+            RESTORED.write_text(str(time.time()))
 
 
 def start_training():
@@ -517,7 +535,7 @@ poll_fail = 0
 if session_alive():
     ensure_sync()
     if not SESSION_T0.exists():  # 現在の VM の作成時刻（driver.log の new）
-        SESSION_T0.write_text(str(time.mktime(time.strptime('2026-09-27 15:33:27', '%Y-%m-%d %H:%M:%S'))))
+        SESSION_T0.write_text(str(time.time()))
 restore_reg()
 while done_count() < 9:
     b = balance()
