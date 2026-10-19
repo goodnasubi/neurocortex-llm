@@ -1,5 +1,5 @@
 """Colab CLI で ステップ44.4（③: 4エポック）を回し続けるドライバ。この環境（コンテナ）側で動かす。"""
-import json, os, subprocess, sys, time
+import json, os, shutil, subprocess, sys, time
 from pathlib import Path
 
 os.environ['PATH'] = os.path.expanduser('~/.local/bin') + ':' + os.environ['PATH']
@@ -21,6 +21,9 @@ MARGIN_H = 1.0
 EPOCH_H_DEFAULT = 6.0  # 実測できないときのエポック所要時間（実測: B 約4.9時間、C 約5.7時間の見込み）
 SESSION_T0 = Path(__file__).parent / 'session_started'
 RECONNECT_NOW = Path(__file__).parent / 'RECONNECT_NOW'  # 置くと、次のチェックポイント保存直後に張り直す
+# colab CLI のセッション記録（セッション名 → 接続先）。コンテナ再起動で空になるので、動いているときに退避しておく
+REG = Path.home() / '.config/colab-cli/sessions.json'
+REG_BACKUP = Path(os.environ.get('COLAB_REG_BACKUP', Path(__file__).parent / 'colab_sessions_backup.json'))
 RESUME_NOW = Path(__file__).parent / 'RESUME_NOW'  # 承認待ちで VM を止めたあと、置くと VM を作り直す
 DRIVE = '/content/drive/MyDrive/neurocortex/step44'
 # VM 上で 30 分ごとに結果とチェックポイントを Drive へ複製する（.part に書いてから rename。完了済み実行の削除も反映）
@@ -113,6 +116,33 @@ def done_count():
     return len(list(LOCAL.glob('phase*_seed*.json')))
 
 
+def reg_has_session():
+    try:
+        return S in REG.read_text()
+    except OSError:
+        return False
+
+
+def save_reg():
+    # 中身が空（{}）のときは退避を上書きしない
+    try:
+        if reg_has_session():
+            shutil.copy(REG, REG_BACKUP)
+    except OSError as e:
+        log('reg backup failed', e)
+
+
+def restore_reg():
+    # 記録が消えていて退避があれば戻す（VM 自体が残っていても CLI から接続できるように）
+    try:
+        if not reg_has_session() and REG_BACKUP.exists() and S in REG_BACKUP.read_text():
+            REG.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(REG_BACKUP, REG)
+            log('reg restored from backup')
+    except OSError as e:
+        log('reg restore failed', e)
+
+
 def session_alive():
     for _ in range(3):  # 一時的な失敗で VM を作り直さないよう、失敗時は再試行する
         rc, out = colab('sessions', timeout=120)
@@ -160,6 +190,7 @@ def new_session():
         SESSION_T0.write_text(str(time.time()))
         log('new', rc, out.strip()[-200:])
         if rc == 0 or session_alive():
+            save_reg()
             break
         time.sleep(60 * (i + 1))
     # 初期設定（clone・pip）は VM 上の別プロセスで走らせ、結果ファイルを確認する。
@@ -470,6 +501,7 @@ if session_alive():
     ensure_sync()
     if not SESSION_T0.exists():  # 現在の VM の作成時刻（driver.log の new）
         SESSION_T0.write_text(str(time.mktime(time.strptime('2026-09-27 15:33:27', '%Y-%m-%d %H:%M:%S'))))
+restore_reg()
 while done_count() < 9:
     b = balance()
     log('balance', b, 'done', done_count())

@@ -2,3 +2,4 @@
 session_started
 RECONNECT_NOW
 colab_tmp/
+colab_sessions_backup.json
