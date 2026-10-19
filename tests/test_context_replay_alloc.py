@@ -67,6 +67,9 @@ def test_ach_replays_kept_traces_only_without_surprise():
     assert m["size"] == 16 and 0.0 <= m["kept"] < 0.5 and mn["size"] < 9
     # この小さな設定の新しいタスクは学習が終わらず驚きが続くので、加えた痕跡はほとんどリプレイされない
     assert m["kept"] < uni["kept"]
+    # ach_need2: 驚きのあるステップは従来と同じなので、驚きが続くこの設定では痕跡を加えない場合とほぼ同じになる
+    m2 = _run(writeback_keep=True, replay_rule="ach_need2")["diag"]["replay_mix"][2]
+    assert m2["size"] > mn["size"] and m2["kept"] <= m["kept"] + 1e-9
 
 
 def test_replay_rule_rejects_bad_arguments():

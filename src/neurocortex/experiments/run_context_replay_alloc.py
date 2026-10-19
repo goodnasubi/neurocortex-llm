@@ -43,7 +43,10 @@ CONFIGS: dict[str, dict] = {
 # 新しさ（予測誤差）で、加えた痕跡のリプレイを止める規則（Hasselmo 1999 のアセチルコリンによる符号化と固定化の切り替え）と、
 # それに need の比率を組み合わせた規則を加える。判定条件と初期設定は変えない
 CONFIGS.update({"ach": {**KEEP, "replay_rule": "ach"}, "ach_need": {**KEEP, "replay_rule": "ach_need", "replay_need": 0.5}})
-FIX1 = ("ach", "ach_need")
+# 修正2: ach_need の最悪の組は、新しい文脈が最後まで確立しないシードで、古い文脈のリプレイが半分のまま学習が止まった
+# ことによる。驚きのあるステップでは base と同じリプレイ（加えた痕跡を除き 64 個）に戻し、比率は驚きのないステップだけに使う
+CONFIGS["ach_need2"] = {**KEEP, "replay_rule": "ach_need2", "replay_need": 0.5}
+FIX1 = ("ach", "ach_need", "ach_need2")
 RULES = ("keep", "gain", "need", "sleep", "sleep_buf", *FIX1)
 # 修正は開発用シードの結果を見て追加する（上限3回）
 

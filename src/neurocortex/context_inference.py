@@ -85,7 +85,7 @@ EPISODIC_EXTRA_READOUTS = ("mix_rep", "switch_rep", "arb_bits", "arb_rep")  # 12
 RECON_READOUTS = ("recon_buf", "recon_all", "recon_all200", "recon_inter", "recon_hold")  # 12.6.159節
 RECON_EXTRA_READOUTS = ("recon_buf_inter", "recon_buf_err")  # 12.6.161節（バッファでの学び直しが効く理由の切り分け）
 WRITEBACKS = ("none", "all", "inter")  # 12.6.161節（学び直しの共有の重みへの書き戻し）
-REPLAY_RULES = ("gain", "need", "sleep", "ach", "ach_need")  # 12.6.163節（海馬の痕跡のリプレイの配分）
+REPLAY_RULES = ("gain", "need", "sleep", "ach", "ach_need", "ach_need2")  # 12.6.163節（海馬の痕跡のリプレイの配分）
 
 
 def episodic_readout(p_param: torch.Tensor, x: torch.Tensor, store_bits: torch.Tensor, store_labels: torch.Tensor,
@@ -341,6 +341,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
           バッチが確立した文脈で驚きなく予測できる（gate の store、損失 ≦ τ）ときだけ、加えた痕跡を含むバッファ全体から
           一様に取る。驚きのある（新しい）ステップでは加えた痕跡を除いたバッファから一様に取る。
       "ach_need" … "ach" と同じ除外をした上で、"need" と同じ新旧の比率で取る。
+      "ach_need2" … 驚きのあるステップでは従来と同じ（加えた痕跡を除いたバッファから一様に batch 個）、驚きのない
+          ステップでは加えた痕跡を含めて "need" と同じ新旧の比率で取る（12.6.163節の修正2）。
       diagnostics = True では diag["replay_mix"][k]（規則を適用したタスク k の、リプレイの痕跡のうちそのステップで
       選んだ文脈のものの割合 "own"、加えた痕跡の割合 "kept"、1ステップのリプレイの数の平均 "size"、睡眠のステップ数
       "sleep"）を加える。
@@ -384,7 +386,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         raise ValueError("writeback は none・all・inter（inferred / inferred_gated のみ）、0 < writeback_at < タスク数")
     if replay_rule and (replay_rule not in REPLAY_RULES or not 0.0 <= replay_beta <= 1.0
                         or not 0.0 < replay_need < 1.0 or sleep_every <= 0 or sleep_steps < 0):
-        raise ValueError("replay_rule は gain・need・sleep・ach・ach_need、replay_beta は [0, 1]、replay_need は (0, 1)、"
+        raise ValueError("replay_rule は gain・need・sleep・ach・ach_need・ach_need2、replay_beta は [0, 1]、replay_need は (0, 1)、"
                          "sleep_every は正、sleep_steps は 0 以上")
     rule_from = (writeback_at if writeback else 1) if replay_rule else len(specs)
     if split_shared_lr_floor > 0:
@@ -769,7 +771,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         """12.6.163節: リプレイする痕跡（入力に文脈を付けたもの、ラベル、出どころ）を取る。rule = "" は従来と同じ。"""
         bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
         bs = torch.cat(buf_src)
-        if rule == "sleep" or (rule in ("ach", "ach_need") and not gate["store"]):
+        novel = rule in ("ach", "ach_need", "ach_need2") and not gate["store"]
+        if rule == "sleep" or novel:
             wake = bs != -1
             bb, bl, bc, bs = bb[wake], bl[wake], bc[wake], bs[wake]
         n = bb.shape[0]
@@ -779,7 +782,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 li = F.cross_entropy(model(with_ctx(bb, bc)), bl, reduction="none")
             p = replay_beta / n + (1 - replay_beta) * li / li.sum().clamp_min(1e-12)
             idx = torch.multinomial(p, batch, replacement=True, generator=generator)
-        elif rule in ("need", "ach_need"):
+        elif rule in ("need", "ach_need") or (rule == "ach_need2" and not novel):
             own, oth = (bc == ctx).nonzero()[:, 0], (bc != ctx).nonzero()[:, 0]
             n_own = round(replay_need * batch)
             if oth.numel() > 0:
