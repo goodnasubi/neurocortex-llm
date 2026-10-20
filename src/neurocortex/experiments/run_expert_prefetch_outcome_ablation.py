@@ -226,7 +226,8 @@ def judge(runs: list[dict], s: dict, conds: list[str], sel: dict) -> dict:
     return out
 
 
-def finalize(runs: list[dict], conds: list[str], args_dict: dict, select: dict | None, out_path: str) -> dict:
+def finalize(runs: list[dict], conds: list[str], args_dict: dict, select: dict | None, out_path: str,
+             part_envs: list[dict] | None = None) -> dict:
     s = summarize(runs, conds)
     sel = select if select else select_all(s, conds)
     verdict = {"selected": sel} | judge(runs, s, conds, sel)
@@ -236,6 +237,8 @@ def finalize(runs: list[dict], conds: list[str], args_dict: dict, select: dict |
                                      f"/w{v['wasted_loads']['mean']:.0f}" for c, v in s[size].items()))
     out = {"環境": env_info() | {"OPENBLAS_NUM_THREADS": os.environ.get("OPENBLAS_NUM_THREADS")},
            "設定": args_dict, "条件": conds, "要約": s, "判定": verdict, "シード別": runs}
+    if part_envs is not None:
+        out["計測の環境"] = part_envs  # まとめる前の各部分（計測した時）の env_info
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     Path(out_path).write_text(json.dumps(out, ensure_ascii=False, indent=1))
     return verdict
@@ -282,7 +285,7 @@ def main() -> None:
             raise ValueError("条件が揃っていない")
         runs = sorted((r for pt in parts for r in pt["シード別"]), key=lambda r: r["seed"])
         cfg = parts[0]["設定"] | {"seeds": [r["seed"] for r in runs], "merged_from": args.merge}
-        finalize(runs, conds, cfg, select, args.out)
+        finalize(runs, conds, cfg, select, args.out, [pt["環境"] for pt in parts])
         return
 
     conds = conditions(args.label_grid, args.grid, tuple(args.fams))

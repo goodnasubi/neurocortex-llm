@@ -153,3 +153,16 @@ def test_select_and_judge_on_synthetic_runs():
     assert v["R0_small"]["pass"] and np.isclose(v["H2_small"]["mean"], 0.03 + 0.002, atol=1e-9)
     assert v["H2_small"]["pass"] and not v["H3_small"]["pass"]  # outbin との差は +0.7 ポイント
     assert "H5_small" in v and "ref_a_actionable_small" in v
+
+
+def test_finalize_keeps_part_envs(tmp_path):
+    import json
+
+    from neurocortex.experiments.run_expert_prefetch_outcome_ablation import finalize
+    conds = conditions([0.4], [0.7])
+    runs = [{"seed": k, "speed": {"small": _speed(conds, {"freq": (0.95, 100)}),
+                                  "large": _speed(conds, {"freq": (0.95, 100)})}} for k in range(5)]
+    out = tmp_path / "m.json"
+    finalize(runs, conds, {}, None, str(out), [{"OPENBLAS_NUM_THREADS": "1"}])
+    d = json.loads(out.read_text())
+    assert d["計測の環境"] == [{"OPENBLAS_NUM_THREADS": "1"}] and "環境" in d
