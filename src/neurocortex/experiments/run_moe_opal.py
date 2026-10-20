@@ -37,12 +37,14 @@ from .run_moe_tf import a_d
 BASE = "cp_rand3"
 MAIN = "opal"
 OPALS = ("opal", "opal_g")
+REF = ("opal_cf", "opal_cfc")  # 設計時の δ（修正前）と修正3 の δ（参考。12.6.207節の修正の記録）
 SWK = "sw_srand3"
 A_TOL = 0.01  # A が土台より悪くならない許容（12.6.185節と同じ、事前に固定）
 ON_TOL = 0.05  # 臨界期の割り当て（閾値あり on_open）が土台より偏らない許容（A が小さいのが閾値の失敗によらないこと）
 CE_TOL = 0.005  # 学習を損なわない許容（検証 CE、12.6.181節と同じ）
 # 12.6.186節の補償関係（閉じた後にゲートの勾配を切った5条件 × 評価用シード 5本 = 25 本の回帰。results/moe_sw/eval.json）
 LINE = (0.0856, -0.707)  # D ≈ 切片 + 傾き·A
+CRITIC = {"opal_delta": "critic", "critic_lr": 1.0}  # 確定した設計（修正2）
 
 
 def conditions(e: int, l: int) -> dict[str, dict]:
@@ -56,7 +58,9 @@ def conditions(e: int, l: int) -> dict[str, dict]:
             "gate0.1": {"kind": "gate", "eta": 0.1}, BASE: r3,
             "tf_srand3": {**r3, "tf": True, "soft": True},
             SWK: {**r3, "soft": True, "switch": "closing"},
-            "opal": {**r3, "tf": True, "opal": "gn"}, "opal_g": {**r3, "tf": True, "opal": "g"}}
+            "opal": {**r3, "tf": True, "opal": "gn", **CRITIC}, "opal_g": {**r3, "tf": True, "opal": "g", **CRITIC},
+            "opal_cf": {**r3, "tf": True, "opal": "gn", "opal_delta": "cf", "critic_lr": None},
+            "opal_cfc": {**r3, "tf": True, "opal": "gn", "opal_delta": "cfcritic", "critic_lr": 1.0}}
 
 
 def resid(a: float, d: float) -> float:
@@ -94,7 +98,9 @@ def run_cond(seed: int, e: int, l: int, key: str, cond: dict, corpus: CharCorpus
           "gate_detach": cond.get("gate_detach", False), "tf": cond.get("tf", False), "soft": cond.get("soft", False),
           "switch": cond.get("switch"), "soft_after": cond.get("soft_after", False),
           "opal": cond.get("opal"), "opal_lr": args.opal_lr, "opal_init": args.opal_init, "opal_seed": seed + 3000,
-          "opal_act": args.opal_act, "opal_beta": args.opal_beta}
+          "opal_act": args.opal_act, "opal_beta": args.opal_beta,
+          "opal_delta": cond.get("opal_delta", args.opal_delta),
+          "critic_lr": cond.get("critic_lr", None if args.critic_lr < 0 else args.critic_lr)}
     r = run_one(seed, e, l, cond, corpus, args, OpALLM, args.train_steps, post=post, train_fn=train_timed, **kw)
     return slim(r, False)
 
@@ -140,18 +146,18 @@ def judge_scale(sub: list[dict], conds: dict, args: argparse.Namespace) -> dict:
                 "検証CE": [m(ce(k)), m(ce(BASE))], "CEが許容内": bool(m(ce(k)) <= m(ce(BASE)) + CE_TOL),
                 "合格": bool(_less(gi(k), gi(BASE)) and _less(gi(k), gi(SWK)) and m(ce(k)) <= m(ce(BASE)) + CE_TOL)}
 
-    meths = (*OPALS, SWK, "tf_srand3")
+    meths = (*OPALS, *REF, SWK, "tf_srand3")
     v["H44_閉じる前の取り込みA"] = {k: h44(k) for k in meths}
     v["H45_閉じた後の漂流D"] = {k: h45(k) for k in meths}
     both = {k: bool(v["H44_閉じる前の取り込みA"][k]["合格"] and v["H45_閉じた後の漂流D"][k]["合格"]) for k in meths}
     v["主_AとDを同時に満たす_H44かつH45"] = both
-    v["H46_補償関係の直線より下"] = {k: h46(k) for k in (*OPALS, "tf_srand3")}
+    v["H46_補償関係の直線より下"] = {k: h46(k) for k in (*OPALS, *REF, "tf_srand3")}
     v["H47_対立（N）が要る"] = {
         "opalは同時に満たしopal_gは満たさない": bool(both["opal"] and not both["opal_g"]),
         "ジニ_opal対opal_g": [m(gi("opal")), m(gi("opal_g"))], "opalがopal_gより偏らない": _less(gi("opal"), gi("opal_g")),
         "合格": bool(both["opal"] and not both["opal_g"])}
-    v["H48_偏りを減らし学習を損なわない"] = {k: h48(k) for k in OPALS}
-    v["H49_閉じた後の取り込み_H1〜H3かつジニ≦0.3"] = {k: cps[k]["取り込み_H1〜H3かつジニ≦0.3"] for k in OPALS}
+    v["H48_偏りを減らし学習を損なわない"] = {k: h48(k) for k in (*OPALS, *REF)}
+    v["H49_閉じた後の取り込み_H1〜H3かつジニ≦0.3"] = {k: cps[k]["取り込み_H1〜H3かつジニ≦0.3"] for k in (*OPALS, *REF)}
     v["教師との一致率_最後の50ステップ"] = {
         k: m([r[k]["teacher_agree_last"] for r in sub]) for k in cpk if sub[0][k]["teacher_agree_last"] is not None}
     v["n"] = n
@@ -182,6 +188,11 @@ def main() -> None:
                    help="G・N の重みの初期値の標準偏差（既定は初期の対数の散らばりを線形ルータにそろえる値）")
     p.add_argument("--opal-act", type=str, default="sigmoid", help="G・N の活動（sigmoid・softplus）")
     p.add_argument("--opal-beta", type=float, default=4.0, help="選択の強さ β·(G − N) の β")
+    p.add_argument("--opal-delta", type=str, default="cfcritic",
+                   help="δ の作り方（cf: 評価した結果の平均との差＝設計時、critic: 選んだ専門家とクリティック＝修正1・2、"
+                        "cfcritic: 評価した全専門家とクリティック＝修正3）")
+    p.add_argument("--critic-lr", type=float, default=1.0,
+                   help="クリティックの正規化 LMS のステップ（修正2。負なら行為者と同じ α＝修正1）")
     p.add_argument("--threads", type=int, default=1)
     p.add_argument("--out", type=str, default="results/moe_opal/dev.json")
     p.add_argument("--merge", type=str, nargs="+", default=None)
@@ -231,7 +242,7 @@ def main() -> None:
         summ[n] = {k: summarize_consol(sub, k) for k in sub[0]}
         if all(k in sub[0] for k in conds):
             verdict[n] = judge_scale(sub, conds, args)
-    keep = {BASE, SWK, *OPALS}
+    keep = {BASE, SWK, *OPALS, *REF}
     for sub in subs.values():  # 結果ファイルを数 MB に収めるため、シード別の時系列は土台と比べる条件だけ残す
         for runs in sub:
             for k in list(runs):

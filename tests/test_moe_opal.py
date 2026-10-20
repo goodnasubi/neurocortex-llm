@@ -7,6 +7,7 @@ import math
 
 import pytest
 import torch
+import torch.nn.functional as F
 
 from neurocortex.data import CharCorpus, synthetic_corpus
 from neurocortex.experiments import run_moe_opal as R
@@ -140,8 +141,11 @@ def test_invalid():
 
 def test_conditions_and_resid():
     c = R.conditions(32, 1)
-    assert set(c) == {"aux0", "aux0.05", "gate0.1", "cp_rand3", "tf_srand3", "sw_srand3", "opal", "opal_g"}
+    assert set(c) == {"aux0", "aux0.05", "gate0.1", "cp_rand3", "tf_srand3", "sw_srand3", "opal", "opal_g",
+                      "opal_cf", "opal_cfc"}
     assert c["opal"]["opal"] == "gn" and c["opal_g"]["opal"] == "g" and c["opal"]["tf"]
+    assert c["opal"]["opal_delta"] == c["opal_g"]["opal_delta"] == "critic" and c["opal"]["critic_lr"] == 1.0
+    assert c["opal_cf"]["opal_delta"] == "cf" and c["opal_cfc"]["opal_delta"] == "cfcritic"
     assert R.conditions(8, 1) == {}
     assert R.resid(0.0, R.LINE[0]) == pytest.approx(0.0)
     assert R.resid(0.1, 0.0) == pytest.approx(-(R.LINE[0] + R.LINE[1] * 0.1))
@@ -150,7 +154,8 @@ def test_conditions_and_resid():
 def test_small_run_and_judge():
     args = argparse.Namespace(d=8, alpha=0.05, train_steps=12, seq_len=16, n_windows=4, n_probe=2, log_every=4,
                               k_num=1, k_den=4, n_random=2, eps=1e-4, tau=0.05, rho=0.25, opal_lr=0.1,
-                              opal_init=0.01, opal_act="sigmoid", opal_beta=4.0)
+                              opal_init=None, opal_act="sigmoid", opal_beta=4.0,
+                              opal_delta="cfcritic", critic_lr=1.0)
     corpus = CharCorpus(synthetic_corpus(n_sentences=60, seed=0))
     subs = [{k: R.run_cond(seed, 16, 1, k, c, corpus, args) for k, c in R.conditions(16, 1).items()}
             for seed in (0, 1)]
@@ -161,3 +166,56 @@ def test_small_run_and_judge():
         assert k in v, k
     assert isinstance(v["主_AとDを同時に満たす_H44かつH45"]["opal"], bool)
     assert "opal_stats" in subs[0]["opal"] and "opal_stats" not in subs[0]["cp_rand3"]
+
+
+def test_critic_delta_updates_chosen_only():
+    """修正1: 実際に選んだ専門家だけを δ = −CE_c − V(h) で更新し、クリティックも同じ δ で学ぶ。"""
+    x, y = XY
+    m = _make(OpALLM, **KW, **R3, tf=True, opal="gn", opal_lr=0.5, opal_delta="critic")
+    gen_state = m.sample_gen.get_state()
+    m.teacher_loss(x, y)
+    with torch.no_grad():
+        h = m.rnn(m.embed(x))[0]
+        hf = h.reshape(-1, 8)
+        r = m.routers[0]
+        chosen = (r(hf) - m.threshold[0]).argmax(-1)
+        gen = torch.Generator()
+        gen.set_state(gen_state)
+        idx = torch.cat([chosen.unsqueeze(-1), _random_others(chosen, 8, 3, gen)], -1)
+        d = -subset_ce(m, h, y, idx)[:, 0]  # V = 0 で初期化
+        g, n = r.pathways(hf)
+        oh = F.one_hot(chosen, 8).float()
+        wg = 0.5 * ((d.unsqueeze(-1) * g * oh).T @ hf) / hf.shape[0]
+        wn = -0.5 * ((d.unsqueeze(-1) * n * oh).T @ hf) / hf.shape[0]
+    assert torch.allclose(m.pending["wg"], wg, atol=1e-6) and torch.allclose(m.pending["wn"], wn, atol=1e-6)
+    assert torch.allclose(m.pending_critic["critic_b"], 0.5 * d.mean())
+    m.homeostatic_step(torch.zeros(1, 4, 15, dtype=torch.long))
+    assert float(m.critic_b) == pytest.approx(float(0.5 * d.mean())) and m.pending_critic is None
+    with pytest.raises(ValueError):
+        _make(OpALLM, **KW, **R3, tf=True, opal="gn", opal_delta="td")
+
+
+def test_critic_nlms_step():
+    """修正2: クリティックのステップは critic_lr / mean(|h|² + 1)。"""
+    x, y = XY
+    m = _make(OpALLM, **KW, **R3, tf=True, opal="gn", opal_delta="cfcritic", critic_lr=1.0)
+    m.teacher_loss(x, y)
+    with torch.no_grad():
+        hf = m.rnn(m.embed(x))[0].reshape(-1, 8)
+        d = m.pending_critic["critic_b"] * float((hf.pow(2).sum(-1) + 1.0).mean()) / 0.05  # = mean δ
+        assert torch.allclose(m.pending_critic["critic_b"], 0.05 * d / float((hf.pow(2).sum(-1) + 1.0).mean()))
+        assert float(d) < 0.0  # 初めは V = 0 なので δ = −CE < 0
+
+
+def test_cfcritic_updates_all_evaluated():
+    """修正3: 評価したすべての専門家を δ_k = −CE_k − V(h) で更新し、クリティックは選んだ専門家の δ だけで学ぶ。"""
+    x, y = XY
+    a = _make(OpALLM, **KW, **R3, tf=True, opal="gn", opal_delta="cfcritic", critic_lr=1.0)
+    b = _make(OpALLM, **KW, **R3, tf=True, opal="gn", opal_delta="critic", critic_lr=1.0)
+    a.teacher_loss(x, y)
+    b.teacher_loss(x, y)
+    assert torch.equal(a.pending_critic["critic_b"], b.pending_critic["critic_b"])
+    assert (a.pending["bg"] != 0).sum() > (b.pending["bg"] != 0).sum()
+    # 初めは V = 0 なので δ_k = −CE_k < 0 で、評価したすべての専門家で G は下がり N は上がる
+    nz = a.pending["bg"] != 0
+    assert (a.pending["bg"][nz] < 0).all() and (a.pending["bn"][nz] > 0).all()

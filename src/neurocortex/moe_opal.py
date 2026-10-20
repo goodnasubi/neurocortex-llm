@@ -19,7 +19,12 @@ c 以外から無作為な 3 個）で、評価した専門家 k ごとに δ_nk
 - `OpponentRouter`: G と N の2つの読み出し。forward は β·(G − N)（`routers[0]` と同じ形の対数）。
 - `OpALLM`: `moe_sw.SwitchLM`（`ThreeFactorLM` の継承）の継承。`opal="gn"` は G と N の両方、`opal="g"` は G だけ（N の重みを初期値に固定する対照）。
   重みの更新は教師の計算（`teacher_loss`）で求め、最適化の後（`homeostatic_step` の初め）に足す。ルータの重みは
-  LM の勾配も Adam も受けない。`opal=None` では `SwitchLM` と同じ（`tests/test_moe_opal.py`）。
+  LM の勾配も Adam も受けない。
+  `opal_delta="critic"`（修正1、12.6.208節）: OpAL の元の形に合わせ、実際に選んだ専門家 c だけを δ_n = −CE_nc − V(h_n) で
+  更新する。V(h) = v·h + b は同じ δ で学ぶ線形のクリティック（ゼロで初期化）。評価の組と乱数の消費は "cf" と同じ。
+  `opal_delta="cfcritic"`（修正3）: 評価したすべての専門家 k を δ_nk = −CE_nk − V(h_n) で更新する（選ばなかった専門家の
+  結果も、実際に選んだ行動の期待との差として第三因子にする。Kishida et al., 2016）。クリティックは c の δ だけで学ぶ。
+  `critic_lr`（修正2）: クリティックを正規化 LMS（ステップ critic_lr / mean(|h|² + 1)）で学ぶ。None は行為者と同じ α（修正1）。`opal=None` では `SwitchLM` と同じ（`tests/test_moe_opal.py`）。
 """
 
 from __future__ import annotations
@@ -66,7 +71,8 @@ class OpALLM(SwitchLM):
     """OpAL 型ルータ（G − N）を、反実仮想の報酬予測誤差を第三因子とする逆向きのヘッブ則だけで学ぶ。"""
 
     def __init__(self, *args, opal: str | None = None, opal_lr: float = 0.1, opal_init: float | None = None,
-                 opal_seed: int = 0, opal_act: str = "sigmoid", opal_beta: float = 4.0, **kw) -> None:
+                 opal_seed: int = 0, opal_act: str = "sigmoid", opal_beta: float = 4.0,
+                 opal_delta: str = "cf", critic_lr: float | None = None, **kw) -> None:
         super().__init__(*args, **kw)
         if opal is None:
             return
@@ -74,7 +80,9 @@ class OpALLM(SwitchLM):
             raise ValueError(f"未知の opal: {opal}")
         if not self.tf or self.soft or self.eq_gate or self.pg or self.switch or self.soft_after or self.kind_t != "rand":
             raise ValueError("opal は tf=True と部分評価の教師 rand だけ（soft・eq_gate・pg とは組まない）")
-        self.opal, self.opal_lr = opal, opal_lr
+        if opal_delta not in ("cf", "critic", "cfcritic"):
+            raise ValueError(f"未知の opal_delta: {opal_delta}")
+        self.opal, self.opal_lr, self.opal_delta, self.critic_lr = opal, opal_lr, opal_delta, critic_lr
         d = self.routers[0].in_features
         if opal_init is None:  # 初期の対数の散らばりを既定の線形ルータ（重み U(±1/√d)）にそろえる（σ の傾き 1/4 の近似）
             opal_init = 4.0 / (math.sqrt(6.0 * d) * opal_beta)
@@ -86,6 +94,8 @@ class OpALLM(SwitchLM):
         self.tag = {n: torch.zeros_like(p) for n, p in self.routers[0].named_parameters()}
         if self.probe is not None:
             self.logit0 = self._mean_logits()
+        self.register_buffer("critic_w", torch.zeros(d))  # 修正1 のクリティック V(h) = critic_w·h + critic_b
+        self.register_buffer("critic_b", torch.zeros(()))
         self.pending: dict[str, torch.Tensor] | None = None
         self.opal_stats: list[dict] = []
 
@@ -107,8 +117,23 @@ class OpALLM(SwitchLM):
         ce = subset_ce(self, h, y, idx)
         dup = _dup_mask(idx)
         ok = (~dup).float()
-        v = (ce * ok).sum(-1, keepdim=True) / ok.sum(-1, keepdim=True)  # 状態価値（評価した結果の平均）
-        delta = (v - ce) * ok  # 報酬予測誤差（報酬 = −CE）。重複は 0
+        crit = None
+        if self.opal_delta == "cf":
+            v = (ce * ok).sum(-1, keepdim=True) / ok.sum(-1, keepdim=True)  # 状態価値（評価した結果の平均）
+            delta = (v - ce) * ok  # 報酬予測誤差（報酬 = −CE）。重複は 0
+        else:  # 修正1: 実際に選んだ専門家だけ、学習するクリティックとの差 δ = −CE_c − V(h)
+            vh = hf @ self.critic_w + self.critic_b
+            d_c = -ce[:, 0] - vh
+            if self.opal_delta == "critic":
+                delta = torch.zeros_like(ce)
+                delta[:, 0] = d_c
+            else:  # 修正3: 評価したすべての専門家を同じクリティックとの差 δ_k = −CE_k − V(h) で（クリティックは c だけで学ぶ）
+                delta = (-ce - vh.unsqueeze(-1)) * ok
+            if self.critic_lr is None:  # 修正1: 行為者と同じ α
+                lr_w = lr_b = self.opal_lr
+            else:  # 修正2: 正規化 LMS（入力の大きさで割る。ステップ critic_lr ∈ (0, 2) で安定）
+                lr_w = lr_b = self.critic_lr / float((hf.pow(2).sum(-1) + 1.0).mean())
+            crit = {"critic_w": lr_w * (d_c.unsqueeze(-1) * hf).mean(0), "critic_b": lr_b * d_c.mean()}
         g, nn_ = router.pathways(hf)
         n = hf.shape[0]
         dg = torch.zeros_like(g).scatter_add_(1, idx, delta * g.gather(1, idx)) / n  # δ·G（D1）
@@ -118,6 +143,7 @@ class OpALLM(SwitchLM):
         if self.opal == "gn":
             upd |= {"wn": a * dn.T @ hf, "bn": a * dn.sum(0)}
         self.pending = upd
+        self.pending_critic = crit
         hard = idx.gather(-1, ce.masked_fill(dup, float("inf")).argmin(-1, keepdim=True)).squeeze(-1)
         self.teacher_stats.append({"agree": float((raw0.argmax(-1) == hard).float().mean())})
         self.opal_stats.append({"delta_chosen": float(delta[:, 0].mean()), "G": float(g.mean()),
@@ -132,4 +158,8 @@ class OpALLM(SwitchLM):
             for k, dw in self.pending.items():
                 params[k].add_(dw)
             self.pending = None
+        if getattr(self, "pending_critic", None):
+            self.critic_w.add_(self.pending_critic["critic_w"])
+            self.critic_b.add_(self.pending_critic["critic_b"])
+            self.pending_critic = None
         super().homeostatic_step(choice)
