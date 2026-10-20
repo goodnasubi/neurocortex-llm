@@ -143,6 +143,9 @@ def judge(runs: list[dict], eta: float, design: str = "realloc") -> dict:
                   "interaction_aux": i_a, "interaction_aux_mean": m(i_a), "interaction_aux_t": paired_t(i_a),
                   "hubs_widened_cap": widened, "hubs_widened_rand": widened_r, "bridge_cap": bridge,
                   "cut_use_cap_minus_band": use, "cross_b2": cross_ce,
+                  **({"参考_interaction_cap_minus_eq": inter(C, f"hubeq{eta:g}"),
+                      "参考_interaction_rand_minus_eq": inter(R, f"hubeq{eta:g}"),
+                      "参考_interaction_eq_minus_band": inter(f"hubeq{eta:g}", B)} if design == "fixed" else {}),
                   "cross_b2_mean": {k: m(v) for k, v in cross_ce.items()}}}
 
 
@@ -187,8 +190,8 @@ def main() -> None:
         by_seed: dict[int, dict] = {}  # 同じシードの別ファイル（条件を分けた実行・修正後の再実行）は条件を合わせる
         for r in (r for part in parts for r in part["シード別"]):
             d = by_seed.setdefault(r["seed"], {"seed": r["seed"], **{t: {} for t in TASKS}})
-            for t in TASKS:
-                d[t].update(r[t])
+            for t in TASKS:  # 12.6.202節の結果（"split/…"）は分かれた土台の条件として読む（全桁一致を確認済み）
+                d[t].update({k.split("/")[-1]: v for k, v in r[t].items() if not k.startswith("shared/")})
         runs = [by_seed[s] for s in sorted(by_seed)]
         args.seeds = [r["seed"] for r in runs]
         keys = [c for c in conds if c in runs[0]["cross"]]
