@@ -52,9 +52,15 @@ CONFIGS: dict[str, dict] = {
 }
 REUSED = ("base", "keep", "ach_c")  # 12.6.167〜168節の結果ファイルから読む
 NEW = ("ach_c_hid", "ach_c_hid_neg", "ach_c_hid_shuf", "ach_c_inp")
-# 修正（12.6.227節。上限3回）は開発用シードの結果を見て追加する
-FIXES: tuple[str, ...] = ()
-FIX_CANDIDATES: tuple[str, ...] = ()
+# 修正（12.6.227節。上限3回）。修正1: 痕跡ごとの重みは固定化の痕跡を少数に集中させ、並べ替えでも一般化が下がった
+# （開発用 ach_c +0.086、hid +0.066、shuf +0.072）。SWIL の元の形（文脈＝クラス単位の類似度、文脈の中は一様）にする
+CONFIGS.update({f"ach_c_{s}": {**SPLIT_CONFIGS["ach_c"], "replay_sim": s, "replay_sim_beta": BETA}
+                for s in ("hid_ctx", "hid_ctx_shuf")})
+FIXES: tuple[str, ...] = ("ach_c_hid_ctx", "ach_c_hid_ctx_shuf")
+# 確定の規則（修正1の計測の前に決めた）: 開発用シードで D1〜D3 と S（ach_c_hid_ctx_shuf との比較）を満たせば
+# H_fix の候補にする。判定の基準は変えない
+FIX_CANDIDATES: tuple[str, ...] = ("ach_c_hid_ctx",)
+SHUF_OF = {"ach_c_hid_ctx": "ach_c_hid_ctx_shuf"}  # S の対照（既定は ach_c_hid_shuf）
 RULES = ("keep", "ach_c", *NEW, *FIXES)
 
 
@@ -135,9 +141,10 @@ def verdict(res: dict) -> dict:
         if w != "ach_c" and o.get("end_ach_c") is not None:
             # D4: ach_c からの上積み（一般化 +0.02 以上、かつ大きく損なった回が増えない）
             v["D4"] = bool(o[f"end_{w}"] - o["end_ach_c"] >= 0.02 and a[f"bad_{w}"] <= a["bad_ach_c"])
-        if w != "ach_c_hid_shuf" and o.get("end_ach_c_hid_shuf") is not None:
+        sh = SHUF_OF.get(w, "ach_c_hid_shuf")
+        if not w.endswith("_shuf") and o.get(f"end_{sh}") is not None:
             # S: 類似度との対応が効く（並べ替えより一般化 +0.02 以上、かつ大きく損なった回が増えない）
-            v["S"] = bool(o[f"end_{w}"] - o["end_ach_c_hid_shuf"] >= 0.02 and a[f"bad_{w}"] <= a["bad_ach_c_hid_shuf"])
+            v["S"] = bool(o[f"end_{w}"] - o[f"end_{sh}"] >= 0.02 and a[f"bad_{w}"] <= a[f"bad_{sh}"])
         out[w] = v
     m = "ach_c_hid"
     out["H"] = bool(out[m]["success"] and out[m].get("S")) if m in out else None

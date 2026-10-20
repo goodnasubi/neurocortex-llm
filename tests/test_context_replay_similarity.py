@@ -43,6 +43,13 @@ def test_similarity_direction_and_shuffle():
     assert _run(replay_sim="hid")["diag"]["replay_mix"][2]["fam"] > 0  # 固定化の分が実際にある
 
 
+def test_context_level_similarity():
+    """修正1: hid_ctx は似た文脈の痕跡を引く（z > 0）。文脈の間で並べ替えた対照は引く痕跡が変わる。"""
+    a, b = _run(replay_sim="hid_ctx"), _run(replay_sim="hid_ctx_shuf")
+    assert a["R"][:2] == b["R"][:2] and a["diag"]["replay_mix"][2]["sim"] != b["diag"]["replay_mix"][2]["sim"]
+    assert a["diag"]["replay_mix"][2]["sim"] > 0
+
+
 def test_rejects_invalid():
     with pytest.raises(ValueError):
         _run(replay_sim="foo")
@@ -56,7 +63,7 @@ def test_rejects_invalid():
 
 def test_experiment_configs_and_jobs():
     """新しい条件は ach_c と replay_sim だけが違い、30組 × 条件の数の仕事を作る。"""
-    for w in exp.NEW:
+    for w in (*exp.NEW, *exp.FIXES):
         d = {k: v for k, v in exp.CONFIGS[w].items() if k not in ("replay_sim", "replay_sim_beta")}
         assert d == exp.CONFIGS["ach_c"] and exp.CONFIGS[w]["replay_sim_beta"] == exp.BETA
     assert len(exp.jobs()) == 30 * len(exp.NEW)

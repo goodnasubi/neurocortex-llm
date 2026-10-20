@@ -27,7 +27,7 @@ from .hippocampus_replay import make_model
 
 CONDITIONS = ("oracle", "none", "inferred", "random", "inferred_gated")
 # 12.6.227節: ach_c の固定化のリプレイを、今の入力との類似度で重みづけする（類似度に基づく選択的リプレイ）
-REPLAY_SIMS = ("hid", "hid_neg", "hid_shuf", "inp")
+REPLAY_SIMS = ("hid", "hid_neg", "hid_shuf", "inp", "hid_ctx", "hid_ctx_shuf")
 
 
 @dataclass(frozen=True)
@@ -395,6 +395,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
       "hid" … 似た痕跡を優先する。"hid_neg" … 似ていない痕跡を優先する（β の符号を反転）。
       "hid_shuf" … 対照。z をバッファの中で並べ替える（重みの分布は同じで、類似度との対応だけを壊す）。
       "inp" … 類似度を入力のビットの一致率 max_b mean(x_i = x_b) で測る（表現ではなく入力の重なり）。
+      "hid_ctx" … 12.6.227節の修正1。SWIL の元の形（クラス単位）に合わせ、痕跡の s_i を保存時の文脈ごとに平均した
+          値に置き換える（文脈の中では一様に引き、文脈の間の配分だけを類似度で決める）。
+      "hid_ctx_shuf" … "hid_ctx" の対照。文脈ごとの類似度を文脈の間で並べ替える。
     既定の "" では従来と同じ乱数の消費になる。diagnostics = True では diag["replay_mix"][k]["sim"] に、引いた固定化の
     痕跡の z の平均（hid_shuf でも並べ替える前の z）を加える。
     """
@@ -899,6 +902,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 hi = F.normalize(model.backbone(with_ctx(bb, bc)), dim=1)
                 hb = F.normalize(model.backbone(sim_cue["x"]), dim=1)
                 s = (hi @ hb.T).max(1).values
+                if replay_sim in ("hid_ctx", "hid_ctx_shuf"):
+                    cs, inv = bc.unique(return_inverse=True)
+                    sc = torch.zeros(cs.numel()).index_add_(0, inv, s) / torch.bincount(inv).float()
+                    if replay_sim == "hid_ctx_shuf":
+                        sc = sc[torch.randperm(cs.numel(), generator=generator)]
+                    s = sc[inv]
             z = (s - s.mean()) / s.std(unbiased=False).clamp_min(1e-6) if s.numel() > 1 else torch.zeros_like(s)
         sim_cue["z"] = z  # 診断には並べ替える前の（本当の類似度の）z を残す
         if replay_sim == "hid_shuf":
