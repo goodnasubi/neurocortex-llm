@@ -59,7 +59,8 @@ CONFIGS.update({f"ach_c_{s}": {**SPLIT_CONFIGS["ach_c"], "replay_sim": s, "repla
 FIXES: tuple[str, ...] = ("ach_c_hid_ctx", "ach_c_hid_ctx_shuf")
 # 確定の規則（修正1の計測の前に決めた）: 開発用シードで D1〜D3 と S（ach_c_hid_ctx_shuf との比較）を満たせば
 # H_fix の候補にする。判定の基準は変えない
-FIX_CANDIDATES: tuple[str, ...] = ("ach_c_hid_ctx",)
+# 修正1は開発用シードで D1・D2(c)・S が不合格（end +0.069、並べ替え +0.079）。初期設定と修正1で確定し、H_fix の候補はない
+FIX_CANDIDATES: tuple[str, ...] = ()
 SHUF_OF = {"ach_c_hid_ctx": "ach_c_hid_ctx_shuf"}  # S の対照（既定は ach_c_hid_shuf）
 RULES = ("keep", "ach_c", *NEW, *FIXES)
 
@@ -158,7 +159,7 @@ def verdict(res: dict) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--analyze", type=Path, nargs="+", help="結果ファイル（12.6.167〜168節のものも）を集計して判定する")
-    ap.add_argument("--configs", nargs="+", default=list(NEW))
+    ap.add_argument("--configs", nargs="+", default=[*NEW, *FIXES])
     ap.add_argument("--families", nargs="+", default=list(FAMILIES))
     ap.add_argument("--phase", choices=("dev", "eval"), default="dev")
     ap.add_argument("--seeds", type=int, nargs="+")
