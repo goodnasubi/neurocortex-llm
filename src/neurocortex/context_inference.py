@@ -90,8 +90,11 @@ RECON_EXTRA_READOUTS = ("recon_buf_inter", "recon_buf_err")  # 12.6.161節（バ
 WRITEBACKS = ("none", "all", "inter")  # 12.6.161節（学び直しの共有の重みへの書き戻し）
 REPLAY_RULES = ("gain", "need", "sleep", "ach", "ach_need", "ach_need2",  # 12.6.163節（海馬の痕跡のリプレイの配分）
                 "ach_c", "nrem", "ach_c_nrem", "nrem2", "ach_c_nrem2",  # 12.6.167節（連続的な新しさの信号・新しい記憶を優先する睡眠の段階）
-                "ach_u", "ach_v", "ach_uv")  # 12.6.225節（不確かさによる新しさの信号）
-ACH_C_RULES = ("ach_c", "ach_c_nrem", "ach_c_nrem2", "ach_u", "ach_v", "ach_uv")  # なじみの度合い f で配分する規則
+                "ach_u", "ach_v", "ach_uv",  # 12.6.225節（不確かさによる新しさの信号）
+                "ach_c_seq", "ach_c_seq_lab", "ach_c_seq_rem", "ach_c_seq_mix")  # 12.6.231節（覚醒の後の NREM/REM。REM は新皮質の自己生成）
+SEQ_RULES = ("ach_c_seq", "ach_c_seq_lab", "ach_c_seq_rem", "ach_c_seq_mix")
+SLEEP_RULES = ("sleep", "nrem", "ach_c_nrem", "nrem2", "ach_c_nrem2", *SEQ_RULES)
+ACH_C_RULES = ("ach_c", "ach_c_nrem", "ach_c_nrem2", "ach_u", "ach_v", "ach_uv", *SEQ_RULES)  # なじみの度合い f で配分する規則
 
 
 def episodic_readout(p_param: torch.Tensor, x: torch.Tensor, store_bits: torch.Tensor, store_labels: torch.Tensor,
@@ -382,6 +385,16 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
           合わせる。NREM に似たステップは海馬の痕跡（新しい文脈の痕跡と、加えた痕跡（再活性化した保留サンプル）を
           batch の半分ずつ。加えた痕跡がなければ新しい文脈の痕跡だけ）、REM に似たステップは古い文脈の固定化済みの
           バッファ（加えた痕跡を除く）から取る。覚醒中はそれぞれ "nrem" / "ach_c" と同じ。
+      "ach_c_seq" … 12.6.231節。Singh, Norman & Schapiro（2022）の順序と分業に合わせた睡眠。覚醒中は "ach_c"（加えた
+          痕跡を新しい入力と交互に一度学ぶ）。睡眠の段階は "nrem2" と同じ間隔・量で、NREM に似たステップは海馬の痕跡
+          （新しい文脈の痕跡と加えた痕跡を半分ずつ、保存したラベル）、REM に似たステップは新皮質が自分の持つ記憶を
+          再生する: バッファの痕跡（加えた痕跡を除き、新しい文脈を含む全ての文脈）を入力し、教師は睡眠の段階の始めの
+          モデル自身の出力の分布（ラベルを使わない自己生成の標的）とする。
+      "ach_c_seq_lab" … "ach_c_seq" の対照。REM の入力は同じで、教師を保存したラベルにする。
+      "ach_c_seq_rem" … "ach_c_seq" の対照。睡眠の段階の全ステップを REM（自己生成の標的）にする（NREM なし）。
+      "ach_c_seq_mix" … 12.6.231節の修正1。交互にせず、睡眠の各ステップで NREM の海馬の痕跡 batch 個（保存したラベル）と
+          新皮質の自己生成の batch 個（"ach_c_seq" の REM と同じ）を同じバッチで学ぶ（海馬のリップルが新皮質の徐波・
+          紡錘波に入れ子になり、新皮質自身の活動と同時に起きることにあたる）。
       diagnostics = True では diag["replay_mix"][k]（規則を適用したタスク k の、リプレイの痕跡のうちそのステップで
       選んだ文脈のものの割合 "own"、加えた痕跡の割合 "kept"、1ステップのリプレイの数の平均 "size"、睡眠のステップ数
       "sleep"、なじみの度合い f の平均 "fam"（ACH_C_RULES のみ意味を持つ））を加える。
@@ -943,18 +956,42 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             new, old = (~is_old).nonzero()[:, 0], is_old.nonzero()[:, 0]
             if new.numel() == 0:
                 return 0
-            if rule in ("nrem2", "ach_c_nrem2"):
+            if rule in SEQ_RULES:
+                # 12.6.231節: NREM は nrem2 と同じ海馬の痕跡、REM は新皮質の全ての文脈の痕跡（加えた痕跡を除く）
+                kept = torch.cat(buf_src) == -1
+                hip, cort = kept.nonzero()[:, 0], (~kept).nonzero()[:, 0]
+                nrem_p = [new, hip] if hip.numel() > 0 else [new]
+                pools = [[cort]] if rule == "ach_c_seq_rem" else [nrem_p, [cort]]
+                if rule == "ach_c_seq_mix":
+                    pools = [nrem_p]
+            elif rule in ("nrem2", "ach_c_nrem2"):
                 # 修正1: NREM は海馬の痕跡（新しい文脈の痕跡と加えた痕跡を半分ずつ）、REM は新皮質の固定化済みの痕跡
                 kept = torch.cat(buf_src) == -1
                 hip, cort = kept.nonzero()[:, 0], (is_old & ~kept).nonzero()[:, 0]
                 pools = [[new, hip] if hip.numel() > 0 else [new], [cort if cort.numel() > 0 else new]]
             else:
                 pools = [[new], [old if old.numel() > 0 else new]]
+        snap = copy.deepcopy(model) if rule in ("ach_c_seq", "ach_c_seq_rem", "ach_c_seq_mix") else None
         for s_ in range(sleep_steps):
-            parts = pools[s_ % len(pools)]
+            phase = s_ % len(pools)
+            parts = pools[phase]
             sizes = [batch - batch // 2, batch // 2] if len(parts) == 2 else [batch]
             idx = torch.cat([q[torch.randint(q.numel(), (m,), generator=generator)] for q, m in zip(parts, sizes)])
-            loss = F.cross_entropy(model(with_ctx(bb[idx], bc[idx])), bl[idx])
+            xs = with_ctx(bb[idx], bc[idx])
+            if snap is not None and (rule == "ach_c_seq_rem" or phase == 1):
+                with torch.no_grad():  # 12.6.231節の REM: 睡眠の始めの自分の出力の分布を標的にする
+                    tgt = F.softmax(snap(xs), dim=-1)
+                loss = -(tgt * F.log_softmax(model(xs), dim=-1)).sum(-1).mean()
+            elif rule == "ach_c_seq_mix":
+                ic = cort[torch.randint(cort.numel(), (batch,), generator=generator)]
+                xc = with_ctx(bb[ic], bc[ic])
+                with torch.no_grad():
+                    tgt = F.softmax(snap(xc), dim=-1)
+                lh = F.cross_entropy(model(xs), bl[idx], reduction="sum")
+                lc = -(tgt * F.log_softmax(model(xc), dim=-1)).sum()
+                loss = (lh + lc) / (idx.numel() + batch)  # 覚醒中と同じく、合わせたバッチの平均
+            else:
+                loss = F.cross_entropy(model(xs), bl[idx])
             o.zero_grad(set_to_none=True)
             loss.backward()
             o.step()
@@ -980,7 +1017,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             nov_old.update(used)
         nov_d = {"steps": 0, "g_shared": 0.0}
         for step in range(pretrain_steps if k == 0 else steps):
-            if rule in ("sleep", "nrem", "ach_c_nrem", "nrem2", "ach_c_nrem2") and step > 0 and step % sleep_every == 0 and buf_bits:
+            if rule in SLEEP_RULES and step > 0 and step % sleep_every == 0 and buf_bits:
                 mix["sleep"] += sleep_phase(opt, rule)
             bits, labels = make_batch(spec, batch, generator)
             src = None
