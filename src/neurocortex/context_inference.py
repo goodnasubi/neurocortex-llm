@@ -26,6 +26,8 @@ from .context_subnet import GatedModel
 from .hippocampus_replay import make_model
 
 CONDITIONS = ("oracle", "none", "inferred", "random", "inferred_gated")
+# 12.6.227節: ach_c の固定化のリプレイを、今の入力との類似度で重みづけする（類似度に基づく選択的リプレイ）
+REPLAY_SIMS = ("hid", "hid_neg", "hid_shuf", "inp", "hid_ctx", "hid_ctx_shuf")
 
 
 @dataclass(frozen=True)
@@ -157,7 +159,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          replay_need: float = 0.5, sleep_every: int = 50, sleep_steps: int = 25,
                          ach_ema: float = 0.98, nov_split: bool = False, nov_ctx_gain: float = 2.0,
                          nov_shared_gain: float = 0.2, ctx_units: int = 0,
-                         ctx_zero_readout: bool = False) -> dict:
+                         ctx_zero_readout: bool = False, replay_sim: str = "", replay_sim_beta: float = 2.0) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -390,6 +392,21 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     利得は、その文脈の部分ネットワークのパラメータ（入力重みの行・バイアス・読み出しの列）にもかける。既定の 0 では
     従来と同じモデル・同じ乱数の消費になる。ctx_zero_readout = True（12.6.219節の修正1）では、部分ネットワークの
     読み出しの重みを 0 で始める。
+
+    replay_sim（12.6.227節。replay_rule が "ach_c"・"ach_c_nrem"・"ach_c_nrem2" のときだけ）では、ach_c の固定化の分
+    （round(f·batch) 個。今の文脈の痕跡と他の文脈の痕跡の比 replay_need は変えない）を、各プールの中で一様ではなく
+    重み w_i ∝ exp(β·z_i)（β = replay_sim_beta）で復元抽出する。z_i はバッファの痕跡 i の、今のバッチとの類似度
+    s_i = max_b cos(h_i, h_b) をバッファ全体で標準化したもの。h はモデルの隠れ層（共有の層。痕跡は保存時の文脈、
+    バッチはそのステップで選んだ文脈で入力する）。McClelland, McNaughton & Lampinen 2020 の類似度で重みづけした
+    インターリーブ学習（SWIL）の痕跡ごとの形。
+      "hid" … 似た痕跡を優先する。"hid_neg" … 似ていない痕跡を優先する（β の符号を反転）。
+      "hid_shuf" … 対照。z をバッファの中で並べ替える（重みの分布は同じで、類似度との対応だけを壊す）。
+      "inp" … 類似度を入力のビットの一致率 max_b mean(x_i = x_b) で測る（表現ではなく入力の重なり）。
+      "hid_ctx" … 12.6.227節の修正1。SWIL の元の形（クラス単位）に合わせ、痕跡の s_i を保存時の文脈ごとに平均した
+          値に置き換える（文脈の中では一様に引き、文脈の間の配分だけを類似度で決める）。
+      "hid_ctx_shuf" … "hid_ctx" の対照。文脈ごとの類似度を文脈の間で並べ替える。
+    既定の "" では従来と同じ乱数の消費になる。diagnostics = True では diag["replay_mix"][k]["sim"] に、引いた固定化の
+    痕跡の z の平均（hid_shuf でも並べ替える前の z）を加える。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -433,6 +450,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                         or not 0.0 <= ach_ema < 1.0):
         raise ValueError("replay_rule は " + "・".join(REPLAY_RULES) + "、replay_beta は [0, 1]、replay_need は (0, 1)、"
                          "sleep_every は正、sleep_steps は 0 以上、ach_ema は [0, 1)")
+    if replay_sim and (replay_sim not in REPLAY_SIMS or replay_rule not in ("ach_c", "ach_c_nrem", "ach_c_nrem2")
+                       or replay_sim_beta < 0):
+        raise ValueError("replay_sim は " + "・".join(REPLAY_SIMS) + "（replay_rule が ach_c 系のときだけ）、"
+                         "replay_sim_beta は 0 以上")
     rule_from = (writeback_at if writeback else 1) if replay_rule else len(specs)
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
@@ -848,12 +869,16 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             if n_f > 0:
                 own, oth = (bc == ctx).nonzero()[:, 0], (bc != ctx).nonzero()[:, 0]
                 n_own = round(replay_need * n_f)
+                pick = sim_picker(bb, bc)
                 if oth.numel() == 0:
-                    fam = torch.randint(bb.shape[0], (n_f,), generator=generator)
+                    fam = pick(torch.arange(bb.shape[0]), n_f)
                 else:
-                    fam = oth[torch.randint(oth.numel(), (n_f - n_own,), generator=generator)]
+                    fam = pick(oth, n_f - n_own)
                     if own.numel() > 0:
-                        fam = torch.cat([own[torch.randint(own.numel(), (n_own,), generator=generator)], fam])
+                        fam = torch.cat([pick(own, n_own), fam])
+                if replay_sim:
+                    mix["sim"] += float(sim_cue["z"][fam].mean())
+                    mix["n_sim"] += 1
                 idx = torch.cat([fam, idx])
             mix["fam"] += f
             return with_ctx(bb[idx], bc[idx]), bl[idx], torch.stack([bc[idx] == ctx, bs[idx] == -1])
@@ -878,6 +903,34 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         if idx is None:
             idx = torch.randint(n, (batch,), generator=generator)
         return with_ctx(bb[idx], bc[idx]), bl[idx], torch.stack([bc[idx] == ctx, bs[idx] == -1])
+
+    sim_cue: dict = {"x": None, "z": None}  # 12.6.227節: 今のバッチ（文脈つき）と、最後に求めた類似度の z
+
+    def sim_picker(bb: torch.Tensor, bc: torch.Tensor):
+        """12.6.227節: プール pool（バッファの添字）から m 個を引く関数。replay_sim = "" では従来と同じ一様な引き方。"""
+        if not replay_sim:
+            return lambda pool, m: pool[torch.randint(pool.numel(), (m,), generator=generator)]
+        with torch.no_grad():
+            if replay_sim == "inp":
+                xb = sim_cue["x"][:, :bb.shape[1]]
+                s = ((bb @ xb.T) / bb.shape[1] + 1).max(1).values / 2  # ±1 のビットの一致率
+            else:
+                hi = F.normalize(model.backbone(with_ctx(bb, bc)), dim=1)
+                hb = F.normalize(model.backbone(sim_cue["x"]), dim=1)
+                s = (hi @ hb.T).max(1).values
+                if replay_sim in ("hid_ctx", "hid_ctx_shuf"):
+                    cs, inv = bc.unique(return_inverse=True)
+                    sc = torch.zeros(cs.numel()).index_add_(0, inv, s) / torch.bincount(inv).float()
+                    if replay_sim == "hid_ctx_shuf":
+                        sc = sc[torch.randperm(cs.numel(), generator=generator)]
+                    s = sc[inv]
+            z = (s - s.mean()) / s.std(unbiased=False).clamp_min(1e-6) if s.numel() > 1 else torch.zeros_like(s)
+        sim_cue["z"] = z  # 診断には並べ替える前の（本当の類似度の）z を残す
+        if replay_sim == "hid_shuf":
+            z = z[torch.randperm(z.numel(), generator=generator)]
+        w = torch.exp((-replay_sim_beta if replay_sim == "hid_neg" else replay_sim_beta) * z)
+        return lambda pool, m: pool[torch.multinomial(w[pool], m, replacement=True, generator=generator)] if m > 0 \
+            else pool[:0]
 
     def sleep_phase(o: torch.optim.Optimizer, rule: str) -> int:
         """12.6.163節: 新しい入力なしで、加えた痕跡を含むバッファ全体を交互にリプレイする（睡眠に似た段階）。
@@ -922,7 +975,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         rule = replay_rule if k >= rule_from else ""
         if rule and k == rule_from:
             old_ctx.update(used)
-        mix = {"own": 0.0, "kept": 0.0, "size": 0, "n": 0, "sleep": 0, "fam": 0.0}
+        mix = {"own": 0.0, "kept": 0.0, "size": 0, "n": 0, "sleep": 0, "fam": 0.0, "sim": 0.0, "n_sim": 0}
         if k == nov_from:
             nov_old.update(used)
         nov_d = {"steps": 0, "g_shared": 0.0}
@@ -978,6 +1031,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             n_new = y.shape[0]
             if buf_bits and k > 0:
                 if rule:
+                    sim_cue["x"] = with_ctx(bits, ctx)
                     xr, yr, flags = replay_draw(rule, ctx)
                     mix["own"] += float(flags[0].float().mean())
                     mix["kept"] += float(flags[1].float().mean())
@@ -1128,6 +1182,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 diag.setdefault("replay_mix", {})[k] = {"own": mix["own"] / m_, "kept": mix["kept"] / m_,
                                                         "size": mix["size"] / m_, "sleep": mix["sleep"],
                                                         "fam": mix["fam"] / m_}
+                if replay_sim:
+                    diag["replay_mix"][k]["sim"] = mix["sim"] / max(mix["n_sim"], 1)
     selection_acc = None
     sel_choices: list[list[int]] = []
     sel_cues: list[list[int]] = []
