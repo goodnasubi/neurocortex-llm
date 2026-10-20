@@ -375,6 +375,12 @@ def train_realtext(data: list[LangData], vocab: int, cfg: RealConfig, generator:
 
 # ---------------------------------------------------------------- 評価
 
+def _subsample(b: dict, n: int, generator: torch.Generator) -> dict:
+    """痕跡の辞書（seg・x・y・tag）から n 個を無作為に残す（12.6.215節の偏った記憶）。"""
+    idx = torch.randperm(b["x"].shape[0], generator=generator)[:n]
+    return {f: v[idx] for f, v in b.items()}
+
+
 def _ce_windows(model: TransformerContextLM, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     """窓 x [N, k] の実際の次の文字 y の CE を文脈ごとに [文脈]。"""
     lp = model.logp_all(x)
@@ -391,9 +397,14 @@ def random_windows(ids: torch.Tensor, shape: tuple[int, ...], k: int, generator:
 
 def evaluate_realtext(data: list[LangData], speakers: list[NgramSpeaker], trained: dict, cfg: RealConfig,
                       vocab: int, cue_ns: tuple[int, ...], generator: torch.Generator, episodes: int = 100,
-                      pool: int = 4, rules: tuple[str, ...] = REAL_RULES, n_fresh: int = 4000) -> dict:
+                      pool: int = 4, rules: tuple[str, ...] = REAL_RULES, n_fresh: int = 4000,
+                      mem_keep: list[int] | None = None, detail: bool = False) -> dict:
     """各言語・各手がかりの数・各規則で文脈を選び、選択精度と選んだヘッドの CE（テスト文の実際の次の文字）を測る。
-    規則の定義・乱数の分け方は context_lm.evaluate（12.6.191節）と同じ。"""
+    規則の定義・乱数の分け方は context_lm.evaluate（12.6.191節）と同じ。
+
+    12.6.215節の追加（既定では使わない）: mem_keep は想起に使う記憶（バッファと保留サンプル）に残す言語ごとの痕跡の
+    数（別の乱数で無作為に残す。学習のリプレイと診断 own は変えない）。detail=True では、言語ごとの選択精度
+    （acc_lang）と、言語ごとの λ のエピソード間の標準偏差の平均（lam_sd）も返す。"""
     model, bank, table = trained["model"], trained["bank"], trained["table"]
     n_l, k = len(data), cfg.k
     out: dict = {}
@@ -420,6 +431,12 @@ def evaluate_realtext(data: list[LangData], speakers: list[NgramSpeaker], traine
         gens = {name: torch.Generator().manual_seed(seed0 + off) for name, off in
                 (("fix", 777), ("tcm", 888), ("ca3", 999), ("ach", 1111), ("ashuf", 1212), ("cmp", 1313),
                  ("cshuf", 1414))}
+        if mem_keep is not None:  # 12.6.215節: 想起に使う記憶の痕跡の数を言語ごとに偏らせる
+            g_keep = torch.Generator().manual_seed(seed0 + 1515)
+            own_bank = bank["buf"]
+            bank = {key: [_subsample(b, mem_keep[a], g_keep) for a, b in enumerate(bank[key])] for key in ("buf", "hold")}
+        else:
+            own_bank = bank["buf"]
         buf_x = torch.cat([b["x"] for b in bank["buf"]])
         hold_x = torch.cat([b["x"] for b in bank["hold"]])
         buf_tag = torch.cat([b["tag"] for b in bank["buf"]])
@@ -437,13 +454,15 @@ def evaluate_realtext(data: list[LangData], speakers: list[NgramSpeaker], traine
             purity = {r: 0.0 for r in rules if (r.startswith("active_replay_") or r.startswith("active_holdout_"))
                       and r != "active_replay_own"}
             lam_mean = {r: 0.0 for r in rules if "ach" in r or "cmp" in r}
+            acc_lang = {r: [0.0] * n_l for r in rules}
+            lam_sd = {r: 0.0 for r in lam_mean}
             for j in range(n_l):
                 spk = speakers[j]
                 task_x, _ = random_windows(data[j].test, (episodes, m), k, generator)
                 pools = {"task": task_x,
                          "replay": buf_x[torch.randint(0, buf_x.shape[0], (episodes, m), generator=generator)]}
                 ans = {key: spk.sample(px, generator) for key, px in pools.items()}
-                own = bank["buf"][j]["x"]
+                own = own_bank[j]["x"]
                 pools["replay_own"] = own[torch.randint(0, own.shape[0], (episodes, m), generator=gens["fix"])]
                 ans["replay_own"] = spk.sample(pools["replay_own"], gens["fix"])
                 t_now = now_context(task_x, vocab, table, cfg.tcm_dim, cfg.tcm_beta)
@@ -458,6 +477,7 @@ def evaluate_realtext(data: list[LangData], speakers: list[NgramSpeaker], traine
                         purity["active_" + key] += float((srcs[idx] == j).float().mean()) / n_l
                     if lam is not None and "active_" + key in lam_mean:
                         lam_mean["active_" + key] += float(lam.mean()) / n_l
+                        lam_sd["active_" + key] += float(lam.std()) / n_l
 
                 if "active_replay_tcm" in rules:
                     recall("replay_tcm", buf_x, buf_mem, buf_src, None, 0, gens["tcm"])
@@ -490,7 +510,10 @@ def evaluate_realtext(data: list[LangData], speakers: list[NgramSpeaker], traine
                         logps[key] = model.logp_all(px.reshape(-1, k)).reshape(episodes, px.shape[1], n_l, -1)
                     chosen, _ = select_contexts(logps[key], ans[key], n, act)
                     acc[r] += float((chosen == j).float().mean()) / n_l
+                    acc_lang[r][j] = float((chosen == j).float().mean())
                     ce_sel[r] += float(ce[chosen, j].mean()) / n_l
             res[str(n)] = {"acc": acc, "ce": ce_sel, "purity": purity, "lambda": lam_mean}
+            if detail:
+                res[str(n)] |= {"acc_lang": acc_lang, "lam_sd": lam_sd}
         out["cues"] = res
     return out
