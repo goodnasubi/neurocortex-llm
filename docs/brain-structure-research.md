@@ -11988,4 +11988,4 @@ D の分解（opal）: 閉じる期間の間 −0.142、閉じた後 +0.028（cp
 - 判定の基準の点（B6 の ach_c）は曲線の内側の点だった。曲線からの改善を問うには、keep・ach_need2・ach_c を結ぶ前線からの残差で判定する必要がある。
 - 5 シードの評価だけでは、最悪の組と悪い回の数の基準が1回の揺らぎで入れ替わる（ach_u の開発用 6 回 対 評価用 0 回）。
 
-**テスト**: `tests/test_context_replay_uncertainty.py`（8件。不確かさの推定を加えても ach_c の学習が変わらないこと、3規則が書き戻しの前は従来と同じで kept ≦ f となること、揺らぎを足すとなじみの度合いが ach_c を超えないこと、驚きが続く設定で痕跡を加えない場合と同じになること、判定（B1〜B3・B6・H・H_u・H_P））。12.6.163・167節のテスト（`tests/test_context_replay_alloc.py`・`tests/test_context_replay_novelty.py`）も変わらず通る。
+**テスト**: `tests/test_context_replay_uncertainty.py`（8件。不確かさの推定を加えても ach_c の学習が変わらないこと、3規則が書き戻しの前は従来と同じで kept ≦ f となること、揺らぎを足すとなじみの度合いが ach_c を超えないこと、驚きが続く設定で痕跡を加えない場合と同じになること、判定（B1〜B3・B6・H・H_u・H_P））。12.6.163・167節のテスト（`tests/test_context_replay_alloc.py`・`tests/test_context_replay_novelty.py`）も変わらず通る。`tests/` の全体は 911 passed・1 skipped（計測の後に実行）。
