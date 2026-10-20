@@ -162,7 +162,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          replay_need: float = 0.5, sleep_every: int = 50, sleep_steps: int = 25,
                          ach_ema: float = 0.98, nov_split: bool = False, nov_ctx_gain: float = 2.0,
                          nov_shared_gain: float = 0.2, ctx_units: int = 0,
-                         ctx_zero_readout: bool = False, replay_sim: str = "", replay_sim_beta: float = 2.0) -> dict:
+                         ctx_zero_readout: bool = False, replay_sim: str = "", replay_sim_beta: float = 2.0,
+                         cascade_levels: int = 0, cascade_g: float = 0.05, cascade_scope: str = "shared") -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -420,6 +421,17 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
       "hid_ctx_shuf" … "hid_ctx" の対照。文脈ごとの類似度を文脈の間で並べ替える。
     既定の "" では従来と同じ乱数の消費になる。diagnostics = True では diag["replay_mix"][k]["sim"] に、引いた固定化の
     痕跡の z の平均（hid_shuf でも並べ替える前の z）を加える。
+
+    cascade_levels = m ≥ 2（12.6.233節。ctx_units = 0 のみ）では、シナプスの固定化を多時間尺度の隠れ変数の鎖で表す
+    （Benna & Fusi 2016 のカスケード）。各重み w = u_1 に隠れ変数 u_2…u_m を持たせ、最適化器の各ステップ（睡眠の段階も
+    含む）の後に u_k += [g_{k−1,k}(u_{k−1} − u_k) + g_{k,k+1}(u_{k+1} − u_k)] / C_k（C_k = 2^{k−1}、
+    g_{k,k+1} = cascade_g·4^{−(k−1)}、両端は閉じる）で隣どうしを拡散させる。勾配による変化は u_1 にだけ入り、遅い変数へ
+    少しずつ移る（速い変化ほど戻され、続いた変化ほど残る）。書き戻しの時点（writeback がなければタスク 1）から適用し、
+    隠れ変数はその時点の重みで始める（それまでの重みが全段に固定化済みの定常状態とみなす）。cascade_scope = "shared" では
+    共有の重み（fc1 の入力ビットの列・バイアスと読み出し）にだけかけ、文脈の one-hot の列は従来どおりにする。"all" では
+    全ての重みにかける。既定の 0 では従来と同じ挙動・同じ乱数の消費になる。diagnostics = True では
+    diag["cascade"][k] = {"gap": タスク k の終わりの |u_1 − u_m| の平均, "move": u_m の適用時点からの変化の平均}
+    を加える（固定化の対象の要素だけ）。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -467,6 +479,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                        or replay_sim_beta < 0):
         raise ValueError("replay_sim は " + "・".join(REPLAY_SIMS) + "（replay_rule が ach_c 系のときだけ）、"
                          "replay_sim_beta は 0 以上")
+    if cascade_levels and (cascade_levels < 2 or not 0.0 < cascade_g <= 0.5 or cascade_scope not in ("shared", "all")
+                           or ctx_units > 0):
+        raise ValueError("cascade_levels は 0 か 2 以上、cascade_g は (0, 0.5]、cascade_scope は shared・all"
+                         "（ctx_units = 0 のみ）")
     rule_from = (writeback_at if writeback else 1) if replay_rule else len(specs)
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
@@ -995,7 +1011,30 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             o.zero_grad(set_to_none=True)
             loss.backward()
             o.step()
+            if cas_u:
+                cascade_step()
         return sleep_steps
+
+    cas_from = (writeback_at if writeback else 1) if cascade_levels else len(specs)
+    cas_u: list[list[torch.Tensor]] = []  # 12.6.233節: 各パラメータの隠れ変数 u_2…u_m
+    cas_mask: list[torch.Tensor | None] = []  # 固定化の対象（None は全要素）
+    cas_c = [2.0 ** i for i in range(cascade_levels)]
+    cas_g = [cascade_g * 4.0 ** -i for i in range(max(cascade_levels - 1, 0))]
+
+    @torch.no_grad()
+    def cascade_step() -> None:
+        """12.6.233節: 最適化器のステップの後に、隣どうしの隠れ変数を拡散させる（Benna & Fusi 2016）。"""
+        for q, us, mk in zip(model.parameters(), cas_u, cas_mask):
+            ch = [q.detach().clone(), *us]
+            fl = [g * (ch[i] - ch[i + 1]) for i, g in enumerate(cas_g)]
+            nw = [ch[i] + ((fl[i - 1] if i > 0 else 0.0) - (fl[i] if i < len(fl) else 0.0)) / c
+                  for i, c in enumerate(cas_c)]
+            if mk is not None:  # 対象外の要素は従来どおり（隠れ変数は見える重みに揃えておく）
+                nw[0] = torch.where(mk, nw[0], ch[0])
+                nw[1:] = [torch.where(mk, u, nw[0]) for u in nw[1:]]
+            q.copy_(nw[0])
+            for u, v in zip(us, nw[1:]):
+                u.copy_(v)
 
     upd_ref: list[float] = []  # plasticity_cap の ū（平常時の更新ノルムの移動平均）
     split = {"left": 0, "ctx": -1}  # split_window の残りステップと、対象の新しい文脈
@@ -1009,6 +1048,14 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         trained: dict[tuple[int, int], int] = {}
         n_used_at_start = len(used)
         opt = make_opt(k)
+        if k == cas_from:
+            cas_u[:] = [[q.detach().clone() for _ in range(cascade_levels - 1)] for q in model.parameters()]
+            cas_mask[:] = [None for _ in cas_u]
+            if cascade_scope == "shared":  # 文脈の one-hot の列は対象外
+                m_ = torch.ones_like(fc1_w, dtype=torch.bool)
+                m_[:, n_bits:] = False
+                cas_mask[:] = [m_ if q is fc1_w else None for q in model.parameters()]
+            cas_start = [us[-1].clone() for us in cas_u]
         rule = replay_rule if k >= rule_from else ""
         if rule and k == rule_from:
             old_ctx.update(used)
@@ -1132,6 +1179,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                     if n_new > 0:
                         u_ = raw_unorm if plasticity_ref == "raw" else unorm
                         upd_ref[:] = [u_ if not upd_ref else plasticity_ema * upd_ref[0] + (1 - plasticity_ema) * u_]
+                if cas_u:
+                    cascade_step()
                 if diagnostics:
                     diag["upd"].append((k, step, ctx, gnorm, unorm))
             if gate["train"]:
@@ -1214,6 +1263,14 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             if k >= nov_from:
                 diag.setdefault("nov_split", {})[k] = {"steps": nov_d["steps"],
                                                        "g_shared": nov_d["g_shared"] / max(nov_d["steps"], 1)}
+            if cas_u:
+                gap, mv, n_ = 0.0, 0.0, 0
+                for q, us, mk, u0 in zip(model.parameters(), cas_u, cas_mask, cas_start):
+                    sel = mk if mk is not None else torch.ones_like(q, dtype=torch.bool)
+                    gap += float((q.detach() - us[-1]).abs()[sel].sum())
+                    mv += float((us[-1] - u0).abs()[sel].sum())
+                    n_ += int(sel.sum())
+                diag.setdefault("cascade", {})[k] = {"gap": gap / n_, "move": mv / n_}
             if rule:
                 m_ = max(mix["n"], 1)
                 diag.setdefault("replay_mix", {})[k] = {"own": mix["own"] / m_, "kept": mix["kept"] / m_,
