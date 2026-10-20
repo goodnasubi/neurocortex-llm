@@ -11,3 +11,4 @@ rust/target/
 commit_step44_validation_results.sh
 results/moe_absorb/parts/
 results/moe_opal/parts*/
+results/moe_sleep/parts/
