@@ -1,0 +1,303 @@
+seed 100: ce=0.315
+  small: none=1.795s/w0 last=1.807s/w0 freq=1.744s/w126 cerebellum=1.545s/w116 cerebellum_fixed0.1=1.557s/w117 cerebellum_fixed0.2=1.520s/w116 cerebellum_fixed0.3=1.526s/w107 cerebellum_fixed0.4=1.576s/w80 cerebellum_fixed0.5=1.631s/w36 cerebellum_fixed0.6=1.673s/w12 cerebellum_adapt2=1.624s/w59 cerebellum_delayed1=1.557s/w111 cerebellum_delayed2=1.585s/w88 cerebellum_delayed4=1.588s/w56 cerebellum_delayedw11=1.553s/w110 cerebellum_delayedw12=1.587s/w85 cerebellum_delayedw14=1.616s/w56 oracle=1.447s/w0
+  large: none=3.717s/w0 last=3.734s/w0 freq=3.598s/w128 cerebellum=3.201s/w117 cerebellum_fixed0.1=3.217s/w116 cerebellum_fixed0.2=3.174s/w116 cerebellum_fixed0.3=3.220s/w108 cerebellum_fixed0.4=3.250s/w80 cerebellum_fixed0.5=3.425s/w36 cerebellum_fixed0.6=3.491s/w12 cerebellum_adapt2=3.333s/w59 cerebellum_delayed1=3.224s/w111 cerebellum_delayed2=3.260s/w88 cerebellum_delayed4=3.315s/w56 cerebellum_delayedw11=3.222s/w110 cerebellum_delayedw12=3.248s/w85 cerebellum_delayedw14=3.381s/w56 oracle=2.970s/w0
+seed 101: ce=0.315
+  small: none=1.918s/w0 last=1.975s/w0 freq=1.778s/w79 cerebellum=1.641s/w131 cerebellum_fixed0.1=1.625s/w131 cerebellum_fixed0.2=1.698s/w131 cerebellum_fixed0.3=1.668s/w124 cerebellum_fixed0.4=1.719s/w90 cerebellum_fixed0.5=1.749s/w46 cerebellum_fixed0.6=1.786s/w16 cerebellum_adapt2=1.705s/w98 cerebellum_delayed1=1.652s/w131 cerebellum_delayed2=1.694s/w113 cerebellum_delayed4=1.742s/w78 cerebellum_delayedw11=1.631s/w130 cerebellum_delayedw12=1.659s/w112 cerebellum_delayedw14=1.715s/w76 oracle=1.482s/w0
+  large: none=4.014s/w0 last=4.036s/w0 freq=3.674s/w78 cerebellum=3.435s/w131 cerebellum_fixed0.1=3.413s/w131 cerebellum_fixed0.2=3.442s/w131 cerebellum_fixed0.3=3.389s/w124 cerebellum_fixed0.4=3.510s/w90 cerebellum_fixed0.5=3.635s/w46 cerebellum_fixed0.6=3.761s/w16 cerebellum_adapt2=3.530s/w98 cerebellum_delayed1=3.417s/w131 cerebellum_delayed2=3.518s/w113 cerebellum_delayed4=3.571s/w79 cerebellum_delayedw11=3.385s/w131 cerebellum_delayedw12=3.491s/w112 cerebellum_delayedw14=3.577s/w77 oracle=3.176s/w0
+seed 102: ce=0.319
+  small: none=1.834s/w0 last=1.890s/w0 freq=1.729s/w66 cerebellum=1.654s/w119 cerebellum_fixed0.1=1.598s/w119 cerebellum_fixed0.2=1.608s/w119 cerebellum_fixed0.3=1.625s/w108 cerebellum_fixed0.4=1.639s/w69 cerebellum_fixed0.5=1.739s/w32 cerebellum_fixed0.6=1.750s/w11 cerebellum_adapt2=1.680s/w78 cerebellum_delayed1=1.613s/w111 cerebellum_delayed2=1.641s/w93 cerebellum_delayed4=1.710s/w63 cerebellum_delayedw11=1.632s/w111 cerebellum_delayedw12=1.656s/w92 cerebellum_delayedw14=1.720s/w59 oracle=1.472s/w0
+  large: none=3.811s/w0 last=3.860s/w0 freq=3.532s/w66 cerebellum=3.320s/w119 cerebellum_fixed0.1=3.320s/w119 cerebellum_fixed0.2=3.399s/w119 cerebellum_fixed0.3=3.360s/w108 cerebellum_fixed0.4=3.474s/w69 cerebellum_fixed0.5=3.581s/w32 cerebellum_fixed0.6=3.721s/w11 cerebellum_adapt2=3.454s/w78 cerebellum_delayed1=3.352s/w112 cerebellum_delayed2=3.385s/w93 cerebellum_delayed4=3.539s/w63 cerebellum_delayedw11=3.347s/w111 cerebellum_delayedw12=3.405s/w92 cerebellum_delayedw14=3.559s/w60 oracle=3.082s/w0
+seed 103: ce=0.316
+  small: none=1.973s/w0 last=2.014s/w0 freq=1.873s/w114 cerebellum=1.712s/w119 cerebellum_fixed0.1=1.722s/w118 cerebellum_fixed0.2=1.727s/w118 cerebellum_fixed0.3=1.735s/w111 cerebellum_fixed0.4=1.788s/w78 cerebellum_fixed0.5=1.829s/w42 cerebellum_fixed0.6=1.877s/w16 cerebellum_adapt2=1.769s/w86 cerebellum_delayed1=1.753s/w117 cerebellum_delayed2=1.748s/w103 cerebellum_delayed4=1.818s/w70 cerebellum_delayedw11=1.741s/w117 cerebellum_delayedw12=1.737s/w103 cerebellum_delayedw14=1.799s/w70 oracle=1.548s/w0
+  large: none=4.171s/w0 last=4.163s/w0 freq=3.891s/w114 cerebellum=3.513s/w118 cerebellum_fixed0.1=3.632s/w119 cerebellum_fixed0.2=3.556s/w118 cerebellum_fixed0.3=3.542s/w111 cerebellum_fixed0.4=3.680s/w78 cerebellum_fixed0.5=3.817s/w42 cerebellum_fixed0.6=3.907s/w16 cerebellum_adapt2=3.651s/w87 cerebellum_delayed1=3.633s/w116 cerebellum_delayed2=3.592s/w104 cerebellum_delayed4=3.744s/w70 cerebellum_delayedw11=3.568s/w117 cerebellum_delayedw12=3.616s/w103 cerebellum_delayedw14=3.722s/w70 oracle=3.315s/w0
+seed 104: ce=0.323
+  small: none=1.859s/w0 last=1.892s/w0 freq=1.757s/w104 cerebellum=1.626s/w132 cerebellum_fixed0.1=1.637s/w133 cerebellum_fixed0.2=1.640s/w133 cerebellum_fixed0.3=1.611s/w122 cerebellum_fixed0.4=1.689s/w81 cerebellum_fixed0.5=1.735s/w43 cerebellum_fixed0.6=1.803s/w19 cerebellum_adapt2=1.700s/w78 cerebellum_delayed1=1.618s/w129 cerebellum_delayed2=1.668s/w112 cerebellum_delayed4=1.707s/w60 cerebellum_delayedw11=1.619s/w129 cerebellum_delayedw12=1.678s/w109 cerebellum_delayedw14=1.739s/w55 oracle=1.500s/w0
+  large: none=3.849s/w0 last=3.915s/w0 freq=3.623s/w104 cerebellum=3.325s/w133 cerebellum_fixed0.1=3.387s/w133 cerebellum_fixed0.2=3.325s/w133 cerebellum_fixed0.3=3.371s/w121 cerebellum_fixed0.4=3.442s/w80 cerebellum_fixed0.5=3.603s/w43 cerebellum_fixed0.6=3.672s/w19 cerebellum_adapt2=3.528s/w78 cerebellum_delayed1=3.349s/w130 cerebellum_delayed2=3.410s/w113 cerebellum_delayed4=3.575s/w61 cerebellum_delayedw11=3.313s/w130 cerebellum_delayedw12=3.394s/w110 cerebellum_delayedw14=3.561s/w57 oracle=3.079s/w0
+{
+ "selected": {
+  "small": "cerebellum_delayed4",
+  "large": "cerebellum_delayed4"
+ },
+ "H1_small": {
+  "cond": "cerebellum_delayed4",
+  "reduction": 0.08698278373224551,
+  "wall_cb": 1.7131834830000572,
+  "wall_simple_min": 1.7760520413999756,
+  "seeds_faster_than_none": 5,
+  "wasted_cb": 65.4,
+  "wasted_freq": 97.8,
+  "c1_reduction": false,
+  "c2_faster_than_simple": true,
+  "c3_seeds": true,
+  "c4_wasted": true,
+  "pass": false
+ },
+ "H3_small": {
+  "cond": "cerebellum_delayed4",
+  "per_seed": [
+   0.009858839775272715,
+   -0.007754954619809323,
+   -0.029657852142993185,
+   -0.01059094591540749,
+   0.0037219064460278506
+  ],
+  "mean": -0.006884601291381886,
+  "n_pos": 2,
+  "pass": false
+ },
+ "H4_small": {
+  "cond": "cerebellum_delayed4",
+  "resid_adapt": -0.007158878060308632,
+  "per_seed": [
+   0.021718836136795497,
+   -0.008830100445821984,
+   -0.005573164334833333,
+   -0.01391398309734844,
+   0.007969795585841988
+  ],
+  "mean": 0.0002742767689267456,
+  "n_pos": 2,
+  "pass": false
+ },
+ "ref_small": {
+  "resid_adapt": {
+   "per_seed": [
+    -0.011859996361522782,
+    0.0010751458260126606,
+    -0.024084687808159852,
+    0.0033230371819409493,
+    -0.004247889139814137
+   ],
+   "mean": -0.007158878060308632,
+   "n_pos": 2,
+   "pass": false
+  },
+  "resid_stalls_delayed": {
+   "per_seed": [
+    -0.00021491510853213075,
+    0.0003787878787878812,
+    -0.009608678806664113,
+    -0.0029239766081871447,
+    -0.009449084619927432
+   ],
+   "mean": -0.004363573452904588,
+   "n_pos": 1,
+   "pass": false
+  },
+  "resid_stalls_adapt": {
+   "per_seed": [
+    -0.004029658284977436,
+    -0.008455882352941174,
+    -0.008470181503889354,
+    0.0005520794994479938,
+    -0.005905677887454646
+   ],
+   "mean": -0.005261864105962923,
+   "n_pos": 1,
+   "pass": false
+  },
+  "fixed_pass": {
+   "cerebellum_fixed0.1": false,
+   "cerebellum_fixed0.2": false,
+   "cerebellum_fixed0.3": false,
+   "cerebellum_fixed0.4": true,
+   "cerebellum_fixed0.5": false,
+   "cerebellum_fixed0.6": false
+  },
+  "adapt_pass": {
+   "cond": "cerebellum_adapt2",
+   "reduction": 0.09591875396416309,
+   "wall_cb": 1.6955984287999173,
+   "wall_simple_min": 1.7760520413999756,
+   "seeds_faster_than_none": 5,
+   "wasted_cb": 79.8,
+   "wasted_freq": 97.8,
+   "c1_reduction": false,
+   "c2_faster_than_simple": true,
+   "c3_seeds": true,
+   "c4_wasted": true,
+   "pass": false
+  },
+  "w1": {
+   "cond": "cerebellum_delayedw14",
+   "h": {
+    "cond": "cerebellum_delayedw14",
+    "reduction": 0.08401795637401652,
+    "wall_cb": 1.7180814026000917,
+    "wall_simple_min": 1.7760520413999756,
+    "seeds_faster_than_none": 5,
+    "wasted_cb": 63.2,
+    "wasted_freq": 97.8,
+    "c1_reduction": false,
+    "c2_faster_than_simple": true,
+    "c3_seeds": true,
+    "c4_wasted": true,
+    "pass": false
+   },
+   "per_seed": [
+    -0.005724981846337046,
+    0.006875260311544784,
+    -0.029457042934739552,
+    -0.0009195347690263422,
+    -0.010202102455030532
+   ],
+   "mean": -0.007885680338717737,
+   "n_pos": 1,
+   "pass": false
+  },
+  "w2_minus_w1": {
+   "per_seed": [
+    0.015583821621609761,
+    -0.014630214931354107,
+    -0.0002008092082536328,
+    -0.009671411146381148,
+    0.013924008901058382
+   ],
+   "mean": 0.0010010790473358512,
+   "n_pos": 2,
+   "pass": false
+  }
+ },
+ "H2_large": {
+  "cond": "cerebellum_delayed4",
+  "reduction": 0.09270094536664435,
+  "wall_cb": 3.5488156626001,
+  "wall_simple_min": 3.6635289740000645,
+  "seeds_faster_than_none": 5,
+  "wasted_cb": 65.8,
+  "wasted_freq": 98,
+  "c1_reduction": false,
+  "c2_faster_than_simple": true,
+  "c3_seeds": true,
+  "c4_wasted": true,
+  "pass": false
+ },
+ "H3_large": {
+  "cond": "cerebellum_delayed4",
+  "per_seed": [
+   0.008126745745988873,
+   -0.0073466038293083236,
+   -0.012413808920841499,
+   -0.008031352156467553,
+   -0.013101558033563693
+  ],
+  "mean": -0.006553315438838439,
+  "n_pos": 1,
+  "pass": false
+ },
+ "H4_large": {
+  "cond": "cerebellum_delayed4",
+  "resid_adapt": -0.007141603191178,
+  "per_seed": [
+   0.0080974714866279,
+   0.004659981874261143,
+   -0.010791483317803274,
+   -0.005951363835767387,
+   0.006926832554379425
+  ],
+  "mean": 0.0005882877523395614,
+  "n_pos": 3,
+  "pass": false
+ },
+ "ref_large": {
+  "resid_adapt": {
+   "per_seed": [
+    2.9274259360972943e-05,
+    -0.012006585703569467,
+    -0.0016223256030382244,
+    -0.0020799883207001657,
+    -0.020028390587943118
+   ],
+   "mean": -0.007141603191178,
+   "n_pos": 1,
+   "pass": false
+  },
+  "resid_stalls_delayed": {
+   "per_seed": [
+    0.0021491510853213006,
+    0.0,
+    -0.007361487795428175,
+    -0.0029239766081871447,
+    -0.013468109339407733
+   ],
+   "mean": -0.0043208845315403505,
+   "n_pos": 1,
+   "pass": false
+  },
+  "resid_stalls_adapt": {
+   "per_seed": [
+    -0.004029658284977436,
+    -0.006372549019607848,
+    -0.006222990492653416,
+    0.00128818549871184,
+    -0.012927107061503407
+   ],
+   "mean": -0.005652823872006054,
+   "n_pos": 1,
+   "pass": false
+  },
+  "fixed_pass": {
+   "cerebellum_fixed0.1": false,
+   "cerebellum_fixed0.2": false,
+   "cerebellum_fixed0.3": false,
+   "cerebellum_fixed0.4": true,
+   "cerebellum_fixed0.5": false,
+   "cerebellum_fixed0.6": false
+  },
+  "adapt_pass": {
+   "cond": "cerebellum_adapt2",
+   "reduction": 0.10515328422101511,
+   "wall_cb": 3.4991510275999644,
+   "wall_simple_min": 3.6635289740000645,
+   "seeds_faster_than_none": 5,
+   "wasted_cb": 80,
+   "wasted_freq": 98,
+   "c1_reduction": true,
+   "c2_faster_than_simple": true,
+   "c3_seeds": true,
+   "c4_wasted": true,
+   "pass": true
+  },
+  "w1": {
+   "cond": "cerebellum_delayedw14",
+   "h": {
+    "cond": "cerebellum_delayedw14",
+    "reduction": 0.08964489496373684,
+    "wall_cb": 3.559772670400025,
+    "wall_simple_min": 3.6635289740000645,
+    "seeds_faster_than_none": 5,
+    "wasted_cb": 64,
+    "wasted_freq": 98,
+    "c1_reduction": false,
+    "c2_faster_than_simple": true,
+    "c3_seeds": true,
+    "c4_wasted": true,
+    "pass": false
+   },
+   "per_seed": [
+    -0.00952163473810369,
+    -0.007476041733340155,
+    -0.015389892632907631,
+    -0.002600390014052656,
+    -0.004837063538668973
+   ],
+   "mean": -0.007965004531414622,
+   "n_pos": 0,
+   "pass": false
+  },
+  "w2_minus_w1": {
+   "per_seed": [
+    0.017648380484092563,
+    0.00012943790403183164,
+    0.0029760837120661326,
+    -0.005430962142414897,
+    -0.00826449449489472
+   ],
+   "mean": 0.0014116890925761822,
+   "n_pos": 3,
+   "pass": false
+  }
+ }
+}
+small: none=1.876s(+0.0%)/w0 last=1.916s(-2.1%)/w0 freq=1.776s(+5.3%)/w98 cerebellum=1.636s(+12.8%)/w123 cerebellum_fixed0.1=1.628s(+13.2%)/w124 cerebellum_fixed0.2=1.639s(+12.7%)/w123 cerebellum_fixed0.3=1.633s(+13.0%)/w114 cerebellum_fixed0.4=1.682s(+10.3%)/w80 cerebellum_fixed0.5=1.736s(+7.4%)/w40 cerebellum_fixed0.6=1.778s(+5.2%)/w15 cerebellum_adapt2=1.696s(+9.6%)/w80 cerebellum_delayed1=1.639s(+12.7%)/w120 cerebellum_delayed2=1.667s(+11.1%)/w102 cerebellum_delayed4=1.713s(+8.7%)/w65 cerebellum_delayedw11=1.635s(+12.8%)/w119 cerebellum_delayedw12=1.663s(+11.3%)/w100 cerebellum_delayedw14=1.718s(+8.4%)/w63 oracle=1.490s(+20.5%)/w0
+large: none=3.912s(+0.0%)/w0 last=3.942s(-0.8%)/w0 freq=3.664s(+6.3%)/w98 cerebellum=3.359s(+14.1%)/w124 cerebellum_fixed0.1=3.394s(+13.2%)/w124 cerebellum_fixed0.2=3.379s(+13.6%)/w123 cerebellum_fixed0.3=3.376s(+13.7%)/w114 cerebellum_fixed0.4=3.471s(+11.3%)/w79 cerebellum_fixed0.5=3.612s(+7.6%)/w40 cerebellum_fixed0.6=3.711s(+5.1%)/w15 cerebellum_adapt2=3.499s(+10.5%)/w80 cerebellum_delayed1=3.395s(+13.2%)/w120 cerebellum_delayed2=3.433s(+12.2%)/w102 cerebellum_delayed4=3.549s(+9.3%)/w66 cerebellum_delayedw11=3.367s(+13.9%)/w120 cerebellum_delayedw12=3.431s(+12.3%)/w100 cerebellum_delayedw14=3.560s(+9.0%)/w64 oracle=3.125s(+20.1%)/w0

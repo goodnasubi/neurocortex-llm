@@ -1,0 +1,78 @@
+seed=1 cross shared/aux0.05 gini=0.052 used=8 top2=0.274 gate=0.598 ce=0.5439 b2=0.2534 Phub=0.64 Prest=0.52 hubb2=0.22/0.27 lesT=0.237 lesO=0.154
+seed=1 cross shared/point0.01 gini=0.302 used=8 top2=0.437 gate=0.554 ce=0.5442 b2=0.2345 Phub=0.83 Prest=0.58 hubb2=0.30/0.44 lesT=0.412 lesO=0.205
+seed=1 cross shared/band0.01 gini=0.368 used=8 top2=0.486 gate=0.521 ce=0.5439 b2=0.2370 Phub=0.78 Prest=0.68 hubb2=0.26/0.49 lesT=0.195 lesO=0.274
+seed=1 cross split/aux0.05 gini=0.061 used=8 top2=0.283 gate=0.659 ce=0.5470 b2=0.2373 Phub=0.08 Prest=0.41 hubb2=0.27/0.28 lesT=0.236 lesO=0.313 cutT=0.427 hubcutT=0.103 nhcutT=0.108
+seed=1 cross split/point0.1 gini=0.367 used=7 top2=0.489 gate=0.456 ce=0.5802 b2=0.3687 Phub=0.72 Prest=0.53 hubb2=0.37/0.49 lesT=0.096 lesO=0.216 cutT=0.285 hubcutT=0.053 nhcutT=0.077
+seed=1 cross split/band0.1 gini=0.290 used=8 top2=0.441 gate=0.483 ce=0.5806 b2=0.3691 Phub=0.92 Prest=0.43 hubb2=0.39/0.44 lesT=0.131 lesO=0.094 cutT=0.300 hubcutT=0.116 nhcutT=0.061
+seed=1 within shared/aux0.05 gini=0.065 used=8 top2=0.293 gate=0.634 ce=0.4456 b2=0.1378 Phub=0.95 Prest=0.28 hubb2=0.18/0.29 lesT=0.250 lesO=0.201
+seed=1 within shared/point0.01 gini=0.174 used=8 top2=0.360 gate=0.476 ce=0.4596 b2=0.2009 Phub=0.67 Prest=0.54 hubb2=0.35/0.36 lesT=0.325 lesO=0.162
+seed=1 within shared/band0.01 gini=0.418 used=8 top2=0.533 gate=0.484 ce=0.4727 b2=0.2243 Phub=0.92 Prest=0.47 hubb2=0.39/0.53 lesT=0.296 lesO=0.318
+seed=1 within split/aux0.05 gini=0.058 used=8 top2=0.275 gate=0.605 ce=0.5181 b2=0.4092 Phub=0.49 Prest=0.36 hubb2=0.31/0.27 lesT=0.220 lesO=0.142 cutT=0.048 hubcutT=0.006 nhcutT=0.014
+seed=1 within split/point0.1 gini=0.244 used=8 top2=0.421 gate=0.411 ce=0.5381 b2=0.4860 Phub=0.77 Prest=0.38 hubb2=0.40/0.42 lesT=0.099 lesO=0.140 cutT=0.013 hubcutT=0.003 nhcutT=0.003
+seed=1 within split/band0.1 gini=0.264 used=8 top2=0.439 gate=0.413 ce=0.5406 b2=0.4959 Phub=0.73 Prest=0.41 hubb2=0.48/0.44 lesT=0.071 lesO=0.112 cutT=0.047 hubcutT=0.006 nhcutT=0.014
+{
+ "判定": {
+  "eta": 0.01,
+  "eta_split": 0.1,
+  "need": 1,
+  "V_橋渡し（分かれた土台・目標域で、領域をまたぐ読み取りの切断が統合課題の b2 を対照より 0.1 以上悪くする）": true,
+  "H1_交互作用（分かれた土台、目標域−一点）": false,
+  "H2_交互作用（分かれた土台、目標域−補助損失0.05）": false,
+  "H3_交互作用が共有の土台より強い": false,
+  "H4_統合課題でハブの参加係数が高い": true,
+  "H5_ハブ除去の損害が統合課題で b2 に偏る": true,
+  "H6_b2 の位置がハブに偏る": false,
+  "参考_統合課題の難しさ（全条件で統合課題の b2 の CE が対照より 0.03 以上高い）": false,
+  "値": {
+   "interaction_split": [
+    -0.009573429822921753
+   ],
+   "interaction_split_mean": -0.009573429822921753,
+   "interaction_split_t": NaN,
+   "interaction_aux": [
+    0.045079171657562256
+   ],
+   "interaction_aux_mean": 0.045079171657562256,
+   "interaction_aux_t": NaN,
+   "interaction_shared": [
+    -0.02079242467880249
+   ],
+   "interaction_shared_mean": -0.02079242467880249,
+   "interaction_shared_t": NaN,
+   "split_minus_shared": [
+    0.011218994855880737
+   ],
+   "split_minus_shared_mean": 0.011218994855880737,
+   "split_minus_shared_t": NaN,
+   "gap_cross_minus_within": {
+    "shared/aux0.05": 0.11552497744560242,
+    "shared/point0.01": 0.03355632722377777,
+    "shared/band0.01": 0.01276390254497528,
+    "split/aux0.05": -0.17187336087226868,
+    "split/point0.1": -0.11722075939178467,
+    "split/band0.1": -0.12679418921470642
+   },
+   "bridge": [
+    0.25338926911354065
+   ],
+   "p_hub_minus_rest_cross": [
+    0.4877635805813882
+   ],
+   "lesion_target_over_other_cross": [
+    1.4035041994315791
+   ],
+   "lesion_target_over_other_within": [
+    0.6322152337670224
+   ],
+   "hub_path_bias_cross": [
+    -0.05203684344551218
+   ],
+   "hub_cut_target_cross": [
+    0.11607688665390015
+   ],
+   "nonhub_cut_target_cross": [
+    0.0613498330116272
+   ]
+  }
+ }
+}
