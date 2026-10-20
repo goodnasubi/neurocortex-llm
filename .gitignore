@@ -10,3 +10,4 @@ results/step44_full_scale_experiment/
 rust/target/
 commit_step44_validation_results.sh
 results/moe_absorb/parts/
+results/moe_opal/parts*/

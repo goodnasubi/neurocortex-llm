@@ -1,0 +1,33 @@
+# 12.6.207節の予備調整（シード 200、opal のみ。判定には使わない）
+## 1: softplus・初期値 0.01
+alpha=0.03 seed=200 E32_L1/opal gini=0.952 used=7.0 base=0.3266 ratio=2711.79 gate=0.828 on_open=0.969 off_open=0.563 A=-0.406 D=0.389 agree_open=0.005 dormant_end=27 train_sec=96.3
+alpha=0.1 seed=200 E32_L1/opal gini=0.952 used=6.0 base=0.3175 ratio=2521.04 gate=0.993 on_open=0.969 off_open=0.586 A=-0.383 D=0.366 agree_open=0.053 dormant_end=30 train_sec=91.0
+alpha=0.3 seed=200 E32_L1/opal gini=0.969 used=1.0 base=nan ratio=nan gate=nan on_open=0.944 off_open=0.790 A=-0.154 D=0.179 agree_open=0.000 dormant_end=31 train_sec=91.6
+alpha=1.0 seed=200 E32_L1/opal gini=0.969 used=1.0 base=nan ratio=nan gate=nan on_open=0.965 off_open=0.964 A=-0.001 D=0.005 agree_open=0.946 dormant_end=31 train_sec=91.0
+## 2: sigmoid β=4・初期値 0.01
+alpha=0.1 seed=200 E32_L1/opal gini=0.938 used=3.0 base=0.3191 ratio=1897.02 gate=0.609 on_open=0.944 off_open=0.570 A=-0.373 D=0.367 agree_open=0.075 dormant_end=30 train_sec=67.0
+alpha=0.3 seed=200 E32_L1/opal gini=0.967 used=5.0 base=0.3182 ratio=2540.05 gate=0.882 on_open=0.969 off_open=0.701 A=-0.268 D=0.266 agree_open=0.016 dormant_end=31 train_sec=67.9
+alpha=1.0 seed=200 E32_L1/opal gini=0.942 used=2.0 base=0.3157 ratio=1944.55 gate=0.852 on_open=0.942 off_open=0.828 A=-0.114 D=0.114 agree_open=0.065 dormant_end=30 train_sec=67.5
+alpha=3.0 seed=200 E32_L1/opal gini=0.929 used=7.0 base=0.3167 ratio=1953.23 gate=0.823 on_open=0.782 off_open=0.714 A=-0.069 D=0.215 agree_open=0.129 dormant_end=28 train_sec=66.9
+## 3: sigmoid β=4・初期値 4/(β√(6d))
+alpha=0.1 seed=200 E32_L1/opal gini=0.735 used=16.0 base=0.3193 ratio=7.27 gate=0.436 on_open=0.265 off_open=0.596 A=0.331 D=0.139 agree_open=0.480 dormant_end=17 train_sec=63.8 teacher_agree_last=0.918916015625
+alpha=0.3 seed=200 E32_L1/opal gini=0.792 used=17.0 base=0.3174 ratio=8.56 gate=0.609 on_open=0.432 off_open=0.480 A=0.048 D=0.312 agree_open=0.408 dormant_end=16 train_sec=69.4 teacher_agree_last=0.927568359375
+alpha=1.0 seed=200 E32_L1/opal gini=0.734 used=17.0 base=0.3203 ratio=8.42 gate=0.581 on_open=0.472 off_open=0.501 A=0.029 D=0.233 agree_open=0.451 dormant_end=16 train_sec=64.0 teacher_agree_last=0.91583984375
+alpha=3.0 seed=200 E32_L1/opal gini=0.725 used=16.0 base=0.3214 ratio=7.60 gate=0.587 on_open=0.537 off_open=0.536 A=-0.000 D=0.189 agree_open=0.474 dormant_end=17 train_sec=64.2 teacher_agree_last=0.903486328125
+## 4: 修正1（critic、クリティックも α）の α の選び直し
+alpha=0.3 seed=200 E32_L1/opal gini=0.940 used=12.0 base=0.3162 ratio=659.89 gate=0.188 on_open=0.936 off_open=0.949 A=0.013 D=-0.009 agree_open=0.022 dormant_end=25 train_sec=67.3 teacher_agree_last=0.8345
+alpha=1.0 seed=200 E32_L1/opal gini=0.969 used=1.0 base=nan ratio=nan gate=nan on_open=0.969 off_open=0.969 A=0.000 D=0.000 agree_open=1.000 dormant_end=31 train_sec=62.0 teacher_agree_last=1.0
+alpha=3.0 seed=200 E32_L1/opal gini=0.969 used=1.0 base=nan ratio=nan gate=nan on_open=0.969 off_open=0.969 A=0.000 D=0.000 agree_open=1.000 dormant_end=31 train_sec=66.5 teacher_agree_last=1.0
+alpha=10.0 seed=200 E32_L1/opal gini=0.969 used=1.0 base=nan ratio=nan gate=nan on_open=0.969 off_open=0.969 A=0.000 D=0.000 agree_open=1.000 dormant_end=31 train_sec=71.5 teacher_agree_last=1.0
+## 5: 修正2（クリティックを正規化 LMS、ステップ 0.05）
+alpha=0.3 seed=200 E32_L1/opal gini=0.838 used=19.0 base=0.3170 ratio=53.58 gate=0.250 on_open=0.713 off_open=0.851 A=0.138 D=-0.013 agree_open=0.097 dormant_end=21 train_sec=63.0 teacher_agree_last=0.8528
+alpha=1.0 seed=200 E32_L1/opal gini=0.849 used=16.0 base=0.3190 ratio=862.13 gate=0.335 on_open=0.838 off_open=0.878 A=0.039 D=-0.029 agree_open=0.098 dormant_end=24 train_sec=67.7 teacher_agree_last=0.8465
+alpha=3.0 seed=200 E32_L1/opal gini=0.887 used=15.0 base=0.3181 ratio=880.92 gate=0.461 on_open=0.861 off_open=0.920 A=0.059 D=-0.033 agree_open=0.025 dormant_end=25 train_sec=68.3 teacher_agree_last=0.8328
+alpha=10.0 seed=200 E32_L1/opal gini=0.901 used=22.0 base=0.3171 ratio=403.95 gate=0.596 on_open=0.871 off_open=0.834 A=-0.038 D=0.067 agree_open=0.257 dormant_end=26 train_sec=63.2 teacher_agree_last=0.8615
+## 6: 修正2（α × クリティックのステップ）
+0.3_0.25 seed=200 E32_L1/opal gini=0.434 used=30.0 base=0.3196 ratio=2.81 gate=0.161 on_open=0.543 off_open=0.549 A=0.006 D=-0.115 agree_open=0.531 dormant_end=6 train_sec=61.2 teacher_agree_last=0.8171
+0.3_0.5 seed=200 E32_L1/opal gini=0.416 used=26.0 base=0.3193 ratio=2.45 gate=0.168 on_open=0.283 off_open=0.683 A=0.400 D=-0.267 agree_open=0.382 dormant_end=6 train_sec=62.8 teacher_agree_last=0.826
+0.3_1.0 seed=200 E32_L1/opal gini=0.404 used=29.0 base=0.3182 ratio=2.48 gate=0.182 on_open=0.119 off_open=0.660 A=0.541 D=-0.256 agree_open=0.405 dormant_end=7 train_sec=63.4 teacher_agree_last=0.8268
+1.0_0.25 seed=200 E32_L1/opal gini=0.630 used=28.0 base=0.3188 ratio=6.06 gate=0.165 on_open=0.716 off_open=0.414 A=-0.302 D=0.216 agree_open=0.214 dormant_end=13 train_sec=62.4 teacher_agree_last=0.8003
+1.0_0.5 seed=200 E32_L1/opal gini=0.539 used=29.0 base=0.3259 ratio=4.34 gate=0.188 on_open=0.577 off_open=0.559 A=-0.018 D=-0.021 agree_open=0.310 dormant_end=10 train_sec=66.8 teacher_agree_last=0.7954
+1.0_1.0 seed=200 E32_L1/opal gini=0.518 used=30.0 base=0.3210 ratio=3.19 gate=0.199 on_open=0.378 off_open=0.585 A=0.207 D=-0.067 agree_open=0.413 dormant_end=8 train_sec=66.1 teacher_agree_last=0.8261

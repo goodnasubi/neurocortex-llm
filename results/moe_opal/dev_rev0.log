@@ -1,0 +1,10 @@
+seed=100 E32_L1/opal gini=0.731 used=17.0 base=0.3110 ratio=12.42 gate=0.457 on_open=0.228 off_open=0.640 A=0.412 D=0.091 agree_open=0.474 dormant_end=17 train_sec=71.3
+seed=100 E32_L1/opal_g gini=0.786 used=14.0 base=0.3128 ratio=26.33 gate=0.172 on_open=0.199 off_open=0.607 A=0.407 D=0.179 agree_open=0.430 dormant_end=20 train_sec=70.3
+seed=101 E32_L1/opal gini=0.786 used=13.0 base=0.3068 ratio=21.10 gate=0.484 on_open=0.225 off_open=0.657 A=0.432 D=0.129 agree_open=0.401 dormant_end=21 train_sec=64.0
+seed=101 E32_L1/opal_g gini=0.760 used=17.0 base=0.3105 ratio=12.13 gate=0.171 on_open=0.195 off_open=0.667 A=0.471 D=0.094 agree_open=0.393 dormant_end=16 train_sec=60.1
+seed=102 E32_L1/opal gini=0.765 used=16.0 base=0.3166 ratio=16.46 gate=0.450 on_open=0.320 off_open=0.654 A=0.333 D=0.111 agree_open=0.408 dormant_end=19 train_sec=70.2
+seed=102 E32_L1/opal_g gini=0.766 used=16.0 base=0.3151 ratio=9.66 gate=0.175 on_open=0.188 off_open=0.566 A=0.378 D=0.201 agree_open=0.490 dormant_end=18 train_sec=70.0
+seed=103 E32_L1/opal gini=0.731 used=17.0 base=0.3186 ratio=9.14 gate=0.423 on_open=0.301 off_open=0.687 A=0.385 D=0.044 agree_open=0.331 dormant_end=18 train_sec=60.8
+seed=103 E32_L1/opal_g gini=0.751 used=16.0 base=0.3176 ratio=25.93 gate=0.172 on_open=0.227 off_open=0.677 A=0.450 D=0.074 agree_open=0.387 dormant_end=19 train_sec=63.8
+seed=104 E32_L1/opal gini=0.643 used=19.0 base=0.3173 ratio=5.49 gate=0.445 on_open=0.225 off_open=0.653 A=0.429 D=-0.010 agree_open=0.446 dormant_end=13 train_sec=69.6
+seed=104 E32_L1/opal_g gini=0.714 used=18.0 base=0.3199 ratio=6.19 gate=0.153 on_open=0.315 off_open=0.651 A=0.336 D=0.063 agree_open=0.450 dormant_end=17 train_sec=75.0
