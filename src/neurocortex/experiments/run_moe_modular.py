@@ -39,11 +39,16 @@ SUBSTRATES = ("shared", "split")
 SLOTS = ("target", "other", "all")
 
 
-def conditions(args: argparse.Namespace) -> dict[str, dict]:
+def conditions(args: argparse.Namespace, eta: float) -> dict[str, dict]:
     c = {f"aux{v:g}": {"kind": "plain", "coef": v, "band": "point"} for v in args.coefs}
     for name in args.bands:
-        c[f"{name}{args.eta:g}"] = {"kind": "select", "eta": args.eta, "band": name}
+        c[f"{name}{eta:g}"] = {"kind": "select", "eta": eta, "band": name}
     return c
+
+
+def split_eta(args: argparse.Namespace) -> float:
+    """分かれた土台の η（12.6.201節の修正 1。未指定なら共有の土台と同じ）。"""
+    return args.eta if args.split_eta is None else args.split_eta
 
 
 def _d(after: dict, before: dict) -> dict:
@@ -89,9 +94,11 @@ def summarize(runs: list[dict], keys: list[str]) -> dict:
     return s
 
 
-def judge(runs: list[dict], eta: float) -> dict:
-    """12.6.201節の合格条件（評価用シードを見る前に固定）。主指標 = b2 の CE（target）。"""
-    B, P, A = f"split/band{eta:g}", f"split/point{eta:g}", "split/aux0.05"
+def judge(runs: list[dict], eta: float, eta_split: float | None = None) -> dict:
+    """12.6.201節の合格条件（評価用シードを見る前に固定）。主指標 = b2 の CE（target）。
+    eta は共有の土台、eta_split は分かれた土台の η（修正 1）。"""
+    es = eta if eta_split is None else eta_split
+    B, P, A = f"split/band{es:g}", f"split/point{es:g}", "split/aux0.05"
     Bs, Ps = f"shared/band{eta:g}", f"shared/point{eta:g}"
     tce = lambda r, t, k: r[t][k]["slot_ce"]["target"]  # noqa: E731
 
@@ -123,7 +130,7 @@ def judge(runs: list[dict], eta: float) -> dict:
     h6 = m(path) >= 0.05 and sum(x > 0 for x in path) >= need
     hub_cut = [r["cross"][B]["hub_cut_d"]["target"] for r in runs]
     nonhub_cut = [r["cross"][B]["nonhub_cut_d"]["target"] for r in runs]
-    return {"eta": eta, "need": need,
+    return {"eta": eta, "eta_split": es, "need": need,
             "V_橋渡し（分かれた土台・目標域で、領域をまたぐ読み取りの切断が統合課題の b2 を対照より 0.1 以上悪くする）": v1,
             "H1_交互作用（分かれた土台、目標域−一点）": h1, "H2_交互作用（分かれた土台、目標域−補助損失0.05）": h2,
             "H3_交互作用が共有の土台より強い": h3, "H4_統合課題でハブの参加係数が高い": h4,
@@ -147,9 +154,11 @@ def main() -> None:
     p.add_argument("--seeds", type=int, nargs="+", default=[100, 101, 102, 103, 104])
     p.add_argument("--substrates", type=str, nargs="+", default=list(SUBSTRATES))
     p.add_argument("--experts", type=int, default=8)
-    p.add_argument("--coefs", type=float, nargs="+", default=[0.05])
+    p.add_argument("--coefs", type=float, nargs="*", default=[0.05])
     p.add_argument("--bands", type=str, nargs="+", default=["point", "band"])
     p.add_argument("--eta", type=float, default=0.01, help="12.6.195節の開発用シードで選んだ η*")
+    p.add_argument("--split-eta", type=float, default=None,
+                   help="分かれた土台の η（12.6.201節の修正 1。負荷の基準だけで開発用シードで選ぶ）")
     p.add_argument("--alpha", type=float, default=0.05)
     p.add_argument("--n-lines", type=int, default=8000)
     p.add_argument("--n-concepts", type=int, default=8)
@@ -167,14 +176,19 @@ def main() -> None:
     p.add_argument("--merge", type=str, nargs="+", default=None)
     args = p.parse_args()
     torch.set_num_threads(args.threads)
-    conds = conditions(args)
-    keys = [f"{sub}/{c}" for sub in args.substrates for c in conds]
+    conds = {"shared": conditions(args, args.eta), "split": conditions(args, split_eta(args))}
+    keys = [f"{sub}/{c}" for sub in args.substrates for c in conds[sub]]
     E = args.experts
     k = max(1, E * args.k_num // args.k_den)
     runs, parts = [], []
     if args.merge:
         parts = [json.loads(Path(f).read_text()) for f in args.merge]
-        runs = [r for part in parts for r in part["シード別"]]
+        by_seed: dict[int, dict] = {}  # 同じシードの別ファイル（12.6.201節の修正 1 の η の再選択）は条件を合わせる
+        for r in (r for part in parts for r in part["シード別"]):
+            d = by_seed.setdefault(r["seed"], {"seed": r["seed"], **{t: {} for t in TASKS}})
+            for t in TASKS:
+                d[t].update(r[t])
+        runs = [by_seed[s] for s in sorted(by_seed)]
         args.seeds = [r["seed"] for r in runs]
     for seed in ([] if args.merge else args.seeds):
         r = {"seed": seed}
@@ -186,7 +200,7 @@ def main() -> None:
             r[task] = {}
             for key in keys:
                 sub, cname = key.split("/")
-                cond = conds[cname]
+                cond = conds[sub][cname]
                 lo, hi = BANDS[cond["band"]]
                 kw = {"model_cls": BandHomeostaticLM} if sub == "shared" else \
                     {"model_cls": ModularRoutedLM, "region_of_token": region_table(corpus.stoi), "d_mod": args.d_mod}
@@ -205,7 +219,8 @@ def main() -> None:
                       flush=True)
         runs.append(r)
     out_s = summarize(runs, keys)
-    verdict = judge(runs, args.eta) if set(args.substrates) == set(SUBSTRATES) else {}
+    verdict = judge(runs, args.eta, split_eta(args)) \
+        if set(args.substrates) == set(SUBSTRATES) and 0.05 in args.coefs else {}
     out = {"環境": env_info(), "設定": vars(args),
            **({"結合元の環境": [part["環境"] for part in parts]} if args.merge else {}),
            "要約": out_s, "判定": verdict, "シード別": runs}

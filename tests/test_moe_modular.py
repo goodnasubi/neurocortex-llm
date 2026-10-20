@@ -100,3 +100,12 @@ def test_run_one_with_post_records_cut_and_lesions():
     for name in ("cut_all_d", "hub_cut_d", "nonhub_cut_d", "hub_lesion_d", "nonhub_lesion_d"):
         assert set(z[name]) == {"target", "other", "all"} and all(np.isfinite(list(z[name].values())))
     assert 0 <= z["hub_target_share"] <= 1
+
+
+def test_conditions_use_split_eta_only_for_split_substrate():
+    from neurocortex.experiments.run_moe_modular import conditions, split_eta
+    args = argparse.Namespace(coefs=[0.05], bands=["point", "band"], eta=0.01, split_eta=None)
+    assert split_eta(args) == 0.01
+    args.split_eta = 0.1
+    assert set(conditions(args, split_eta(args))) == {"aux0.05", "point0.1", "band0.1"}
+    assert conditions(args, args.eta)["band0.01"] == {"kind": "select", "eta": 0.01, "band": "band"}
