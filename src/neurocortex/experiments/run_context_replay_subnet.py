@@ -100,7 +100,9 @@ def run_job(job: tuple, kw: dict) -> dict:
            "selection_acc": sum(c == nat[j] for j in orig for c in ch[j]) / (T0 * SELECTION_TRIALS),
            "exp_end": _exp(acc, ch, orig), "end_nat": [2 * acc[j][nat[j]] - 1 for j in orig],
            "pre_nat": [2 * w["pre"]["fresh"][j][ci[j]] - 1 for j in orig],
-           "gap": [w["pre"]["own_buf"][j][ci[j]] - w["pre"]["fresh"][j][ci[j]] for j in orig],
+           # 本来の文脈に痕跡がない（own_buf が None の）ときは None（gap は判定に使わず、組の分類は base の値で行う）
+           "gap": [None if w["pre"]["own_buf"][j][ci[j]] is None else w["pre"]["own_buf"][j][ci[j]] - w["pre"]["fresh"][j][ci[j]]
+                   for j in orig],
            "new_nat": 2 * acc[T0][nat[T0]] - 1, "new_exp": _exp(acc, ch, [T0]), "new_ctx": nat[T0] not in w["used"],
            "mix_own": mix.get("own"), "mix_kept": mix.get("kept"), "mix_size": mix.get("size"),
            "mix_fam": mix.get("fam"), "nov_steps": nov.get("steps"), "nov_g_shared": nov.get("g_shared")}
