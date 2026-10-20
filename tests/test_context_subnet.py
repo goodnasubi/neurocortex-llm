@@ -95,7 +95,7 @@ def test_verdict_logic():
     v = exp.verdict({"over_14bit": o, "not_over": n, "all": o})
     m = v["ach_c_sub_nov"]
     assert v["H"] and m["D1"] and m["D2"] and m["D3"] and m["D4"] and m["D5"] and m["G"] and m["C"]
-    assert v["H_sub"] is False and not v["H_fix"]
+    assert v["H_sub"] is False and v["H_fix"] is None
     o2 = {**o, "bad_ach_c_wide_nov": 1, "end_base_sub_nov": 0.12}
     v2 = exp.verdict({"over_14bit": o2, "not_over": n, "all": o2})
     assert v2["ach_c_sub_nov"]["G"] is False and v2["ach_c_sub_nov"]["D5"] is False

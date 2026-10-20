@@ -64,7 +64,8 @@ CONFIGS["ach_c_sub_nov_z"] = {**CONFIGS["ach_c_sub_nov"], "ctx_zero_readout": Tr
 CONFIGS["base_sub_nov_z"] = {**CONFIGS["base_sub_nov"], "ctx_zero_readout": True}
 FIXES: tuple[str, ...] = ("ach_c_sub_nov_z",)
 # 確定の規則（修正1の計測の前に決めた）: 開発用シードで D1〜D3 を満たした修正だけを H_fix の候補にする
-FIX_CANDIDATES: tuple[str, ...] = ("ach_c_sub_nov_z",)
+# 修正1は開発用シードで D2 不合格（−0.10 未満 3 回、最悪の組 −0.127）。初期設定で確定し、H_fix の候補はない
+FIX_CANDIDATES: tuple[str, ...] = ()
 RULES = ("keep", "ach_c", "ach_c_nov", *NEW, "ach_c_sub_nov_z", "base_sub_nov_z")
 
 
