@@ -1,0 +1,55 @@
+seed=1 cross aux0 gini=0.584 used=7 top2=0.655 gate=0.691 ce=0.5341 b2=0.2023 Phub=0.69 Prest=0.44 lesT=0.811 lesO=0.676
+seed=1 cross aux0.01 gini=0.236 used=8 top2=0.392 gate=0.566 ce=0.5530 b2=0.2756 Phub=0.63 Prest=0.79 lesT=0.174 lesO=0.358
+seed=1 cross aux0.05 gini=0.052 used=8 top2=0.274 gate=0.598 ce=0.5439 b2=0.2534 Phub=0.64 Prest=0.52 lesT=0.237 lesO=0.154
+seed=1 cross point0.01 gini=0.302 used=8 top2=0.437 gate=0.554 ce=0.5442 b2=0.2345 Phub=0.83 Prest=0.58 lesT=0.412 lesO=0.205
+seed=1 cross band0.01 gini=0.368 used=8 top2=0.486 gate=0.521 ce=0.5439 b2=0.2370 Phub=0.78 Prest=0.68 lesT=0.195 lesO=0.274
+seed=1 within aux0 gini=0.595 used=6 top2=0.675 gate=0.690 ce=0.4404 b2=0.1282 Phub=0.70 Prest=0.32 lesT=0.761 lesO=0.644
+seed=1 within aux0.01 gini=0.265 used=8 top2=0.423 gate=0.660 ce=0.4387 b2=0.1193 Phub=0.60 Prest=0.72 lesT=0.555 lesO=0.406
+seed=1 within aux0.05 gini=0.065 used=8 top2=0.293 gate=0.634 ce=0.4456 b2=0.1378 Phub=0.95 Prest=0.28 lesT=0.250 lesO=0.201
+seed=1 within point0.01 gini=0.174 used=8 top2=0.360 gate=0.476 ce=0.4596 b2=0.2009 Phub=0.67 Prest=0.54 lesT=0.325 lesO=0.162
+seed=1 within band0.01 gini=0.418 used=8 top2=0.533 gate=0.484 ce=0.4727 b2=0.2243 Phub=0.92 Prest=0.47 lesT=0.296 lesO=0.318
+{
+ "判定": {
+  "eta": 0.01,
+  "V_課題の妥当性（全条件で統合課題の b2 の CE が対照より 0.03 以上高い）": false,
+  "H1_交互作用（帯域−一点 の差が統合課題でだけ小さい）": true,
+  "H1b_統合課題で帯域が一点より低い": false,
+  "H2_交互作用（帯域−補助損失0.05）": true,
+  "H3_統合課題でハブの参加係数が高い": true,
+  "H4_ハブ除去の損害が統合課題で b2 に偏る": false,
+  "値": {
+   "interaction_mean": -0.02079242467880249,
+   "interaction_t": NaN,
+   "interaction_per_seed": [
+    -0.02079242467880249
+   ],
+   "d_cross": [
+    0.0025367140769958496
+   ],
+   "d_within": [
+    0.02332913875579834
+   ],
+   "interaction_aux_mean": -0.10276107490062714,
+   "interaction_aux_t": NaN,
+   "interaction_aux_per_seed": [
+    -0.10276107490062714
+   ],
+   "gap_cross_minus_within": {
+    "aux0": 0.07413777709007263,
+    "aux0.01": 0.1563013195991516,
+    "aux0.05": 0.11552497744560242,
+    "point0.01": 0.03355632722377777,
+    "band0.01": 0.01276390254497528
+   },
+   "p_hub_minus_rest_cross": [
+    0.10149619540708199
+   ],
+   "lesion_target_over_other_cross": [
+    0.7125543800838872
+   ],
+   "lesion_target_over_other_within": [
+    0.9299917894244718
+   ]
+  }
+ }
+}

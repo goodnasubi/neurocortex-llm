@@ -1,0 +1,3087 @@
+{
+ "環境": {
+  "python": "3.13.16",
+  "platform": "Linux x86_64",
+  "torch": "2.14.1+cpu",
+  "numpy": "2.5.3",
+  "git_commit": "97640de8b2ff5e1e312d11789f73042a8dec98ca+dirty",
+  "utc": "2026-10-19T21:19:05+00:00",
+  "cuda": null
+ },
+ "設定": {
+  "seeds": [
+   103
+  ],
+  "experts": 8,
+  "layers": 1,
+  "coefs": [
+   0.0,
+   0.01,
+   0.05
+  ],
+  "bands": [
+   "point",
+   "band",
+   "wide"
+  ],
+  "etas": [
+   0.01,
+   0.03,
+   0.1
+  ],
+  "eta_star": null,
+  "alpha": 0.05,
+  "n_sentences": 3000,
+  "d": 48,
+  "train_steps": 600,
+  "seq_len": 64,
+  "n_windows": 64,
+  "k_num": 1,
+  "k_den": 4,
+  "n_random": 30,
+  "eps": 0.0001,
+  "threads": 1,
+  "out": "results/moe_homeo_band/dev_rev0_seed103.json",
+  "merge": null
+ },
+ "要約": {
+  "aux0": {
+   "gini": {
+    "mean": 0.8031005859375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_over_mean": {
+    "mean": 6.369140625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "entropy": {
+    "mean": 0.32315821866157435,
+    "sd": 0.0,
+    "n": 1
+   },
+   "n_used": {
+    "mean": 4.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "gate_mean": {
+    "mean": 0.8910159468650818,
+    "sd": 0.0,
+    "n": 1
+   },
+   "shifted_frac": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "topk_share": {
+    "mean": 0.936279296875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "spearman_load_single": {
+    "mean": 1.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "band_violation": {
+    "mean": 0.794921875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "own_band_violation": {
+    "mean": 1.37255859375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_share": {
+    "mean": 0.796142578125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "all_used_seeds": 0,
+   "zero": {
+    "base_ce": {
+     "mean": 0.317787230014801,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 1.0453940033912659,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.03731066385904948,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 28.018638514192823,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.936279296875,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.8460968732833862,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 1.2355488318193186,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 2.5464051317257055,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 1.1165407660731748,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "reroute": {
+    "base_ce": {
+     "mean": 0.317787230014801,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 2.941746413707733,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.052353147665659586,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 56.19044020990807,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.936279296875,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.8460968732833862,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 3.4768434993642194,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 3.13207066440504,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 3.141953927130867,
+     "sd": 0.0,
+     "n": 1
+    }
+   }
+  },
+  "aux0.01": {
+   "gini": {
+    "mean": 0.56134033203125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_over_mean": {
+    "mean": 2.724609375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "entropy": {
+    "mean": 0.7067976063231812,
+    "sd": 0.0,
+    "n": 1
+   },
+   "n_used": {
+    "mean": 7.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "gate_mean": {
+    "mean": 0.5758037567138672,
+    "sd": 0.0,
+    "n": 1
+   },
+   "shifted_frac": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "topk_share": {
+    "mean": 0.6416015625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "spearman_load_single": {
+    "mean": 0.9285714285714287,
+    "sd": 0.0,
+    "n": 1
+   },
+   "band_violation": {
+    "mean": 0.236083984375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "own_band_violation": {
+    "mean": 0.916015625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_share": {
+    "mean": 0.340576171875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "all_used_seeds": 0,
+   "zero": {
+    "base_ce": {
+     "mean": 0.3186962902545929,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.7594139277935028,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.10922080079714457,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 6.953015563436124,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.6416015625,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.35302451252937317,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 2.1511648648769572,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 0.838447142901051,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 1.1836223166827198,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "reroute": {
+    "base_ce": {
+     "mean": 0.3186962902545929,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 1.275374859571457,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.24741883873939513,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 5.154720093544704,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.6416015625,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.35302451252937317,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 3.612709073467923,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 2.2887112907673406,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 1.9877988678861063,
+     "sd": 0.0,
+     "n": 1
+    }
+   }
+  },
+  "aux0.05": {
+   "gini": {
+    "mean": 0.086669921875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_over_mean": {
+    "mean": 1.296875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "entropy": {
+    "mean": 0.9941015701549739,
+    "sd": 0.0,
+    "n": 1
+   },
+   "n_used": {
+    "mean": 8.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "gate_mean": {
+    "mean": 0.6423249840736389,
+    "sd": 0.0,
+    "n": 1
+   },
+   "shifted_frac": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "topk_share": {
+    "mean": 0.302001953125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "spearman_load_single": {
+    "mean": 0.5476190476190477,
+    "sd": 0.0,
+    "n": 1
+   },
+   "band_violation": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "own_band_violation": {
+    "mean": 0.12548828125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_share": {
+    "mean": 0.162109375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "all_used_seeds": 1,
+   "zero": {
+    "base_ce": {
+     "mean": 0.31763139367103577,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.3965241611003876,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.2882161955038706,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 1.3757872294690754,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.302001953125,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.1744633913040161,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 2.2728215824339513,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 1.8584431548872076,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 1.3129854194560933,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "reroute": {
+    "base_ce": {
+     "mean": 0.31763139367103577,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.6873471438884735,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.4429958681265513,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 1.5515881599422008,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.302001953125,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.1744633913040161,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 3.939778647835163,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 2.8298043887109845,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 2.2759692007818817,
+     "sd": 0.0,
+     "n": 1
+    }
+   }
+  },
+  "point0.01": {
+   "gini": {
+    "mean": 0.123779296875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_over_mean": {
+    "mean": 1.41015625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "entropy": {
+    "mean": 0.9880275632307994,
+    "sd": 0.0,
+    "n": 1
+   },
+   "n_used": {
+    "mean": 8.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "gate_mean": {
+    "mean": 0.535678505897522,
+    "sd": 0.0,
+    "n": 1
+   },
+   "shifted_frac": {
+    "mean": 0.158447265625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "topk_share": {
+    "mean": 0.33349609375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "spearman_load_single": {
+    "mean": -0.261904761904762,
+    "sd": 0.0,
+    "n": 1
+   },
+   "band_violation": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "own_band_violation": {
+    "mean": 0.18017578125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_share": {
+    "mean": 0.17626953125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "all_used_seeds": 1,
+   "zero": {
+    "base_ce": {
+     "mean": 0.3167848289012909,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.1773190200328827,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.2292831798394521,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 0.7733625299380636,
+    "target_gt_random": 0,
+    "hub_load_frac": {
+     "mean": 0.33349609375,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.15319861471652985,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 1.157445322602844,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 1.8094215316717979,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.5316974422069455,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "reroute": {
+    "base_ce": {
+     "mean": 0.3167848289012909,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.14469435811042786,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.22921220064163209,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 0.6312681336568733,
+    "target_gt_random": 0,
+    "hub_load_frac": {
+     "mean": 0.33349609375,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.15319861471652985,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 0.9444886846931495,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 1.7984511725819874,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.4338712231481058,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "threshold_range": {
+    "mean": 1.03508460521698,
+    "sd": 0.0,
+    "n": 1
+   },
+   "threshold_off": {
+    "gini": {
+     "mean": 0.20599365234375,
+     "sd": 0.0,
+     "n": 1
+    },
+    "n_used": {
+     "mean": 8.0,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_ce": {
+     "mean": 0.008444368839263916,
+     "sd": 0.0,
+     "n": 1
+    }
+   }
+  },
+  "point0.03": {
+   "gini": {
+    "mean": 0.14996337890625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_over_mean": {
+    "mean": 1.515625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "entropy": {
+    "mean": 0.9799664740020672,
+    "sd": 0.0,
+    "n": 1
+   },
+   "n_used": {
+    "mean": 8.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "gate_mean": {
+    "mean": 0.5557243824005127,
+    "sd": 0.0,
+    "n": 1
+   },
+   "shifted_frac": {
+    "mean": 0.149658203125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "topk_share": {
+    "mean": 0.330322265625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "spearman_load_single": {
+    "mean": 0.3233590907165799,
+    "sd": 0.0,
+    "n": 1
+   },
+   "band_violation": {
+    "mean": 0.004150390625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "own_band_violation": {
+    "mean": 0.21630859375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_share": {
+    "mean": 0.189453125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "all_used_seeds": 1,
+   "zero": {
+    "base_ce": {
+     "mean": 0.320286363363266,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.16755977272987366,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.22275907993316652,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 0.7522017633586291,
+    "target_gt_random": 0,
+    "hub_load_frac": {
+     "mean": 0.330322265625,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.15051987767219543,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 1.1132069419747204,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 1.6466803745399943,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.5072615144874815,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "reroute": {
+    "base_ce": {
+     "mean": 0.320286363363266,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.11196538805961609,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.30396295587221783,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 0.3683520833594108,
+    "target_gt_random": 0,
+    "hub_load_frac": {
+     "mean": 0.330322265625,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.15051987767219543,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 0.7438578199183504,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 2.2664584955467424,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.3389580410141814,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "threshold_range": {
+    "mean": 0.8399102687835693,
+    "sd": 0.0,
+    "n": 1
+   },
+   "threshold_off": {
+    "gini": {
+     "mean": 0.16204833984375,
+     "sd": 0.0,
+     "n": 1
+    },
+    "n_used": {
+     "mean": 8.0,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_ce": {
+     "mean": -0.0014029741287231445,
+     "sd": 0.0,
+     "n": 1
+    }
+   }
+  },
+  "point0.1": {
+   "gini": {
+    "mean": 0.03448486328125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_over_mean": {
+    "mean": 1.1484375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "entropy": {
+    "mean": 0.9989668828466881,
+    "sd": 0.0,
+    "n": 1
+   },
+   "n_used": {
+    "mean": 8.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "gate_mean": {
+    "mean": 0.5583688020706177,
+    "sd": 0.0,
+    "n": 1
+   },
+   "shifted_frac": {
+    "mean": 0.07177734375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "topk_share": {
+    "mean": 0.274169921875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "spearman_load_single": {
+    "mean": -0.19047619047619052,
+    "sd": 0.0,
+    "n": 1
+   },
+   "band_violation": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "own_band_violation": {
+    "mean": 0.0498046875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_share": {
+    "mean": 0.1435546875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "all_used_seeds": 1,
+   "zero": {
+    "base_ce": {
+     "mean": 0.31749799847602844,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.14292451739311218,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.22895828088124592,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 0.6242382535499689,
+    "target_gt_random": 0,
+    "hub_load_frac": {
+     "mean": 0.274169921875,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.11655493825674057,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 1.2262416293189244,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 1.5413204599744632,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.5212990411773709,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "reroute": {
+    "base_ce": {
+     "mean": 0.31749799847602844,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.04147934913635254,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.38485525647799174,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 0.10777908951004433,
+    "target_gt_random": 0,
+    "hub_load_frac": {
+     "mean": 0.274169921875,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.11655493825674057,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 0.35587809282678523,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 2.554679283723907,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.1512906625667854,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "threshold_range": {
+    "mean": 0.9568661451339722,
+    "sd": 0.0,
+    "n": 1
+   },
+   "threshold_off": {
+    "gini": {
+     "mean": 0.049072265625,
+     "sd": 0.0,
+     "n": 1
+    },
+    "n_used": {
+     "mean": 8.0,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_ce": {
+     "mean": 0.006823360919952393,
+     "sd": 0.0,
+     "n": 1
+    }
+   }
+  },
+  "band0.01": {
+   "gini": {
+    "mean": 0.39202880859375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_over_mean": {
+    "mean": 3.04296875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "entropy": {
+    "mean": 0.8670692967981907,
+    "sd": 0.0,
+    "n": 1
+   },
+   "n_used": {
+    "mean": 8.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "gate_mean": {
+    "mean": 0.4360141456127167,
+    "sd": 0.0,
+    "n": 1
+   },
+   "shifted_frac": {
+    "mean": 0.291748046875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "topk_share": {
+    "mean": 0.5537109375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "spearman_load_single": {
+    "mean": 0.8982196964349441,
+    "sd": 0.0,
+    "n": 1
+   },
+   "band_violation": {
+    "mean": 0.1103515625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "own_band_violation": {
+    "mean": 0.1103515625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_share": {
+    "mean": 0.38037109375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "all_used_seeds": 1,
+   "zero": {
+    "base_ce": {
+     "mean": 0.3250052034854889,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.3757697641849518,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.10539206067721049,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 3.5654465978783785,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.5537109375,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.2501024305820465,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 1.502463463911359,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 1.7333079895456627,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.6786388686514826,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "reroute": {
+    "base_ce": {
+     "mean": 0.3250052034854889,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.19554218649864197,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.14404588143030803,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 1.3574993228338068,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.5537109375,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.2501024305820465,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 0.7818484052456821,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 2.3685662237648866,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.35314849907338514,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "threshold_range": {
+    "mean": 2.042659282684326,
+    "sd": 0.0,
+    "n": 1
+   },
+   "threshold_off": {
+    "gini": {
+     "mean": 0.36334228515625,
+     "sd": 0.0,
+     "n": 1
+    },
+    "n_used": {
+     "mean": 8.0,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_ce": {
+     "mean": 0.01163443922996521,
+     "sd": 0.0,
+     "n": 1
+    }
+   }
+  },
+  "band0.03": {
+   "gini": {
+    "mean": 0.28411865234375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_over_mean": {
+    "mean": 2.265625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "entropy": {
+    "mean": 0.933603620110836,
+    "sd": 0.0,
+    "n": 1
+   },
+   "n_used": {
+    "mean": 8.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "gate_mean": {
+    "mean": 0.49289190769195557,
+    "sd": 0.0,
+    "n": 1
+   },
+   "shifted_frac": {
+    "mean": 0.216552734375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "topk_share": {
+    "mean": 0.447265625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "spearman_load_single": {
+    "mean": 0.8333333333333335,
+    "sd": 0.0,
+    "n": 1
+   },
+   "band_violation": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "own_band_violation": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_share": {
+    "mean": 0.283203125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "all_used_seeds": 1,
+   "zero": {
+    "base_ce": {
+     "mean": 0.32107478380203247,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.3047088384628296,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.1421047071615855,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 2.1442557713190245,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.447265625,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.24828550219535828,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 1.2272518361667197,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 1.7607585526362408,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.6812704161265011,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "reroute": {
+    "base_ce": {
+     "mean": 0.32107478380203247,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.06809043884277344,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.17867313027381898,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 0.3810894158423481,
+    "target_gt_random": 0,
+    "hub_load_frac": {
+     "mean": 0.447265625,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.24828550219535828,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 0.2742425080832867,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 2.2033439698526514,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.15223713837336245,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "threshold_range": {
+    "mean": 1.788614273071289,
+    "sd": 0.0,
+    "n": 1
+   },
+   "threshold_off": {
+    "gini": {
+     "mean": 0.28765869140625,
+     "sd": 0.0,
+     "n": 1
+    },
+    "n_used": {
+     "mean": 8.0,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_ce": {
+     "mean": 0.022052288055419922,
+     "sd": 0.0,
+     "n": 1
+    }
+   }
+  },
+  "band0.1": {
+   "gini": {
+    "mean": 0.2998046875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_over_mean": {
+    "mean": 2.349609375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "entropy": {
+    "mean": 0.9192649246135302,
+    "sd": 0.0,
+    "n": 1
+   },
+   "n_used": {
+    "mean": 8.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "gate_mean": {
+    "mean": 0.6073474287986755,
+    "sd": 0.0,
+    "n": 1
+   },
+   "shifted_frac": {
+    "mean": 0.13427734375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "topk_share": {
+    "mean": 0.511474609375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "spearman_load_single": {
+    "mean": 0.38095238095238104,
+    "sd": 0.0,
+    "n": 1
+   },
+   "band_violation": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "own_band_violation": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_share": {
+    "mean": 0.293701171875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "all_used_seeds": 1,
+   "zero": {
+    "base_ce": {
+     "mean": 0.32064932584762573,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.4349679946899414,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.13823548555374146,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 3.1465726253107418,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.511474609375,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.33139491081237793,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 1.3125367363779532,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 1.5407013021463116,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.8504195256563246,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "reroute": {
+    "base_ce": {
+     "mean": 0.32064932584762573,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.36490166187286377,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.20444618264834086,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 1.7848299104733862,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.511474609375,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.33139491081237793,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 1.1011082245600807,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 2.232205892041093,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.7134306477476133,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "threshold_range": {
+    "mean": 1.178253412246704,
+    "sd": 0.0,
+    "n": 1
+   },
+   "threshold_off": {
+    "gini": {
+     "mean": 0.31903076171875,
+     "sd": 0.0,
+     "n": 1
+    },
+    "n_used": {
+     "mean": 8.0,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_ce": {
+     "mean": 0.00815516710281372,
+     "sd": 0.0,
+     "n": 1
+    }
+   }
+  },
+  "wide0.01": {
+   "gini": {
+    "mean": 0.59033203125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_over_mean": {
+    "mean": 3.861328125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "entropy": {
+    "mean": 0.7001141964727816,
+    "sd": 0.0,
+    "n": 1
+   },
+   "n_used": {
+    "mean": 8.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "gate_mean": {
+    "mean": 0.4657503366470337,
+    "sd": 0.0,
+    "n": 1
+   },
+   "shifted_frac": {
+    "mean": 0.307861328125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "topk_share": {
+    "mean": 0.728515625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "spearman_load_single": {
+    "mean": 0.880952380952381,
+    "sd": 0.0,
+    "n": 1
+   },
+   "band_violation": {
+    "mean": 0.340576171875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "own_band_violation": {
+    "mean": 0.04541015625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_share": {
+    "mean": 0.482666015625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "all_used_seeds": 1,
+   "zero": {
+    "base_ce": {
+     "mean": 0.3224039673805237,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.5664907097816467,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.06881844401359558,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 8.231669836500988,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.728515625,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.3669535517692566,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 1.5437667984144783,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 1.9972983588708406,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.7775958268316437,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "reroute": {
+    "base_ce": {
+     "mean": 0.3224039673805237,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.4544993042945862,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.07933619419733683,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 5.728776240061221,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.728515625,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.3669535517692566,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 1.238574479258288,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 3.013417086028835,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.623870358709995,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "threshold_range": {
+    "mean": 1.7441110610961914,
+    "sd": 0.0,
+    "n": 1
+   },
+   "threshold_off": {
+    "gini": {
+     "mean": 0.5145263671875,
+     "sd": 0.0,
+     "n": 1
+    },
+    "n_used": {
+     "mean": 8.0,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_ce": {
+     "mean": 0.021636962890625,
+     "sd": 0.0,
+     "n": 1
+    }
+   }
+  },
+  "wide0.03": {
+   "gini": {
+    "mean": 0.31365966796875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_over_mean": {
+    "mean": 1.78125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "entropy": {
+    "mean": 0.9181734410705016,
+    "sd": 0.0,
+    "n": 1
+   },
+   "n_used": {
+    "mean": 8.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "gate_mean": {
+    "mean": 0.47445207834243774,
+    "sd": 0.0,
+    "n": 1
+   },
+   "shifted_frac": {
+    "mean": 0.2529296875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "topk_share": {
+    "mean": 0.434326171875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "spearman_load_single": {
+    "mean": 0.7857142857142858,
+    "sd": 0.0,
+    "n": 1
+   },
+   "band_violation": {
+    "mean": 0.044677734375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "own_band_violation": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_share": {
+    "mean": 0.22265625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "all_used_seeds": 1,
+   "zero": {
+    "base_ce": {
+     "mean": 0.3243262767791748,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.2608731985092163,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.1346908708413442,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 1.9368291026680307,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.434326171875,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.1783542037010193,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 1.4626691891519763,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 1.405286825615647,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.6006389101145306,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "reroute": {
+    "base_ce": {
+     "mean": 0.3243262767791748,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.05580264329910278,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.15819565256436666,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 0.35274448061332025,
+    "target_gt_random": 0,
+    "hub_load_frac": {
+     "mean": 0.434326171875,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.1783542037010193,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 0.3128754026602395,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 1.566670809128301,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.12848095950147556,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "threshold_range": {
+    "mean": 1.7858409881591797,
+    "sd": 0.0,
+    "n": 1
+   },
+   "threshold_off": {
+    "gini": {
+     "mean": 0.27532958984375,
+     "sd": 0.0,
+     "n": 1
+    },
+    "n_used": {
+     "mean": 8.0,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_ce": {
+     "mean": 0.008494853973388672,
+     "sd": 0.0,
+     "n": 1
+    }
+   }
+  },
+  "wide0.1": {
+   "gini": {
+    "mean": 0.350341796875,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_over_mean": {
+    "mean": 2.353515625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "entropy": {
+    "mean": 0.9048248887300568,
+    "sd": 0.0,
+    "n": 1
+   },
+   "n_used": {
+    "mean": 8.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "gate_mean": {
+    "mean": 0.5217074751853943,
+    "sd": 0.0,
+    "n": 1
+   },
+   "shifted_frac": {
+    "mean": 0.172119140625,
+    "sd": 0.0,
+    "n": 1
+   },
+   "topk_share": {
+    "mean": 0.491943359375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "spearman_load_single": {
+    "mean": 0.8333333333333335,
+    "sd": 0.0,
+    "n": 1
+   },
+   "band_violation": {
+    "mean": 0.044677734375,
+    "sd": 0.0,
+    "n": 1
+   },
+   "own_band_violation": {
+    "mean": 0.0,
+    "sd": 0.0,
+    "n": 1
+   },
+   "max_share": {
+    "mean": 0.294189453125,
+    "sd": 0.0,
+    "n": 1
+   },
+   "all_used_seeds": 1,
+   "zero": {
+    "base_ce": {
+     "mean": 0.32011497020721436,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.41058480739593506,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.12795549631118774,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 3.208809462919771,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.491943359375,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.26709237694740295,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 1.5372389586273714,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 1.5404757354697334,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.8346180501705955,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "reroute": {
+    "base_ce": {
+     "mean": 0.32011497020721436,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target": {
+     "mean": 0.4190114736557007,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random": {
+     "mean": 0.2022453288237254,
+     "sd": 0.0,
+     "n": 1
+    },
+    "ratio_of_means": 2.0717980291199014,
+    "target_gt_random": 1,
+    "hub_load_frac": {
+     "mean": 0.491943359375,
+     "sd": 0.0,
+     "n": 1
+    },
+    "hub_gate_mass": {
+     "mean": 0.26709237694740295,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_gate": {
+     "mean": 1.568788590841042,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_random_per_gate": {
+     "mean": 2.4189006295946993,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_target_per_load": {
+     "mean": 0.8517473926023573,
+     "sd": 0.0,
+     "n": 1
+    }
+   },
+   "threshold_range": {
+    "mean": 1.3170720338821411,
+    "sd": 0.0,
+    "n": 1
+   },
+   "threshold_off": {
+    "gini": {
+     "mean": 0.3311767578125,
+     "sd": 0.0,
+     "n": 1
+    },
+    "n_used": {
+     "mean": 8.0,
+     "sd": 0.0,
+     "n": 1
+    },
+    "d_ce": {
+     "mean": 0.018407225608825684,
+     "sd": 0.0,
+     "n": 1
+    }
+   }
+  }
+ },
+ "判定": {
+  "eta": 0.01,
+  "H1_負荷集中を下げる": true,
+  "H2_性能を保つ": false,
+  "H3_ハブを保つ": true,
+  "H3b_ハブの利点（帯域が一点の目標より CE が低い）": false,
+  "H4_ハブを壊したときの頑健さ": true,
+  "参考_ハブ除去のゲートの質量あたり_帯域÷補助損失なし": 1.2160292051743633,
+  "値": {
+   "gini_帯域": 0.39202880859375,
+   "gini_なし": 0.8031005859375,
+   "max_over_mean_帯域": 3.04296875,
+   "max_over_mean_なし": 6.369140625,
+   "CE": {
+    "band0.01": 0.3250052034854889,
+    "point0.01": 0.3167848289012909,
+    "aux0": 0.317787230014801,
+    "aux0.05": 0.31763139367103577
+   },
+   "topk_share_帯域": 0.5537109375,
+   "topk_share_一点": 0.33349609375,
+   "spearman_帯域": 0.8982196964349441,
+   "dT_帯域": 0.3757697641849518,
+   "dT_なし": 1.0453940033912659
+  },
+  "eta_selected_on": "このシードでの選択（12.6.195節の選び方）"
+ },
+ "シード別": [
+  {
+   "seed": 103,
+   "aux0": {
+    "gini": 0.8031005859375,
+    "max_over_mean": 6.369140625,
+    "entropy": 0.32315821866157435,
+    "n_used": 4.0,
+    "all_used": false,
+    "shifted_frac": 0.0,
+    "gate_mean": 0.8910159468650818,
+    "train_ce": 0.32450565695762634,
+    "load": [
+     [
+      179.0,
+      82.0,
+      0.0,
+      0.0,
+      0.0,
+      574.0,
+      0.0,
+      3261.0
+     ]
+    ],
+    "k": 2,
+    "lesion": {
+     "zero": {
+      "base_ce": 0.317787230014801,
+      "d_target": 1.0453940033912659,
+      "d_random_mean": 0.03731066385904948,
+      "n_random": 15,
+      "hub_load_frac": 0.936279296875,
+      "hub_gate_mass": 0.8460968732833862,
+      "random_load_frac_mean": 0.021240234375,
+      "random_gate_mass_mean": 0.01497301459312439,
+      "d_target_per_load": 1.1165407660731748,
+      "d_random_per_load": 1.716889368129352,
+      "d_target_per_gate": 1.2355488318193186,
+      "d_random_per_gate": 2.5464051317257055,
+      "ratio": 28.018638514192823
+     },
+     "reroute": {
+      "base_ce": 0.317787230014801,
+      "d_target": 2.941746413707733,
+      "d_random_mean": 0.052353147665659586,
+      "n_random": 15,
+      "hub_load_frac": 0.936279296875,
+      "hub_gate_mass": 0.8460968732833862,
+      "random_load_frac_mean": 0.021240234375,
+      "random_gate_mass_mean": 0.01497301459312439,
+      "d_target_per_load": 3.141953927130867,
+      "d_random_per_load": 2.193949670883143,
+      "d_target_per_gate": 3.4768434993642194,
+      "d_random_per_gate": 3.13207066440504,
+      "ratio": 56.19044020990807
+     }
+    },
+    "single_lesion": [
+     0.08006671071052551,
+     0.03186526894569397,
+     0.0,
+     0.0,
+     0.0,
+     0.2391471266746521,
+     0.0,
+     0.8062469363212585
+    ],
+    "spearman_load_single": 1.0,
+    "topk_share": 0.936279296875,
+    "band_violation": 0.794921875,
+    "own_band_violation": 1.37255859375,
+    "max_share": 0.796142578125
+   },
+   "aux0.01": {
+    "gini": 0.56134033203125,
+    "max_over_mean": 2.724609375,
+    "entropy": 0.7067976063231812,
+    "n_used": 7.0,
+    "all_used": false,
+    "shifted_frac": 0.0,
+    "gate_mean": 0.5758037567138672,
+    "train_ce": 0.3185805678367615,
+    "load": [
+     [
+      1233.0,
+      572.0,
+      52.0,
+      119.0,
+      724.0,
+      0.0,
+      1.0,
+      1395.0
+     ]
+    ],
+    "k": 2,
+    "lesion": {
+     "zero": {
+      "base_ce": 0.3186962902545929,
+      "d_target": 0.7594139277935028,
+      "d_random_mean": 0.10922080079714457,
+      "n_random": 15,
+      "hub_load_frac": 0.6416015625,
+      "hub_gate_mass": 0.35302451252937317,
+      "random_load_frac_mean": 0.11946614583333333,
+      "random_gate_mass_mean": 0.0742597366886912,
+      "d_target_per_load": 1.1836223166827198,
+      "d_random_per_load": 0.5392185152041511,
+      "d_target_per_gate": 2.1511648648769572,
+      "d_random_per_gate": 0.838447142901051,
+      "ratio": 6.953015563436124
+     },
+     "reroute": {
+      "base_ce": 0.3186962902545929,
+      "d_target": 1.275374859571457,
+      "d_random_mean": 0.24741883873939513,
+      "n_random": 15,
+      "hub_load_frac": 0.6416015625,
+      "hub_gate_mass": 0.35302451252937317,
+      "random_load_frac_mean": 0.11946614583333333,
+      "random_gate_mass_mean": 0.0742597366886912,
+      "d_target_per_load": 1.9877988678861063,
+      "d_random_per_load": 1.517869162198163,
+      "d_target_per_gate": 3.612709073467923,
+      "d_random_per_gate": 2.2887112907673406,
+      "ratio": 5.154720093544704
+     }
+    },
+    "single_lesion": [
+     0.408414751291275,
+     0.15393462777137756,
+     0.007425934076309204,
+     0.005915552377700806,
+     0.16098350286483765,
+     0.0,
+     -0.0005972385406494141,
+     0.35099920630455017
+    ],
+    "spearman_load_single": 0.9285714285714287,
+    "topk_share": 0.6416015625,
+    "band_violation": 0.236083984375,
+    "own_band_violation": 0.916015625,
+    "max_share": 0.340576171875
+   },
+   "aux0.05": {
+    "gini": 0.086669921875,
+    "max_over_mean": 1.296875,
+    "entropy": 0.9941015701549739,
+    "n_used": 8.0,
+    "all_used": true,
+    "shifted_frac": 0.0,
+    "gate_mean": 0.6423249840736389,
+    "train_ce": 0.31588199734687805,
+    "load": [
+     [
+      477.0,
+      523.0,
+      573.0,
+      664.0,
+      481.0,
+      545.0,
+      377.0,
+      456.0
+     ]
+    ],
+    "k": 2,
+    "lesion": {
+     "zero": {
+      "base_ce": 0.31763139367103577,
+      "d_target": 0.3965241611003876,
+      "d_random_mean": 0.2882161955038706,
+      "n_random": 15,
+      "hub_load_frac": 0.302001953125,
+      "hub_gate_mass": 0.1744633913040161,
+      "random_load_frac_mean": 0.232666015625,
+      "random_gate_mass_mean": 0.15595383942127228,
+      "d_target_per_load": 1.3129854194560933,
+      "d_random_per_load": 1.2387773509870859,
+      "d_target_per_gate": 2.2728215824339513,
+      "d_random_per_gate": 1.8584431548872076,
+      "ratio": 1.3757872294690754
+     },
+     "reroute": {
+      "base_ce": 0.31763139367103577,
+      "d_target": 0.6873471438884735,
+      "d_random_mean": 0.4429958681265513,
+      "n_random": 15,
+      "hub_load_frac": 0.302001953125,
+      "hub_gate_mass": 0.1744633913040161,
+      "random_load_frac_mean": 0.232666015625,
+      "random_gate_mass_mean": 0.15595383942127228,
+      "d_target_per_load": 2.2759692007818817,
+      "d_random_per_load": 1.8759746835725442,
+      "d_target_per_gate": 3.939778647835163,
+      "d_random_per_gate": 2.8298043887109845,
+      "ratio": 1.5515881599422008
+     }
+    },
+    "single_lesion": [
+     0.15171700716018677,
+     0.1838429868221283,
+     0.10690239071846008,
+     0.28962185978889465,
+     0.1320958435535431,
+     0.1642671525478363,
+     0.13183704018592834,
+     0.10088858008384705
+    ],
+    "spearman_load_single": 0.5476190476190477,
+    "topk_share": 0.302001953125,
+    "band_violation": 0.0,
+    "own_band_violation": 0.12548828125,
+    "max_share": 0.162109375
+   },
+   "point0.01": {
+    "gini": 0.123779296875,
+    "max_over_mean": 1.41015625,
+    "entropy": 0.9880275632307994,
+    "n_used": 8.0,
+    "all_used": true,
+    "shifted_frac": 0.158447265625,
+    "gate_mean": 0.535678505897522,
+    "train_ce": 0.317441463470459,
+    "load": [
+     [
+      539.0,
+      492.0,
+      644.0,
+      433.0,
+      333.0,
+      449.0,
+      484.0,
+      722.0
+     ]
+    ],
+    "k": 2,
+    "lesion": {
+     "zero": {
+      "base_ce": 0.3167848289012909,
+      "d_target": 0.1773190200328827,
+      "d_random_mean": 0.2292831798394521,
+      "n_random": 15,
+      "hub_load_frac": 0.33349609375,
+      "hub_gate_mass": 0.15319861471652985,
+      "random_load_frac_mean": 0.22216796875,
+      "random_gate_mass_mean": 0.1274932915965716,
+      "d_target_per_load": 0.5316974422069455,
+      "d_random_per_load": 1.039608551181111,
+      "d_target_per_gate": 1.157445322602844,
+      "d_random_per_gate": 1.8094215316717979,
+      "ratio": 0.7733625299380636
+     },
+     "reroute": {
+      "base_ce": 0.3167848289012909,
+      "d_target": 0.14469435811042786,
+      "d_random_mean": 0.22921220064163209,
+      "n_random": 15,
+      "hub_load_frac": 0.33349609375,
+      "hub_gate_mass": 0.15319861471652985,
+      "random_load_frac_mean": 0.22216796875,
+      "random_gate_mass_mean": 0.1274932915965716,
+      "d_target_per_load": 0.4338712231481058,
+      "d_random_per_load": 1.076513484265515,
+      "d_target_per_gate": 0.9444886846931495,
+      "d_random_per_gate": 1.7984511725819874,
+      "ratio": 0.6312681336568733
+     }
+    },
+    "threshold": [
+     [
+      -0.43490737676620483,
+      -0.1861519068479538,
+      -0.46099749207496643,
+      0.33190956711769104,
+      0.5740870833396912,
+      0.14627966284751892,
+      -0.4020238220691681,
+      0.43180423974990845
+     ]
+    ],
+    "threshold_range": 1.03508460521698,
+    "threshold_off": {
+     "gini": 0.20599365234375,
+     "max_over_mean": 1.70703125,
+     "entropy": 0.9592716209863634,
+     "n_used": 8.0,
+     "all_used": true,
+     "shifted_frac": 0.0,
+     "gate_mean": 0.5588924288749695,
+     "base_ce": 0.3252291977405548,
+     "d_ce": 0.008444368839263916
+    },
+    "single_lesion": [
+     0.1139853298664093,
+     0.09313768148422241,
+     0.12824949622154236,
+     0.16780126094818115,
+     0.08728793263435364,
+     0.13470417261123657,
+     0.09093320369720459,
+     0.049069613218307495
+    ],
+    "spearman_load_single": -0.261904761904762,
+    "topk_share": 0.33349609375,
+    "band_violation": 0.0,
+    "own_band_violation": 0.18017578125,
+    "max_share": 0.17626953125
+   },
+   "point0.03": {
+    "gini": 0.14996337890625,
+    "max_over_mean": 1.515625,
+    "entropy": 0.9799664740020672,
+    "n_used": 8.0,
+    "all_used": true,
+    "shifted_frac": 0.149658203125,
+    "gate_mean": 0.5557243824005127,
+    "train_ce": 0.3147026300430298,
+    "load": [
+     [
+      569.0,
+      480.0,
+      452.0,
+      434.0,
+      577.0,
+      569.0,
+      239.0,
+      776.0
+     ]
+    ],
+    "k": 2,
+    "lesion": {
+     "zero": {
+      "base_ce": 0.320286363363266,
+      "d_target": 0.16755977272987366,
+      "d_random_mean": 0.22275907993316652,
+      "n_random": 15,
+      "hub_load_frac": 0.330322265625,
+      "hub_gate_mass": 0.15051987767219543,
+      "random_load_frac_mean": 0.22322591145833334,
+      "random_gate_mass_mean": 0.1350681647658348,
+      "d_target_per_load": 0.5072615144874815,
+      "d_random_per_load": 0.9915440858591551,
+      "d_target_per_gate": 1.1132069419747204,
+      "d_random_per_gate": 1.6466803745399943,
+      "ratio": 0.7522017633586291
+     },
+     "reroute": {
+      "base_ce": 0.320286363363266,
+      "d_target": 0.11196538805961609,
+      "d_random_mean": 0.30396295587221783,
+      "n_random": 15,
+      "hub_load_frac": 0.330322265625,
+      "hub_gate_mass": 0.15051987767219543,
+      "random_load_frac_mean": 0.22322591145833334,
+      "random_gate_mass_mean": 0.1350681647658348,
+      "d_target_per_load": 0.3389580410141814,
+      "d_random_per_load": 1.3699906128470143,
+      "d_target_per_gate": 0.7438578199183504,
+      "d_random_per_gate": 2.2664584955467424,
+      "ratio": 0.3683520833594108
+     }
+    },
+    "threshold": [
+     [
+      -0.3245943784713745,
+      -0.21748635172843933,
+      0.05091917887330055,
+      0.47635799646377563,
+      -0.3635523021221161,
+      -0.35740774869918823,
+      0.43203380703926086,
+      0.30372992157936096
+     ]
+    ],
+    "threshold_range": 0.8399102687835693,
+    "threshold_off": {
+     "gini": 0.16204833984375,
+     "max_over_mean": 1.5703125,
+     "entropy": 0.9777859517193733,
+     "n_used": 8.0,
+     "all_used": true,
+     "shifted_frac": 0.0,
+     "gate_mean": 0.5766464471817017,
+     "base_ce": 0.31888338923454285,
+     "d_ce": -0.0014029741287231445
+    },
+    "single_lesion": [
+     0.16012147068977356,
+     0.11634659767150879,
+     0.08984526991844177,
+     0.09452557563781738,
+     0.10001429915428162,
+     0.1516706347465515,
+     0.05576777458190918,
+     0.06754553318023682
+    ],
+    "spearman_load_single": 0.3233590907165799,
+    "topk_share": 0.330322265625,
+    "band_violation": 0.004150390625,
+    "own_band_violation": 0.21630859375,
+    "max_share": 0.189453125
+   },
+   "point0.1": {
+    "gini": 0.03448486328125,
+    "max_over_mean": 1.1484375,
+    "entropy": 0.9989668828466881,
+    "n_used": 8.0,
+    "all_used": true,
+    "shifted_frac": 0.07177734375,
+    "gate_mean": 0.5583688020706177,
+    "train_ce": 0.31912001967430115,
+    "load": [
+     [
+      504.0,
+      515.0,
+      499.0,
+      500.0,
+      535.0,
+      486.0,
+      469.0,
+      588.0
+     ]
+    ],
+    "k": 2,
+    "lesion": {
+     "zero": {
+      "base_ce": 0.31749799847602844,
+      "d_target": 0.14292451739311218,
+      "d_random_mean": 0.22895828088124592,
+      "n_random": 15,
+      "hub_load_frac": 0.274169921875,
+      "hub_gate_mass": 0.11655493825674057,
+      "random_load_frac_mean": 0.241943359375,
+      "random_gate_mass_mean": 0.14727128098408382,
+      "d_target_per_load": 0.5212990411773709,
+      "d_random_per_load": 0.9456963415532427,
+      "d_target_per_gate": 1.2262416293189244,
+      "d_random_per_gate": 1.5413204599744632,
+      "ratio": 0.6242382535499689
+     },
+     "reroute": {
+      "base_ce": 0.31749799847602844,
+      "d_target": 0.04147934913635254,
+      "d_random_mean": 0.38485525647799174,
+      "n_random": 15,
+      "hub_load_frac": 0.274169921875,
+      "hub_gate_mass": 0.11655493825674057,
+      "random_load_frac_mean": 0.241943359375,
+      "random_gate_mass_mean": 0.14727128098408382,
+      "d_target_per_load": 0.1512906625667854,
+      "d_random_per_load": 1.5921294869660634,
+      "d_target_per_gate": 0.35587809282678523,
+      "d_random_per_gate": 2.554679283723907,
+      "ratio": 0.10777908951004433
+     }
+    },
+    "threshold": [
+     [
+      -0.281011700630188,
+      -0.18391962349414825,
+      -0.12235064059495926,
+      0.23765277862548828,
+      -0.3508323132991791,
+      -0.09439712762832642,
+      0.6060338616371155,
+      0.18882466852664948
+     ]
+    ],
+    "threshold_range": 0.9568661451339722,
+    "threshold_off": {
+     "gini": 0.049072265625,
+     "max_over_mean": 1.212890625,
+     "entropy": 0.9979166390648218,
+     "n_used": 8.0,
+     "all_used": true,
+     "shifted_frac": 0.0,
+     "gate_mean": 0.5611732006072998,
+     "base_ce": 0.32432135939598083,
+     "d_ce": 0.006823360919952393
+    },
+    "single_lesion": [
+     0.0702718198299408,
+     0.15466874837875366,
+     0.12177306413650513,
+     0.15106531977653503,
+     0.09065768122673035,
+     0.06847232580184937,
+     0.12062346935272217,
+     0.05226674675941467
+    ],
+    "spearman_load_single": -0.19047619047619052,
+    "topk_share": 0.274169921875,
+    "band_violation": 0.0,
+    "own_band_violation": 0.0498046875,
+    "max_share": 0.1435546875
+   },
+   "band0.01": {
+    "gini": 0.39202880859375,
+    "max_over_mean": 3.04296875,
+    "entropy": 0.8670692967981907,
+    "n_used": 8.0,
+    "all_used": true,
+    "shifted_frac": 0.291748046875,
+    "gate_mean": 0.4360141456127167,
+    "train_ce": 0.3235131800174713,
+    "load": [
+     [
+      287.0,
+      1558.0,
+      423.0,
+      174.0,
+      390.0,
+      710.0,
+      390.0,
+      164.0
+     ]
+    ],
+    "k": 2,
+    "lesion": {
+     "zero": {
+      "base_ce": 0.3250052034854889,
+      "d_target": 0.3757697641849518,
+      "d_random_mean": 0.10539206067721049,
+      "n_random": 15,
+      "hub_load_frac": 0.5537109375,
+      "hub_gate_mass": 0.2501024305820465,
+      "random_load_frac_mean": 0.14876302083333334,
+      "random_gate_mass_mean": 0.0619705763955911,
+      "d_target_per_load": 0.6786388686514826,
+      "d_random_per_load": 0.7157710371650243,
+      "d_target_per_gate": 1.502463463911359,
+      "d_random_per_gate": 1.7333079895456627,
+      "ratio": 3.5654465978783785
+     },
+     "reroute": {
+      "base_ce": 0.3250052034854889,
+      "d_target": 0.19554218649864197,
+      "d_random_mean": 0.14404588143030803,
+      "n_random": 15,
+      "hub_load_frac": 0.5537109375,
+      "hub_gate_mass": 0.2501024305820465,
+      "random_load_frac_mean": 0.14876302083333334,
+      "random_gate_mass_mean": 0.0619705763955911,
+      "d_target_per_load": 0.35314849907338514,
+      "d_random_per_load": 0.9765623223681656,
+      "d_target_per_gate": 0.7818484052456821,
+      "d_random_per_gate": 2.3685662237648866,
+      "ratio": 1.3574993228338068
+     }
+    },
+    "threshold": [
+     [
+      -0.6828708052635193,
+      -0.21776792407035828,
+      0.4483659267425537,
+      0.19779430329799652,
+      -1.1768051385879517,
+      -0.1257719248533249,
+      0.6912015676498413,
+      0.865854024887085
+     ]
+    ],
+    "threshold_range": 2.042659282684326,
+    "threshold_off": {
+     "gini": 0.36334228515625,
+     "max_over_mean": 2.189453125,
+     "entropy": 0.8939379485591471,
+     "n_used": 8.0,
+     "all_used": true,
+     "shifted_frac": 0.0,
+     "gate_mean": 0.4800311326980591,
+     "base_ce": 0.3366396427154541,
+     "d_ce": 0.01163443922996521
+    },
+    "single_lesion": [
+     0.05772086977958679,
+     0.25308510661125183,
+     0.0860048234462738,
+     0.052906692028045654,
+     0.044583141803741455,
+     0.12268471717834473,
+     0.061002254486083984,
+     0.01395842432975769
+    ],
+    "spearman_load_single": 0.8982196964349441,
+    "topk_share": 0.5537109375,
+    "band_violation": 0.1103515625,
+    "own_band_violation": 0.1103515625,
+    "max_share": 0.38037109375
+   },
+   "band0.03": {
+    "gini": 0.28411865234375,
+    "max_over_mean": 2.265625,
+    "entropy": 0.933603620110836,
+    "n_used": 8.0,
+    "all_used": true,
+    "shifted_frac": 0.216552734375,
+    "gate_mean": 0.49289190769195557,
+    "train_ce": 0.31800588965415955,
+    "load": [
+     [
+      1160.0,
+      672.0,
+      570.0,
+      327.0,
+      544.0,
+      276.0,
+      278.0,
+      269.0
+     ]
+    ],
+    "k": 2,
+    "lesion": {
+     "zero": {
+      "base_ce": 0.32107478380203247,
+      "d_target": 0.3047088384628296,
+      "d_random_mean": 0.1421047071615855,
+      "n_random": 15,
+      "hub_load_frac": 0.447265625,
+      "hub_gate_mass": 0.24828550219535828,
+      "random_load_frac_mean": 0.18424479166666666,
+      "random_gate_mass_mean": 0.08153546750545501,
+      "d_target_per_load": 0.6812704161265011,
+      "d_random_per_load": 0.7920813241544911,
+      "d_target_per_gate": 1.2272518361667197,
+      "d_random_per_gate": 1.7607585526362408,
+      "ratio": 2.1442557713190245
+     },
+     "reroute": {
+      "base_ce": 0.32107478380203247,
+      "d_target": 0.06809043884277344,
+      "d_random_mean": 0.17867313027381898,
+      "n_random": 15,
+      "hub_load_frac": 0.447265625,
+      "hub_gate_mass": 0.24828550219535828,
+      "random_load_frac_mean": 0.18424479166666666,
+      "random_gate_mass_mean": 0.08153546750545501,
+      "d_target_per_load": 0.15223713837336245,
+      "d_random_per_load": 1.0477835571421532,
+      "d_target_per_gate": 0.2742425080832867,
+      "d_random_per_gate": 2.2033439698526514,
+      "ratio": 0.3810894158423481
+     }
+    },
+    "threshold": [
+     [
+      -0.019473209977149963,
+      -0.1863926351070404,
+      -0.06433236598968506,
+      -0.353294312953949,
+      -1.0878684520721436,
+      0.5928658843040466,
+      0.7007457613945007,
+      0.4177493453025818
+     ]
+    ],
+    "threshold_range": 1.788614273071289,
+    "threshold_off": {
+     "gini": 0.28765869140625,
+     "max_over_mean": 2.150390625,
+     "entropy": 0.9291788386176556,
+     "n_used": 8.0,
+     "all_used": true,
+     "shifted_frac": 0.0,
+     "gate_mean": 0.517888069152832,
+     "base_ce": 0.3431270718574524,
+     "d_ce": 0.022052288055419922
+    },
+    "single_lesion": [
+     0.22374767065048218,
+     0.08096116781234741,
+     0.09225058555603027,
+     0.09718668460845947,
+     0.07137683033943176,
+     0.06834262609481812,
+     0.07024374604225159,
+     0.026913493871688843
+    ],
+    "spearman_load_single": 0.8333333333333335,
+    "topk_share": 0.447265625,
+    "band_violation": 0.0,
+    "own_band_violation": 0.0,
+    "max_share": 0.283203125
+   },
+   "band0.1": {
+    "gini": 0.2998046875,
+    "max_over_mean": 2.349609375,
+    "entropy": 0.9192649246135302,
+    "n_used": 8.0,
+    "all_used": true,
+    "shifted_frac": 0.13427734375,
+    "gate_mean": 0.6073474287986755,
+    "train_ce": 0.31620895862579346,
+    "load": [
+     [
+      358.0,
+      892.0,
+      263.0,
+      271.0,
+      357.0,
+      1203.0,
+      353.0,
+      399.0
+     ]
+    ],
+    "k": 2,
+    "lesion": {
+     "zero": {
+      "base_ce": 0.32064932584762573,
+      "d_target": 0.4349679946899414,
+      "d_random_mean": 0.13823548555374146,
+      "n_random": 15,
+      "hub_load_frac": 0.511474609375,
+      "hub_gate_mass": 0.33139491081237793,
+      "random_load_frac_mean": 0.162841796875,
+      "random_gate_mass_mean": 0.0919841801126798,
+      "d_target_per_load": 0.8504195256563246,
+      "d_random_per_load": 0.8660986751284203,
+      "d_target_per_gate": 1.3125367363779532,
+      "d_random_per_gate": 1.5407013021463116,
+      "ratio": 3.1465726253107418
+     },
+     "reroute": {
+      "base_ce": 0.32064932584762573,
+      "d_target": 0.36490166187286377,
+      "d_random_mean": 0.20444618264834086,
+      "n_random": 15,
+      "hub_load_frac": 0.511474609375,
+      "hub_gate_mass": 0.33139491081237793,
+      "random_load_frac_mean": 0.162841796875,
+      "random_gate_mass_mean": 0.0919841801126798,
+      "d_target_per_load": 0.7134306477476133,
+      "d_random_per_load": 1.2561326310280307,
+      "d_target_per_gate": 1.1011082245600807,
+      "d_random_per_gate": 2.232205892041093,
+      "ratio": 1.7848299104733862
+     }
+    },
+    "threshold": [
+     [
+      0.21953372657299042,
+      -0.22814209759235382,
+      -0.22288306057453156,
+      -0.44329744577407837,
+      -0.484519362449646,
+      0.20182882249355316,
+      0.6937341094017029,
+      0.2637453079223633
+     ]
+    ],
+    "threshold_range": 1.178253412246704,
+    "threshold_off": {
+     "gini": 0.31903076171875,
+     "max_over_mean": 2.142578125,
+     "entropy": 0.9216721117314502,
+     "n_used": 8.0,
+     "all_used": true,
+     "shifted_frac": 0.0,
+     "gate_mean": 0.6168040037155151,
+     "base_ce": 0.32880449295043945,
+     "d_ce": 0.00815516710281372
+    },
+    "single_lesion": [
+     0.08680874109268188,
+     0.17630720138549805,
+     0.06708976626396179,
+     0.10228657722473145,
+     0.06246265769004822,
+     0.25866079330444336,
+     0.0549931526184082,
+     0.04106545448303223
+    ],
+    "spearman_load_single": 0.38095238095238104,
+    "topk_share": 0.511474609375,
+    "band_violation": 0.0,
+    "own_band_violation": 0.0,
+    "max_share": 0.293701171875
+   },
+   "wide0.01": {
+    "gini": 0.59033203125,
+    "max_over_mean": 3.861328125,
+    "entropy": 0.7001141964727816,
+    "n_used": 8.0,
+    "all_used": true,
+    "shifted_frac": 0.307861328125,
+    "gate_mean": 0.4657503366470337,
+    "train_ce": 0.33071431517601013,
+    "load": [
+     [
+      428.0,
+      1977.0,
+      1007.0,
+      358.0,
+      67.0,
+      100.0,
+      65.0,
+      94.0
+     ]
+    ],
+    "k": 2,
+    "lesion": {
+     "zero": {
+      "base_ce": 0.3224039673805237,
+      "d_target": 0.5664907097816467,
+      "d_random_mean": 0.06881844401359558,
+      "n_random": 15,
+      "hub_load_frac": 0.728515625,
+      "hub_gate_mass": 0.3669535517692566,
+      "random_load_frac_mean": 0.09049479166666667,
+      "random_gate_mass_mean": 0.03293225280940533,
+      "d_target_per_load": 0.7775958268316437,
+      "d_random_per_load": 0.7618513494993712,
+      "d_target_per_gate": 1.5437667984144783,
+      "d_random_per_gate": 1.9972983588708406,
+      "ratio": 8.231669836500988
+     },
+     "reroute": {
+      "base_ce": 0.3224039673805237,
+      "d_target": 0.4544993042945862,
+      "d_random_mean": 0.07933619419733683,
+      "n_random": 15,
+      "hub_load_frac": 0.728515625,
+      "hub_gate_mass": 0.3669535517692566,
+      "random_load_frac_mean": 0.09049479166666667,
+      "random_gate_mass_mean": 0.03293225280940533,
+      "d_target_per_load": 0.623870358709995,
+      "d_random_per_load": 1.2577493182722703,
+      "d_target_per_gate": 1.238574479258288,
+      "d_random_per_gate": 3.013417086028835,
+      "ratio": 5.728776240061221
+     }
+    },
+    "threshold": [
+     [
+      -0.5382877588272095,
+      -0.5268164873123169,
+      0.5373958349227905,
+      -0.7479908466339111,
+      0.6187581419944763,
+      0.39907753467559814,
+      -0.7382566928863525,
+      0.996120274066925
+     ]
+    ],
+    "threshold_range": 1.7441110610961914,
+    "threshold_off": {
+     "gini": 0.5145263671875,
+     "max_over_mean": 2.580078125,
+     "entropy": 0.763582888542903,
+     "n_used": 8.0,
+     "all_used": true,
+     "shifted_frac": 0.0,
+     "gate_mean": 0.532875120639801,
+     "base_ce": 0.3440409302711487,
+     "d_ce": 0.021636962890625
+    },
+    "single_lesion": [
+     0.08058759570121765,
+     0.31491953134536743,
+     0.2515712380409241,
+     0.06722649931907654,
+     0.024931758642196655,
+     0.017724603414535522,
+     0.01127392053604126,
+     0.004710972309112549
+    ],
+    "spearman_load_single": 0.880952380952381,
+    "topk_share": 0.728515625,
+    "band_violation": 0.340576171875,
+    "own_band_violation": 0.04541015625,
+    "max_share": 0.482666015625
+   },
+   "wide0.03": {
+    "gini": 0.31365966796875,
+    "max_over_mean": 1.78125,
+    "entropy": 0.9181734410705016,
+    "n_used": 8.0,
+    "all_used": true,
+    "shifted_frac": 0.2529296875,
+    "gate_mean": 0.47445207834243774,
+    "train_ce": 0.3176157474517822,
+    "load": [
+     [
+      912.0,
+      867.0,
+      346.0,
+      416.0,
+      160.0,
+      843.0,
+      169.0,
+      383.0
+     ]
+    ],
+    "k": 2,
+    "lesion": {
+     "zero": {
+      "base_ce": 0.3243262767791748,
+      "d_target": 0.2608731985092163,
+      "d_random_mean": 0.1346908708413442,
+      "n_random": 15,
+      "hub_load_frac": 0.434326171875,
+      "hub_gate_mass": 0.1783542037010193,
+      "random_load_frac_mean": 0.18855794270833334,
+      "random_gate_mass_mean": 0.09869929365813732,
+      "d_target_per_load": 0.6006389101145306,
+      "d_random_per_load": 0.6851432563624916,
+      "d_target_per_gate": 1.4626691891519763,
+      "d_random_per_gate": 1.405286825615647,
+      "ratio": 1.9368291026680307
+     },
+     "reroute": {
+      "base_ce": 0.3243262767791748,
+      "d_target": 0.05580264329910278,
+      "d_random_mean": 0.15819565256436666,
+      "n_random": 15,
+      "hub_load_frac": 0.434326171875,
+      "hub_gate_mass": 0.1783542037010193,
+      "random_load_frac_mean": 0.18855794270833334,
+      "random_gate_mass_mean": 0.09869929365813732,
+      "d_target_per_load": 0.12848095950147556,
+      "d_random_per_load": 0.7940256221301383,
+      "d_target_per_gate": 0.3128754026602395,
+      "d_random_per_gate": 1.566670809128301,
+      "ratio": 0.35274448061332025
+     }
+    },
+    "threshold": [
+     [
+      -0.6523758769035339,
+      -0.07528338581323624,
+      1.0292683839797974,
+      0.12379654496908188,
+      -0.7565726637840271,
+      0.10782548040151596,
+      -0.560634195804596,
+      0.7839757204055786
+     ]
+    ],
+    "threshold_range": 1.7858409881591797,
+    "threshold_off": {
+     "gini": 0.27532958984375,
+     "max_over_mean": 1.509765625,
+     "entropy": 0.8995970961282637,
+     "n_used": 8.0,
+     "all_used": true,
+     "shifted_frac": 0.0,
+     "gate_mean": 0.5047912001609802,
+     "base_ce": 0.3328211307525635,
+     "d_ce": 0.008494853973388672
+    },
+    "single_lesion": [
+     0.154488205909729,
+     0.10638505220413208,
+     0.04497188329696655,
+     0.10303553938865662,
+     0.018192172050476074,
+     0.18118834495544434,
+     0.03879868984222412,
+     0.017886072397232056
+    ],
+    "spearman_load_single": 0.7857142857142858,
+    "topk_share": 0.434326171875,
+    "band_violation": 0.044677734375,
+    "own_band_violation": 0.0,
+    "max_share": 0.22265625
+   },
+   "wide0.1": {
+    "gini": 0.350341796875,
+    "max_over_mean": 2.353515625,
+    "entropy": 0.9048248887300568,
+    "n_used": 8.0,
+    "all_used": true,
+    "shifted_frac": 0.172119140625,
+    "gate_mean": 0.5217074751853943,
+    "train_ce": 0.31417569518089294,
+    "load": [
+     [
+      462.0,
+      200.0,
+      810.0,
+      371.0,
+      129.0,
+      594.0,
+      1205.0,
+      325.0
+     ]
+    ],
+    "k": 2,
+    "lesion": {
+     "zero": {
+      "base_ce": 0.32011497020721436,
+      "d_target": 0.41058480739593506,
+      "d_random_mean": 0.12795549631118774,
+      "n_random": 15,
+      "hub_load_frac": 0.491943359375,
+      "hub_gate_mass": 0.26709237694740295,
+      "random_load_frac_mean": 0.16935221354166666,
+      "random_gate_mass_mean": 0.08487169841925303,
+      "d_target_per_load": 0.8346180501705955,
+      "d_random_per_load": 0.7661684743627253,
+      "d_target_per_gate": 1.5372389586273714,
+      "d_random_per_gate": 1.5404757354697334,
+      "ratio": 3.208809462919771
+     },
+     "reroute": {
+      "base_ce": 0.32011497020721436,
+      "d_target": 0.4190114736557007,
+      "d_random_mean": 0.2022453288237254,
+      "n_random": 15,
+      "hub_load_frac": 0.491943359375,
+      "hub_gate_mass": 0.26709237694740295,
+      "random_load_frac_mean": 0.16935221354166666,
+      "random_gate_mass_mean": 0.08487169841925303,
+      "d_target_per_load": 0.8517473926023573,
+      "d_random_per_load": 1.2794509673104102,
+      "d_target_per_gate": 1.568788590841042,
+      "d_random_per_gate": 2.4189006295946993,
+      "ratio": 2.0717980291199014
+     }
+    },
+    "threshold": [
+     [
+      -0.5646226406097412,
+      -0.3364253044128418,
+      0.024778373539447784,
+      0.5583792924880981,
+      -0.17721839249134064,
+      -0.3949804902076721,
+      0.13763989508152008,
+      0.7524493932723999
+     ]
+    ],
+    "threshold_range": 1.3170720338821411,
+    "threshold_off": {
+     "gini": 0.3311767578125,
+     "max_over_mean": 1.87890625,
+     "entropy": 0.9115044335958784,
+     "n_used": 8.0,
+     "all_used": true,
+     "shifted_frac": 0.0,
+     "gate_mean": 0.5360811948776245,
+     "base_ce": 0.33852219581604004,
+     "d_ce": 0.018407225608825684
+    },
+    "single_lesion": [
+     0.08550238609313965,
+     0.03203940391540527,
+     0.20256024599075317,
+     0.13926103711128235,
+     0.028644204139709473,
+     0.07806986570358276,
+     0.20802456140518188,
+     0.02034953236579895
+    ],
+    "spearman_load_single": 0.8333333333333335,
+    "topk_share": 0.491943359375,
+    "band_violation": 0.044677734375,
+    "own_band_violation": 0.0,
+    "max_share": 0.294189453125
+   }
+  }
+ ]
+}
