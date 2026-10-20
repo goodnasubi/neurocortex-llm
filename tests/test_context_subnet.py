@@ -95,7 +95,22 @@ def test_verdict_logic():
     v = exp.verdict({"over_14bit": o, "not_over": n, "all": o})
     m = v["ach_c_sub_nov"]
     assert v["H"] and m["D1"] and m["D2"] and m["D3"] and m["D4"] and m["D5"] and m["G"] and m["C"]
-    assert v["H_sub"] is False and v["H_fix"] is None
+    assert v["H_sub"] is False and not v["H_fix"]
     o2 = {**o, "bad_ach_c_wide_nov": 1, "end_base_sub_nov": 0.12}
     v2 = exp.verdict({"over_14bit": o2, "not_over": n, "all": o2})
     assert v2["ach_c_sub_nov"]["G"] is False and v2["ach_c_sub_nov"]["D5"] is False
+
+
+def test_zero_readout_starts_from_shared_layer():
+    """修正1: 読み出しを 0 で始めると、どの枠でも初期の予測は共有の層だけで決まる（枠によらず同じ）。
+    乱数の消費は変えないので、共有の層と部分ネットワークの入力重みは既定と同じ。"""
+    torch.manual_seed(0)
+    a = GatedModel(4, 3, 8, 5)
+    torch.manual_seed(0)
+    z = GatedModel(4, 3, 8, 5, zero_readout=True)
+    assert torch.equal(a.sub.weight, z.sub.weight) and torch.equal(a.backbone.fc1.weight, z.backbone.fc1.weight)
+    bits = torch.randint(0, 2, (8, 4)).float()
+    outs = [z(torch.cat([bits, F.one_hot(torch.full((8,), c), 3).float()], 1)) for c in range(3)]
+    shared = [z.head(torch.cat([z.backbone(torch.cat([bits, F.one_hot(torch.full((8,), c), 3).float()], 1)),
+                                torch.zeros(8, 15)], 1)) for c in range(3)]
+    assert all(torch.allclose(o, s) for o, s in zip(outs, shared))
