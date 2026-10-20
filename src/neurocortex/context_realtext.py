@@ -283,6 +283,9 @@ class RealConfig:
     ca3_iters: int = 3
     ca3_sparsity: float = 0.025
     order: list[int] = field(default_factory=list)  # seq で学ぶ言語の順（空なら 0, 1, …）
+    # 12.6.213節の修正1: seq のリプレイを、断片の全体（長さ T + 1）ではなく、手がかりとして問う窓と答え（断片の最後の
+    # k + 1 文字）にする（合成の 12.6.173節と同じく、問う痕跡そのものをリプレイする）。損失の重みは断片の数の比のまま
+    replay_window: bool = False
 
 
 def _passages(ids: torch.Tensor, text_len: int) -> torch.Tensor:
@@ -323,10 +326,17 @@ def train_realtext(data: list[LangData], vocab: int, cfg: RealConfig, generator:
         s = torch.randint(0, flat[j].shape[0] - t_len - 1, (n,), generator=generator)
         return flat[j][s[:, None] + torch.arange(t_len + 1)[None]]
 
-    def step(seg: torch.Tensor, c: torch.Tensor) -> float:
-        opt.zero_grad()
+    def nll(seg: torch.Tensor, c: torch.Tensor) -> torch.Tensor:
         lp = model.seq_logp(seg[:, :-1], c)
-        loss = nn.functional.nll_loss(lp.reshape(-1, lp.shape[-1]), seg[:, 1:].reshape(-1))
+        return nn.functional.nll_loss(lp.reshape(-1, lp.shape[-1]), seg[:, 1:].reshape(-1))
+
+    def step(seg: torch.Tensor, c: torch.Tensor, rseg: torch.Tensor | None = None,
+             rc: torch.Tensor | None = None) -> float:
+        opt.zero_grad()
+        loss = nll(seg, c)
+        if rseg is not None:  # 修正1: 長さの違うリプレイの窓。重みは断片の数の比（全体を1つのバッチにしたときと同じ）
+            n_new, n_rep = seg.shape[0], rseg.shape[0]
+            loss = (n_new * loss + n_rep * nll(rseg, rc)) / (n_new + n_rep)
         loss.backward()
         opt.step()
         return float(loss.detach())
@@ -353,6 +363,9 @@ def train_realtext(data: list[LangData], vocab: int, cfg: RealConfig, generator:
                     rc = torch.tensor(past)[torch.randint(0, len(past), (cfg.replay_batch,), generator=generator)]
                     ri = torch.randint(0, cfg.buffer, (cfg.replay_batch,), generator=generator)
                     rseg = torch.stack([bank["buf"][a]["seg"][b] for a, b in zip(rc.tolist(), ri.tolist())])
+                    if cfg.replay_window:
+                        losses.append(step(seg, c, rseg[:, t_len - cfg.k:], rc))
+                        continue
                     seg, c = torch.cat([seg, rseg]), torch.cat([c, rc])
                 losses.append(step(seg, c))
             store(j)

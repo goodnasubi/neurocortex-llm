@@ -50,6 +50,8 @@ CUE_NS = (1, 2, 4, 8, 16)
 NS = tuple(str(n) for n in CUE_NS)
 EPISODES, POOL = 100, 4
 SPEAKER_ORDER = 5
+# 開発用シードでの修正（12.6.213節の開発の経過）。0 は初期設定
+FIXES: dict[int, dict] = {0: {}, 1: {"replay_window": True}}
 
 # 判定条件（12.6.213節で計測前に固定。値は 12.6.191節と同じ）
 GAP_OVER, GAP_NONE = 0.05, 0.02  # 上書きあり: CE_holdout − CE_own_buf ≧ 0.05、上書きなし: ≦ 0.02（nats）
@@ -194,9 +196,12 @@ def main() -> None:
     ap.add_argument("--phase", choices=("dev", "eval"), default="dev")
     ap.add_argument("--seeds", type=int, nargs="+")
     ap.add_argument("--sets", nargs="+", default=list(SETS))
+    ap.add_argument("--regimes", nargs="+", default=list(REGIMES))
+    ap.add_argument("--reuse", type=Path, help="修正が変えない組（joint）の回をこの結果ファイルから再利用する")
     ap.add_argument("--steps", type=int, default=1500)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
+    ap.add_argument("--fix", type=int, default=0, help="12.6.213節の修正の番号（1: リプレイを問う窓にする）")
     ap.add_argument("--out", type=Path)
     args = ap.parse_args()
     if args.analyze:
@@ -208,21 +213,25 @@ def main() -> None:
     digest = {LANG_CODES[lang]: hashlib.sha256("\n".join(docs[lang]).encode("utf-8")).hexdigest()[:16]
               for lang in VOCAB_LANGS}
     seeds = args.seeds or (DEV_SEEDS if args.phase == "dev" else EVAL_SEEDS)
-    jobs = [(s_, reg, seed) for s_ in args.sets for reg in REGIMES for seed in seeds]
+    jobs = [(s_, reg, seed) for s_ in args.sets for reg in args.regimes for seed in seeds]
     with Pool(args.workers) as pool:
-        runs = pool.starmap(run_one, [(j, args.steps, EPISODES, CUE_NS, corpus) for j in jobs])
+        runs = pool.starmap(run_one, [(j, args.steps, EPISODES, CUE_NS, corpus, FIXES[args.fix]) for j in jobs])
+    if args.reuse:  # 修正1は seq のリプレイだけを変えるので、joint の回は同じ値になる（テストで確認）
+        old = json.loads(args.reuse.read_text(encoding="utf-8"))["runs"]
+        runs += [r for r in old if r["regime"] not in args.regimes and r["seed"] in seeds]
     for r in runs:
         r.pop("native_per_lang", None)
     out = {"環境": env_info(),
            "設定": {"corpus": "Europarl（NLTK europarl_raw の標本）", "url": URL, "sha256_16": digest,
                   "vocab": vocab, "sets": {k: [LANG_CODES[x] for x in v] for k, v in SETS.items()},
                   "split": {"train_days": N_TRAIN, "speaker_days": N_SPEAKER}, "speaker_order": SPEAKER_ORDER,
-                  "model": RealConfig().__dict__ | {"steps_per_lang": args.steps},
+                  "model": RealConfig(**FIXES[args.fix]).__dict__ | {"steps_per_lang": args.steps}, "fix": args.fix,
                   "cmp": "λ = 1 − δ、δ = 1 − cos(s_S, t̂)/cos(s_1, t̂)", "episodes": EPISODES, "pool": POOL,
                   "cue_ns": CUE_NS, "rules": REAL_RULES, "seeds": list(seeds)},
            "runs": runs}
     out["集計"] = analyze(runs)
-    path = args.out or Path("results/context_lm") / f"context_realtext_{args.phase}.json"
+    tag = f"_fix{args.fix}" if args.fix else ""
+    path = args.out or Path("results/context_lm") / f"context_realtext{tag}_{args.phase}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(out["集計"]["判定"], ensure_ascii=False, indent=1))

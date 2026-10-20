@@ -104,8 +104,8 @@ def test_train_and_evaluate_smoke():
     """小さな設定で joint・seq が動き、λ の並べ替えは λ の平均を変えず、値の範囲が正しい。"""
     data = _toy_data()
     spk = [NgramSpeaker(d.speaker, 8, 3) for d in data]
-    for regime in ("joint", "seq"):
-        cfg = RealConfig(regime=regime, steps_per_lang=20, batch=8, replay_batch=4, seq_len=12, text_len=100,
+    for regime, rw in (("joint", False), ("seq", False), ("seq", True)):
+        cfg = RealConfig(regime=regime, replay_window=rw, steps_per_lang=20, batch=8, replay_batch=4, seq_len=12, text_len=100,
                          buffer=30, d=16, layers=1, heads=2, hidden=16, tcm_dim=64, order=[2, 0, 1])
         g = torch.Generator().manual_seed(5)
         tr = train_realtext(data, 8, cfg, g)
@@ -148,3 +148,14 @@ def test_analyze_verdicts():
             for n in rr.NS:
                 r["cues"][n]["acc"]["active_replay_cmp_shuf"] = 0.83 + (0.01 if i % 4 == 0 else -0.002)
     assert rr.analyze(runs)["判定"]["合否"]["H8-G"] is False
+
+
+def test_fix1_changes_only_seq_replay():
+    """修正1（リプレイを問う窓にする）は joint の学習を変えない（joint の回を再利用できる）。"""
+    data = _toy_data()
+    kw = dict(regime="joint", steps_per_lang=5, batch=8, replay_batch=4, seq_len=12, text_len=100, buffer=10, d=16,
+              layers=1, heads=2, hidden=16, tcm_dim=64)
+    a = train_realtext(data, 8, RealConfig(**kw), torch.Generator().manual_seed(1))
+    b = train_realtext(data, 8, RealConfig(replay_window=True, **kw), torch.Generator().manual_seed(1))
+    for pa, pb in zip(a["model"].parameters(), b["model"].parameters()):
+        assert torch.equal(pa, pb)
