@@ -1,0 +1,16 @@
+# 12.6.207節の予備調整（シード 200、opal のみ。判定には使わない）
+## 1: softplus・初期値 0.01
+alpha=0.03 seed=200 E32_L1/opal gini=0.952 used=7.0 base=0.3266 ratio=2711.79 gate=0.828 on_open=0.969 off_open=0.563 A=-0.406 D=0.389 agree_open=0.005 dormant_end=27 train_sec=96.3
+alpha=0.1 seed=200 E32_L1/opal gini=0.952 used=6.0 base=0.3175 ratio=2521.04 gate=0.993 on_open=0.969 off_open=0.586 A=-0.383 D=0.366 agree_open=0.053 dormant_end=30 train_sec=91.0
+alpha=0.3 seed=200 E32_L1/opal gini=0.969 used=1.0 base=nan ratio=nan gate=nan on_open=0.944 off_open=0.790 A=-0.154 D=0.179 agree_open=0.000 dormant_end=31 train_sec=91.6
+alpha=1.0 seed=200 E32_L1/opal gini=0.969 used=1.0 base=nan ratio=nan gate=nan on_open=0.965 off_open=0.964 A=-0.001 D=0.005 agree_open=0.946 dormant_end=31 train_sec=91.0
+## 2: sigmoid β=4・初期値 0.01
+alpha=0.1 seed=200 E32_L1/opal gini=0.938 used=3.0 base=0.3191 ratio=1897.02 gate=0.609 on_open=0.944 off_open=0.570 A=-0.373 D=0.367 agree_open=0.075 dormant_end=30 train_sec=67.0
+alpha=0.3 seed=200 E32_L1/opal gini=0.967 used=5.0 base=0.3182 ratio=2540.05 gate=0.882 on_open=0.969 off_open=0.701 A=-0.268 D=0.266 agree_open=0.016 dormant_end=31 train_sec=67.9
+alpha=1.0 seed=200 E32_L1/opal gini=0.942 used=2.0 base=0.3157 ratio=1944.55 gate=0.852 on_open=0.942 off_open=0.828 A=-0.114 D=0.114 agree_open=0.065 dormant_end=30 train_sec=67.5
+alpha=3.0 seed=200 E32_L1/opal gini=0.929 used=7.0 base=0.3167 ratio=1953.23 gate=0.823 on_open=0.782 off_open=0.714 A=-0.069 D=0.215 agree_open=0.129 dormant_end=28 train_sec=66.9
+## 3: sigmoid β=4・初期値 4/(β√(6d))
+alpha=0.1 seed=200 E32_L1/opal gini=0.735 used=16.0 base=0.3193 ratio=7.27 gate=0.436 on_open=0.265 off_open=0.596 A=0.331 D=0.139 agree_open=0.480 dormant_end=17 train_sec=63.8 teacher_agree_last=0.918916015625
+alpha=0.3 seed=200 E32_L1/opal gini=0.792 used=17.0 base=0.3174 ratio=8.56 gate=0.609 on_open=0.432 off_open=0.480 A=0.048 D=0.312 agree_open=0.408 dormant_end=16 train_sec=69.4 teacher_agree_last=0.927568359375
+alpha=1.0 seed=200 E32_L1/opal gini=0.734 used=17.0 base=0.3203 ratio=8.42 gate=0.581 on_open=0.472 off_open=0.501 A=0.029 D=0.233 agree_open=0.451 dormant_end=16 train_sec=64.0 teacher_agree_last=0.91583984375
+alpha=3.0 seed=200 E32_L1/opal gini=0.725 used=16.0 base=0.3214 ratio=7.60 gate=0.587 on_open=0.537 off_open=0.536 A=-0.000 D=0.189 agree_open=0.474 dormant_end=17 train_sec=64.2 teacher_agree_last=0.903486328125
