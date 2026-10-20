@@ -52,8 +52,12 @@ CONFIGS: dict[str, dict] = {
 }
 REUSED = ("base", "keep", "ach_c", "ach_c_nrem2")  # 12.6.167〜168節の結果ファイルから読む
 NEW = ("ach_c_seq", "ach_c_seq_lab", "ach_c_seq_rem")
-# 修正（12.6.231節。上限3回）
-FIXES: tuple[str, ...] = ()
+# 修正（12.6.231節。上限3回）。修正1: NREM の海馬の痕跡を新しい入力なしに学ぶステップが新しいタスクを損なった
+# （開発用 ach_c_seq の −0.10 未満 16/150、REM だけの ach_c_seq_rem は 2/150）。NREM と自己生成の再生を交互にせず、
+# 同じバッチで学ぶ（リップルが徐波・紡錘波に入れ子になる）
+CONFIGS["ach_c_seq_mix"] = {**CONFIGS["ach_c_seq"], "replay_rule": "ach_c_seq_mix"}
+FIXES: tuple[str, ...] = ("ach_c_seq_mix",)
+# 確定の規則（修正1の計測の前に決めた）: 開発用シードで D1〜D3 を満たせば H_fix の候補にする。判定の基準は変えない
 FIX_CANDIDATES: tuple[str, ...] = ()
 RULES = ("keep", "ach_c", "ach_c_nrem2", *NEW, *FIXES)
 
