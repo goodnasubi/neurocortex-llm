@@ -22,9 +22,12 @@ from dataclasses import dataclass
 
 from .basal_ganglia_core import ParitySpec
 from .basal_ganglia_core import make_batch as _parity_batch
+from .context_subnet import GatedModel
 from .hippocampus_replay import make_model
 
 CONDITIONS = ("oracle", "none", "inferred", "random", "inferred_gated")
+# 12.6.227節: ach_c の固定化のリプレイを、今の入力との類似度で重みづけする（類似度に基づく選択的リプレイ）
+REPLAY_SIMS = ("hid", "hid_neg", "hid_shuf", "inp", "hid_ctx", "hid_ctx_shuf")
 
 
 @dataclass(frozen=True)
@@ -86,7 +89,12 @@ RECON_READOUTS = ("recon_buf", "recon_all", "recon_all200", "recon_inter", "reco
 RECON_EXTRA_READOUTS = ("recon_buf_inter", "recon_buf_err")  # 12.6.161節（バッファでの学び直しが効く理由の切り分け）
 WRITEBACKS = ("none", "all", "inter")  # 12.6.161節（学び直しの共有の重みへの書き戻し）
 REPLAY_RULES = ("gain", "need", "sleep", "ach", "ach_need", "ach_need2",  # 12.6.163節（海馬の痕跡のリプレイの配分）
-                "ach_c", "nrem", "ach_c_nrem", "nrem2", "ach_c_nrem2")  # 12.6.167節（連続的な新しさの信号・新しい記憶を優先する睡眠の段階）
+                "ach_c", "nrem", "ach_c_nrem", "nrem2", "ach_c_nrem2",  # 12.6.167節（連続的な新しさの信号・新しい記憶を優先する睡眠の段階）
+                "ach_u", "ach_v", "ach_uv",  # 12.6.225節（不確かさによる新しさの信号）
+                "ach_c_seq", "ach_c_seq_lab", "ach_c_seq_rem", "ach_c_seq_mix")  # 12.6.231節（覚醒の後の NREM/REM。REM は新皮質の自己生成）
+SEQ_RULES = ("ach_c_seq", "ach_c_seq_lab", "ach_c_seq_rem", "ach_c_seq_mix")
+SLEEP_RULES = ("sleep", "nrem", "ach_c_nrem", "nrem2", "ach_c_nrem2", *SEQ_RULES)
+ACH_C_RULES = ("ach_c", "ach_c_nrem", "ach_c_nrem2", "ach_u", "ach_v", "ach_uv", *SEQ_RULES)  # なじみの度合い f で配分する規則
 
 
 def episodic_readout(p_param: torch.Tensor, x: torch.Tensor, store_bits: torch.Tensor, store_labels: torch.Tensor,
@@ -153,7 +161,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          writeback_keep: bool = False, replay_rule: str = "", replay_beta: float = 0.5,
                          replay_need: float = 0.5, sleep_every: int = 50, sleep_steps: int = 25,
                          ach_ema: float = 0.98, nov_split: bool = False, nov_ctx_gain: float = 2.0,
-                         nov_shared_gain: float = 0.2) -> dict:
+                         nov_shared_gain: float = 0.2, ctx_units: int = 0,
+                         ctx_zero_readout: bool = False, replay_sim: str = "", replay_sim_beta: float = 2.0) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -367,13 +376,50 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
           ステップ（古い記憶 = それ以前からある文脈の痕跡。加えた痕跡を含む）を、NREM から始めて1ステップずつ交互に
           学習する。新しい文脈の痕跡がまだなければ睡眠の段階を置かない。
       "ach_c_nrem" … 覚醒中は "ach_c"、睡眠の段階は "nrem"。
+      "ach_u" / "ach_v" / "ach_uv" … 12.6.225節。"ach_c" と同じ配分で、なじみの度合いを損失の平均ではなく不確かさで
+          推定する。U_c はモデル自身の予測のエントロピー（ラベルを使わない、予期された不確かさ。Yu & Dayan 2005 の
+          アセチルコリン）の指数移動平均、σ_c は損失の移動平均からのずれの二乗の指数移動平均の平方根（損失の揺らぎ。
+          予期しない不確かさ・変動性）。減衰はどれも ach_ema。"ach_u" は f = clamp(1 − U_c/τ)、"ach_v" は
+          f = clamp(1 − (L̄_c + σ_c)/τ)、"ach_uv" は f = clamp(1 − (U_c + σ_c)/τ)（驚きのあるステップでは 0）。
       "nrem2" / "ach_c_nrem2" … 12.6.167節の修正1。睡眠の段階の痕跡の出どころを Singh et al. の海馬と新皮質の分業に
           合わせる。NREM に似たステップは海馬の痕跡（新しい文脈の痕跡と、加えた痕跡（再活性化した保留サンプル）を
           batch の半分ずつ。加えた痕跡がなければ新しい文脈の痕跡だけ）、REM に似たステップは古い文脈の固定化済みの
           バッファ（加えた痕跡を除く）から取る。覚醒中はそれぞれ "nrem" / "ach_c" と同じ。
+      "ach_c_seq" … 12.6.231節。Singh, Norman & Schapiro（2022）の順序と分業に合わせた睡眠。覚醒中は "ach_c"（加えた
+          痕跡を新しい入力と交互に一度学ぶ）。睡眠の段階は "nrem2" と同じ間隔・量で、NREM に似たステップは海馬の痕跡
+          （新しい文脈の痕跡と加えた痕跡を半分ずつ、保存したラベル）、REM に似たステップは新皮質が自分の持つ記憶を
+          再生する: バッファの痕跡（加えた痕跡を除き、新しい文脈を含む全ての文脈）を入力し、教師は睡眠の段階の始めの
+          モデル自身の出力の分布（ラベルを使わない自己生成の標的）とする。
+      "ach_c_seq_lab" … "ach_c_seq" の対照。REM の入力は同じで、教師を保存したラベルにする。
+      "ach_c_seq_rem" … "ach_c_seq" の対照。睡眠の段階の全ステップを REM（自己生成の標的）にする（NREM なし）。
+      "ach_c_seq_mix" … 12.6.231節の修正1。交互にせず、睡眠の各ステップで NREM の海馬の痕跡 batch 個（保存したラベル）と
+          新皮質の自己生成の batch 個（"ach_c_seq" の REM と同じ）を同じバッチで学ぶ（海馬のリップルが新皮質の徐波・
+          紡錘波に入れ子になり、新皮質自身の活動と同時に起きることにあたる）。
       diagnostics = True では diag["replay_mix"][k]（規則を適用したタスク k の、リプレイの痕跡のうちそのステップで
       選んだ文脈のものの割合 "own"、加えた痕跡の割合 "kept"、1ステップのリプレイの数の平均 "size"、睡眠のステップ数
-      "sleep"、なじみの度合い f の平均 "fam"（ach_c のみ意味を持つ））を加える。
+      "sleep"、なじみの度合い f の平均 "fam"（ACH_C_RULES のみ意味を持つ））を加える。
+
+    ctx_units = K > 0（文脈を使う条件のみ。12.6.219節）では、モデルを context_subnet.GatedModel にする。共有の隠れ層
+    hidden_dim 個に加えて、文脈の枠ごとに K 個の隠れユニットを持ち、入力の文脈の one-hot が指す枠のユニットだけを
+    働かせる（文脈依存のゲーティング。文脈固有の表現の容量を増やす）。split_window・nov_split の「新しい文脈の列」の
+    利得は、その文脈の部分ネットワークのパラメータ（入力重みの行・バイアス・読み出しの列）にもかける。既定の 0 では
+    従来と同じモデル・同じ乱数の消費になる。ctx_zero_readout = True（12.6.219節の修正1）では、部分ネットワークの
+    読み出しの重みを 0 で始める。
+
+    replay_sim（12.6.227節。replay_rule が "ach_c"・"ach_c_nrem"・"ach_c_nrem2" のときだけ）では、ach_c の固定化の分
+    （round(f·batch) 個。今の文脈の痕跡と他の文脈の痕跡の比 replay_need は変えない）を、各プールの中で一様ではなく
+    重み w_i ∝ exp(β·z_i)（β = replay_sim_beta）で復元抽出する。z_i はバッファの痕跡 i の、今のバッチとの類似度
+    s_i = max_b cos(h_i, h_b) をバッファ全体で標準化したもの。h はモデルの隠れ層（共有の層。痕跡は保存時の文脈、
+    バッチはそのステップで選んだ文脈で入力する）。McClelland, McNaughton & Lampinen 2020 の類似度で重みづけした
+    インターリーブ学習（SWIL）の痕跡ごとの形。
+      "hid" … 似た痕跡を優先する。"hid_neg" … 似ていない痕跡を優先する（β の符号を反転）。
+      "hid_shuf" … 対照。z をバッファの中で並べ替える（重みの分布は同じで、類似度との対応だけを壊す）。
+      "inp" … 類似度を入力のビットの一致率 max_b mean(x_i = x_b) で測る（表現ではなく入力の重なり）。
+      "hid_ctx" … 12.6.227節の修正1。SWIL の元の形（クラス単位）に合わせ、痕跡の s_i を保存時の文脈ごとに平均した
+          値に置き換える（文脈の中では一様に引き、文脈の間の配分だけを類似度で決める）。
+      "hid_ctx_shuf" … "hid_ctx" の対照。文脈ごとの類似度を文脈の間で並べ替える。
+    既定の "" では従来と同じ乱数の消費になる。diagnostics = True では diag["replay_mix"][k]["sim"] に、引いた固定化の
+    痕跡の z の平均（hid_shuf でも並べ替える前の z）を加える。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -417,6 +463,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                         or not 0.0 <= ach_ema < 1.0):
         raise ValueError("replay_rule は " + "・".join(REPLAY_RULES) + "、replay_beta は [0, 1]、replay_need は (0, 1)、"
                          "sleep_every は正、sleep_steps は 0 以上、ach_ema は [0, 1)")
+    if replay_sim and (replay_sim not in REPLAY_SIMS or replay_rule not in ("ach_c", "ach_c_nrem", "ach_c_nrem2")
+                       or replay_sim_beta < 0):
+        raise ValueError("replay_sim は " + "・".join(REPLAY_SIMS) + "（replay_rule が ach_c 系のときだけ）、"
+                         "replay_sim_beta は 0 以上")
     rule_from = (writeback_at if writeback else 1) if replay_rule else len(specs)
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
@@ -430,7 +480,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     nov_old: set[int] = set()  # 12.6.169節: nov_from の時点にあった文脈
     T = len(specs)
     C = 0 if condition == "none" else (T if condition == "oracle" else (n_slots or T + 2))
-    model = make_model(specs[0].n_inputs + C, hidden_dim)
+    if ctx_units < 0 or (ctx_units > 0 and C == 0):
+        raise ValueError("ctx_units は 0 以上（文脈を使う条件のみ）")
+    if ctx_units > 0:
+        model = GatedModel(specs[0].n_inputs, C, hidden_dim, ctx_units, ctx_zero_readout)
+    else:
+        model = make_model(specs[0].n_inputs + C, hidden_dim)
 
     def with_ctx(bits: torch.Tensor, ctx: torch.Tensor | int) -> torch.Tensor:
         if C == 0:
@@ -650,6 +705,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     buf_count: dict[int, int] = {}
     ema_loss: dict[int, float] = {}
     nov_loss: dict[int, float] = {}  # 12.6.167節: ach_c のなじみの度合いに使う損失のゆっくりした移動平均
+    nov_unc: dict[int, float] = {}  # 12.6.225節: 予測のエントロピーの移動平均（予期された不確かさ）
+    nov_var: dict[int, float] = {}  # 12.6.225節: 損失の移動平均からのずれの二乗の移動平均（損失の揺らぎ）
     old_ctx: set[int] = set()  # 12.6.167節: 規則の適用を始めた時点にあった文脈（nrem の古い記憶）
     cur = 0
     used = [0]
@@ -804,13 +861,20 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             buf_ctx.append(hc[keep])
             buf_src.append(torch.full((int(keep.sum()),), -1, dtype=torch.long))
 
+    def novelty_level(rule: str, ctx: int) -> float:
+        """12.6.225節: なじみの度合い f = clamp(1 − 値/τ) の「値」（文脈 ctx の不確かさの推定）。"""
+        if ctx not in nov_loss:
+            return math.inf
+        sd = math.sqrt(nov_var.get(ctx, 0.0)) if rule in ("ach_v", "ach_uv") else 0.0
+        return (nov_unc[ctx] if rule in ("ach_u", "ach_uv") else nov_loss[ctx]) + sd
+
     def replay_draw(rule: str, ctx: int) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """12.6.163節: リプレイする痕跡（入力に文脈を付けたもの、ラベル、出どころ）を取る。rule = "" は従来と同じ。"""
         bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
         bs = torch.cat(buf_src)
         novel = rule in ("ach", "ach_need", "ach_need2") and not gate["store"]
-        if rule in ("ach_c", "ach_c_nrem", "ach_c_nrem2"):
-            f = max(0.0, min(1.0, 1 - nov_loss.get(ctx, math.inf) / tau)) if gate["store"] else 0.0
+        if rule in ACH_C_RULES:
+            f = max(0.0, min(1.0, 1 - novelty_level(rule, ctx) / tau)) if gate["store"] else 0.0
             n_f = round(f * batch)
             wake = (bs != -1).nonzero()[:, 0]
             # 残りは加えた痕跡を除いたバッファから一様に（f = 0 なら痕跡を加えない場合と同じ乱数の消費と選択）
@@ -818,12 +882,16 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             if n_f > 0:
                 own, oth = (bc == ctx).nonzero()[:, 0], (bc != ctx).nonzero()[:, 0]
                 n_own = round(replay_need * n_f)
+                pick = sim_picker(bb, bc)
                 if oth.numel() == 0:
-                    fam = torch.randint(bb.shape[0], (n_f,), generator=generator)
+                    fam = pick(torch.arange(bb.shape[0]), n_f)
                 else:
-                    fam = oth[torch.randint(oth.numel(), (n_f - n_own,), generator=generator)]
+                    fam = pick(oth, n_f - n_own)
                     if own.numel() > 0:
-                        fam = torch.cat([own[torch.randint(own.numel(), (n_own,), generator=generator)], fam])
+                        fam = torch.cat([pick(own, n_own), fam])
+                if replay_sim:
+                    mix["sim"] += float(sim_cue["z"][fam].mean())
+                    mix["n_sim"] += 1
                 idx = torch.cat([fam, idx])
             mix["fam"] += f
             return with_ctx(bb[idx], bc[idx]), bl[idx], torch.stack([bc[idx] == ctx, bs[idx] == -1])
@@ -849,6 +917,34 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             idx = torch.randint(n, (batch,), generator=generator)
         return with_ctx(bb[idx], bc[idx]), bl[idx], torch.stack([bc[idx] == ctx, bs[idx] == -1])
 
+    sim_cue: dict = {"x": None, "z": None}  # 12.6.227節: 今のバッチ（文脈つき）と、最後に求めた類似度の z
+
+    def sim_picker(bb: torch.Tensor, bc: torch.Tensor):
+        """12.6.227節: プール pool（バッファの添字）から m 個を引く関数。replay_sim = "" では従来と同じ一様な引き方。"""
+        if not replay_sim:
+            return lambda pool, m: pool[torch.randint(pool.numel(), (m,), generator=generator)]
+        with torch.no_grad():
+            if replay_sim == "inp":
+                xb = sim_cue["x"][:, :bb.shape[1]]
+                s = ((bb @ xb.T) / bb.shape[1] + 1).max(1).values / 2  # ±1 のビットの一致率
+            else:
+                hi = F.normalize(model.backbone(with_ctx(bb, bc)), dim=1)
+                hb = F.normalize(model.backbone(sim_cue["x"]), dim=1)
+                s = (hi @ hb.T).max(1).values
+                if replay_sim in ("hid_ctx", "hid_ctx_shuf"):
+                    cs, inv = bc.unique(return_inverse=True)
+                    sc = torch.zeros(cs.numel()).index_add_(0, inv, s) / torch.bincount(inv).float()
+                    if replay_sim == "hid_ctx_shuf":
+                        sc = sc[torch.randperm(cs.numel(), generator=generator)]
+                    s = sc[inv]
+            z = (s - s.mean()) / s.std(unbiased=False).clamp_min(1e-6) if s.numel() > 1 else torch.zeros_like(s)
+        sim_cue["z"] = z  # 診断には並べ替える前の（本当の類似度の）z を残す
+        if replay_sim == "hid_shuf":
+            z = z[torch.randperm(z.numel(), generator=generator)]
+        w = torch.exp((-replay_sim_beta if replay_sim == "hid_neg" else replay_sim_beta) * z)
+        return lambda pool, m: pool[torch.multinomial(w[pool], m, replacement=True, generator=generator)] if m > 0 \
+            else pool[:0]
+
     def sleep_phase(o: torch.optim.Optimizer, rule: str) -> int:
         """12.6.163節: 新しい入力なしで、加えた痕跡を含むバッファ全体を交互にリプレイする（睡眠に似た段階）。
         12.6.167節の nrem では、新しい文脈の痕跡（NREM）と古い文脈の痕跡（REM）を1ステップずつ交互に取る。
@@ -860,18 +956,42 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             new, old = (~is_old).nonzero()[:, 0], is_old.nonzero()[:, 0]
             if new.numel() == 0:
                 return 0
-            if rule in ("nrem2", "ach_c_nrem2"):
+            if rule in SEQ_RULES:
+                # 12.6.231節: NREM は nrem2 と同じ海馬の痕跡、REM は新皮質の全ての文脈の痕跡（加えた痕跡を除く）
+                kept = torch.cat(buf_src) == -1
+                hip, cort = kept.nonzero()[:, 0], (~kept).nonzero()[:, 0]
+                nrem_p = [new, hip] if hip.numel() > 0 else [new]
+                pools = [[cort]] if rule == "ach_c_seq_rem" else [nrem_p, [cort]]
+                if rule == "ach_c_seq_mix":
+                    pools = [nrem_p]
+            elif rule in ("nrem2", "ach_c_nrem2"):
                 # 修正1: NREM は海馬の痕跡（新しい文脈の痕跡と加えた痕跡を半分ずつ）、REM は新皮質の固定化済みの痕跡
                 kept = torch.cat(buf_src) == -1
                 hip, cort = kept.nonzero()[:, 0], (is_old & ~kept).nonzero()[:, 0]
                 pools = [[new, hip] if hip.numel() > 0 else [new], [cort if cort.numel() > 0 else new]]
             else:
                 pools = [[new], [old if old.numel() > 0 else new]]
+        snap = copy.deepcopy(model) if rule in ("ach_c_seq", "ach_c_seq_rem", "ach_c_seq_mix") else None
         for s_ in range(sleep_steps):
-            parts = pools[s_ % len(pools)]
+            phase = s_ % len(pools)
+            parts = pools[phase]
             sizes = [batch - batch // 2, batch // 2] if len(parts) == 2 else [batch]
             idx = torch.cat([q[torch.randint(q.numel(), (m,), generator=generator)] for q, m in zip(parts, sizes)])
-            loss = F.cross_entropy(model(with_ctx(bb[idx], bc[idx])), bl[idx])
+            xs = with_ctx(bb[idx], bc[idx])
+            if snap is not None and (rule == "ach_c_seq_rem" or phase == 1):
+                with torch.no_grad():  # 12.6.231節の REM: 睡眠の始めの自分の出力の分布を標的にする
+                    tgt = F.softmax(snap(xs), dim=-1)
+                loss = -(tgt * F.log_softmax(model(xs), dim=-1)).sum(-1).mean()
+            elif rule == "ach_c_seq_mix":
+                ic = cort[torch.randint(cort.numel(), (batch,), generator=generator)]
+                xc = with_ctx(bb[ic], bc[ic])
+                with torch.no_grad():
+                    tgt = F.softmax(snap(xc), dim=-1)
+                lh = F.cross_entropy(model(xs), bl[idx], reduction="sum")
+                lc = -(tgt * F.log_softmax(model(xc), dim=-1)).sum()
+                loss = (lh + lc) / (idx.numel() + batch)  # 覚醒中と同じく、合わせたバッチの平均
+            else:
+                loss = F.cross_entropy(model(xs), bl[idx])
             o.zero_grad(set_to_none=True)
             loss.backward()
             o.step()
@@ -892,12 +1012,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         rule = replay_rule if k >= rule_from else ""
         if rule and k == rule_from:
             old_ctx.update(used)
-        mix = {"own": 0.0, "kept": 0.0, "size": 0, "n": 0, "sleep": 0, "fam": 0.0}
+        mix = {"own": 0.0, "kept": 0.0, "size": 0, "n": 0, "sleep": 0, "fam": 0.0, "sim": 0.0, "n_sim": 0}
         if k == nov_from:
             nov_old.update(used)
         nov_d = {"steps": 0, "g_shared": 0.0}
         for step in range(pretrain_steps if k == 0 else steps):
-            if rule in ("sleep", "nrem", "ach_c_nrem", "nrem2", "ach_c_nrem2") and step > 0 and step % sleep_every == 0 and buf_bits:
+            if rule in SLEEP_RULES and step > 0 and step % sleep_every == 0 and buf_bits:
                 mix["sleep"] += sleep_phase(opt, rule)
             bits, labels = make_batch(spec, batch, generator)
             src = None
@@ -948,6 +1068,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             n_new = y.shape[0]
             if buf_bits and k > 0:
                 if rule:
+                    sim_cue["x"] = with_ctx(bits, ctx)
                     xr, yr, flags = replay_draw(rule, ctx)
                     mix["own"] += float(flags[0].float().mean())
                     mix["kept"] += float(flags[1].float().mean())
@@ -977,6 +1098,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                             if q is fc1_w:
                                 col = n_bits + split["ctx"]
                                 d[:, col] = (q[:, col] - b[:, col]) * split_ctx_gain
+                            for q2, ix in (model.ctx_slices(split["ctx"]) if ctx_units > 0 else []):
+                                if q2 is q:
+                                    d[ix] = (q[ix] - b[ix]) * split_ctx_gain
                             q.copy_(b + d)
                 elif nov_now:
                     # 12.6.169節: 新しい文脈がなじむまで、その文脈の列の可塑性を上げ、共有の重みの可塑性を下げ続ける
@@ -989,6 +1113,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                             if q is fc1_w:
                                 col = n_bits + ctx
                                 d[:, col] = (q[:, col] - b[:, col]) * g_nov[0]
+                            for q2, ix in (model.ctx_slices(ctx) if ctx_units > 0 else []):
+                                if q2 is q:
+                                    d[ix] = (q[ix] - b[ix]) * g_nov[0]
                             q.copy_(b + d)
                 if diagnostics or plasticity_cap > 0:
                     unorm = float(torch.sqrt(sum(((q.detach() - b) ** 2).sum() for q, b in zip(model.parameters(), before))))
@@ -1011,7 +1138,14 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 with torch.no_grad():
                     cur_loss = loss_under(bits, labels, ctx_in)
                 ema_loss[ctx] = cur_loss if ctx not in ema_loss else ema * ema_loss[ctx] + (1 - ema) * cur_loss
+                if ctx in nov_loss:
+                    nov_var[ctx] = ach_ema * nov_var.get(ctx, 0.0) + (1 - ach_ema) * (cur_loss - nov_loss[ctx]) ** 2
                 nov_loss[ctx] = cur_loss if ctx not in nov_loss else ach_ema * nov_loss[ctx] + (1 - ach_ema) * cur_loss
+                if replay_rule in ("ach_u", "ach_uv"):  # 規則の適用の前から持つ（nov_loss と同じ）
+                    with torch.no_grad():
+                        lp = F.log_softmax(model(with_ctx(bits, ctx_in)), -1)
+                        cur_unc = float(-(lp.exp() * lp).sum(-1).mean())
+                    nov_unc[ctx] = cur_unc if ctx not in nov_unc else ach_ema * nov_unc[ctx] + (1 - ach_ema) * cur_unc
                 if evidence_reliability and revised and reliability_source == "gated":
                     with torch.no_grad():
                         cur_acc = float((model(with_ctx(bits, ctx_in)).argmax(-1) == labels).float().mean())
@@ -1085,6 +1219,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 diag.setdefault("replay_mix", {})[k] = {"own": mix["own"] / m_, "kept": mix["kept"] / m_,
                                                         "size": mix["size"] / m_, "sleep": mix["sleep"],
                                                         "fam": mix["fam"] / m_}
+                if replay_sim:
+                    diag["replay_mix"][k]["sim"] = mix["sim"] / max(mix["n_sim"], 1)
     selection_acc = None
     sel_choices: list[list[int]] = []
     sel_cues: list[list[int]] = []
