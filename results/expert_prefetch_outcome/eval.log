@@ -10,3 +10,524 @@ seed 2: ce=0.320
 seed 3: ce=0.323
   small: none=1.916s/w0 last=1.900s/w0 freq=1.759s/w97 cerebellum=1.679s/w112 cerebellum_fixed0.1=1.642s/w112 cerebellum_fixed0.2=1.631s/w113 cerebellum_fixed0.3=1.642s/w107 cerebellum_fixed0.4=1.690s/w75 cerebellum_fixed0.5=1.742s/w40 cerebellum_fixed0.6=1.840s/w14 cerebellum_fixed0.7=1.885s/w7 cerebellum_fixed0.8=1.906s/w0 cerebellum_efixed0.1=1.551s/w220 cerebellum_efixed0.2=1.561s/w197 cerebellum_efixed0.3=1.565s/w134 cerebellum_efixed0.4=1.669s/w81 cerebellum_efixed0.5=1.758s/w40 cerebellum_efixed0.6=1.812s/w14 cerebellum_efixed0.7=1.866s/w7 cerebellum_efixed0.8=1.896s/w0 outcome0.1=1.485s/w257 outcome0.2=1.526s/w247 outcome0.3=1.479s/w224 outcome0.4=1.524s/w164 outcome0.5=1.586s/w109 outcome0.6=1.649s/w78 outcome0.7=1.691s/w40 outcome0.8=1.813s/w21 outcomeshuf0.1=1.822s/w432 outcomeshuf0.2=1.761s/w423 outcomeshuf0.3=1.780s/w378 outcomeshuf0.4=1.798s/w303 outcomeshuf0.5=1.796s/w203 outcomeshuf0.6=1.909s/w111 outcomeshuf0.7=1.874s/w41 outcomeshuf0.8=1.914s/w19 cerebellum_delayed2.5=1.691s/w81 oracle=1.518s/w0
   large: none=3.984s/w0 last=4.030s/w0 freq=3.710s/w97 cerebellum=3.408s/w113 cerebellum_fixed0.1=3.427s/w113 cerebellum_fixed0.2=3.411s/w113 cerebellum_fixed0.3=3.424s/w107 cerebellum_fixed0.4=3.485s/w75 cerebellum_fixed0.5=3.681s/w40 cerebellum_fixed0.6=3.827s/w14 cerebellum_fixed0.7=3.869s/w7 cerebellum_fixed0.8=4.011s/w0 cerebellum_efixed0.1=3.313s/w218 cerebellum_efixed0.2=3.257s/w195 cerebellum_efixed0.3=3.316s/w134 cerebellum_efixed0.4=3.554s/w81 cerebellum_efixed0.5=3.684s/w40 cerebellum_efixed0.6=3.838s/w14 cerebellum_efixed0.7=3.946s/w7 cerebellum_efixed0.8=4.024s/w0 outcome0.1=3.027s/w257 outcome0.2=3.093s/w244 outcome0.3=3.148s/w222 outcome0.4=3.190s/w168 outcome0.5=3.197s/w112 outcome0.6=3.385s/w76 outcome0.7=3.567s/w40 outcome0.8=3.741s/w21 outcomeshuf0.1=3.771s/w426 outcomeshuf0.2=3.778s/w431 outcomeshuf0.3=3.787s/w395 outcomeshuf0.4=3.802s/w311 outcomeshuf0.5=3.893s/w203 outcomeshuf0.6=3.931s/w106 outcomeshuf0.7=3.957s/w48 outcomeshuf0.8=3.983s/w18 cerebellum_delayed2.5=3.486s/w81 oracle=3.117s/w0
+seed 4: ce=0.320
+  small: none=1.790s/w0 last=1.851s/w0 freq=1.722s/w98 cerebellum=1.577s/w91 cerebellum_fixed0.1=1.580s/w91 cerebellum_fixed0.2=1.568s/w91 cerebellum_fixed0.3=1.609s/w82 cerebellum_fixed0.4=1.625s/w55 cerebellum_fixed0.5=1.679s/w26 cerebellum_fixed0.6=1.754s/w12 cerebellum_fixed0.7=1.796s/w3 cerebellum_fixed0.8=1.801s/w2 cerebellum_efixed0.1=1.495s/w248 cerebellum_efixed0.2=1.514s/w210 cerebellum_efixed0.3=1.519s/w136 cerebellum_efixed0.4=1.599s/w68 cerebellum_efixed0.5=1.699s/w27 cerebellum_efixed0.6=1.723s/w12 cerebellum_efixed0.7=1.765s/w3 cerebellum_efixed0.8=1.806s/w2 outcome0.1=1.423s/w273 outcome0.2=1.449s/w262 outcome0.3=1.465s/w230 outcome0.4=1.480s/w168 outcome0.5=1.532s/w115 outcome0.6=1.579s/w85 outcome0.7=1.622s/w46 outcome0.8=1.717s/w20 outcomeshuf0.1=1.644s/w442 outcomeshuf0.2=1.713s/w429 outcomeshuf0.3=1.645s/w356 outcomeshuf0.4=1.710s/w284 outcomeshuf0.5=1.754s/w173 outcomeshuf0.6=1.775s/w95 outcomeshuf0.7=1.825s/w35 outcomeshuf0.8=1.834s/w11 cerebellum_delayed2.5=1.613s/w59 oracle=1.428s/w0
+  large: none=3.776s/w0 last=3.765s/w0 freq=3.645s/w98 cerebellum=3.238s/w91 cerebellum_fixed0.1=3.287s/w91 cerebellum_fixed0.2=3.224s/w91 cerebellum_fixed0.3=3.267s/w82 cerebellum_fixed0.4=3.294s/w55 cerebellum_fixed0.5=3.450s/w26 cerebellum_fixed0.6=3.577s/w12 cerebellum_fixed0.7=3.639s/w3 cerebellum_fixed0.8=3.696s/w2 cerebellum_efixed0.1=3.089s/w244 cerebellum_efixed0.2=3.142s/w211 cerebellum_efixed0.3=3.168s/w135 cerebellum_efixed0.4=3.305s/w68 cerebellum_efixed0.5=3.511s/w27 cerebellum_efixed0.6=3.555s/w12 cerebellum_efixed0.7=3.623s/w3 cerebellum_efixed0.8=3.707s/w2 outcome0.1=3.024s/w273 outcome0.2=2.972s/w259 outcome0.3=2.956s/w221 outcome0.4=3.040s/w166 outcome0.5=3.177s/w115 outcome0.6=3.295s/w85 outcome0.7=3.436s/w46 outcome0.8=3.527s/w20 outcomeshuf0.1=3.654s/w447 outcomeshuf0.2=3.588s/w430 outcomeshuf0.3=3.561s/w378 outcomeshuf0.4=3.733s/w279 outcomeshuf0.5=3.667s/w177 outcomeshuf0.6=3.713s/w94 outcomeshuf0.7=3.746s/w38 outcomeshuf0.8=3.794s/w12 cerebellum_delayed2.5=3.335s/w59 oracle=2.990s/w0
+{
+ "selected": {
+  "small": {
+   "cerebellum_fixed": "cerebellum_fixed0.4",
+   "cerebellum_efixed": "cerebellum_efixed0.4",
+   "outcome": "outcome0.6",
+   "outcomeshuf": "outcomeshuf0.7",
+   "label_best": "cerebellum_efixed0.4"
+  },
+  "large": {
+   "cerebellum_fixed": "cerebellum_fixed0.4",
+   "cerebellum_efixed": "cerebellum_efixed0.4",
+   "outcome": "outcome0.6",
+   "outcomeshuf": "outcomeshuf0.7",
+   "label_best": "cerebellum_efixed0.4"
+  }
+ },
+ "H1_small": {
+  "cond": "outcome0.6",
+  "per_seed": [
+   0.039200521588901305,
+   0.03563041986220539,
+   0.06225031729287192,
+   0.01598217283417591,
+   -0.001513615144338648
+  ],
+  "mean": 0.030309963286763175,
+  "n_pos": 4,
+  "pass": true
+ },
+ "H2_small": {
+  "conds": [
+   "outcome0.1",
+   "outcome0.2",
+   "outcome0.3",
+   "outcome0.4",
+   "outcome0.5",
+   "outcome0.6",
+   "outcome0.7",
+   "outcome0.8"
+  ],
+  "per_theta_mean": [
+   0.03896130948822083,
+   0.027255216194247377,
+   0.03971533872533877,
+   0.04043437302748284,
+   0.030018778612146548,
+   0.030309963286763175,
+   0.033490996434622104,
+   0.006880942503927744
+  ],
+  "per_seed": [
+   0.04853468321349277,
+   0.04291041098187419,
+   0.027938988753826423,
+   0.020944133859504686,
+   0.01408860711177031
+  ],
+  "mean": 0.030883364784093675,
+  "n_pos": 5,
+  "pass": true
+ },
+ "H3_small": {
+  "cond": "outcome0.6",
+  "shuf": "outcomeshuf0.7",
+  "resid_shuf": -0.06457688206944924,
+  "per_seed": [
+   0.09461529159390852,
+   0.07552627876965404,
+   0.1296649354115251,
+   0.0854740161058596,
+   0.08915370490011483
+  ],
+  "mean": 0.09488684535621242,
+  "n_pos": 5,
+  "pass": true
+ },
+ "H4_small": {
+  "cond": "outcome0.6",
+  "resid_delayed": -0.009402660535270276,
+  "per_seed": [
+   0.03807391046215307,
+   0.07832028108835229,
+   0.0588233391181692,
+   0.027162131381189614,
+   -0.0038165429396969097
+  ],
+  "mean": 0.03971262382203345,
+  "n_pos": 4,
+  "pass": true
+ },
+ "H5_small": {
+  "cond": "outcome0.6",
+  "reduction": 0.11847293021471814,
+  "wall_cb": 1.6173858150001252,
+  "wall_simple_min": 1.768821088999721,
+  "seeds_faster_than_none": 5,
+  "wasted_cb": 78.8,
+  "wasted_freq": 109,
+  "c1_reduction": true,
+  "c2_faster_than_simple": true,
+  "c3_seeds": true,
+  "c4_wasted": true,
+  "pass": true
+ },
+ "ref_small": {
+  "label_best": {
+   "cond": "cerebellum_efixed0.4",
+   "reduction": 0.09657920978444925,
+   "wall_cb": 1.6576719218004654,
+   "wall_simple_min": 1.768821088999721,
+   "seeds_faster_than_none": 5,
+   "wasted_cb": 91.8,
+   "wasted_freq": 109,
+   "c1_reduction": false,
+   "c2_faster_than_simple": true,
+   "c3_seeds": true,
+   "c4_wasted": true,
+   "pass": false,
+   "resid": {
+    "per_seed": [
+     0.0,
+     0.0,
+     -0.024738427554940587,
+     0.0,
+     0.0
+    ],
+    "mean": -0.0049476855109881175,
+    "n_pos": 0,
+    "pass": false
+   }
+  },
+  "delayed": {
+   "cond": "cerebellum_delayed2.5",
+   "reduction": 0.08708223930267393,
+   "wall_cb": 1.6747161612005583,
+   "wall_simple_min": 1.768821088999721,
+   "seeds_faster_than_none": 5,
+   "wasted_cb": 88.4,
+   "wasted_freq": 109,
+   "c1_reduction": false,
+   "c2_faster_than_simple": true,
+   "c3_seeds": true,
+   "c4_wasted": true,
+   "pass": false,
+   "resid": {
+    "per_seed": [
+     0.0011266111267482365,
+     -0.0426898612261469,
+     0.0034269781747027217,
+     -0.011179958547013702,
+     0.0023029277953582616
+    ],
+    "mean": -0.009402660535270276,
+    "n_pos": 3,
+    "pass": false
+   }
+  },
+  "shuf_curve_mean": -0.09704527802868268,
+  "resid_stalls_outcome": {
+   "per_seed": [
+    0.09103157894736842,
+    0.09650076070419475,
+    0.11679801267774544,
+    0.0939946946211129,
+    0.05308352849336451
+   ],
+   "mean": 0.09028171508875721,
+   "n_pos": 5,
+   "pass": true
+  },
+  "resid_stalls_delayed": {
+   "per_seed": [
+    0.007778768956288965,
+    -0.0105140186915888,
+    0.03255096796299474,
+    -0.00322797149157851,
+    0.00858704137392663
+   ],
+   "mean": 0.007034957622008605,
+   "n_pos": 3,
+   "pass": false
+  },
+  "outcome_all": {
+   "outcome0.1": {
+    "resid": 0.03896130948822083,
+    "reduction": 0.19643055488777436,
+    "wasted": 276.2
+   },
+   "outcome0.2": {
+    "resid": 0.027255216194247377,
+    "reduction": 0.1847244615938009,
+    "wasted": 268.2
+   },
+   "outcome0.3": {
+    "resid": 0.03971533872533877,
+    "reduction": 0.1944210488130234,
+    "wasted": 234
+   },
+   "outcome0.4": {
+    "resid": 0.04043437302748284,
+    "reduction": 0.18345970430438202,
+    "wasted": 179.2
+   },
+   "outcome0.5": {
+    "resid": 0.030018778612146548,
+    "reduction": 0.15201651260488727,
+    "wasted": 118.6
+   },
+   "outcome0.6": {
+    "resid": 0.030309963286763175,
+    "reduction": 0.11847293021471814,
+    "wasted": 78.8
+   },
+   "outcome0.7": {
+    "resid": 0.033490996434622104,
+    "reduction": 0.09064619133644367,
+    "wasted": 41.4
+   },
+   "outcome0.8": {
+    "resid": 0.006880942503927744,
+    "reduction": 0.04102037601943376,
+    "wasted": 20.4
+   },
+   "outcomeshuf0.1": {
+    "resid": -0.10642342206492632,
+    "reduction": 0.05104582333462722,
+    "wasted": 440.2
+   },
+   "outcomeshuf0.2": {
+    "resid": -0.10960973960915787,
+    "reduction": 0.04785950579039566,
+    "wasted": 428.6
+   },
+   "outcomeshuf0.3": {
+    "resid": -0.10263635241204186,
+    "reduction": 0.054832892987511685,
+    "wasted": 378.4
+   },
+   "outcomeshuf0.4": {
+    "resid": -0.12194365322178344,
+    "reduction": 0.03552559217777009,
+    "wasted": 298.4
+   },
+   "outcomeshuf0.5": {
+    "resid": -0.11421890005724042,
+    "reduction": 0.02954057379149211,
+    "wasted": 190.6
+   },
+   "outcomeshuf0.6": {
+    "resid": -0.10839609949078242,
+    "reduction": 4.0806021063377607e-05,
+    "wasted": 103
+   },
+   "outcomeshuf0.7": {
+    "resid": -0.06457688206944924,
+    "reduction": -0.00792212152879892,
+    "wasted": 42.8
+   },
+   "outcomeshuf0.8": {
+    "resid": -0.04855717530407984,
+    "reduction": -0.019813335944530674,
+    "wasted": 14.6
+   }
+  }
+ },
+ "H1_large": {
+  "cond": "outcome0.6",
+  "per_seed": [
+   0.02025771444087024,
+   0.04231873697636962,
+   0.05242115332230032,
+   0.024636560857049183,
+   -0.01133142654650876
+  ],
+  "mean": 0.025660547810016122,
+  "n_pos": 4,
+  "pass": true
+ },
+ "H2_large": {
+  "conds": [
+   "outcome0.1",
+   "outcome0.2",
+   "outcome0.3",
+   "outcome0.4",
+   "outcome0.5",
+   "outcome0.6",
+   "outcome0.7",
+   "outcome0.8"
+  ],
+  "per_theta_mean": [
+   0.04711781243972293,
+   0.04733392903110638,
+   0.04198969616126345,
+   0.04153786711302988,
+   0.03575277099924405,
+   0.025660547810016122,
+   0.026061523231498757,
+   0.013817008125820995
+  ],
+  "per_seed": [
+   0.04265718775372719,
+   0.04506544314689439,
+   0.042794197838713584,
+   0.03357092152889104,
+   0.010456721551587908
+  ],
+  "mean": 0.03490889436396282,
+  "n_pos": 5,
+  "pass": true
+ },
+ "H3_large": {
+  "cond": "outcome0.6",
+  "shuf": "outcomeshuf0.7",
+  "resid_shuf": -0.07110202216410053,
+  "per_seed": [
+   0.10251785060115022,
+   0.08434149044408018,
+   0.10772624082722065,
+   0.10502395393345618,
+   0.08420331406467602
+  ],
+  "mean": 0.09676256997411666,
+  "n_pos": 5,
+  "pass": true
+ },
+ "H4_large": {
+  "cond": "outcome0.6",
+  "resid_delayed": -0.0028181886770302254,
+  "per_seed": [
+   0.02674019488298504,
+   0.06669918387450363,
+   0.020228505062480084,
+   0.02790168485279454,
+   0.0008241137624684369
+  ],
+  "mean": 0.028478736487046345,
+  "n_pos": 5,
+  "pass": true
+ },
+ "H5_large": {
+  "cond": "outcome0.6",
+  "reduction": 0.12927950444224326,
+  "wall_cb": 3.368070104400249,
+  "wall_simple_min": 3.694853153999611,
+  "seeds_faster_than_none": 5,
+  "wasted_cb": 78.2,
+  "wasted_freq": 109.6,
+  "c1_reduction": true,
+  "c2_faster_than_simple": true,
+  "c3_seeds": true,
+  "c4_wasted": true,
+  "pass": true
+ },
+ "ref_large": {
+  "label_best": {
+   "cond": "cerebellum_efixed0.4",
+   "reduction": 0.10996021305539536,
+   "wall_cb": 3.4432116479994876,
+   "wall_simple_min": 3.694853153999611,
+   "seeds_faster_than_none": 5,
+   "wasted_cb": 92,
+   "wasted_freq": 109.6,
+   "c1_reduction": true,
+   "c2_faster_than_simple": true,
+   "c3_seeds": true,
+   "c4_wasted": true,
+   "pass": true,
+   "resid": {
+    "per_seed": [
+     0.0,
+     0.0,
+     0.0,
+     -0.020139101458884034,
+     -0.006434769235936888
+    ],
+    "mean": -0.005314774138964184,
+    "n_pos": 0,
+    "pass": false
+   }
+  },
+  "delayed": {
+   "cond": "cerebellum_delayed2.5",
+   "reduction": 0.11021384441890025,
+   "wall_cb": 3.441318237000087,
+   "wall_simple_min": 3.694853153999611,
+   "seeds_faster_than_none": 5,
+   "wasted_cb": 88.6,
+   "wasted_freq": 109.6,
+   "c1_reduction": true,
+   "c2_faster_than_simple": true,
+   "c3_seeds": true,
+   "c4_wasted": true,
+   "pass": true,
+   "resid": {
+    "per_seed": [
+     -0.006482480442114802,
+     -0.02438044689813401,
+     0.03219264825982024,
+     -0.003265123995745356,
+     -0.012155540308977197
+    ],
+    "mean": -0.0028181886770302254,
+    "n_pos": 1,
+    "pass": false
+   }
+  },
+  "shuf_curve_mean": -0.10722597170526682,
+  "resid_stalls_outcome": {
+   "per_seed": [
+    0.08869473684210517,
+    0.09340360791132371,
+    0.10848894980298106,
+    0.09902334569384234,
+    0.05620608899297419
+   ],
+   "mean": 0.0891633458486453,
+   "n_pos": 5,
+   "pass": true
+  },
+  "resid_stalls_delayed": {
+   "per_seed": [
+    0.010278637770897756,
+    -0.011682242990654235,
+    0.0347781394551996,
+    0.0064239828693789525,
+    0.0069390233324659635
+   ],
+   "mean": 0.009347508087457608,
+   "n_pos": 4,
+   "pass": false
+  },
+  "outcome_all": {
+   "outcome0.1": {
+    "resid": 0.04711781243972293,
+    "reduction": 0.21168432689059524,
+    "wasted": 273.6
+   },
+   "outcome0.2": {
+    "resid": 0.04733392903110638,
+    "reduction": 0.2119004434819787,
+    "wasted": 262
+   },
+   "outcome0.3": {
+    "resid": 0.04198969616126345,
+    "reduction": 0.2046111140026349,
+    "wasted": 232.6
+   },
+   "outcome0.4": {
+    "resid": 0.04153786711302988,
+    "reduction": 0.1972409885615059,
+    "wasted": 177.6
+   },
+   "outcome0.5": {
+    "resid": 0.03575277099924405,
+    "reduction": 0.170954694536954,
+    "wasted": 120.8
+   },
+   "outcome0.6": {
+    "resid": 0.025660547810016122,
+    "reduction": 0.12927950444224326,
+    "wasted": 78.2
+   },
+   "outcome0.7": {
+    "resid": 0.026061523231498757,
+    "reduction": 0.09607822327716597,
+    "wasted": 42
+   },
+   "outcome0.8": {
+    "resid": 0.013817008125820995,
+    "reduction": 0.0602934853930881,
+    "wasted": 21
+   },
+   "outcomeshuf0.1": {
+    "resid": -0.13018820751062274,
+    "reduction": 0.03437830694024957,
+    "wasted": 439
+   },
+   "outcomeshuf0.2": {
+    "resid": -0.11909319265764857,
+    "reduction": 0.04547332179322374,
+    "wasted": 428.6
+   },
+   "outcomeshuf0.3": {
+    "resid": -0.11561518938179868,
+    "reduction": 0.048951325069073626,
+    "wasted": 385.8
+   },
+   "outcomeshuf0.4": {
+    "resid": -0.1288908470954691,
+    "reduction": 0.035675667355403194,
+    "wasted": 299.4
+   },
+   "outcomeshuf0.5": {
+    "resid": -0.13319975016664226,
+    "reduction": 0.026689201947869768,
+    "wasted": 192.8
+   },
+   "outcomeshuf0.6": {
+    "resid": -0.10908942475747663,
+    "reduction": 0.009939048157940422,
+    "wasted": 101.4
+   },
+   "outcomeshuf0.7": {
+    "resid": -0.07110202216410053,
+    "reduction": 0.004244727038710772,
+    "wasted": 46.2
+   },
+   "outcomeshuf0.8": {
+    "resid": -0.050629139908376024,
+    "reduction": -0.012516864851594933,
+    "wasted": 15.2
+   }
+  }
+ }
+}
+small: none=1.835s(+0.0%)/w0 last=1.868s(-1.8%)/w0 freq=1.769s(+3.6%)/w109 cerebellum=1.639s(+10.7%)/w124 cerebellum_fixed0.1=1.634s(+10.9%)/w124 cerebellum_fixed0.2=1.616s(+11.9%)/w124 cerebellum_fixed0.3=1.619s(+11.7%)/w115 cerebellum_fixed0.4=1.668s(+9.1%)/w83 cerebellum_fixed0.5=1.730s(+5.7%)/w44 cerebellum_fixed0.6=1.794s(+2.2%)/w18 cerebellum_fixed0.7=1.833s(+0.1%)/w5 cerebellum_fixed0.8=1.856s(-1.2%)/w1 cerebellum_efixed0.1=1.554s(+15.2%)/w249 cerebellum_efixed0.2=1.561s(+14.9%)/w215 cerebellum_efixed0.3=1.576s(+14.1%)/w154 cerebellum_efixed0.4=1.658s(+9.7%)/w92 cerebellum_efixed0.5=1.738s(+5.3%)/w45 cerebellum_efixed0.6=1.792s(+2.3%)/w18 cerebellum_efixed0.7=1.819s(+0.9%)/w5 cerebellum_efixed0.8=1.853s(-1.0%)/w1 outcome0.1=1.474s(+19.6%)/w276 outcome0.2=1.496s(+18.5%)/w268 outcome0.3=1.478s(+19.4%)/w234 outcome0.4=1.498s(+18.3%)/w179 outcome0.5=1.556s(+15.2%)/w119 outcome0.6=1.617s(+11.8%)/w79 outcome0.7=1.668s(+9.1%)/w41 outcome0.8=1.760s(+4.1%)/w20 outcomeshuf0.1=1.742s(+5.1%)/w440 outcomeshuf0.2=1.747s(+4.8%)/w429 outcomeshuf0.3=1.734s(+5.5%)/w378 outcomeshuf0.4=1.770s(+3.6%)/w298 outcomeshuf0.5=1.780s(+3.0%)/w191 outcomeshuf0.6=1.835s(+0.0%)/w103 outcomeshuf0.7=1.849s(-0.8%)/w43 outcomeshuf0.8=1.871s(-2.0%)/w15 cerebellum_delayed2.5=1.675s(+8.7%)/w88 oracle=1.455s(+20.7%)/w0
+large: none=3.869s(+0.0%)/w0 last=3.918s(-1.2%)/w0 freq=3.695s(+4.4%)/w110 cerebellum=3.358s(+13.2%)/w124 cerebellum_fixed0.1=3.369s(+12.9%)/w124 cerebellum_fixed0.2=3.379s(+12.6%)/w125 cerebellum_fixed0.3=3.366s(+13.0%)/w115 cerebellum_fixed0.4=3.447s(+10.9%)/w83 cerebellum_fixed0.5=3.599s(+7.0%)/w44 cerebellum_fixed0.6=3.727s(+3.7%)/w18 cerebellum_fixed0.7=3.776s(+2.4%)/w5 cerebellum_fixed0.8=3.842s(+0.7%)/w1 cerebellum_efixed0.1=3.272s(+15.4%)/w248 cerebellum_efixed0.2=3.268s(+15.5%)/w213 cerebellum_efixed0.3=3.290s(+14.9%)/w153 cerebellum_efixed0.4=3.443s(+11.0%)/w92 cerebellum_efixed0.5=3.616s(+6.5%)/w45 cerebellum_efixed0.6=3.723s(+3.8%)/w18 cerebellum_efixed0.7=3.803s(+1.7%)/w5 cerebellum_efixed0.8=3.868s(+0.0%)/w1 outcome0.1=3.049s(+21.2%)/w274 outcome0.2=3.049s(+21.2%)/w262 outcome0.3=3.076s(+20.5%)/w233 outcome0.4=3.105s(+19.7%)/w178 outcome0.5=3.205s(+17.1%)/w121 outcome0.6=3.368s(+12.9%)/w78 outcome0.7=3.496s(+9.6%)/w42 outcome0.8=3.636s(+6.0%)/w21 outcomeshuf0.1=3.735s(+3.4%)/w439 outcomeshuf0.2=3.692s(+4.5%)/w429 outcomeshuf0.3=3.679s(+4.9%)/w386 outcomeshuf0.4=3.730s(+3.6%)/w299 outcomeshuf0.5=3.766s(+2.7%)/w193 outcomeshuf0.6=3.830s(+1.0%)/w101 outcomeshuf0.7=3.853s(+0.4%)/w46 outcomeshuf0.8=3.917s(-1.3%)/w15 cerebellum_delayed2.5=3.441s(+11.0%)/w89 oracle=3.052s(+21.1%)/w0
