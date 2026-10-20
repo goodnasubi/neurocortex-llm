@@ -101,7 +101,7 @@ def run_one(job: tuple, table: dict) -> dict:
     return run_job(job, table[job[3]])
 
 
-def _group(rows: dict, runs_d: dict, pred) -> dict:
+def _group(rows: dict, runs_d: dict, pred, rules: tuple = RULES) -> dict:
     """組の集合ごとの平均・最悪の組・1回ごとの差の分布。"""
     g = {k: v for k, v in rows.items() if pred(k, v)}
     out: dict = {"n": len(g), "combos": sorted(g)}
@@ -112,7 +112,7 @@ def _group(rows: dict, runs_d: dict, pred) -> dict:
         if k.startswith("new_") and vals:
             out[f"min_{k}"] = min(vals)
             out[f"argmin_{k}"] = min((v[k], c) for c, v in g.items() if v.get(k) is not None)[1]
-    for w in RULES:
+    for w in rules:
         d = sorted(x for c in g for x in runs_d.get(c, {}).get(w, []))
         if d:
             n = len(d)
@@ -125,8 +125,9 @@ def _group(rows: dict, runs_d: dict, pred) -> dict:
     return out
 
 
-def analyze(paths: list[Path]) -> dict:
-    """各規則は同じシードの base と対にして差をとる。組の分類は 12.6.161節と同じ（base の gap、正確度の単位）。"""
+def analyze(paths: list[Path], rules: tuple = RULES, verdict_fn=None) -> dict:
+    """各規則は同じシードの base と対にして差をとる。組の分類は 12.6.161節と同じ（base の gap、正確度の単位）。
+    rules・verdict_fn は 12.6.225節（run_context_replay_uncertainty）が別の規則の組で使う。"""
     runs: dict = {}
     for p in paths:
         runs.update(json.loads(p.read_text(encoding="utf-8"))["runs"])
@@ -141,7 +142,7 @@ def analyze(paths: list[Path]) -> dict:
                    "end_base": _avg([_avg(x["end_nat"]) for x in base.values()]),
                    "new_base": _avg([x["new_nat"] for x in base.values()]), "pre_identical": True}
         runs_d[cb] = {}
-        for w in RULES:
+        for w in rules:
             per = {x["seed"]: x for x in runs.get(f"{cb}/{w}", {}).get("per_seed", [])}
             if not per:
                 continue
@@ -175,13 +176,13 @@ def analyze(paths: list[Path]) -> dict:
         return lambda k, v: k.split("/")[1].startswith(f"{m}_")
 
     res = {"rows": rows, "pre_identical": all(r["pre_identical"] for r in rows.values()),
-           "over_14bit": _group(rows, runs_d, over), "not_over": _group(rows, runs_d, intact),
-           "all": _group(rows, runs_d, lambda k, v: True)}
+           "over_14bit": _group(rows, runs_d, over, rules), "not_over": _group(rows, runs_d, intact, rules),
+           "all": _group(rows, runs_d, lambda k, v: True, rules)}
     for m in MECHS_USED:
-        res[f"{m}_over_14bit"] = _group(rows, runs_d, lambda k, v, f=mech(m): f(k, v) and over(k, v))
-        res[f"{m}_not_over"] = _group(rows, runs_d, lambda k, v, f=mech(m): f(k, v) and intact(k, v))
-        res[f"{m}_all"] = _group(rows, runs_d, mech(m))
-    res["verdict"] = verdict(res)
+        res[f"{m}_over_14bit"] = _group(rows, runs_d, lambda k, v, f=mech(m): f(k, v) and over(k, v), rules)
+        res[f"{m}_not_over"] = _group(rows, runs_d, lambda k, v, f=mech(m): f(k, v) and intact(k, v), rules)
+        res[f"{m}_all"] = _group(rows, runs_d, mech(m), rules)
+    res["verdict"] = (verdict_fn or verdict)(res)
     return res
 
 

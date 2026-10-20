@@ -87,7 +87,9 @@ RECON_READOUTS = ("recon_buf", "recon_all", "recon_all200", "recon_inter", "reco
 RECON_EXTRA_READOUTS = ("recon_buf_inter", "recon_buf_err")  # 12.6.161節（バッファでの学び直しが効く理由の切り分け）
 WRITEBACKS = ("none", "all", "inter")  # 12.6.161節（学び直しの共有の重みへの書き戻し）
 REPLAY_RULES = ("gain", "need", "sleep", "ach", "ach_need", "ach_need2",  # 12.6.163節（海馬の痕跡のリプレイの配分）
-                "ach_c", "nrem", "ach_c_nrem", "nrem2", "ach_c_nrem2")  # 12.6.167節（連続的な新しさの信号・新しい記憶を優先する睡眠の段階）
+                "ach_c", "nrem", "ach_c_nrem", "nrem2", "ach_c_nrem2",  # 12.6.167節（連続的な新しさの信号・新しい記憶を優先する睡眠の段階）
+                "ach_u", "ach_v", "ach_uv")  # 12.6.225節（不確かさによる新しさの信号）
+ACH_C_RULES = ("ach_c", "ach_c_nrem", "ach_c_nrem2", "ach_u", "ach_v", "ach_uv")  # なじみの度合い f で配分する規則
 
 
 def episodic_readout(p_param: torch.Tensor, x: torch.Tensor, store_bits: torch.Tensor, store_labels: torch.Tensor,
@@ -369,13 +371,18 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
           ステップ（古い記憶 = それ以前からある文脈の痕跡。加えた痕跡を含む）を、NREM から始めて1ステップずつ交互に
           学習する。新しい文脈の痕跡がまだなければ睡眠の段階を置かない。
       "ach_c_nrem" … 覚醒中は "ach_c"、睡眠の段階は "nrem"。
+      "ach_u" / "ach_v" / "ach_uv" … 12.6.225節。"ach_c" と同じ配分で、なじみの度合いを損失の平均ではなく不確かさで
+          推定する。U_c はモデル自身の予測のエントロピー（ラベルを使わない、予期された不確かさ。Yu & Dayan 2005 の
+          アセチルコリン）の指数移動平均、σ_c は損失の移動平均からのずれの二乗の指数移動平均の平方根（損失の揺らぎ。
+          予期しない不確かさ・変動性）。減衰はどれも ach_ema。"ach_u" は f = clamp(1 − U_c/τ)、"ach_v" は
+          f = clamp(1 − (L̄_c + σ_c)/τ)、"ach_uv" は f = clamp(1 − (U_c + σ_c)/τ)（驚きのあるステップでは 0）。
       "nrem2" / "ach_c_nrem2" … 12.6.167節の修正1。睡眠の段階の痕跡の出どころを Singh et al. の海馬と新皮質の分業に
           合わせる。NREM に似たステップは海馬の痕跡（新しい文脈の痕跡と、加えた痕跡（再活性化した保留サンプル）を
           batch の半分ずつ。加えた痕跡がなければ新しい文脈の痕跡だけ）、REM に似たステップは古い文脈の固定化済みの
           バッファ（加えた痕跡を除く）から取る。覚醒中はそれぞれ "nrem" / "ach_c" と同じ。
       diagnostics = True では diag["replay_mix"][k]（規則を適用したタスク k の、リプレイの痕跡のうちそのステップで
       選んだ文脈のものの割合 "own"、加えた痕跡の割合 "kept"、1ステップのリプレイの数の平均 "size"、睡眠のステップ数
-      "sleep"、なじみの度合い f の平均 "fam"（ach_c のみ意味を持つ））を加える。
+      "sleep"、なじみの度合い f の平均 "fam"（ACH_C_RULES のみ意味を持つ））を加える。
 
     ctx_units = K > 0（文脈を使う条件のみ。12.6.219節）では、モデルを context_subnet.GatedModel にする。共有の隠れ層
     hidden_dim 個に加えて、文脈の枠ごとに K 個の隠れユニットを持ち、入力の文脈の one-hot が指す枠のユニットだけを
@@ -664,6 +671,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     buf_count: dict[int, int] = {}
     ema_loss: dict[int, float] = {}
     nov_loss: dict[int, float] = {}  # 12.6.167節: ach_c のなじみの度合いに使う損失のゆっくりした移動平均
+    nov_unc: dict[int, float] = {}  # 12.6.225節: 予測のエントロピーの移動平均（予期された不確かさ）
+    nov_var: dict[int, float] = {}  # 12.6.225節: 損失の移動平均からのずれの二乗の移動平均（損失の揺らぎ）
     old_ctx: set[int] = set()  # 12.6.167節: 規則の適用を始めた時点にあった文脈（nrem の古い記憶）
     cur = 0
     used = [0]
@@ -818,13 +827,20 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             buf_ctx.append(hc[keep])
             buf_src.append(torch.full((int(keep.sum()),), -1, dtype=torch.long))
 
+    def novelty_level(rule: str, ctx: int) -> float:
+        """12.6.225節: なじみの度合い f = clamp(1 − 値/τ) の「値」（文脈 ctx の不確かさの推定）。"""
+        if ctx not in nov_loss:
+            return math.inf
+        sd = math.sqrt(nov_var.get(ctx, 0.0)) if rule in ("ach_v", "ach_uv") else 0.0
+        return (nov_unc[ctx] if rule in ("ach_u", "ach_uv") else nov_loss[ctx]) + sd
+
     def replay_draw(rule: str, ctx: int) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """12.6.163節: リプレイする痕跡（入力に文脈を付けたもの、ラベル、出どころ）を取る。rule = "" は従来と同じ。"""
         bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
         bs = torch.cat(buf_src)
         novel = rule in ("ach", "ach_need", "ach_need2") and not gate["store"]
-        if rule in ("ach_c", "ach_c_nrem", "ach_c_nrem2"):
-            f = max(0.0, min(1.0, 1 - nov_loss.get(ctx, math.inf) / tau)) if gate["store"] else 0.0
+        if rule in ACH_C_RULES:
+            f = max(0.0, min(1.0, 1 - novelty_level(rule, ctx) / tau)) if gate["store"] else 0.0
             n_f = round(f * batch)
             wake = (bs != -1).nonzero()[:, 0]
             # 残りは加えた痕跡を除いたバッファから一様に（f = 0 なら痕跡を加えない場合と同じ乱数の消費と選択）
@@ -1031,7 +1047,14 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 with torch.no_grad():
                     cur_loss = loss_under(bits, labels, ctx_in)
                 ema_loss[ctx] = cur_loss if ctx not in ema_loss else ema * ema_loss[ctx] + (1 - ema) * cur_loss
+                if ctx in nov_loss:
+                    nov_var[ctx] = ach_ema * nov_var.get(ctx, 0.0) + (1 - ach_ema) * (cur_loss - nov_loss[ctx]) ** 2
                 nov_loss[ctx] = cur_loss if ctx not in nov_loss else ach_ema * nov_loss[ctx] + (1 - ach_ema) * cur_loss
+                if replay_rule in ("ach_u", "ach_uv"):  # 規則の適用の前から持つ（nov_loss と同じ）
+                    with torch.no_grad():
+                        lp = F.log_softmax(model(with_ctx(bits, ctx_in)), -1)
+                        cur_unc = float(-(lp.exp() * lp).sum(-1).mean())
+                    nov_unc[ctx] = cur_unc if ctx not in nov_unc else ach_ema * nov_unc[ctx] + (1 - ach_ema) * cur_unc
                 if evidence_reliability and revised and reliability_source == "gated":
                     with torch.no_grad():
                         cur_acc = float((model(with_ctx(bits, ctx_in)).argmax(-1) == labels).float().mean())
