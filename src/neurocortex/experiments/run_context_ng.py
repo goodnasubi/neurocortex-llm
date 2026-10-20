@@ -176,6 +176,7 @@ def main() -> None:
     ap.add_argument("--families", nargs="+", default=list(FAMILIES))
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--out", type=Path)
+    ap.add_argument("--cache", type=Path, help="ジョブごとの結果を保存し、中断から再開する（同じ設定のときだけ使う）")
     args = ap.parse_args()
     if args.analyze:
         runs = [r for p in args.analyze for r in json.loads(p.read_text(encoding="utf-8"))["runs"]]
@@ -184,7 +185,14 @@ def main() -> None:
     seeds = args.seeds or (DEV_SEEDS if args.phase == "dev" else EVAL_SEEDS)
     jobs = [(f, reg, s) for f in args.families for reg in REGIMES for s in seeds]
     with Pool(args.workers) as pool:
-        runs = pool.map(run_one, jobs, chunksize=1)
+        if args.cache:
+            args.cache.mkdir(parents=True, exist_ok=True)
+            todo = [j for j in jobs if not (args.cache / f"{j[0]}_{j[1]}_{j[2]}.json").exists()]
+            for r in pool.imap_unordered(run_one, todo):
+                (args.cache / f"{r['family']}_{r['regime']}_{r['seed']}.json").write_text(json.dumps(r), encoding="utf-8")
+            runs = [json.loads((args.cache / f"{f}_{reg}_{s}.json").read_text(encoding="utf-8")) for f, reg, s in jobs]
+        else:
+            runs = pool.map(run_one, jobs, chunksize=1)
     out = {"環境": env_info(), "設定": {"arch": "gain", "tcm_beta": FIX1_BETA, "item": f"{FIX1_ITEM}文字組の one-hot",
                                      "ca3_iters": CA3_ITERS, "ca3_sparsity": CA3_SPARSITY,
                                      "cmp": "λ = 1 − δ、δ = 1 − cos(r_S, t̂)/cos(r_1, t̂)",
