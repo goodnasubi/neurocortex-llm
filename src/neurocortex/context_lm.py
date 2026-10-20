@@ -24,6 +24,8 @@
 （Hasselmo, Wyble & Wallenstein 1996; Lisman & Grace 2005。active_*_cmp の規則のときだけ）。
 12.6.197〜198節: 痕跡を歯状回のパターン分離（疎な拡張と k-WTA。dg_codes）で符号化して CA3 に保存し、補完を
 その符号の空間で行う（手がかりは貫通路から生のタグで入る。ca3_recall_codes。active_*_dg・rp の規則のときだけ）。
+12.6.203〜204節: 歯状回に成体神経新生を加える（ng_codes）。時刻とともに入れ替わる若い細胞の集団に、その時刻に保存する痕跡を
+優先して割り当て、若い細胞の入力の結合を保存のときに Hebb 則で学ぶ（active_*_ng の規則のときだけ）。
 
 12.6.143節と違い、能動的な選択も打ち切りなしで n 個すべてを観測する（観測の数を規則の間で揃えるため）。
 """
@@ -64,6 +66,11 @@ CMP_RULES = ("active_replay_cmp", "active_holdout_cmp", "active_replay_cmp_shuf"
 # rp・rpcmp は疎性を合わせた乱数射影（競合なし、入力の幾何を保つ）の対照
 DG_RULES = ("active_replay_dg", "active_replay_dgcmp", "active_holdout_dgcmp", "active_replay_rp",
             "active_replay_rpcmp")
+# 12.6.203節: 成体神経新生のある歯状回（ng_codes）。ng は補完（λ = 1）、ngcmp は比較器のゲートつき、ngshuf は痕跡の
+# 時刻を痕跡の間で並べ替えた対照（若さの割り当てが時刻と無関係）、ngnohebb は若い細胞の Hebb 則なし（参考）
+NG_RULES = ("active_replay_ng", "active_replay_ngcmp", "active_holdout_ngcmp", "active_replay_ngshuf",
+            "active_replay_ngshufcmp", "active_replay_ngnohebbcmp")
+NG_VARIANTS = {"ng": (False, True), "ngshuf": (True, True), "ngnohebb": (False, False)}  # (並べ替え, Hebb)
 
 
 @dataclass(frozen=True)
@@ -217,6 +224,64 @@ def rp_codes(tags: torch.Tensor, w: torch.Tensor, n_active: int, conn: float) ->
     発火する単位の数は歯状回と同じ。符号 [N, n_active]（行ごとに正規化）。"""
     x = nn.functional.normalize(tags, dim=-1)
     return nn.functional.normalize(x @ (w[:n_active] - conn).T, dim=-1)
+
+
+def storage_times(srcs: torch.Tensor, regime: str, n_ctx: int, generator: torch.Generator) -> torch.Tensor:
+    """痕跡を経験した時刻 [N]（12.6.203節。単位は1つの言語の学習の期間）。seq では言語 j を第 j 期に学ぶので、その
+    痕跡の時刻は j + U(0, 1)。joint では全言語を毎ステップ混ぜて学ぶので、時刻は言語によらず U(0, n_ctx)。"""
+    u = torch.rand(srcs.shape[0], generator=generator)
+    return srcs.float() + u if regime == "seq" else u * n_ctx
+
+
+def ng_codes(tags: torch.Tensor, times: torch.Tensor, w: torch.Tensor, n_active: int, n_young: int,
+             young_frac: float, tau: float, conn: float, eta: float, generator: torch.Generator) -> tuple:
+    """成体神経新生のある歯状回の符号（12.6.203節）。
+
+    成熟した顆粒細胞 w [M, D]（dg_codes と同じ固定の結合）に加え、新生細胞が時刻 b_i に一定の割合で生まれ
+    （どの時刻にも若い細胞が n_young 個）、生まれてから tau の間だけ若い（興奮性が高く可塑的: Ge et al. 2007;
+    Marín-Burgin et al. 2012）。時刻 t の痕跡は、成熟した細胞の競合（k-WTA）で (1 − young_frac)·n_active 個、
+    その時刻に若い細胞の競合で young_frac·n_active 個を発火させる（若い細胞への優先的な割り当て: Aimone, Wiles &
+    Gage 2006, 2009）。各部分は c = relu(h − θ) を正規化し、重み √(1 − young_frac)・√young_frac で結合する。
+    若い細胞の入力の結合は、保存のたびに Hebb 則（発火した細胞の結合を入力の方向へ動かし、ノルムを保つ:
+    u ← normalize(u + eta·(c/max c)·x̂)）で学ぶ。痕跡は時刻の順に処理し、符号は保存の時点のもの。
+    成熟した新生細胞は、新しい痕跡の割り当てに加わらない（簡単化。符号には若かったときの発火が残る）。
+    疎な符号 (番号 [N, a], 値 [N, a], 次元) を返す（dg_codes と同じ形）。"""
+    x = nn.functional.normalize(tags, dim=-1)
+    n, d = x.shape
+    m = w.shape[0]
+    a_y = max(1, round(young_frac * n_active))
+    a_m = n_active - a_y
+    t0, t1 = float(times.min()), float(times.max())
+    n_born = math.ceil(n_young * (t1 - t0 + tau) / tau) + 1
+    birth = t0 - tau + (torch.arange(n_born, dtype=torch.float64) + 0.5) * (tau / n_young)
+    w_y = (torch.rand(n_born, d, generator=generator) < conn).float()
+    u = nn.functional.normalize(w_y, dim=-1)
+    scale = w_y.norm(dim=-1)  # 結合の強さ（ノルム）は保つ（シナプスのスケーリング）
+    y_ind = torch.full((n, a_y), m + n_born)  # 若い細胞が足りないときは値0の空き列（最後の列）で埋める
+    y_val = torch.zeros(n, a_y)
+    tt = times.double()
+    los = torch.searchsorted(birth, tt - tau, right=True).tolist()  # 若い細胞: t − τ < b ≦ t
+    his = torch.searchsorted(birth, tt, right=True).tolist()
+    for i in times.argsort().tolist():
+        lo, hi = los[i], his[i]
+        k = min(a_y, hi - lo)
+        if k <= 0:
+            continue
+        h = (u[lo:hi] @ x[i]) * scale[lo:hi]
+        top = h.topk(min(k + 1, hi - lo))
+        th = top.values[-1] if top.values.shape[0] > k else torch.tensor(0.0)
+        c = (top.values[:k] - th).clamp_min(0.0)
+        cells = top.indices[:k] + lo
+        y_ind[i, :k], y_val[i, :k] = cells + m, c
+        if eta > 0 and float(c.max()) > 0:
+            u[cells] = nn.functional.normalize(u[cells] + eta * (c / c.max())[:, None] * x[i], dim=-1)
+    m_ind, m_val, _ = dg_codes(tags, w, a_m) if a_m > 0 else (torch.empty(n, 0, dtype=torch.long),
+                                                              torch.empty(n, 0), m)
+    y_val = nn.functional.normalize(y_val, dim=-1) * math.sqrt(young_frac)
+    ind = torch.cat([m_ind, y_ind], dim=1)
+    val = torch.cat([m_val * math.sqrt(1 - young_frac), y_val], dim=1)
+    ind, srt = ind.sort(dim=-1)  # CSR の列の番号は行ごとに昇順（成熟 < 若い < 空き列）
+    return ind, val.gather(1, srt), m + n_born + 1
 
 
 def _code_ops(codes):
@@ -458,6 +523,10 @@ class TrainConfig:
     dg_expand: int = 4  # 歯状回の顆粒細胞の数（タグの次元の倍数。12.6.197節）
     dg_conn: float = 0.05  # 各顆粒細胞が結合する嗅内皮質の入力の割合
     dg_sparsity: float = 0.05  # 歯状回で発火する顆粒細胞の割合（k-WTA）。乱数射影の対照も同じ数の単位
+    ng_young: float = 0.05  # どの時刻にも若い新生細胞の数（成熟した顆粒細胞の数に対する割合。12.6.203節）
+    ng_alloc: float = 0.5  # 痕跡の符号のうち若い細胞に割り当てる割合
+    ng_tau: float = 1.0  # 新生細胞が若い期間（1つの言語の学習の期間を単位とする）
+    ng_eta: float = 0.01  # 若い細胞の入力の結合の Hebb 則の学習率
 
 
 def train_models(fam: LangFamily, trans: torch.Tensor, cfg: TrainConfig, generator: torch.Generator,
@@ -589,8 +658,9 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
         cshuf_gen = torch.Generator().manual_seed(generator.initial_seed() + 1414)  # cmp_shuf の並べ替え専用
         dg_gen = torch.Generator().manual_seed(generator.initial_seed() + 1515)  # 歯状回の結合・答え専用
         tcm = [r for r in rules if r in TCM_RULES or r in CA3_RULES or r in ACH_RULES or r in CMP_RULES
-               or r in DG_RULES]
+               or r in DG_RULES or r in NG_RULES]
         dg = [r for r in rules if r in DG_RULES]
+        ng = [r for r in rules if r in NG_RULES]
         ca3 = [r for r in rules if r in CA3_RULES]
         ach = [r for r in rules if r in ACH_RULES]
         cmp = [r for r in rules if r in CMP_RULES]
@@ -613,6 +683,30 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                 generator.initial_seed() + 1616)) for name, c in
                 (("raw", nn.functional.normalize(all_buf_tag, dim=-1)), ("dg", dg_bank["dg"]["replay"]),
                  ("rp", dg_bank["rp"]["replay"]))}
+        if ng:  # 成体神経新生のある歯状回の符号（12.6.203節）。成熟した細胞の結合は dg と同じ（同じ種で引き直す）
+            d_in = all_buf_tag.shape[1]
+            seed0 = generator.initial_seed()
+            w_ng = dg_weights(d_in, cfg.dg_expand * d_in, cfg.dg_conn, torch.Generator().manual_seed(seed0 + 1515))
+            n_ng = max(1, round(cfg.dg_sparsity * w_ng.shape[0]))
+            # 保存した痕跡（バッファと保留サンプル）は同じ時間の流れの中で経験したので、まとめて時刻の順に符号化する
+            ng_tags = torch.cat([all_buf_tag, all_hold_tag])
+            ng_src = torch.cat([buf_src, hold_src])
+            ng_t = storage_times(ng_src, cfg.regime, n_l, torch.Generator().manual_seed(seed0 + 1818))
+            ng_bank = {}
+            for var, (shuffled, hebb) in NG_VARIANTS.items():
+                if not any(r.removeprefix("active_").split("_")[1].removesuffix("cmp") == var for r in ng):
+                    continue
+                times = ng_t[torch.randperm(ng_t.shape[0], generator=torch.Generator().manual_seed(seed0 + 1919))
+                             ] if shuffled else ng_t
+                ind, val, dim = ng_codes(ng_tags, times, w_ng, n_ng, round(cfg.ng_young * w_ng.shape[0]),
+                                         cfg.ng_alloc, cfg.ng_tau, cfg.dg_conn, cfg.ng_eta if hebb else 0.0,
+                                         torch.Generator().manual_seed(seed0 + 2020))
+                nb = all_buf_tag.shape[0]
+                ng_bank[var] = {"replay": (ind[:nb], val[:nb], dim), "holdout": (ind[nb:], val[nb:], dim)}
+            ov_gen = generator.initial_seed() + 1616  # dg_overlap と同じ痕跡の標本
+            out["ng_overlap"] = {name: code_overlap(c["replay"], buf_src, 600, torch.Generator().manual_seed(ov_gen))
+                                 for name, c in ng_bank.items()}
+            ng_gen = torch.Generator().manual_seed(seed0 + 1717)  # 神経新生の規則の答え専用
         all_buf = torch.cat(trained["buf_x"])
         all_hold = torch.cat(trained["hold_x"])
         res: dict = {}
@@ -625,6 +719,8 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
             purity = {"replay_tcm": 0.0, "holdout_tcm": 0.0}
             purity.update({r.removeprefix("active_"): 0.0 for r in ca3 + ach + cmp + dg})
             lam_mean = {r.removeprefix("active_"): 0.0 for r in ach + cmp + [d for d in dg if d.endswith("cmp")]}
+            purity.update({r.removeprefix("active_"): 0.0 for r in ng})
+            lam_mean.update({r.removeprefix("active_"): 0.0 for r in ng if r.endswith("cmp")})
             for j in range(n_l):
                 # 情報源の答えは真の分布から引く（窓の出どころによらず同じ規則）
                 def answers(xw: torch.Tensor, gen: torch.Generator = generator) -> torch.Tensor:
@@ -719,6 +815,24 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                     pools[key] = bank[idx]
                     ans[key] = answers(pools[key], dg_gen)
                     purity[key] += float((srcs[idx] == j).float().mean()) / n_l
+                for r in ng:  # 神経新生のある歯状回の符号で補完してから想起する（12.6.203節）
+                    key = r.removeprefix("active_")
+                    bank_name, code = key.split("_")
+                    gated = code.endswith("cmp")
+                    code = code.removesuffix("cmp")
+                    bank, tags, srcs = ((all_buf, all_buf_tag, buf_src) if bank_name == "replay"
+                                        else (all_hold, all_hold_tag, hold_src))
+                    n_act = max(1, round(cfg.ca3_sparsity * tags.shape[0]))
+                    t_now = tcm_now(task_x, v, cfg.tcm_beta, cfg.tcm_item)
+                    codes = ng_bank[code][bank_name]
+                    idx, delta = ca3_recall_codes(t_now, tags, codes, cfg.ca3_iters, n_act, m)
+                    if gated:
+                        lam = 1 - delta
+                        idx, _ = ca3_recall_codes(t_now, tags, codes, cfg.ca3_iters, n_act, m, lam)
+                        lam_mean[key] += float(lam.mean()) / n_l
+                    pools[key] = bank[idx]
+                    ans[key] = answers(pools[key], ng_gen)
+                    purity[key] += float((srcs[idx] == j).float().mean()) / n_l
                 ans["passage"] = py_.reshape(episodes, n)
                 logp = {key: model.logp_all(px.reshape(-1, k)).reshape(episodes, px.shape[1], n_l, v)
                         for key, px in pools.items()}
@@ -728,7 +842,8 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
                         "active_replay_cued": ("replay_cued", True), "active_holdout_cued": ("holdout_cued", True),
                         "active_replay_own": ("replay_own", True),
                         "active_replay_tcm": ("replay_tcm", True), "active_holdout_tcm": ("holdout_tcm", True),
-                        **{r: (r.removeprefix("active_"), True) for r in CA3_RULES + ACH_RULES + CMP_RULES + DG_RULES}}
+                        **{r: (r.removeprefix("active_"), True) for r in CA3_RULES + ACH_RULES + CMP_RULES + DG_RULES
+                           + NG_RULES}}
                 soft = [r for r in rules if r in SOFT_RULES]
                 for r in rules:
                     if r in SOFT_RULES:
@@ -755,7 +870,7 @@ def evaluate(fam: LangFamily, trans: torch.Tensor, trained: dict, cfg: TrainConf
             res[str(n)] = {"acc": acc, "ce": ce_sel, "info": info, "acc_per_lang": per_lang}
             if tcm:  # 想起した痕跡のうち本来の文脈のものの割合（操作の確認）
                 res[str(n)]["tcm_purity"] = purity
-            if ach or cmp or dg:  # ゲートの強さ λ の平均（操作の確認）
+            if ach or cmp or dg or ng:  # ゲートの強さ λ の平均（操作の確認）
                 res[str(n)]["ach_lambda"] = lam_mean
         out["cues"] = res
     return out
