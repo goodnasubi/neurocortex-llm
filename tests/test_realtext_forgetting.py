@@ -104,3 +104,8 @@ def test_jobs():
     assert {(r, x) for _, r, _, x in ev} == {("naive", 0.0), ("replay", 0.0), ("ewc", 0.03), ("replay_ewc", 0.03),
                                              ("joint", 0.0)}
     assert {sd for *_, sd, _ in ev} == set(rf.EVAL_SEEDS)
+
+
+def test_jobs_conds():
+    js = rf.jobs_for("dev2", ("R",), None, ["ewc:3", "replay_ewc:0.3"])
+    assert {(r, x) for _, r, _, x in js} == {("ewc", 3.0), ("replay_ewc", 0.3)} and len(js) == 10

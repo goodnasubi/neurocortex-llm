@@ -129,7 +129,10 @@ def analyze(runs: list[dict]) -> dict:
     return {"表": table, "判定": j}
 
 
-def jobs_for(phase: str, sets: tuple[str, ...], lam: float | None) -> list[tuple]:
+def jobs_for(phase: str, sets: tuple[str, ...], lam: float | None, conds: list[str] | None = None) -> list[tuple]:
+    if conds:  # 「規則:λ」の並び（開発用シードでの追加の計測。12.6.230節の修正1）
+        pairs = [(c.split(":")[0], float(c.split(":")[1]) if ":" in c else 0.0) for c in conds]
+        return [(s, rule, seed, x) for s in sets for rule, x in pairs for seed in DEV_SEEDS]
     if phase == "dev":
         conds = [("naive", 0.0), ("replay", 0.0)] + [("ewc", x) for x in EWC_GRID]
         seeds = DEV_SEEDS
@@ -145,6 +148,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--phase", choices=("dev", "dev2", "eval"), default="dev")
     ap.add_argument("--lam", type=float, default=None)
+    ap.add_argument("--conds", nargs="+", default=None)
     ap.add_argument("--sets", nargs="+", default=list(SETS))
     ap.add_argument("--steps", type=int, default=1500)
     ap.add_argument("--workers", type=int, default=4)
@@ -156,10 +160,10 @@ def main() -> None:
         runs = [r for p in args.analyze for r in json.loads(p.read_text(encoding="utf-8"))["runs"]]
         print(json.dumps(analyze(runs), ensure_ascii=False, indent=1))
         return
-    if args.phase != "dev" and args.lam is None:
+    if args.phase != "dev" and args.lam is None and not args.conds:
         raise SystemExit("--lam が要る（dev で選んだ λ）")
     corpus = fetch_corpus(args.corpus)
-    jobs = jobs_for(args.phase, tuple(args.sets), args.lam)
+    jobs = jobs_for(args.phase, tuple(args.sets), args.lam, args.conds)
     with Pool(args.workers) as pool:
         runs = pool.starmap(run_one, [(*j, args.steps, corpus) for j in jobs])
     out = {"環境": env_info(),
