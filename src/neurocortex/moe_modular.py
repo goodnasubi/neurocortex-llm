@@ -99,6 +99,11 @@ class ModularRoutedLM(BandHomeostaticLM):
             hs.append(self.rnns[m](inp)[0])
         return reg, torch.stack(hs, dim=2)
 
+    def expert_ffn(self, z_in: torch.Tensor, choice: torch.Tensor) -> torch.Tensor:
+        """選ばれた専門家の出力 [B,T,d_mod]（12.6.205節で幅の違う専門家に差し替えるためのフック）。"""
+        y = torch.einsum("btd,btdf->btf", z_in, self.w1[0][choice]).relu()
+        return torch.einsum("btf,btfd->btd", y, self.w2[0][choice])
+
     def run(self, x: torch.Tensor, disabled: torch.Tensor | None = None, mode: str = "zero",
             gate_one: bool = False, use_threshold: bool = True, cut_remote=None) -> dict:
         """`ScaledRoutedCharLM.run` と同じ返り値（L=1）。cut_remote は True（全専門家）か bool [E]。"""
@@ -123,8 +128,7 @@ class ModularRoutedLM(BandHomeostaticLM):
             cut = torch.ones(self.n_experts, dtype=torch.bool) if cut_remote is True else cut_remote.to(torch.bool)
             keep = torch.where(cut[choice].unsqueeze(-1).unsqueeze(-1), own, torch.ones_like(own))
             z_in = (H * keep).reshape(B, T, K * D)
-        y = torch.einsum("btd,btdf->btf", z_in, self.w1[0][choice]).relu()
-        y = torch.einsum("btf,btfd->btd", y, self.w2[0][choice])
+        y = self.expert_ffn(z_in, choice)
         if disabled is not None and mode == "zero":
             y = y * (~disabled[0].to(torch.bool))[choice].unsqueeze(-1).to(y.dtype)
         gy = (torch.ones_like(gate) if gate_one else gate) * y
