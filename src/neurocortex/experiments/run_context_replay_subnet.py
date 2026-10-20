@@ -58,9 +58,14 @@ CONFIGS: dict[str, dict] = {
 }
 REUSED = ("base", "keep", "ach_c", "ach_c_nov")  # 12.6.167〜170節の結果ファイルから読む
 NEW = ("ach_c_sub_nov", "ach_c_sub", "base_sub_nov", "ach_c_wide_nov")
-FIXES: tuple[str, ...] = ()  # 修正（上限3回）は開発用シードの結果を見て追加する
-FIX_CANDIDATES: tuple[str, ...] = ()
-RULES = ("keep", "ach_c", "ach_c_nov", *NEW)
+# 修正（12.6.219節。上限3回）。修正1: 部分ネットワークの読み出しを 0 で始める（割り当てたばかりのユニットは出力を
+# 持たない）。主の D2(c) の不合格（150回中2回、どちらも L = 500）が、作った直後の乱数の読み出しによるかを確かめる
+CONFIGS["ach_c_sub_nov_z"] = {**CONFIGS["ach_c_sub_nov"], "ctx_zero_readout": True}
+CONFIGS["base_sub_nov_z"] = {**CONFIGS["base_sub_nov"], "ctx_zero_readout": True}
+FIXES: tuple[str, ...] = ("ach_c_sub_nov_z",)
+# 確定の規則（修正1の計測の前に決めた）: 開発用シードで D1〜D3 を満たした修正だけを H_fix の候補にする
+FIX_CANDIDATES: tuple[str, ...] = ("ach_c_sub_nov_z",)
+RULES = ("keep", "ach_c", "ach_c_nov", *NEW, "ach_c_sub_nov_z", "base_sub_nov_z")
 
 
 def jobs(configs=NEW, families=FAMILIES) -> list[tuple]:
@@ -119,7 +124,7 @@ def analyze(paths: list[Path], rules=RULES) -> dict:
     seeds: set[int] = set()
     for p in paths:
         d = json.loads(p.read_text(encoding="utf-8"))
-        if any(k.endswith(NEW) for k in d["runs"]):
+        if any(k.endswith(NEW + FIXES) for k in d["runs"]):
             seeds.update(d["seeds"])
     tmp = []
     for p in paths:
@@ -165,6 +170,12 @@ def verdict(res: dict) -> dict:
         if a.get("bad_ach_c_nov") is not None:
             # C: 容量が効く（12.6.169節の ach_c_nov より大きく損なった回が半分以下で、一般化を 0.02 より失わない）
             out[m]["C"] = bool(a[f"bad_{m}"] <= a["bad_ach_c_nov"] / 2 and o[f"end_{m}"] >= o["end_ach_c_nov"] - 0.02)
+    for w in FIXES:
+        if w in out and o.get(f"end_base_sub_nov_z") is not None:
+            out[w]["D5"] = bool(o[f"end_{w}"] - o["end_base_sub_nov_z"] >= 0.05)
+        if w in out and a.get("bad_ach_c_wide_nov") is not None:
+            out[w]["G"] = bool(a[f"bad_{w}"] <= a["bad_ach_c_wide_nov"] / 2
+                               and o[f"end_{w}"] >= o["end_ach_c_wide_nov"] - 0.02)
     out["H"] = out.get(m, {}).get("success")
     out["H_sub"] = out.get("ach_c_sub", {}).get("success")
     out["H_fix"] = any(out.get(w, {}).get("success") for w in FIX_CANDIDATES) if FIX_CANDIDATES else None

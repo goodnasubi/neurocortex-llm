@@ -154,7 +154,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          writeback_keep: bool = False, replay_rule: str = "", replay_beta: float = 0.5,
                          replay_need: float = 0.5, sleep_every: int = 50, sleep_steps: int = 25,
                          ach_ema: float = 0.98, nov_split: bool = False, nov_ctx_gain: float = 2.0,
-                         nov_shared_gain: float = 0.2, ctx_units: int = 0) -> dict:
+                         nov_shared_gain: float = 0.2, ctx_units: int = 0,
+                         ctx_zero_readout: bool = False) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -380,7 +381,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     hidden_dim 個に加えて、文脈の枠ごとに K 個の隠れユニットを持ち、入力の文脈の one-hot が指す枠のユニットだけを
     働かせる（文脈依存のゲーティング。文脈固有の表現の容量を増やす）。split_window・nov_split の「新しい文脈の列」の
     利得は、その文脈の部分ネットワークのパラメータ（入力重みの行・バイアス・読み出しの列）にもかける。既定の 0 では
-    従来と同じモデル・同じ乱数の消費になる。
+    従来と同じモデル・同じ乱数の消費になる。ctx_zero_readout = True（12.6.219節の修正1）では、部分ネットワークの
+    読み出しの重みを 0 で始める。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -440,7 +442,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     if ctx_units < 0 or (ctx_units > 0 and C == 0):
         raise ValueError("ctx_units は 0 以上（文脈を使う条件のみ）")
     if ctx_units > 0:
-        model = GatedModel(specs[0].n_inputs, C, hidden_dim, ctx_units)
+        model = GatedModel(specs[0].n_inputs, C, hidden_dim, ctx_units, ctx_zero_readout)
     else:
         model = make_model(specs[0].n_inputs + C, hidden_dim)
 

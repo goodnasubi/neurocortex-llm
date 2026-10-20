@@ -24,13 +24,18 @@ class GatedModel:
     入力 x は [ビット n_bits 個, 文脈の one-hot C 個]。部分ネットワークの入力は x 全体（共有の層と同じ）。
     """
 
-    def __init__(self, n_bits: int, n_ctx: int, hidden_dim: int, ctx_units: int) -> None:
+    def __init__(self, n_bits: int, n_ctx: int, hidden_dim: int, ctx_units: int, zero_readout: bool = False) -> None:
         if n_ctx <= 0 or ctx_units <= 0:
             raise ValueError("n_ctx・ctx_units は正")
         self.n_bits, self.n_ctx, self.hidden_dim, self.ctx_units = n_bits, n_ctx, hidden_dim, ctx_units
         self.backbone = Backbone(n_bits + n_ctx, hidden_dim)
         self.sub = nn.Linear(n_bits + n_ctx, n_ctx * ctx_units)
         self.head = nn.Linear(hidden_dim + n_ctx * ctx_units, 2)
+        if zero_readout:
+            # 12.6.219節の修正1: 割り当てたばかりのユニットはまだ読み出しへの出力を持たない（作った直後の文脈の予測は
+            # 共有の層だけで決まる）。乱数の消費は変えない（初期化の後で 0 にする）
+            with torch.no_grad():
+                self.head.weight[:, hidden_dim:] = 0.0
 
     def gate(self, x: torch.Tensor) -> torch.Tensor:
         """文脈の one-hot を各枠の K 個のユニットに広げたマスク。"""
