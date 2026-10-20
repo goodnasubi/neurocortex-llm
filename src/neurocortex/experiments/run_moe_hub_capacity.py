@@ -23,7 +23,7 @@ import numpy as np
 import torch
 
 from ..data import CharCorpus
-from ..moe_hub_capacity import HubCapacityLM
+from ..moe_hub_capacity import HubCapacityLM, allocate_widths
 from ..moe_integration import integration_corpus, split_like_corpus, windows_like
 from ..moe_modular import ModularRoutedLM, region_table
 from ..run_env import env_info
@@ -34,14 +34,39 @@ from .run_moe_modular import SLOTS, TASKS, post
 from .run_moe_scale import run_one
 
 CAP = {"bandcap": "load", "bandrand": "random"}
+FIXED = {"hubcap": "load", "hubrand": "random", "hubeq": "equal"}  # 修正 1（12.6.205節）
+NAMES = {"realloc": ("bandcap", "bandrand"), "fixed": ("hubcap", "hubrand")}
 
 
-def conditions(eta: float) -> dict[str, dict]:
+def conditions(eta: float, design: str = "realloc") -> dict[str, dict]:
     c = {"aux0.05": {"kind": "plain", "coef": 0.05, "band": "point"}}
-    for name in ("point", "band", *CAP):
-        c[f"{name}{eta:g}"] = {"kind": "select", "eta": eta, "band": "band" if name in CAP else name,
-                               **({"alloc": CAP[name]} if name in CAP else {})}
+    for name in ("point", "band"):
+        c[f"{name}{eta:g}"] = {"kind": "select", "eta": eta, "band": name}
+    if design == "realloc":
+        for name, a in CAP.items():
+            c[f"{name}{eta:g}"] = {"kind": "select", "eta": eta, "band": "band", "alloc": a}
+    else:
+        for name, a in FIXED.items():
+            c[f"{name}{eta:g}"] = {"kind": "select", "eta": eta, "band": "point", "fixed": a}
     return c
+
+
+def hub_design(n_experts: int, n_hubs: int, hub_share: float, d_ff: int, w_min: int, w_max: int,
+               seed: int) -> dict[str, tuple[list[int], list[float]]]:
+    """修正 1: 専門家 0..n_hubs−1 をハブとする恒常性の目標の比と、各条件の幅。
+
+    目標の比: ハブ r_h = E·hub_share / n_hubs、残り r_n = E·(1 − hub_share) / (E − n_hubs)（和は E）。
+    hubcap = 目標の比に比例した幅、hubrand = 同じ幅の並びを乱数の置換で割り当てる、hubeq = 均等な幅。
+    """
+    E = n_experts
+    sp = [E * hub_share / n_hubs] * n_hubs + [E * (1 - hub_share) / (E - n_hubs)] * (E - n_hubs)
+    cap = allocate_widths(sp, E * d_ff, w_min, w_max)
+    prof = sorted(cap, reverse=True)
+    perm = np.random.default_rng(seed).permutation(E)
+    rand = [0] * E
+    for rank, e in enumerate(perm):
+        rand[int(e)] = prof[rank]
+    return {"load": (cap, sp), "random": (rand, sp), "equal": ([d_ff] * E, sp)}
 
 
 def post_cap(k: int, x_lang: torch.Tensor, y_slot: torch.Tensor):
@@ -81,9 +106,11 @@ def summarize(runs: list[dict], keys: list[str]) -> dict:
     return s
 
 
-def judge(runs: list[dict], eta: float) -> dict:
-    """12.6.205節の合格条件（評価用シードを見る前に固定）。主指標 = b2 の CE（target）。"""
-    C, R, B, P, A = (f"bandcap{eta:g}", f"bandrand{eta:g}", f"band{eta:g}", f"point{eta:g}", "aux0.05")
+def judge(runs: list[dict], eta: float, design: str = "realloc") -> dict:
+    """12.6.205節の合格条件（評価用シードを見る前に固定）。主指標 = b2 の CE（target）。
+    修正 1 では C・R を構造で決めたハブの条件（hubcap・hubrand）に替える。基準は同じ。"""
+    cn, rn = NAMES[design]
+    C, R, B, P, A = (f"{cn}{eta:g}", f"{rn}{eta:g}", f"band{eta:g}", f"point{eta:g}", "aux0.05")
     tce = lambda r, t, k: r[t][k]["slot_ce"]["target"]  # noqa: E731
     m = statistics.mean
     n = len(runs)
@@ -102,13 +129,13 @@ def judge(runs: list[dict], eta: float) -> dict:
     bridge = [r["cross"][C]["cut_all_d"]["target"] - r["within"][C]["cut_all_d"]["target"] for r in runs]
     use = [r["cross"][C]["cut_all_d"]["target"] - r["cross"][B]["cut_all_d"]["target"] for r in runs]
     cross_ce = {k: [tce(r, "cross", k) for r in runs] for k in (C, R, B, P, A)}
-    return {"eta": eta, "need": need,
-            "M_操作（統合課題の bandcap で学習後のハブ2個がともに広げた専門家）": sum(w == 2 for w in widened) >= need_m,
-            "V_橋渡し（bandcap で、領域をまたぐ読み取りの切断が統合課題の b2 を対照より 0.1 以上悪くする）":
+    return {"eta": eta, "need": need, "design": design, "C": C, "R": R,
+            "M_操作（統合課題の C で学習後のハブ2個がともに広げた専門家）": sum(w == 2 for w in widened) >= need_m,
+            "V_橋渡し（C で、領域をまたぐ読み取りの切断が統合課題の b2 を対照より 0.1 以上悪くする）":
                 m(bridge) >= 0.1 and sum(b > 0 for b in bridge) >= need,
-            "H1_交互作用（bandcap−一点）": neg(i_p), "H2_ボトルネックの解消（bandcap−均等な目標域）": neg(i_b),
-            "H3_負荷に特有（bandcap−bandrand）": neg(i_r), "H4_交互作用（bandcap−補助損失0.05）": neg(i_a),
-            "H5_領域をまたぐ読み取りの利用が増える（統合課題の切断の損害 bandcap−均等な目標域）":
+            "H1_交互作用（C−一点）": neg(i_p), "H2_ボトルネックの解消（C−均等な目標域）": neg(i_b),
+            "H3_負荷に特有（C−R）": neg(i_r), "H4_交互作用（C−補助損失0.05）": neg(i_a),
+            "H5_領域をまたぐ読み取りの利用が増える（統合課題の切断の損害 C−均等な目標域）":
                 m(use) >= 0.05 and sum(x > 0 for x in use) >= need,
             "値": {"interaction_point": i_p, "interaction_point_mean": m(i_p), "interaction_point_t": paired_t(i_p),
                   "interaction_band": i_b, "interaction_band_mean": m(i_b), "interaction_band_t": paired_t(i_b),
@@ -133,6 +160,11 @@ def main() -> None:
     p.add_argument("--realloc-step", type=int, default=200)
     p.add_argument("--w-min", type=int, default=16)
     p.add_argument("--w-max", type=int, default=192)
+    p.add_argument("--design", choices=list(NAMES), default="realloc",
+                   help="realloc = 途中で負荷に応じて配り直す（rev0）、fixed = 構造で決めたハブ（修正 1）")
+    p.add_argument("--n-hubs", type=int, default=2)
+    p.add_argument("--hub-share", type=float, default=0.57,
+                   help="修正 1: ハブの目標の負荷の割合（12.6.202節の目標域の上位2個の割合）")
     p.add_argument("--train-steps", type=int, default=600)
     p.add_argument("--seq-len", type=int, default=64)
     p.add_argument("--n-windows", type=int, default=256)
@@ -145,7 +177,7 @@ def main() -> None:
     p.add_argument("--merge", type=str, nargs="+", default=None)
     args = p.parse_args()
     torch.set_num_threads(args.threads)
-    conds = conditions(args.eta)
+    conds = conditions(args.eta, args.design)
     keys = list(conds) if args.conds is None else args.conds
     E = args.experts
     k = max(1, E * args.k_num // args.k_den)
@@ -175,6 +207,9 @@ def main() -> None:
                 if "alloc" in cond:
                     kw.update(model_cls=HubCapacityLM, alloc=cond["alloc"], alloc_seed=seed,
                               realloc_step=args.realloc_step, w_min=args.w_min, w_max=args.w_max)
+                if "fixed" in cond:
+                    w, sp = hub_design(E, args.n_hubs, args.hub_share, 64, args.w_min, args.w_max, seed)[cond["fixed"]]
+                    kw.update(model_cls=HubCapacityLM, widths=w, set_points=sp, w_min=args.w_min, w_max=args.w_max)
                 z = run_one(seed, E, 1, cond, corpus, args, post=post_cap(k, x_lang, y_slot), r_lo=lo, r_hi=hi, **kw)
                 z["lesion"].pop("zero_gate1")  # 12.6.138節: ゲート=1 の評価は使わない
                 z.pop("threshold", None)
@@ -189,7 +224,7 @@ def main() -> None:
                       f"cutT={z['cut_all_d']['target']:.3f}{wd}", flush=True)
         runs.append(r)
     out_s = summarize(runs, keys)
-    verdict = judge(runs, args.eta) if set(conds) <= set(keys) else {}
+    verdict = judge(runs, args.eta, args.design) if set(conds) <= set(keys) else {}
     out = {"環境": env_info(), "設定": vars(args),
            **({"結合元の環境": [part["環境"] for part in parts]} if args.merge else {}),
            "要約": out_s, "判定": verdict, "シード別": runs}

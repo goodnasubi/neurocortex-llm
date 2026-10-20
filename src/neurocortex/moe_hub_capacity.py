@@ -65,7 +65,8 @@ class HubCapacityLM(ModularRoutedLM):
                  kind: str = "select", eta: float = 0.0, alpha: float = 0.05, r_lo: float = 1.0,
                  r_hi: float = 1.0, r_floor: float = 0.01, region_of_token: list[int] | None = None,
                  d_mod: int = 24, realloc_step: int = 200, alloc: str = "load", alloc_seed: int = 0,
-                 w_min: int = 16, w_max: int = 192) -> None:
+                 w_min: int = 16, w_max: int = 192, widths: list[int] | None = None,
+                 set_points: list[float] | None = None) -> None:
         super().__init__(vocab_size, d=d, n_experts=n_experts, d_ff=d_ff, n_layers=n_layers, kind=kind, eta=eta,
                          alpha=alpha, r_lo=r_lo, r_hi=r_hi, r_floor=r_floor, region_of_token=region_of_token,
                          d_mod=d_mod)
@@ -84,6 +85,24 @@ class HubCapacityLM(ModularRoutedLM):
         self.register_buffer("widths", torch.full((n_experts,), d_ff, dtype=torch.long))
         self.register_buffer("steps_seen", torch.zeros((), dtype=torch.long))
         self.realloc_load: list[float] | None = None
+        if widths is not None:  # 修正 1: 初めから固定の幅（再配分しない）。出力の初期の大きさを幅で揃える
+            if len(widths) != n_experts or sum(widths) != n_experts * d_ff or min(widths) < 1 or max(widths) > w_max:
+                raise ValueError(widths)
+            self.realloc_step = -1
+            self.widths.copy_(torch.as_tensor(widths, dtype=torch.long))
+            with torch.no_grad():
+                for e, w in enumerate(widths):
+                    self.w2[0][e].mul_((d_ff / w) ** 0.5)
+        self.register_buffer("set_points", None if set_points is None else
+                             torch.as_tensor(set_points, dtype=torch.float32).reshape(1, n_experts))
+        if set_points is not None and abs(sum(set_points) - n_experts) > 1e-4:
+            raise ValueError(set_points)
+
+    def drive_error(self) -> torch.Tensor:
+        if self.set_points is None:
+            return super().drive_error()
+        r = (self.n_experts * self.usage_ema).clamp_min(self.r_floor)
+        return torch.log(r / self.set_points)
 
     def active_expert_params(self) -> int:
         """使われている単位の重みの数（w1 の列と w2 の行）。均等な幅の `ModularRoutedLM` と同じになる。"""

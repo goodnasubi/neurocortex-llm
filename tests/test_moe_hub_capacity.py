@@ -117,5 +117,31 @@ def test_run_one_records_widths_and_judge_shape():
         r["cross"]["bandcap0.1"]["slot_ce"]["target"] = ce_c
         return r
     v = judge([fake(0.3 + 0.01 * i) for i in range(10)], 0.1)
-    assert v["H1_交互作用（bandcap−一点）"] and v["H2_ボトルネックの解消（bandcap−均等な目標域）"]
-    assert v["M_操作（統合課題の bandcap で学習後のハブ2個がともに広げた専門家）"]
+    assert v["H1_交互作用（C−一点）"] and v["H2_ボトルネックの解消（C−均等な目標域）"]
+    assert v["M_操作（統合課題の C で学習後のハブ2個がともに広げた専門家）"]
+
+
+def test_fixed_hubs_widths_and_set_points():
+    """修正 1: 構造で決めたハブ。幅は目標の比に比例し、和は均等な幅と同じ。恒常性は専門家ごとの目標に寄せる。"""
+    from neurocortex.experiments.run_moe_hub_capacity import hub_design
+    d = hub_design(8, 2, 0.57, 64, 16, 192, seed=0)
+    (wc, sp), (wr, sp_r), (we, _) = d["load"], d["random"], d["equal"]
+    assert sum(wc) == sum(wr) == sum(we) == 512 and sorted(wc) == sorted(wr)
+    assert wc[0] == wc[1] == max(wc) and abs(sum(sp) - 8) < 1e-9 and sp == sp_r
+    assert set(conditions(0.1, "fixed")) == {"aux0.05", "point0.1", "band0.1", "hubcap0.1", "hubrand0.1", "hubeq0.1"}
+    c, _, _ = _corpus()
+    torch.manual_seed(3)
+    m = HubCapacityLM(c.vocab_size, region_of_token=region_table(c.stoi), d_mod=8, d_ff=16, n_experts=4, w_min=4,
+                      w_max=40, widths=[28, 12, 12, 12], set_points=[2.0, 2 / 3, 2 / 3, 2 / 3], kind="select", eta=0.1)
+    assert m.widths.tolist() == [28, 12, 12, 12] and m.active_expert_params() == 64 * (32 + 8)
+    m.usage_ema.copy_(torch.tensor([[0.5, 1 / 6, 1 / 6, 1 / 6]]))
+    assert torch.allclose(m.drive_error(), torch.zeros(1, 4), atol=1e-5)  # 目標どおりなら閾値は動かない
+    m.usage_ema.copy_(torch.full((1, 4), 0.25))
+    e = m.drive_error()[0]
+    assert e[0] < 0 and (e[1:] > 0).all()  # ハブは使われなさすぎ、残りは使われすぎ
+    for _ in range(3):
+        m.homeostatic_step(torch.zeros(1, 2, 10, dtype=torch.long))
+    assert m.widths.tolist() == [28, 12, 12, 12]  # 再配分しない
+    with pytest.raises(ValueError):
+        HubCapacityLM(c.vocab_size, region_of_token=region_table(c.stoi), d_mod=8, d_ff=16, n_experts=4,
+                      w_min=4, w_max=40, widths=[30, 12, 12, 12])
