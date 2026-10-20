@@ -22,6 +22,7 @@ from dataclasses import dataclass
 
 from .basal_ganglia_core import ParitySpec
 from .basal_ganglia_core import make_batch as _parity_batch
+from .context_subnet import GatedModel
 from .hippocampus_replay import make_model
 
 CONDITIONS = ("oracle", "none", "inferred", "random", "inferred_gated")
@@ -153,7 +154,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          writeback_keep: bool = False, replay_rule: str = "", replay_beta: float = 0.5,
                          replay_need: float = 0.5, sleep_every: int = 50, sleep_steps: int = 25,
                          ach_ema: float = 0.98, nov_split: bool = False, nov_ctx_gain: float = 2.0,
-                         nov_shared_gain: float = 0.2) -> dict:
+                         nov_shared_gain: float = 0.2, ctx_units: int = 0) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -374,6 +375,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
       diagnostics = True では diag["replay_mix"][k]（規則を適用したタスク k の、リプレイの痕跡のうちそのステップで
       選んだ文脈のものの割合 "own"、加えた痕跡の割合 "kept"、1ステップのリプレイの数の平均 "size"、睡眠のステップ数
       "sleep"、なじみの度合い f の平均 "fam"（ach_c のみ意味を持つ））を加える。
+
+    ctx_units = K > 0（文脈を使う条件のみ。12.6.219節）では、モデルを context_subnet.GatedModel にする。共有の隠れ層
+    hidden_dim 個に加えて、文脈の枠ごとに K 個の隠れユニットを持ち、入力の文脈の one-hot が指す枠のユニットだけを
+    働かせる（文脈依存のゲーティング。文脈固有の表現の容量を増やす）。split_window・nov_split の「新しい文脈の列」の
+    利得は、その文脈の部分ネットワークのパラメータ（入力重みの行・バイアス・読み出しの列）にもかける。既定の 0 では
+    従来と同じモデル・同じ乱数の消費になる。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -430,7 +437,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     nov_old: set[int] = set()  # 12.6.169節: nov_from の時点にあった文脈
     T = len(specs)
     C = 0 if condition == "none" else (T if condition == "oracle" else (n_slots or T + 2))
-    model = make_model(specs[0].n_inputs + C, hidden_dim)
+    if ctx_units < 0 or (ctx_units > 0 and C == 0):
+        raise ValueError("ctx_units は 0 以上（文脈を使う条件のみ）")
+    if ctx_units > 0:
+        model = GatedModel(specs[0].n_inputs, C, hidden_dim, ctx_units)
+    else:
+        model = make_model(specs[0].n_inputs + C, hidden_dim)
 
     def with_ctx(bits: torch.Tensor, ctx: torch.Tensor | int) -> torch.Tensor:
         if C == 0:
@@ -977,6 +989,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                             if q is fc1_w:
                                 col = n_bits + split["ctx"]
                                 d[:, col] = (q[:, col] - b[:, col]) * split_ctx_gain
+                            for q2, ix in (model.ctx_slices(split["ctx"]) if ctx_units > 0 else []):
+                                if q2 is q:
+                                    d[ix] = (q[ix] - b[ix]) * split_ctx_gain
                             q.copy_(b + d)
                 elif nov_now:
                     # 12.6.169節: 新しい文脈がなじむまで、その文脈の列の可塑性を上げ、共有の重みの可塑性を下げ続ける
@@ -989,6 +1004,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                             if q is fc1_w:
                                 col = n_bits + ctx
                                 d[:, col] = (q[:, col] - b[:, col]) * g_nov[0]
+                            for q2, ix in (model.ctx_slices(ctx) if ctx_units > 0 else []):
+                                if q2 is q:
+                                    d[ix] = (q[ix] - b[ix]) * g_nov[0]
                             q.copy_(b + d)
                 if diagnostics or plasticity_cap > 0:
                     unorm = float(torch.sqrt(sum(((q.detach() - b) ** 2).sum() for q, b in zip(model.parameters(), before))))
