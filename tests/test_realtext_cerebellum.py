@@ -110,3 +110,18 @@ def test_jobs():
     jobs = rcb.jobs_for("dev", ("R", "G"))
     assert len(jobs) == 2 * len(CONDS) * 5 and {j[2] for j in jobs} == set(rcb.DEV_SEEDS)
     assert {j[2] for j in rcb.jobs_for("eval", ("R",), ["cb"])} == set(rcb.EVAL_SEEDS)
+
+
+def test_reliability_gain():
+    """修正1: 利得は 0〜1 で、小脳の条件でだけ記録され、利得なしの cb と結果が違う。"""
+    cfg = _cfg("cb", steps=30)
+    cfg.reliability = True
+    out = train_cerebellum(_data(), 8, cfg, torch.Generator().manual_seed(1), torch.Generator().manual_seed(2))
+    assert out["gain_mean"] is not None and 0.0 <= out["gain_mean"] <= 1.0
+    base = train_cerebellum(_data(), 8, _cfg("cb", steps=30), torch.Generator().manual_seed(1),
+                            torch.Generator().manual_seed(2))
+    assert base["gain_mean"] is None and base["final_ce_mean"] != out["final_ce_mean"]
+    sp = _cfg("sparse", steps=30)
+    sp.reliability = True
+    assert train_cerebellum(_data(), 8, sp, torch.Generator().manual_seed(1),
+                            torch.Generator().manual_seed(2))["gain_mean"] is None
