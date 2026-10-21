@@ -1,0 +1,607 @@
+{
+  "description": "ステップ44.5 スコープ1〜2（既存データのみ）。vanilla Transformer との比較・勾配寄与度は結果 JSON に無く未実施。",
+  "scales": {
+    "reduced": {
+      "metric": "最終エポックの val_ppls[-1]（backbone lm_head の非重み付き PPL）",
+      "missing": [],
+      "phases": {
+        "A": {
+          "seeds": [
+            0,
+            1,
+            2
+          ],
+          "per_seed": {
+            "0": 117.11283230960974,
+            "1": 117.6146489656221,
+            "2": 117.13763323946294
+          },
+          "n": 3,
+          "mean": 117.28837150489825,
+          "sd": 0.28283653859197705
+        },
+        "B": {
+          "seeds": [
+            0,
+            1,
+            2
+          ],
+          "per_seed": {
+            "0": 117.38526371967663,
+            "1": 118.04568030195819,
+            "2": 117.07424997806234
+          },
+          "n": 3,
+          "mean": 117.50173133323239,
+          "sd": 0.4960773601986148
+        },
+        "C": {
+          "seeds": [
+            0,
+            1,
+            2
+          ],
+          "per_seed": {
+            "0": 117.65292717996722,
+            "1": 118.12603314385018,
+            "2": 117.21733983621216
+          },
+          "n": 3,
+          "mean": 117.66543338667651,
+          "sd": 0.4544757262398313
+        }
+      },
+      "epochs": {
+        "A": [
+          {
+            "epoch": 1,
+            "n": 3,
+            "mean": 192.33296058333917
+          },
+          {
+            "epoch": 2,
+            "n": 3,
+            "mean": 140.0390969367396
+          },
+          {
+            "epoch": 3,
+            "n": 3,
+            "mean": 117.28837150489825
+          }
+        ],
+        "B": [
+          {
+            "epoch": 1,
+            "n": 3,
+            "mean": 192.44262436238344
+          },
+          {
+            "epoch": 2,
+            "n": 3,
+            "mean": 139.96371341528672
+          },
+          {
+            "epoch": 3,
+            "n": 3,
+            "mean": 117.50173133323239
+          }
+        ],
+        "C": [
+          {
+            "epoch": 1,
+            "n": 3,
+            "mean": 192.31628236018955
+          },
+          {
+            "epoch": 2,
+            "n": 3,
+            "mean": 139.94604516526462
+          },
+          {
+            "epoch": 3,
+            "n": 3,
+            "mean": 117.66543338667651
+          }
+        ]
+      },
+      "comparisons": {
+        "A->B_val": {
+          "n_a": 3,
+          "n_b": 3,
+          "n_paired": 3,
+          "per_seed": [
+            0.2724314100668863,
+            0.4310313363360905,
+            -0.06338326140060246
+          ],
+          "mean_diff_unpaired": 0.21335982833413425,
+          "rel_pct_unpaired": 0.18191047040432634,
+          "se_unpaired": 0.329691398565546,
+          "verdict_unpaired": "差なし",
+          "mean_diff": 0.21335982833412478,
+          "rel_pct": 0.18191047040431826,
+          "se_paired": 0.14574925664772329,
+          "verdict_paired": "差なし",
+          "paired_seeds": [
+            0,
+            1,
+            2
+          ]
+        },
+        "B->C_val": {
+          "n_a": 3,
+          "n_b": 3,
+          "n_paired": 3,
+          "per_seed": [
+            0.26766346029059207,
+            0.08035284189199388,
+            0.14308985814982123
+          ],
+          "mean_diff_unpaired": 0.16370205344412625,
+          "rel_pct_unpaired": 0.13931884371973272,
+          "se_unpaired": 0.38843314870680484,
+          "verdict_unpaired": "差なし",
+          "mean_diff": 0.16370205344413571,
+          "rel_pct": 0.1393188437197408,
+          "se_paired": 0.05504532643605189,
+          "verdict_paired": "悪化",
+          "paired_seeds": [
+            0,
+            1,
+            2
+          ]
+        },
+        "A->C_val": {
+          "n_a": 3,
+          "n_b": 3,
+          "n_paired": 3,
+          "per_seed": [
+            0.5400948703574784,
+            0.5113841782280844,
+            0.07970659674921876
+          ],
+          "mean_diff_unpaired": 0.3770618817782605,
+          "rel_pct_unpaired": 0.32148274968803153,
+          "se_unpaired": 0.3090548458898048,
+          "verdict_unpaired": "差なし",
+          "mean_diff": 0.3770618817782605,
+          "rel_pct": 0.32148274968803153,
+          "se_paired": 0.14890847313217181,
+          "verdict_paired": "悪化",
+          "paired_seeds": [
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "config": {
+        "dataset_config": "wikitext-103-v1",
+        "hidden_size": 256,
+        "num_layers": 4,
+        "num_epochs": 3,
+        "max_seq_length": 128,
+        "batch_size": 32,
+        "learning_rate": 0.0005
+      },
+      "aux": {
+        "A": {
+          "head_ce_final": {
+            "hippocampus_loss": {
+              "n": 3,
+              "mean": 4.9906095897450165,
+              "sd": 0.0077610878874518514
+            }
+          },
+          "loss_weights": {
+            "hippocampus_loss_weight": 0.05,
+            "basal_ganglia_loss_weight": 0.05,
+            "cerebellum_loss_weight": 0.02
+          }
+        },
+        "B": {
+          "head_ce_final": {
+            "hippocampus_loss": {
+              "n": 3,
+              "mean": 4.99028980180329,
+              "sd": 0.0017518050863562773
+            },
+            "basal_ganglia_loss": {
+              "n": 3,
+              "mean": 4.862039730595607,
+              "sd": 0.003992030641815056
+            }
+          },
+          "loss_weights": {
+            "hippocampus_loss_weight": 0.05,
+            "basal_ganglia_loss_weight": 0.05,
+            "cerebellum_loss_weight": 0.02
+          }
+        },
+        "C": {
+          "head_ce_final": {
+            "hippocampus_loss": {
+              "n": 3,
+              "mean": 4.9894881873037304,
+              "sd": 0.001227922795410192
+            },
+            "basal_ganglia_loss": {
+              "n": 3,
+              "mean": 4.863214212679396,
+              "sd": 0.0028056288472842637
+            },
+            "cerebellum_loss": {
+              "n": 3,
+              "mean": 4.862225087857714,
+              "sd": 0.0013140233610357155
+            }
+          },
+          "loss_weights": {
+            "hippocampus_loss_weight": 0.05,
+            "basal_ganglia_loss_weight": 0.05,
+            "cerebellum_loss_weight": 0.02
+          }
+        }
+      },
+      "test_ppl": {
+        "A": {
+          "n": 3,
+          "mean": 107.3558537585969,
+          "sd": 0.439565044141624
+        },
+        "B": {
+          "n": 3,
+          "mean": 107.49238670028781,
+          "sd": 0.5535940909763005
+        },
+        "C": {
+          "n": 3,
+          "mean": 107.72010230163026,
+          "sd": 0.4986645491093818
+        }
+      },
+      "cost": {
+        "学習時間（秒）": "データなし",
+        "ステップ当たり時間": "データなし",
+        "パラメータ数": "データなし",
+        "FLOPs": "データなし",
+        "ピークメモリ": "データなし"
+      }
+    },
+    "full": {
+      "metric": "最終エポックの val_ppls[-1]（backbone lm_head の非重み付き PPL）",
+      "missing": [],
+      "phases": {
+        "A": {
+          "seeds": [
+            0,
+            1,
+            2
+          ],
+          "per_seed": {
+            "0": 34.395367197236524,
+            "1": 34.38456495047123,
+            "2": 34.159540229276885
+          },
+          "n": 3,
+          "mean": 34.31315745899488,
+          "sd": 0.13314601790315736
+        },
+        "B": {
+          "seeds": [
+            0,
+            1,
+            2
+          ],
+          "per_seed": {
+            "0": 34.465033740440965,
+            "1": 34.36022024801238,
+            "2": 34.23962251656382
+          },
+          "n": 3,
+          "mean": 34.354958835005725,
+          "sd": 0.11279768088293367
+        },
+        "C": {
+          "seeds": [
+            0,
+            1,
+            2
+          ],
+          "per_seed": {
+            "0": 34.466413373044524,
+            "1": 34.42382681195476,
+            "2": 34.192560706624505
+          },
+          "n": 3,
+          "mean": 34.36093363054126,
+          "sd": 0.14736174852237588
+        }
+      },
+      "epochs": {
+        "A": [
+          {
+            "epoch": 1,
+            "n": 3,
+            "mean": 77.09986148016804
+          },
+          {
+            "epoch": 2,
+            "n": 3,
+            "mean": 49.479328757384415
+          },
+          {
+            "epoch": 3,
+            "n": 3,
+            "mean": 39.38688646417521
+          },
+          {
+            "epoch": 4,
+            "n": 3,
+            "mean": 34.31315745899488
+          }
+        ],
+        "B": [
+          {
+            "epoch": 1,
+            "n": 3,
+            "mean": 77.39301330341387
+          },
+          {
+            "epoch": 2,
+            "n": 3,
+            "mean": 49.59487329385845
+          },
+          {
+            "epoch": 3,
+            "n": 3,
+            "mean": 39.38754583479632
+          },
+          {
+            "epoch": 4,
+            "n": 3,
+            "mean": 34.354958835005725
+          }
+        ],
+        "C": [
+          {
+            "epoch": 1,
+            "n": 3,
+            "mean": 77.54635285298038
+          },
+          {
+            "epoch": 2,
+            "n": 3,
+            "mean": 49.64957143909103
+          },
+          {
+            "epoch": 3,
+            "n": 3,
+            "mean": 39.45294726229942
+          },
+          {
+            "epoch": 4,
+            "n": 3,
+            "mean": 34.36093363054126
+          }
+        ]
+      },
+      "comparisons": {
+        "A->B_val": {
+          "n_a": 3,
+          "n_b": 3,
+          "n_paired": 3,
+          "per_seed": [
+            0.06966654320444121,
+            -0.024344702458847678,
+            0.08008228728693467
+          ],
+          "mean_diff_unpaired": 0.041801376010845104,
+          "rel_pct_unpaired": 0.1218231696129942,
+          "se_unpaired": 0.10074915863343648,
+          "verdict_unpaired": "差なし",
+          "mean_diff": 0.04180137601084274,
+          "rel_pct": 0.12182316961298731,
+          "se_paired": 0.03320943492386279,
+          "verdict_paired": "差なし",
+          "paired_seeds": [
+            0,
+            1,
+            2
+          ]
+        },
+        "B->C_val": {
+          "n_a": 3,
+          "n_b": 3,
+          "n_paired": 3,
+          "per_seed": [
+            0.001379632603558889,
+            0.06360656394237907,
+            -0.04706180993931497
+          ],
+          "mean_diff_unpaired": 0.005974795535536259,
+          "rel_pct_unpaired": 0.017391362813825546,
+          "se_unpaired": 0.10714289794497206,
+          "verdict_unpaired": "差なし",
+          "mean_diff": 0.005974795535540996,
+          "rel_pct": 0.01739136281383933,
+          "se_paired": 0.032029719980996824,
+          "verdict_paired": "差なし",
+          "paired_seeds": [
+            0,
+            1,
+            2
+          ]
+        },
+        "A->C_val": {
+          "n_a": 3,
+          "n_b": 3,
+          "n_paired": 3,
+          "per_seed": [
+            0.0710461758080001,
+            0.03926186148353139,
+            0.0330204773476197
+          ],
+          "mean_diff_unpaired": 0.04777617154638136,
+          "rel_pct_unpaired": 0.13923571913623844,
+          "se_unpaired": 0.11466377953396306,
+          "verdict_unpaired": "差なし",
+          "mean_diff": 0.04777617154638373,
+          "rel_pct": 0.13923571913624533,
+          "se_paired": 0.011773678874715067,
+          "verdict_paired": "悪化",
+          "paired_seeds": [
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "config": {
+        "dataset_config": "wikitext-103-v1",
+        "hidden_size": 768,
+        "num_layers": 12,
+        "num_epochs": 4,
+        "max_seq_length": 256,
+        "batch_size": 8,
+        "learning_rate": 5e-05
+      },
+      "aux": {
+        "A": {
+          "head_ce_final": {
+            "hippocampus_loss": {
+              "n": 3,
+              "mean": 3.892694183623029,
+              "sd": 0.0038528562188525897
+            }
+          },
+          "loss_weights": {
+            "hippocampus_loss_weight": 0.05,
+            "basal_ganglia_loss_weight": 0.05,
+            "cerebellum_loss_weight": 0.02
+          }
+        },
+        "B": {
+          "head_ce_final": {
+            "hippocampus_loss": {
+              "n": 3,
+              "mean": 3.8830412727975268,
+              "sd": 0.004269960786809224
+            },
+            "basal_ganglia_loss": {
+              "n": 3,
+              "mean": 3.7491571700634734,
+              "sd": 0.003427718857893134
+            }
+          },
+          "loss_weights": {
+            "hippocampus_loss_weight": 0.05,
+            "basal_ganglia_loss_weight": 0.05,
+            "cerebellum_loss_weight": 0.02
+          }
+        },
+        "C": {
+          "head_ce_final": {
+            "hippocampus_loss": {
+              "n": 3,
+              "mean": 3.8795314927175255,
+              "sd": 0.003975999692285969
+            },
+            "basal_ganglia_loss": {
+              "n": 3,
+              "mean": 3.747272954538902,
+              "sd": 0.003672846832886807
+            },
+            "cerebellum_loss": {
+              "n": 3,
+              "mean": 3.752240723855343,
+              "sd": 0.004353174416012408
+            }
+          },
+          "loss_weights": {
+            "hippocampus_loss_weight": 0.05,
+            "basal_ganglia_loss_weight": 0.05,
+            "cerebellum_loss_weight": 0.02
+          }
+        }
+      },
+      "test_ppl": {
+        "A": "データなし",
+        "B": "データなし",
+        "C": "データなし"
+      },
+      "cost": {
+        "学習時間（秒）": "データなし",
+        "ステップ当たり時間": "データなし",
+        "パラメータ数": "データなし",
+        "FLOPs": "データなし",
+        "ピークメモリ": "データなし"
+      }
+    }
+  },
+  "scale_labels": {
+    "reduced": "縮小規模（256d/4層/WikiText-2 ローカルデータ・語彙上限10000）",
+    "full": "フル規模（768d/12層/WikiText-103）"
+  },
+  "direction_agreement": {
+    "A->B_val": {
+      "reduced": {
+        "mean_diff": 0.21335982833412478,
+        "rel_pct": 0.18191047040431826,
+        "verdict_paired": "差なし",
+        "verdict_unpaired": "差なし"
+      },
+      "full": {
+        "mean_diff": 0.04180137601084274,
+        "rel_pct": 0.12182316961298731,
+        "verdict_paired": "差なし",
+        "verdict_unpaired": "差なし"
+      },
+      "sign_agree": true,
+      "verdict_paired_agree": true,
+      "verdict_unpaired_agree": true,
+      "improved_anywhere": false
+    },
+    "B->C_val": {
+      "reduced": {
+        "mean_diff": 0.16370205344413571,
+        "rel_pct": 0.1393188437197408,
+        "verdict_paired": "悪化",
+        "verdict_unpaired": "差なし"
+      },
+      "full": {
+        "mean_diff": 0.005974795535540996,
+        "rel_pct": 0.01739136281383933,
+        "verdict_paired": "差なし",
+        "verdict_unpaired": "差なし"
+      },
+      "sign_agree": true,
+      "verdict_paired_agree": false,
+      "verdict_unpaired_agree": true,
+      "improved_anywhere": false
+    },
+    "A->C_val": {
+      "reduced": {
+        "mean_diff": 0.3770618817782605,
+        "rel_pct": 0.32148274968803153,
+        "verdict_paired": "悪化",
+        "verdict_unpaired": "差なし"
+      },
+      "full": {
+        "mean_diff": 0.04777617154638373,
+        "rel_pct": 0.13923571913624533,
+        "verdict_paired": "悪化",
+        "verdict_unpaired": "差なし"
+      },
+      "sign_agree": true,
+      "verdict_paired_agree": true,
+      "verdict_unpaired_agree": true,
+      "improved_anywhere": false
+    }
+  },
+  "not_done": [
+    "vanilla Transformer との PPL 比較（Phase A は海馬ヘッド付きのため vanilla ではない）",
+    "モジュール別の勾配寄与度分析",
+    "計算コスト（時間・パラメータ数・FLOPs）の計測"
+  ]
+}
