@@ -95,3 +95,35 @@ def test_verdict_and_paired():
     p = exp.paired({0: 0.1, 1: 0.3, 2: -0.1})
     assert p["n"] == 3 and p["pos"] == 2 and p["mean"] == pytest.approx(0.1)
     assert p["t"] == pytest.approx(0.1 / (0.2 / 3 ** 0.5))
+
+
+def test_analyze_synthetic(tmp_path):
+    """結果ファイルを base との差で集計し、シードで絞り、L ごとの値と駆動の平均を返す。"""
+    import json
+
+    eff = {"base": (0.0, 0.0), "keep": (0.14, -0.03), "ach_c": (0.08, 0.0), "ach_c_cas_cap": (0.11, 0.0),
+           "ach_c_cas_cap_perm": (0.12, 0.0), "ach_c_cas_cap_mean": (0.12, 0.0)}
+    runs = {}
+    for L in (0, 500):
+        for w, (de, dn) in eff.items():
+            rows = []
+            for s in (200, 201, 7):
+                r = {"seed": s, "end_nat": [0.5 + de + 0.01 * (s % 3)], "new_nat": 0.9 + dn, "pre_nat": [0.1],
+                     "gap": [0.2], "mix_kept": None}
+                if w.startswith("ach_c_cas_cap"):
+                    r["cap_drive"] = 0.5
+                    if w != "ach_c_cas_cap":
+                        r["drive_len_match"] = True
+                rows.append(r)
+            runs[f"flip_m1/reset_L{L}/{w}"] = {"per_seed": rows}
+    p = tmp_path / "r.json"
+    p.write_text(json.dumps({"runs": runs}), encoding="utf-8")
+    res = exp.analyze([p], seeds=[200, 201])
+    assert res["seeds"] == [200, 201] and res["drive_len_match"]
+    assert res["over_14bit"]["end_ach_c_cas_cap"] == pytest.approx(0.11)
+    assert res["by_L"][0]["end_ach_c_cas_cap_perm"] == pytest.approx(0.12)
+    assert res["drive"]["ach_c_cas_cap"] == pytest.approx(0.5)
+    assert res["paired"]["end_ach_c_cas_cap-ach_c"]["mean"] == pytest.approx(0.03)
+    assert res["paired"]["resid_ach_c_cas_cap-ach_c_cas_cap_perm"]["mean"] == pytest.approx(-0.01)
+    v = res["verdict"]
+    assert v["ach_c_cas_cap"]["residual"] == pytest.approx(0.03) and v["N"] is False

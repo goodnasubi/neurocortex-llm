@@ -149,6 +149,13 @@ def analyze(paths: list[Path], seeds: list[int] | None = None) -> dict:
             e_c, n_c = per_seed_end(runs, o["combos"], CAP), per_seed_new(runs, CAP)
             res["paired"][f"resid_{CAP}-{w}"] = paired({s: (e_c[s] - e_w[s]) - slope * (n_c[s] - n_w[s])
                                                        for s in e_w if s in e_c and s in n_w and s in n_c})
+    # 参考: 移行の長さ L ごとの上書きありの end と 30組のうちその L の組の new の平均
+    res["by_L"] = {}
+    for L in LS:
+        rows = {k: v for k, v in res["rows"].items() if k.split("/")[1].endswith(f"_L{L}")}
+        res["by_L"][L] = {f"{q}_{w}": _mean([v.get(f"{q}_{w}") for k, v in rows.items()
+                                             if q == "new" or k in o["combos"]])
+                          for w in RULES for q in ("end", "new")}
     res["drive"] = {w: _mean([x.get("cap_drive") for k, v in runs.items() if k.endswith("/" + w)
                               for x in v["per_seed"]]) for w in (CAP, *CONTROLS)}
     res["drive_len_match"] = all(x.get("drive_len_match", True) for v in runs.values() for x in v["per_seed"])
