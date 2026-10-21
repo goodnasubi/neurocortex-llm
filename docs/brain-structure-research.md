@@ -13122,6 +13122,8 @@ oracle の行は 12.6.230節の評価用シードの値と一致した（同じ�
 
 **テスト**: `tests/test_context_drift_null.py`（9件）。
 
+全体のテスト: `PYTHONPATH=src pytest` で 960 passed, 9 skipped, 36 failed, 8 errors（評価用シードの計測の後に実行）。失敗とエラーはすべて faiss を入れていない環境での6ファイル（`test_faiss_batch_optimization`・`test_faiss_integration`・`test_hybrid_rerank`・`test_pq_gpu_scaling`・`test_pq_tradeoff_analysis`・`test_product_quantization`）で、`requirements-dev.txt` の依存を入れて6ファイルを再実行すると 58 passed, 1 skipped だった。本節の変更と関係しない。
+
 ### ステップ44.4 再実験: Kaggle Notebooks 対応（2026-09-26）
 
 ユーザーが Colab を使えないため、Kaggle Notebooks で実行できるようにした。実験規模は変えていない。
