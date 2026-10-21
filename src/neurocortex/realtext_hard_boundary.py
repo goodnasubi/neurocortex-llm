@@ -211,7 +211,7 @@ def train_hard(data: list[LangData], vocab: int, cfg: HardConfig, order: list[in
                 n_ctx = max(n_ctx, a + 1)
                 c = torch.full((bs,), a)
             else:
-                nll = frag_nll(model, seg, min(n_ctx + bs, k_max))
+                nll = frag_nll(model, seg, min(n_ctx + 1, k_max))  # 既存の文脈と、次に作る文脈の未学習のヘッド
                 if cfg.assign == "batch":
                     m = nll.mean(0)
                     s = m[:n_ctx] - base[:n_ctx]
@@ -242,6 +242,8 @@ def train_hard(data: list[LangData], vocab: int, cfg: HardConfig, order: list[in
                         if a == n_ctx:
                             n_ctx += 1
                             acc_s[a] = 0.0
+                            if n_ctx < k_max:  # 次に作りうる文脈の列を足す（モデルは同じなので値は変わらない）
+                                nll = frag_nll(model, seg, n_ctx + 1)
                         update_base(a, float(nll[i, a]), ema)
                         cs.append(a)
                         prev = a

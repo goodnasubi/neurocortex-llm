@@ -96,7 +96,7 @@ def test_ev_integrates_surprise():
 def _fake(cond, s, seed, acc, fgt, ari_=1.0, react=1.0):
     return {"cond": cond, "set": s, "seed": seed, "delta": 0.3,
             "metrics": {"ACC": acc, "FGT": fgt, "AVG": acc, "LA1": acc}, "R_id": [[1.0, 0.9]],
-            "seg": {"n_ctx": 3, "ARI": ari_, "merged": 0, "react": react, "split": 0.0, "delays": [0, 1]},
+            "seg": {"n_ctx": 3, "ARI": ari_, "purity": 1.0, "merged": 0, "react": react, "split": 0.0, "delays": [0, 1]},
             "surprise": {"within": [0.1, 0.2, 0.5], "switch": [1.2, 1.5]}}
 
 

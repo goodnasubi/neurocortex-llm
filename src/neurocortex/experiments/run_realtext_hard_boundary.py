@@ -80,6 +80,7 @@ def analyze(runs: list[dict]) -> dict:
                     "n_ctx": _mean([r["seg"]["n_ctx"] for r in sel]),
                     "ARI": _mean([r["seg"]["ARI"] for r in sel]),
                     "merged": _mean([r["seg"]["merged"] for r in sel]),
+                    "purity": _mean([r["seg"]["purity"] for r in sel]),
                     "react": _mean([r["seg"]["react"] for r in sel]),
                     "split": _mean([r["seg"]["split"] for r in sel]),
                     "delay_median": median([d for r in sel for d in r["seg"]["delays"]])}
@@ -136,8 +137,8 @@ def analyze(runs: list[dict]) -> dict:
     for tf, ref_c in (("naive_ev", "naive_id"), ("replay_ev", "replay_id"), ("replay_frag", "replay_id")):
         if tf in by and ref_c in by:
             ks = sorted(k for k in by[tf] if k in by[ref_c])
-            ref[f"{tf}: (ARI, n_ctx, ACC − {ref_c})"] = [
-                [round(by[tf][k]["seg"]["ARI"], 3), by[tf][k]["seg"]["n_ctx"],
+            ref[f"{tf}: (ARI, 純度, n_ctx, ACC − {ref_c})"] = [
+                [round(by[tf][k]["seg"]["ARI"], 3), round(by[tf][k]["seg"]["purity"], 3), by[tf][k]["seg"]["n_ctx"],
                  round(by[tf][k]["metrics"]["ACC"] - by[ref_c][k]["metrics"]["ACC"], 3)] for k in ks]
     j["参考"] = ref
     return {"表": table, "判定": j}
