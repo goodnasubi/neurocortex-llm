@@ -13428,6 +13428,8 @@ replay_bd は 12.6.240節の replay（推定の読み出し、−1.512 / −1.67
 
 **テスト**: `tests/test_replay_readout_only.py`（6件。行き先を絞った対数確率が seq_logp と同じ値であること、replay_ro は胴体に・replay_body は読み出しに勾配を流さずリプレイにない文脈の読み出しも変えないこと、新しい規則が学習を終えて replay・naive と違う行列になること、判定の集計、計測の組み立て）。既存の `tests/test_realtext_forgetting.py`・`tests/test_realtext_head_probe.py` も通る（replay の経路は変えていない）。
 
+`PYTHONPATH=src pytest` 全体が通る（faiss-cpu を入れて 1049 passed, 1 skipped。評価用シードの計測の後に実行）。
+
 ### ステップ44.4 再実験: Kaggle Notebooks 対応（2026-09-26）
 
 ユーザーが Colab を使えないため、Kaggle Notebooks で実行できるようにした。実験規模は変えていない。
