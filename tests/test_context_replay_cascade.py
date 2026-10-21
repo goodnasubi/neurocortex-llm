@@ -78,7 +78,8 @@ def test_cascade_shared_keeps_context_columns_free():
 
 @pytest.mark.parametrize("kw", [dict(cascade_levels=1), dict(cascade_levels=3, cascade_g=0.0),
                                 dict(cascade_levels=3, cascade_g=0.6), dict(cascade_levels=3, cascade_scope="ctx"),
-                                dict(cascade_levels=3, ctx_units=4)])
+                                dict(cascade_levels=3, ctx_units=4), dict(cascade_capture=0.1),
+                                dict(cascade_levels=3, cascade_capture=1.5)])
 def test_invalid_args(kw):
     with pytest.raises(ValueError):
         _run(replay_rule="ach_c", **kw)
@@ -90,6 +91,7 @@ def test_experiment_config_jobs_and_verdict():
         assert exp.CONFIGS[c]["cascade_levels"] == 4
     assert exp.CONFIGS["ach_c_cas_all"]["cascade_scope"] == "all"
     assert len(exp.jobs()) == 30 * len(exp.NEW)
+    assert all(exp.CONFIGS[c]["cascade_capture"] == 0.1 for c in exp.FIXES)
     o = {"end_keep": 0.14, "end_ach_c": 0.08, "end_keep_cas": 0.15, "end_ach_c_cas": 0.12, "end_base_cas": 0.0,
          "end_ach_c_cas_all": 0.08}
     n = {f"end_{w}": 0.01 for w in ("keep", "ach_c", *exp.NEW)}
@@ -106,3 +108,16 @@ def test_experiment_config_jobs_and_verdict():
     assert v["F"] and v["H"] and v["ach_c_cas"]["D4"]
     assert v["B"] is False  # new −0.03
     assert "residual" not in v["base_cas"]
+
+
+def test_capture_changes_learning_and_full_capture_is_plain():
+    """捕獲は学習を変える。κ = 1 で常に新しい（f = 0）なら、隠れ変数は毎ステップ見える重みに揃い、覚醒中は可塑性だけと
+    同じになる（この設定では睡眠の段階がないので、カスケードなしと同じ学習になる）。"""
+    ref = _run(replay_rule="ach_c")
+    c = _run(replay_rule="ach_c", cascade_levels=4, cascade_g=0.2)
+    k = _run(replay_rule="ach_c", cascade_levels=4, cascade_g=0.2, cascade_capture=0.1)
+    assert k["diag"]["cascade"][2] != c["diag"]["cascade"][2]
+    full = _run(replay_rule="ach_c", cascade_levels=4, cascade_g=0.2, cascade_capture=1.0, tau=1e-9)
+    plain = _run(replay_rule="ach_c", tau=1e-9)
+    assert full["R"] == plain["R"] and full["diag"]["cascade"][2]["gap"] < 1e-6
+    assert ref["R"][:2] == k["R"][:2]

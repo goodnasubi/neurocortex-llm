@@ -163,7 +163,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          ach_ema: float = 0.98, nov_split: bool = False, nov_ctx_gain: float = 2.0,
                          nov_shared_gain: float = 0.2, ctx_units: int = 0,
                          ctx_zero_readout: bool = False, replay_sim: str = "", replay_sim_beta: float = 2.0,
-                         cascade_levels: int = 0, cascade_g: float = 0.05, cascade_scope: str = "shared") -> dict:
+                         cascade_levels: int = 0, cascade_g: float = 0.05, cascade_scope: str = "shared",
+                         cascade_capture: float = 0.0) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -432,6 +433,11 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     全ての重みにかける。既定の 0 では従来と同じ挙動・同じ乱数の消費になる。diagnostics = True では
     diag["cascade"][k] = {"gap": タスク k の終わりの |u_1 − u_m| の平均, "move": u_m の適用時点からの変化の平均}
     を加える（固定化の対象の要素だけ）。
+    cascade_capture = κ > 0（12.6.233節の修正1）では、新しさに駆動されたシナプスの捕獲（行動のタグ付け。新しさによる
+    ドーパミンがタグのついた変化を固定化する）を加える。覚醒中の各ステップの拡散の後、隠れ変数を
+    u_k += κ·(1 − f)·(u_1 − u_k) で見える重みに寄せる。f はそのステップの文脈のなじみの度合い（ach_c と同じ
+    clamp(1 − L̄_c/τ, 0, 1)、驚きのあるステップでは 0）。新しい文脈を学ぶ間の変化は遅い変数にすぐ取り込まれて
+    引き戻されず、なじんだ後の変化（加えた痕跡の固定化を含む）だけがカスケードで濾される。睡眠の段階では捕獲しない。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -483,6 +489,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                            or ctx_units > 0):
         raise ValueError("cascade_levels は 0 か 2 以上、cascade_g は (0, 0.5]、cascade_scope は shared・all"
                          "（ctx_units = 0 のみ）")
+    if not 0.0 <= cascade_capture <= 1.0 or (cascade_capture > 0 and not cascade_levels):
+        raise ValueError("cascade_capture は [0, 1]（cascade_levels > 0 のときだけ）")
     rule_from = (writeback_at if writeback else 1) if replay_rule else len(specs)
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
@@ -1022,13 +1030,16 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     cas_g = [cascade_g * 4.0 ** -i for i in range(max(cascade_levels - 1, 0))]
 
     @torch.no_grad()
-    def cascade_step() -> None:
-        """12.6.233節: 最適化器のステップの後に、隣どうしの隠れ変数を拡散させる（Benna & Fusi 2016）。"""
+    def cascade_step(capture: float = 0.0) -> None:
+        """12.6.233節: 最適化器のステップの後に、隣どうしの隠れ変数を拡散させる（Benna & Fusi 2016）。capture > 0
+        （修正1）では、その後に隠れ変数を見える重みへ capture の割合だけ寄せる（新しさによる捕獲）。"""
         for q, us, mk in zip(model.parameters(), cas_u, cas_mask):
             ch = [q.detach().clone(), *us]
             fl = [g * (ch[i] - ch[i + 1]) for i, g in enumerate(cas_g)]
             nw = [ch[i] + ((fl[i - 1] if i > 0 else 0.0) - (fl[i] if i < len(fl) else 0.0)) / c
                   for i, c in enumerate(cas_c)]
+            if capture > 0:
+                nw[1:] = [u + capture * (nw[0] - u) for u in nw[1:]]
             if mk is not None:  # 対象外の要素は従来どおり（隠れ変数は見える重みに揃えておく）
                 nw[0] = torch.where(mk, nw[0], ch[0])
                 nw[1:] = [torch.where(mk, u, nw[0]) for u in nw[1:]]
@@ -1180,7 +1191,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                         u_ = raw_unorm if plasticity_ref == "raw" else unorm
                         upd_ref[:] = [u_ if not upd_ref else plasticity_ema * upd_ref[0] + (1 - plasticity_ema) * u_]
                 if cas_u:
-                    cascade_step()
+                    f_cap = 0.0
+                    if cascade_capture > 0 and gate["store"]:
+                        f_cap = max(0.0, min(1.0, 1 - novelty_level("ach_c", ctx) / tau))
+                    cascade_step(cascade_capture * (1 - f_cap))
                 if diagnostics:
                     diag["upd"].append((k, step, ctx, gnorm, unorm))
             if gate["train"]:

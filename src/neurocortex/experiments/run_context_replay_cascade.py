@@ -55,10 +55,15 @@ CONFIGS: dict[str, dict] = {
 }
 REUSED = ("base", "keep", "ach_c")  # 12.6.167〜168節の結果ファイルから読む
 NEW = ("base_cas", "keep_cas", "ach_c_cas", "ach_c_cas_all")
-# 修正（12.6.233節。上限3回）は開発用シードの結果を見て追加する
-FIXES: tuple[str, ...] = ()
+# 修正（12.6.233節。上限3回）。修正1: カスケードは共有の重みの変化を一様に引き戻し、新しいタスクを大きく損なった
+# （開発用 base_cas の −0.10 未満 32/150、ach_c_cas 36/150）。新しさに駆動された捕獲（行動のタグ付け）で、新しい文脈を
+# 学ぶ間の変化を遅い変数に取り込む。κ = 0.1（時定数 10 ステップ。計測前に決めた）
+CAP = {"cascade_capture": 0.1}
+CONFIGS.update({f"{c}_cap": {**CONFIGS[c], **CAP} for c in ("base_cas", "keep_cas", "ach_c_cas")})
+FIXES: tuple[str, ...] = ("base_cas_cap", "keep_cas_cap", "ach_c_cas_cap")
+# 確定の規則（修正1の計測の前に決めた）: 開発用シードで D1〜D3 を満たせば H_fix の候補にする。判定の基準は変えない
 FIX_CANDIDATES: tuple[str, ...] = ()
-FRONTIER = ("keep_cas", "ach_c_cas", "ach_c_cas_all")  # 交換の曲線からの残差を測る条件
+FRONTIER = ("keep_cas", "ach_c_cas", "ach_c_cas_all")  # 交換の曲線からの残差を測る条件（修正は FIXES で別に測る）
 RULES = ("keep", "ach_c", *NEW, *FIXES)
 
 
@@ -153,7 +158,7 @@ def verdict(res: dict) -> dict:
         if w not in ("keep", "ach_c") and o.get("end_ach_c") is not None:
             # D4: ach_c からの上積み（一般化 +0.02 以上、かつ大きく損なった回が増えない）
             v["D4"] = bool(o[f"end_{w}"] - o["end_ach_c"] >= 0.02 and a[f"bad_{w}"] <= a["bad_ach_c"])
-        r = frontier_residual(o, a, w) if w in (*FRONTIER, *FIXES) else None
+        r = frontier_residual(o, a, w) if w in FRONTIER or (w in FIXES and not w.startswith("base_")) else None
         if r is not None:
             v["residual"] = r
             v["F"] = bool(r >= 0.02)  # 交換の曲線より +0.02 以上外側
