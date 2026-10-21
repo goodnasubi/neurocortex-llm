@@ -117,3 +117,17 @@ def test_verdict_negative():
                           "nl_harm_rep": 0.0, "nl_harm_ro": 0.0} for r in ov.RULES0 for w in ov.DENSE}
     v = exp.verdict(summ, {}, set())
     assert v["Z"] is False and v["E"] is False and v["K"] is False and v["F"] is None
+
+
+def test_analyze_merges_files(tmp_path):
+    """開発用と評価用のファイル（同じキー）を合わせると、両方の回を使う。"""
+    paths = []
+    for i, seeds in enumerate(((0, 1), (2, 3))):
+        runs = {f"flip_m1/reset_L0/{r}_h{w}": {"per_seed": [_row(s, float(s), 0.5, 1.0, 0.0, 0.0, 0.0) for s in seeds]}
+                for r in ov.RULES0 for w in ov.DENSE}
+        p = tmp_path / f"r{i}.json"
+        p.write_text(json.dumps({"seeds": list(seeds), "runs": runs}))
+        paths.append(p)
+    res = exp.analyze(paths)
+    assert res["seeds"] == [0, 1, 2, 3] and res["summary"]["keep_h32"]["n"] == 4
+    assert res["summary"]["keep_h32"]["nl_d_tot"] == pytest.approx(1.5)

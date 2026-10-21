@@ -168,7 +168,8 @@ def analyze(paths: list[Path], refs: list[Path] | None = None) -> dict:
     for p in paths:
         d = json.loads(p.read_text(encoding="utf-8"))
         seeds.update(d["seeds"])
-        runs.update(d["runs"])
+        for k, v in d["runs"].items():  # 開発用と評価用のファイルは同じキーを持つので、回を連結する
+            runs.setdefault(k, {"per_seed": []})["per_seed"] += v["per_seed"]
     summ = summary(runs, seeds)
     out: dict = {"seeds": sorted(seeds), "summary": summ, "per_seed": per_seed(runs, seeds)}
     if refs:
