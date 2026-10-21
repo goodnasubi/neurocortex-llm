@@ -1,0 +1,15 @@
+vocab 9372 unk_rate_eval {'english': 0.072, 'german': 0.147, 'french': 0.098, 'finnish': 0.287}
+/usr/local/lib/python3.11/dist-packages/torch/nn/modules/transformer.py:823: UserWarning: Support for mismatched src_key_padding_mask and src_mask is deprecated. Use same type for both instead.
+  src_key_padding_mask = F._canonical_mask(
+[B seed100] task0 english done 326s diag ce 5.342 acc 0.117 | row ce 5.34 9.94 10.34 8.40
+[B seed100] task1 german done 628s diag ce 5.275 acc 0.164 | row ce 8.95 5.28 10.63 8.41
+[B seed100] task2 french done 936s diag ce 5.412 acc 0.105 | row ce 9.25 8.95 5.41 8.95
+[B seed100] task3 finnish done 1229s diag ce 4.750 acc 0.296 | row ce 9.52 9.42 9.54 4.75
+saved results/step44_continual_forgetting/dev/phaseB_seed100.json metrics {'ACC_acc': 0.15080759135877247, 'BWT_acc': -0.02589676290463692, 'F_acc': 0.02589676290463692, 'LA_acc': 0.17023016353725015, 'F_ce': 4.150358066344471, 'dCE': 4.150358066344471, 'ACC_ce': 8.307621645912988, 'LA_ce': 5.1948530961546355}
+/usr/local/lib/python3.11/dist-packages/torch/nn/modules/transformer.py:823: UserWarning: Support for mismatched src_key_padding_mask and src_mask is deprecated. Use same type for both instead.
+  src_key_padding_mask = F._canonical_mask(
+[C seed100] task0 english done 361s diag ce 5.336 acc 0.118 | row ce 5.34 9.92 10.31 8.38
+[C seed100] task1 german done 699s diag ce 5.277 acc 0.162 | row ce 8.91 5.28 10.67 8.42
+[C seed100] task2 french done 1077s diag ce 5.382 acc 0.111 | row ce 9.03 8.83 5.38 8.92
+[C seed100] task3 finnish done 1443s diag ce 4.733 acc 0.296 | row ce 9.50 9.30 9.63 4.73
+saved results/step44_continual_forgetting/dev/phaseC_seed100.json metrics {'ACC_acc': 0.15078740157480314, 'BWT_acc': -0.027633084325997717, 'F_acc': 0.027633084325997717, 'LA_acc': 0.17151221481930146, 'F_ce': 4.144642109790363, 'dCE': 4.144642109790363, 'ACC_ce': 8.290606767087182, 'LA_ce': 5.18212518474441}
