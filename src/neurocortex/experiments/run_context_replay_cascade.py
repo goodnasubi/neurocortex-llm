@@ -75,12 +75,14 @@ def run_job(job: tuple, kw: dict) -> dict:
     """job = (課題, 機構, L, 設定の名前, シード)。12.6.231節の run_job と同じ量に、カスケードの診断を加える。"""
     fam, mech, L, cfg, seed = job
     torch.set_num_threads(1)
+    kw = dict(kw)
+    hidden = kw.pop("hidden", 32)  # 12.6.241節: 共有の隠れ層の幅（既定は 12.6.167〜170節と同じ 32）
     specs = specs_for(fam)
     T0 = len(specs)
     specs = specs + [NEW_TASK[fam]]
     T = len(specs)
     torch.manual_seed(seed)
-    r = run_context_sequence("inferred_gated", specs, 32, torch.Generator().manual_seed(seed + 50_000),
+    r = run_context_sequence("inferred_gated", specs, hidden, torch.Generator().manual_seed(seed + 50_000),
                              torch.Generator().manual_seed(seed + 90_000), transition_steps=L, steps=500,
                              diagnostics=True, cue_n=CUE_N, selection_trials=SELECTION_TRIALS, **MECHS[mech],
                              **SELECTS[SELECT], writeback_at=T0, **kw)
