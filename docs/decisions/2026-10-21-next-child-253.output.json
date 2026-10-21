@@ -1,0 +1,22 @@
+{
+  "model": "jev-1.13.0",
+  "answers": {
+    "next": {
+      "type": "choice",
+      "choice": "HD",
+      "confidence": 0.88,
+      "probabilities": {
+        "HD": 0.9,
+        "PS": 0.07,
+        "LA": 0.01,
+        "C": 0.01,
+        "P": 0.01,
+        "V": 0.0
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 1753,
+    "output_tokens": 59
+  }
+}
