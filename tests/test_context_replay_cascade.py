@@ -108,6 +108,7 @@ def test_experiment_config_jobs_and_verdict():
     assert v["F"] and v["H"] and v["ach_c_cas"]["D4"]
     assert v["B"] is False  # new −0.03
     assert "residual" not in v["base_cas"]
+    assert v["F_fix"] is None  # 修正の条件がなければ判定しない
 
 
 def test_capture_changes_learning_and_full_capture_is_plain():

@@ -170,6 +170,12 @@ def verdict(res: dict) -> dict:
         # base の 1% 以下）
         out["B"] = bool(a["new_base_cas"] >= -0.02 and a["bad_frac_base_cas"] <= 0.01)
     out["H_fix"] = any(out.get(w, {}).get("success") for w in FIX_CANDIDATES) if FIX_CANDIDATES else None
+    # F_fix（修正1の確定時、評価用シードの計測前に加えた）: 修正の keep_cas_cap・ach_c_cas_cap のいずれかが交換の曲線より
+    # +0.02 以上外側。B_fix: base_cas_cap が B を満たす
+    fx = [w for w in FIXES if not w.startswith("base_") and w in out]
+    out["F_fix"] = any(out[w].get("F") for w in fx) if fx else None
+    if "base_cas_cap" in out:
+        out["B_fix"] = bool(a["new_base_cas_cap"] >= -0.02 and a["bad_frac_base_cas_cap"] <= 0.01)
     return out
 
 
