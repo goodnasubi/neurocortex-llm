@@ -16,6 +16,7 @@ import copy
 import math
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 
 from dataclasses import dataclass
@@ -26,6 +27,41 @@ from .context_subnet import GatedModel
 from .hippocampus_replay import make_model
 
 CONDITIONS = ("oracle", "none", "inferred", "random", "inferred_gated")
+
+
+class KWTABackbone(nn.Module):
+    """12.6.243節: k-WTA（k-winners-take-all）の隠れ層。前活性の大きい k 個のユニットだけが tanh の出力を持ち、
+    残りは 0 にする（新皮質の疎な符号化と側方抑制の単純化。O'Reilly 1998 の kWTA、Makhzani & Frey 2013）。
+    勾配は勝者のユニットだけを通る。fc1 は元の Backbone のものをそのまま使う（初期化の乱数の消費は変えない）。"""
+
+    def __init__(self, fc1: nn.Linear, k: int) -> None:
+        super().__init__()
+        self.fc1 = fc1
+        self.k = k
+
+    def forward(self, bits: torch.Tensor) -> torch.Tensor:
+        z = self.fc1(bits)
+        mask = torch.zeros_like(z).scatter_(-1, z.topk(self.k, dim=-1).indices, 1.0)
+        return torch.tanh(z) * mask
+
+
+def rep_stats(h0: dict, h1: dict) -> dict:
+    """12.6.243節: 隠れ層の表現の診断。h0・h1 は文脈 → 同じ探査入力の隠れ層の活動 [N, W]（h0 は新しいタスクの
+    学習の直前、h1 は最後）。
+      drift[c]   … 1 − 探査入力ごとの cos(h0[c], h1[c]) の平均（新しいタスクの学習の間の表現の動き）
+      overlap    … 最後の文脈どうしの、探査入力ごとの cos の平均（文脈 × 文脈）
+      sparse[c]  … Treves–Rolls の母集団の疎さ (mean|h|)² / mean(h²) の平均（1 = 一様に密、1/W = 1 個だけ）
+      active[c]  … |h| > 0.5 のユニットの割合の平均"""
+    def cos(a: torch.Tensor, b: torch.Tensor) -> float:
+        return float(F.cosine_similarity(a, b, dim=-1, eps=1e-8).mean())
+
+    cs = sorted(h1)
+    return {"drift": {c: 1 - cos(h0[c], h1[c]) for c in cs if c in h0},
+            "overlap": {c: {c2: cos(h1[c], h1[c2]) for c2 in cs} for c in cs},
+            "sparse": {c: float((h1[c].abs().mean(-1) ** 2 / (h1[c] ** 2).mean(-1).clamp_min(1e-12)).mean()) for c in cs},
+            "active": {c: float((h1[c].abs() > 0.5).float().mean()) for c in cs}}
+
+
 # 12.6.227節: ach_c の固定化のリプレイを、今の入力との類似度で重みづけする（類似度に基づく選択的リプレイ）
 REPLAY_SIMS = ("hid", "hid_neg", "hid_shuf", "inp", "hid_ctx", "hid_ctx_shuf")
 
@@ -165,7 +201,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          ctx_zero_readout: bool = False, replay_sim: str = "", replay_sim_beta: float = 2.0,
                          cascade_levels: int = 0, cascade_g: float = 0.05, cascade_scope: str = "shared",
                          cascade_capture: float = 0.0, cascade_capture_drive: list[float] | None = None,
-                         het_gain: float = 1.0, het_mode: str = "conflict") -> dict:
+                         het_gain: float = 1.0, het_mode: str = "conflict", kwta: int = 0,
+                         rep_diag: bool = False) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -509,6 +546,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     if cascade_capture_drive is not None and (not cascade_capture > 0 or not cascade_capture_drive
                                               or any(not 0.0 <= v <= 1.0 for v in cascade_capture_drive)):
         raise ValueError("cascade_capture_drive は [0, 1] の値の空でない列（cascade_capture > 0 のときだけ）")
+    if kwta and (not 0 < kwta < hidden_dim or ctx_units > 0):
+        raise ValueError("kwta は 0 か (0, hidden_dim)（ctx_units = 0 のみ）")
+    if rep_diag and not (diagnostics and writeback and condition in ("inferred", "inferred_gated")):
+        raise ValueError("rep_diag は diagnostics と writeback があるときだけ")
     if not 0.0 <= het_gain <= 1.0 or het_mode not in ("conflict", "perm", "wta") or (het_gain < 1.0 and ctx_units > 0):
         raise ValueError("het_gain は [0, 1]（ctx_units = 0 のときだけ 1 未満）、het_mode は conflict・perm・wta")
     rule_from = (writeback_at if writeback else 1) if replay_rule else len(specs)
@@ -530,6 +571,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         model = GatedModel(specs[0].n_inputs, C, hidden_dim, ctx_units, ctx_zero_readout)
     else:
         model = make_model(specs[0].n_inputs + C, hidden_dim)
+        if kwta:  # 12.6.243節
+            model.backbone = KWTABackbone(model.backbone.fc1, kwta)
 
     def with_ctx(bits: torch.Tensor, ctx: torch.Tensor | int) -> torch.Tensor:
         if C == 0:
@@ -1107,6 +1150,29 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         het_d["conflict"] += n_cf / n_sh
         het_d["n"] += 1
 
+    rep_d: dict = {"tr": [], "old": []}  # 12.6.243節: 新しいタスクの学習中の勾配の cos
+    rep_x = torch.randint(0, 2, (256, specs[0].n_inputs),
+                          generator=torch.Generator().manual_seed(generator.initial_seed() + 130_000)).float() * 2 - 1
+    rep_h0: dict = {}
+
+    def grad_overlap(x: torch.Tensor, y: torch.Tensor, n_new: int, flags: torch.Tensor) -> None:
+        """12.6.243節: 共有の重み（文脈の one-hot の列を除く）の上で、新しい入力の勾配と、加えた痕跡（tr）・
+        古い文脈の覚醒中の痕跡（old）の勾配の cos を記録する。.grad と乱数には触れない。"""
+        ce = F.cross_entropy(model(x), y, reduction="none")
+        ps = model.parameters()
+        rows = {"tr": flags[1], "old": ~flags[0] & ~flags[1]}
+        g_new = torch.autograd.grad(ce[:n_new].mean(), ps, retain_graph=True)
+
+        def flat(gs) -> torch.Tensor:
+            return torch.cat([(g[:, :n_bits] if q is fc1_w else g).flatten() for q, g in zip(ps, gs)])
+
+        a = flat(g_new)
+        for name, m in rows.items():
+            if bool(m.any()):
+                full = torch.cat([torch.zeros(n_new, dtype=torch.bool), m])
+                g = torch.autograd.grad(ce[full].mean(), ps, retain_graph=True)
+                rep_d[name].append(float(F.cosine_similarity(a, flat(g), dim=0, eps=1e-12)))
+
     upd_ref: list[float] = []  # plasticity_cap の ū（平常時の更新ノルムの移動平均）
     split = {"left": 0, "ctx": -1}  # split_window の残りステップと、対象の新しい文脈
     split_on = split_window > 0 and condition in ("inferred", "inferred_gated")
@@ -1116,6 +1182,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     for k, spec in enumerate(specs):
         if writeback and k == writeback_at:
             writeback_phase(k)
+            if rep_diag:  # 12.6.243節: 新しいタスクの学習の直前の表現
+                with torch.no_grad():
+                    rep_h0.update({c: model.backbone(with_ctx(rep_x, c)) for c in used})
         trained: dict[tuple[int, int], int] = {}
         n_used_at_start = len(used)
         opt = make_opt(k)
@@ -1201,6 +1270,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                 x = torch.cat([x, xr])
                 y = torch.cat([y, yr])
             if y.numel() > 0:
+                if rep_diag and k == writeback_at and buf_bits and n_new > 0 and step % 10 == 0:
+                    grad_overlap(x, y, n_new, flags)
                 opt.zero_grad(set_to_none=True)
                 if het_gain < 1.0 and k >= het_from and buf_bits and bool(flags[1].any()):
                     het_step(x, y, n_new, flags[1], ctx)
@@ -1415,6 +1486,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         bb = torch.cat(buf_bits) if buf_bits else torch.zeros(0)
         bl = torch.cat(buf_labels) if buf_labels else torch.zeros(0, dtype=torch.long)
         diag["buffer"] = {"bits": bb, "labels": bl, "ctx": bc, "src": bs}
+        if rep_diag:  # 12.6.243節
+            with torch.no_grad():
+                rep_h1 = {c: model.backbone(with_ctx(rep_x, c)) for c in used}
+            diag["rep"] = {**rep_stats(rep_h0, rep_h1),
+                           **{f"gcos_{n}": (sum(v) / len(v) if v else None) for n, v in rep_d.items()},
+                           **{f"n_gcos_{n}": len(v) for n, v in rep_d.items()}}
         if condition in ("inferred", "inferred_gated"):
             # 12.6.151節: 入力の出どころごとの正確度（正解は評価するタスク j の規則）
             hc = torch.cat(hold_ctx) if hold_ctx else torch.zeros(0, dtype=torch.long)

@@ -110,6 +110,15 @@ def run_job(job: tuple, kw: dict) -> dict:
     het = d.get("het", {}).get(T0)
     if het:  # 12.6.237節: 競合で弱めた共有のシナプスの割合と、逆向きの割合
         row["het_frac"], row["het_conflict"] = het["frac"], het["conflict"]
+    rep = d.get("rep")
+    if rep:  # 12.6.243節: 本来の文脈での表現の動き・新しいタスクの文脈との重なり・疎さと、勾配の cos
+        old = [nat[j] for j in orig]
+        row["rep_drift"] = sum(rep["drift"][c] for c in old) / len(old)
+        ov = [rep["overlap"][c][nat[T0]] for c in old if c != nat[T0]]
+        row["rep_overlap"] = sum(ov) / len(ov) if ov else None
+        row["rep_sparse"] = sum(rep["sparse"][c] for c in old) / len(old)
+        row["rep_active"] = sum(rep["active"][c] for c in old) / len(old)
+        row["gcos_tr"], row["gcos_old"] = rep["gcos_tr"], rep["gcos_old"]
     return {"key": f"{fam}/{mech}_L{L}/{cfg}", "row": row, **({"drive": drv} if drv else {})}
 
 
