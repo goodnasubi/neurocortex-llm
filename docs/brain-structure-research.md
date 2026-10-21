@@ -13199,7 +13199,7 @@ replay_bd は 12.6.240節の replay（推定の読み出し、−1.512 / −1.67
 2. 新しいタスクの側（keep の代価の消失、12.6.244節の勾配の向きの反転）を、新しいタスクの読み出しの出力に効く方向と零空間で同じように分ける。
 3. リプレイが動きの「符号」を変える仕組み（解釈 4）: 加えた痕跡のリプレイの勾配が、出力に効く方向の動きを正解の向きに戻す成分をどれだけ持つかを、ステップごとに分けて測る。
 
-**テスト**: `tests/test_context_drift_null.py`（9件）。
+**テスト**: `tests/test_context_drift_null.py`（8件）。
 
 全体のテスト: `PYTHONPATH=src pytest` で 960 passed, 9 skipped, 36 failed, 8 errors（評価用シードの計測の後に実行）。失敗とエラーはすべて faiss を入れていない環境での6ファイル（`test_faiss_batch_optimization`・`test_faiss_integration`・`test_hybrid_rerank`・`test_pq_gpu_scaling`・`test_pq_tradeoff_analysis`・`test_product_quantization`）で、`requirements-dev.txt` の依存を入れて6ファイルを再実行すると 58 passed, 1 skipped だった。本節の変更と関係しない。
 
