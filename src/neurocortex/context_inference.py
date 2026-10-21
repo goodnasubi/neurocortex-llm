@@ -164,7 +164,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          nov_shared_gain: float = 0.2, ctx_units: int = 0,
                          ctx_zero_readout: bool = False, replay_sim: str = "", replay_sim_beta: float = 2.0,
                          cascade_levels: int = 0, cascade_g: float = 0.05, cascade_scope: str = "shared",
-                         cascade_capture: float = 0.0, cascade_capture_drive: list[float] | None = None) -> dict:
+                         cascade_capture: float = 0.0, cascade_capture_drive: list[float] | None = None,
+                         het_gain: float = 1.0, het_mode: str = "conflict") -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -442,6 +443,16 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     cascade_capture_drive（12.6.235節の対照）を与えると、i 番目の捕獲で 1 − f の代わりに drive[i]（長さを越えたら
     先頭に戻る）を使う。別の実行で記録した列を並べ替えたもの・平均で置き換えたものを与えて、捕獲の量を保ったまま
     新しさとの時間的な対応だけを壊す。
+
+    het_gain = γ < 1（12.6.237節。書き戻しの時点（writeback がなければ 2 番目のタスク）から）では、ヘテロシナプスの
+    競合で共有の重みの可塑性を配分する。1ステップの勾配を、新しい入力の分 g_new・加えた痕跡（出どころ −1）のリプレイの分 g_tr・それ以外の
+    リプレイの分に分け（和は従来の勾配と同じ）、共有の重み（文脈の one-hot の列を除く全て）のうち g_tr と g_new の
+    符号が逆のシナプスでだけ g_tr を γ 倍する（同じシナプスに同時に届く二つの可塑性の信号が逆向きなら、今の入力に
+    よる変化を優先する）。het_mode = "perm"（対照）では、そのステップの逆向きのシナプスの数をパラメータごとに保ったまま、
+    弱める位置を共有の重みの中で無作為に選ぶ（別の乱数で、学習の乱数の消費は変えない）。het_mode = "wta"（修正1）では、
+    逆向きのシナプスで大きさの大きい方の信号が勝ち、小さい方（g_tr か g_new）を γ 倍する（強い誘導が弱い誘導を抑える、
+    対称な競合）。diagnostics = True では
+    diag["het"][k] = {"frac": 弱めた共有のシナプスの割合の平均, "conflict": 逆向きの割合の平均, "n": ステップ数}。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -498,6 +509,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     if cascade_capture_drive is not None and (not cascade_capture > 0 or not cascade_capture_drive
                                               or any(not 0.0 <= v <= 1.0 for v in cascade_capture_drive)):
         raise ValueError("cascade_capture_drive は [0, 1] の値の空でない列（cascade_capture > 0 のときだけ）")
+    if not 0.0 <= het_gain <= 1.0 or het_mode not in ("conflict", "perm", "wta") or (het_gain < 1.0 and ctx_units > 0):
+        raise ValueError("het_gain は [0, 1]（ctx_units = 0 のときだけ 1 未満）、het_mode は conflict・perm・wta")
     rule_from = (writeback_at if writeback else 1) if replay_rule else len(specs)
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
@@ -1055,6 +1068,45 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             for u, v in zip(us, nw[1:]):
                 u.copy_(v)
 
+    het_from = max(writeback_at if writeback else 1, 1)
+    het_rng = torch.Generator().manual_seed(generator.initial_seed() + 7_000)  # 12.6.237節の perm の位置（学習の乱数とは別）
+    het_d: dict = {"frac": 0.0, "conflict": 0.0, "n": 0}
+
+    def het_step(x: torch.Tensor, y: torch.Tensor, n_new: int, tr: torch.Tensor, ctx: int) -> None:
+        """12.6.237節: ヘテロシナプスの競合。勾配を新しい入力・加えた痕跡・その他に分け、共有のシナプスのうち
+        g_tr と g_new が逆向きの所でだけ g_tr を het_gain 倍して .grad に置く。"""
+        ce = F.cross_entropy(model(x), y, reduction="none")
+        N = y.shape[0]
+        is_tr = torch.cat([torch.zeros(n_new, dtype=torch.bool), tr])
+        is_new = torch.zeros(N, dtype=torch.bool)
+        is_new[:n_new] = True
+        ps = model.parameters()
+        g_tr = torch.autograd.grad(ce[is_tr].sum() / N, ps, retain_graph=True)
+        g_new = torch.autograd.grad(ce[is_new].sum() / N, ps, retain_graph=True, allow_unused=True)
+        g_rest = torch.autograd.grad(ce[~is_tr].sum() / N, ps, allow_unused=True)
+        n_sh, n_cf, n_wk = 0, 0, 0
+        for q, a, b, c in zip(ps, g_tr, g_new, g_rest):
+            sh = torch.ones_like(q, dtype=torch.bool)
+            if q is fc1_w:
+                sh[:, n_bits:] = False
+            cf = sh & (a * b < 0) if b is not None else torch.zeros_like(sh)
+            wk = cf
+            if het_mode == "perm" and int(cf.sum()) > 0:
+                pos = sh.flatten().nonzero()[:, 0]
+                pick = pos[torch.randperm(pos.numel(), generator=het_rng)[:int(cf.sum())]]
+                wk = torch.zeros(q.numel(), dtype=torch.bool)
+                wk[pick] = True
+                wk = wk.view_as(q)
+            c = c if c is not None else torch.zeros_like(q)
+            if het_mode == "wta":  # 修正1: 逆向きの所では大きい方が勝ち、小さい方を γ 倍する
+                wk = cf & (a.abs() <= b.abs())
+                c = c - (1 - het_gain) * torch.where(cf & ~wk, b, torch.zeros_like(b))
+            n_sh, n_cf, n_wk = n_sh + int(sh.sum()), n_cf + int(cf.sum()), n_wk + int(wk.sum())
+            q.grad = c + torch.where(wk, het_gain * a, a)
+        het_d["frac"] += n_wk / n_sh
+        het_d["conflict"] += n_cf / n_sh
+        het_d["n"] += 1
+
     upd_ref: list[float] = []  # plasticity_cap の ū（平常時の更新ノルムの移動平均）
     split = {"left": 0, "ctx": -1}  # split_window の残りステップと、対象の新しい文脈
     split_on = split_window > 0 and condition in ("inferred", "inferred_gated")
@@ -1079,6 +1131,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         if rule and k == rule_from:
             old_ctx.update(used)
         mix = {"own": 0.0, "kept": 0.0, "size": 0, "n": 0, "sleep": 0, "fam": 0.0, "sim": 0.0, "n_sim": 0}
+        het_d.update(frac=0.0, conflict=0.0, n=0)
         if k == nov_from:
             nov_old.update(used)
         nov_d = {"steps": 0, "g_shared": 0.0}
@@ -1144,12 +1197,16 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                     bb, bl, bc = torch.cat(buf_bits), torch.cat(buf_labels), torch.cat(buf_ctx)
                     idx = torch.randint(bb.shape[0], (batch,), generator=generator)
                     xr, yr = with_ctx(bb[idx], bc[idx]), bl[idx]
+                    flags = torch.stack([bc[idx] == ctx, torch.cat(buf_src)[idx] == -1])
                 x = torch.cat([x, xr])
                 y = torch.cat([y, yr])
             if y.numel() > 0:
-                loss = F.cross_entropy(model(x), y)
                 opt.zero_grad(set_to_none=True)
-                loss.backward()
+                if het_gain < 1.0 and k >= het_from and buf_bits and bool(flags[1].any()):
+                    het_step(x, y, n_new, flags[1], ctx)
+                else:
+                    loss = F.cross_entropy(model(x), y)
+                    loss.backward()
                 if diagnostics or plasticity_cap > 0 or split_now or nov_now:
                     before = [q.detach().clone() for q in model.parameters()]
                 if diagnostics:
@@ -1298,6 +1355,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                     mv += float((us[-1] - u0).abs()[sel].sum())
                     n_ += int(sel.sum())
                 diag.setdefault("cascade", {})[k] = {"gap": gap / n_, "move": mv / n_}
+            if k >= het_from and het_gain < 1.0:
+                n_ = max(het_d["n"], 1)
+                diag.setdefault("het", {})[k] = {"frac": het_d["frac"] / n_, "conflict": het_d["conflict"] / n_,
+                                                 "n": het_d["n"]}
             if rule:
                 m_ = max(mix["n"], 1)
                 diag.setdefault("replay_mix", {})[k] = {"own": mix["own"] / m_, "kept": mix["kept"] / m_,
