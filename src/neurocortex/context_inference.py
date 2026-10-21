@@ -164,7 +164,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          nov_shared_gain: float = 0.2, ctx_units: int = 0,
                          ctx_zero_readout: bool = False, replay_sim: str = "", replay_sim_beta: float = 2.0,
                          cascade_levels: int = 0, cascade_g: float = 0.05, cascade_scope: str = "shared",
-                         cascade_capture: float = 0.0) -> dict:
+                         cascade_capture: float = 0.0, cascade_capture_drive: list[float] | None = None) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -438,6 +438,10 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     u_k += κ·(1 − f)·(u_1 − u_k) で見える重みに寄せる。f はそのステップの文脈のなじみの度合い（ach_c と同じ
     clamp(1 − L̄_c/τ, 0, 1)、驚きのあるステップでは 0）。新しい文脈を学ぶ間の変化は遅い変数にすぐ取り込まれて
     引き戻されず、なじんだ後の変化（加えた痕跡の固定化を含む）だけがカスケードで濾される。睡眠の段階では捕獲しない。
+    diagnostics = True では diag["cascade_drive"] に、覚醒中の各ステップで使った 1 − f の列を加える。
+    cascade_capture_drive（12.6.235節の対照）を与えると、i 番目の捕獲で 1 − f の代わりに drive[i]（長さを越えたら
+    先頭に戻る）を使う。別の実行で記録した列を並べ替えたもの・平均で置き換えたものを与えて、捕獲の量を保ったまま
+    新しさとの時間的な対応だけを壊す。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -491,6 +495,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          "（ctx_units = 0 のみ）")
     if not 0.0 <= cascade_capture <= 1.0 or (cascade_capture > 0 and not cascade_levels):
         raise ValueError("cascade_capture は [0, 1]（cascade_levels > 0 のときだけ）")
+    if cascade_capture_drive is not None and (not cascade_capture > 0 or not cascade_capture_drive
+                                              or any(not 0.0 <= v <= 1.0 for v in cascade_capture_drive)):
+        raise ValueError("cascade_capture_drive は [0, 1] の値の空でない列（cascade_capture > 0 のときだけ）")
     rule_from = (writeback_at if writeback else 1) if replay_rule else len(specs)
     if split_shared_lr_floor > 0:
         split_shared_gain = max(split_shared_gain, min(1.0, split_shared_lr_floor / lr))
@@ -1028,6 +1035,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     cas_mask: list[torch.Tensor | None] = []  # 固定化の対象（None は全要素）
     cas_c = [2.0 ** i for i in range(cascade_levels)]
     cas_g = [cascade_g * 4.0 ** -i for i in range(max(cascade_levels - 1, 0))]
+    cas_drive: list[float] = []  # 12.6.235節: 覚醒中の各捕獲で使った 1 − f
 
     @torch.no_grad()
     def cascade_step(capture: float = 0.0) -> None:
@@ -1194,7 +1202,12 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                     f_cap = 0.0
                     if cascade_capture > 0 and gate["store"]:
                         f_cap = max(0.0, min(1.0, 1 - novelty_level("ach_c", ctx) / tau))
-                    cascade_step(cascade_capture * (1 - f_cap))
+                    drv = 1 - f_cap
+                    if cascade_capture > 0:
+                        if cascade_capture_drive is not None:  # 12.6.235節の対照: 記録した列で置き換える
+                            drv = cascade_capture_drive[len(cas_drive) % len(cascade_capture_drive)]
+                        cas_drive.append(drv)
+                    cascade_step(cascade_capture * drv)
                 if diagnostics:
                     diag["upd"].append((k, step, ctx, gnorm, unorm))
             if gate["train"]:
@@ -1519,6 +1532,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                     diag["episodic_arb"] = arb_rec
         diag["buffer_src"] = {int(c): {int(t): int(((bc == c) & (bs == t)).sum()) for t in bs[bc == c].unique()}
                               for c in bc.unique()}
+        if cas_drive:
+            diag["cascade_drive"] = cas_drive
         out["diag"] = diag
     return out
 

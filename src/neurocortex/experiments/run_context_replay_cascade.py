@@ -102,7 +102,10 @@ def run_job(job: tuple, kw: dict) -> dict:
            "mix_own": mix.get("own"), "mix_kept": mix.get("kept"), "mix_size": mix.get("size"),
            "mix_fam": mix.get("fam"), "sleep_steps": mix.get("sleep"),
            "cas_gap": d.get("cascade", {}).get(T0, {}).get("gap"), "cas_move": d.get("cascade", {}).get(T0, {}).get("move")}
-    return {"key": f"{fam}/{mech}_L{L}/{cfg}", "row": row}
+    drv = d.get("cascade_drive")
+    if drv:  # 12.6.235節: 捕獲の駆動 1 − f の平均（列は drive に返す）
+        row["cap_drive"] = sum(drv) / len(drv)
+    return {"key": f"{fam}/{mech}_L{L}/{cfg}", "row": row, **({"drive": drv} if drv else {})}
 
 
 def run_one(job: tuple, table: dict) -> dict:
