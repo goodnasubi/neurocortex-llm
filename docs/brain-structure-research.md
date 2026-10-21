@@ -12963,3 +12963,5 @@ ach_c のリプレイの配分は自分の f のまま（捕獲の駆動だけ�
 3. 幅 128 の k-WTA の上積み（Q）が頑健かを確証用シードで測る。
 
 **テスト**: `tests/test_context_capacity_overlap.py`（9件）。
+
+全体のテスト: `PYTHONPATH=src pytest` で 993 passed, 1 skipped, 1 failed（評価用シードの計測の後に実行）。失敗した `tests/test_expert_prefetch.py::test_prefetch_accounting`（先読みのスレッドの計数）は本節の変更と関係せず、単独で3回実行すると 1 回失敗・2 回成功する時間依存のテストだった。
