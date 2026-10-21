@@ -61,6 +61,8 @@ class CBConfig:
     granule: int = 1024  # 顆粒細胞の数
     granule_active: float = 0.25  # 顆粒細胞の発火の割合（閾値の目安）
     cb_mu: float = 0.5  # プルキンエ細胞の正規化 LMS の歩幅
+    reliability: bool = False  # 12.6.258節の修正1: 小脳の教える信号を信頼度の利得で重みづける
+    gain_ema: float = 0.9
     eval_every: int = 300
     eval_segments: int = 400
 
@@ -182,6 +184,8 @@ def train_cerebellum(data: list[LangData], vocab: int, cfg: CBConfig, generator:
     cos_all: list[tuple[int, float]] = []
     losses: list[float] = []
     lower_updates = 0
+    gain = 0.0 if cfg.reliability else 1.0
+    gains: list[float] = []
     evaluate(0)
     for it in range(1, cfg.steps + 1):
         seg, c = batch()
@@ -198,13 +202,24 @@ def train_cerebellum(data: list[LangData], vocab: int, cfg: CBConfig, generator:
         g = h1d.grad
         cb_in = h1.detach() if perm is None else h1.detach()[perm]
         cb_y = None if cfg.cond == "cb_state" else seg[:, 1:]
+        if use_cb and feedback and cfg.reliability:
+            # 信頼度: 小脳の予測が下の皮質に与える更新 b と本物の更新 a の最小二乗の係数 a·b/‖b‖²（0〜1 に切る）
+            with torch.no_grad():
+                g_hat = tangent(cb(cb_in, cb_y), h1.detach()) / n_tok
+            a = torch.autograd.grad(h1, low, g, retain_graph=True, allow_unused=True)
+            b = torch.autograd.grad(h1, low, g_hat, retain_graph=True, allow_unused=True)
+            ab = sum(float((x * y).sum()) for x, y in zip(a, b) if x is not None)
+            bb = sum(float((y * y).sum()) for y in b if y is not None)
+            new = min(1.0, max(0.0, ab / bb)) if bb > 0 else 0.0
+            gain = cfg.gain_ema * gain + (1 - cfg.gain_ema) * new
+            gains.append(gain)
         if cfg.cond == "bp" or (feedback and cfg.cond != "frozen"):
             h1.backward(g)
             lower_updates += 1
         elif use_cb:
             with torch.no_grad():
                 g_hat = tangent(cb(cb_in, cb_y), h1.detach()) / n_tok
-            h1.backward(g_hat)
+            h1.backward(gain * g_hat)
             lower_updates += 1
         opt.step()
         low_opt.step()
@@ -221,4 +236,5 @@ def train_cerebellum(data: list[LangData], vocab: int, cfg: CBConfig, generator:
             "auc": sum(r[1] for r in curve[1:]) / max(1, len(curve) - 1),
             "final_loss": sum(losses[-100:]) / min(100, len(losses)), "lower_updates": lower_updates,
             "cb_cos": sum(v for _, v in cos_all) / len(cos_all) if cos_all else None,
-            "cb_cos_late": sum(half) / len(half) if half else None}
+            "cb_cos_late": sum(half) / len(half) if half else None,
+            "gain_mean": sum(gains) / len(gains) if gains else None}

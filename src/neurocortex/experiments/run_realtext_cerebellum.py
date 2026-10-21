@@ -35,15 +35,16 @@ RECOVER = 0.25  # H1: (sparse − cb) / (sparse − bp) ≧ 0.25
 T_MIN = 2.0
 
 
-def run_one(set_name: str, cond: str, seed: int, steps: int = 3000, corpus: Path = DEFAULT_CORPUS) -> dict:
+def run_one(set_name: str, cond: str, seed: int, steps: int = 3000, corpus: Path = DEFAULT_CORPUS,
+            fix: int = 0) -> dict:
     torch.set_num_threads(1)
     vocab, docs = load_sets(corpus)
     v = len(vocab) + 1
     langs = SETS[set_name]
     data = [split_docs(docs[lang], vocab, N_TRAIN, N_SPEAKER, lang) for lang in langs]
-    out = train_cerebellum(data, v, CBConfig(cond=cond, steps=steps), torch.Generator().manual_seed(seed),
+    out = train_cerebellum(data, v, CBConfig(cond=cond, steps=steps, reliability=fix >= 1), torch.Generator().manual_seed(seed),
                            torch.Generator().manual_seed(seed + 2024))
-    out.update({"set": set_name, "cond": cond, "seed": seed, "langs": [LANG_CODES[x] for x in langs]})
+    out.update({"set": set_name, "cond": cond, "seed": seed, "fix": fix, "langs": [LANG_CODES[x] for x in langs]})
     return out
 
 
@@ -52,7 +53,7 @@ def analyze(runs: list[dict]) -> dict:
     for r in runs:
         by.setdefault(r["cond"], {})[(r["set"], r["seed"])] = r
     sets = sorted({k[0] for c in by.values() for k in c})
-    keys = ("final_ce_mean", "auc", "final_loss", "cb_cos", "cb_cos_late")
+    keys = ("final_ce_mean", "auc", "final_loss", "cb_cos", "cb_cos_late", "gain_mean")
     table: dict = {}
     for c in CONDS:
         if c not in by:
@@ -61,7 +62,7 @@ def analyze(runs: list[dict]) -> dict:
             sel = [v for k, v in by[c].items() if s == "全体" or k[0] == s]
             if sel:
                 table[f"{c}/{s}"] = {"n": len(sel)} | {
-                    k: (_mean([v[k] for v in sel]) if all(v[k] is not None for v in sel) else None) for k in keys}
+                    k: (_mean([v[k] for v in sel]) if all(v.get(k) is not None for v in sel) else None) for k in keys}
 
     def diff(a: str, b: str, k: str = "final_ce_mean") -> list[float]:
         if a not in by or b not in by:
@@ -113,6 +114,7 @@ def main() -> None:
     ap.add_argument("--steps", type=int, default=3000)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
+    ap.add_argument("--fix", type=int, default=0, help="12.6.258節の修正の番号（1: 小脳の信号を信頼度の利得で重みづける）")
     ap.add_argument("--out", type=Path, default=None)
     ap.add_argument("--analyze", type=Path, nargs="+", default=None)
     args = ap.parse_args()
@@ -125,16 +127,18 @@ def main() -> None:
     # 長い条件（小脳つき）から先に配って、最後に1本だけ残る待ちを減らす
     jobs.sort(key=lambda j: not j[1].startswith("cb"))
     with Pool(args.workers) as pool:
-        runs = pool.starmap(run_one, [(*j, args.steps, corpus) for j in jobs], chunksize=1)
+        runs = pool.starmap(run_one, [(*j, args.steps, corpus, args.fix) for j in jobs], chunksize=1)
     out = {"環境": env_info(),
            "設定": {"corpus": "Europarl（NLTK europarl_raw の標本）",
                   "sets": {k: [LANG_CODES[x] for x in v] for k, v in SETS.items()},
                   "split": {"train_days": N_TRAIN, "speaker_days": N_SPEAKER},
-                  "model": CBConfig().__dict__ | {"steps": args.steps}, "phase": args.phase,
+                  "model": CBConfig(reliability=args.fix >= 1).__dict__ | {"steps": args.steps}, "phase": args.phase,
+                  "fix": args.fix,
                   "conds": list(CONDS), "jobs": [list(j) for j in jobs]},
            "runs": runs}
     out["集計"] = analyze(runs)
-    path = args.out or Path("results/context_lm") / f"realtext_cerebellum_{args.phase}.json"
+    path = args.out or Path("results/context_lm") / (
+        f"realtext_cerebellum_{args.phase}.json" if not args.fix else f"realtext_cerebellum_fix{args.fix}_{args.phase}.json")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(out["集計"]["判定"], ensure_ascii=False, indent=1))
