@@ -1,8 +1,9 @@
 """境界の推定が難しい設定（戻ってくる言語・1断片ずつの割り当て）での継続学習の忘却指標（12.6.249〜250節）。
 
 Europarl の言語の組 R・G を、各言語 3 区間（1区間 500 ステップ、1言語の総ステップは 12.6.245節と同じ 1500）の
-戻ってくる流れで学ぶ（realtext_hard_boundary）。条件は規則（naive・replay）× 割り当て（frag: 1断片ずつ推定、
-batch: バッチごとに推定、id: 言語の番号を与える、blk: 区間ごとに新しい文脈）。評価はどれも言語の番号を与えない
+戻ってくる流れで学ぶ（realtext_hard_boundary）。条件は規則（naive・replay）× 割り当て（ev: 1断片ずつ、驚きを
+漏れのある積分で集めて推定、frag: 1断片ずつそのまま推定、batch: バッチごとに推定、id: 言語の番号を与える、
+blk: 区間ごとに新しい文脈）の 7 つ（CONDS）。評価はどれも言語の番号を与えない
 推定の読み出し。
 
     --phase dev（開発用シード 100〜104）／ --phase eval（評価用シード 0〜4、一度だけ）／ --phase pre（予備の確認）
@@ -31,12 +32,15 @@ from .run_realtext_forgetting import _mean, _t
 DEV_SEEDS = tuple(range(100, 105))
 EVAL_SEEDS = tuple(range(5))
 # 条件: 名前 → (規則, 割り当て)
-CONDS = {f"{r}_{a}": (r, a) for r in ("naive", "replay") for a in ("frag", "batch", "id", "blk")}
+# naive_frag・naive_batch・naive_blk は計算の都合で除く（12.6.249節）。replay_frag は予備の確認で分けすぎた規則の参照
+CONDS = {"naive_ev": ("naive", "ev"), "replay_ev": ("replay", "ev"), "replay_frag": ("replay", "frag"),
+         "replay_batch": ("replay", "batch"), "naive_id": ("naive", "id"), "replay_id": ("replay", "id"),
+         "replay_blk": ("replay", "blk")}
 # 判定条件（12.6.249節で開発用シードの計測の前に固定。値は −CE（nats）の指標、推定の読み出し）
 FORGET_MIN = 0.05  # V: naive_id の FGT ≦ −0.05（両方の組）
-ARI_MIN = 0.9  # A1: replay_frag の ARI の平均 ≧ 0.9
-REACT_MIN = 0.9  # A2: replay_frag・replay_batch の再活性化の割合の平均 ≧ 0.9
-ID_COST = 0.05  # H2: replay_frag − replay_id の ACC の平均 ≧ −0.05
+ARI_MIN = 0.9  # A1: replay_ev の ARI の平均 ≧ 0.9
+REACT_MIN = 0.9  # A2: replay_ev・replay_batch の再活性化の割合の平均 ≧ 0.9
+ID_COST = 0.05  # H2: replay_ev − replay_id の ACC の平均 ≧ −0.05
 T_MIN = 2.0
 
 
@@ -99,26 +103,26 @@ def analyze(runs: list[dict]) -> dict:
         j["V"] = {s: {"FGT_naive_id": _mean(val("naive_id", "FGT", s)),
                       "合格": _mean(val("naive_id", "FGT", s)) <= -FORGET_MIN} for s in sets}
         j["V"]["合格"] = all(j["V"][s]["合格"] for s in sets)
-    if "replay_frag" in by:
-        a = [r["seg"]["ARI"] for r in by["replay_frag"].values()]
+    if "replay_ev" in by:
+        a = [r["seg"]["ARI"] for r in by["replay_ev"].values()]
         j["A1"] = {"ARI": _mean(a), "最小": min(a), "合格": _mean(a) >= ARI_MIN}
-    ra = [c for c in ("replay_frag", "replay_batch") if c in by]
+    ra = [c for c in ("replay_ev", "replay_batch") if c in by]
     if ra:
         j["A2"] = {c: _mean([r["seg"]["react"] for r in by[c].values()]) for c in ra}
         j["A2"]["合格"] = all(j["A2"][c] >= REACT_MIN for c in ra)
-    if "replay_frag" in by and "naive_frag" in by:
-        j["H1"] = paired(diff("replay_frag", "naive_frag", "ACC"))
-    if "replay_frag" in by and "replay_id" in by:
-        d = diff("replay_frag", "replay_id", "ACC")
+    if "replay_ev" in by and "naive_ev" in by:
+        j["H1"] = paired(diff("replay_ev", "naive_ev", "ACC"))
+    if "replay_ev" in by and "replay_id" in by:
+        d = diff("replay_ev", "replay_id", "ACC")
         j["H2"] = {"差": _mean(d), "最小": min(d), "t": _t(d), "合格": _mean(d) >= -ID_COST}
     if "replay_id" in by and "replay_blk" in by:
         j["H3"] = paired(diff("replay_id", "replay_blk", "ACC"))
     ref: dict = {}
-    for a, b in (("replay_frag", "replay_batch"), ("replay_batch", "replay_id"), ("naive_frag", "naive_id"),
-                 ("naive_id", "naive_blk"), ("replay_frag", "replay_blk")):
+    for a, b in (("replay_ev", "replay_frag"), ("replay_ev", "replay_batch"), ("replay_batch", "replay_id"),
+                 ("naive_ev", "naive_id"), ("replay_frag", "replay_id"), ("replay_ev", "replay_blk")):
         if a in by and b in by:
             ref[f"{a} − {b}"] = {k: paired(diff(a, b, k)) for k in ("ACC", "FGT", "AVG", "LA1")}
-    for c in ("naive_frag", "replay_frag", "naive_batch", "replay_batch"):
+    for c in ("naive_ev", "replay_ev", "replay_frag", "replay_batch"):
         if c in by:
             w = [x for r in by[c].values() for x in r["surprise"]["within"]]
             sw = [x for r in by[c].values() for x in r["surprise"]["switch"]]
@@ -129,8 +133,7 @@ def analyze(runs: list[dict]) -> dict:
                                  "切り替えの最小": min(sw) if sw else None,
                                  "切り替えの中央値": median(sw) if sw else None}
     # 割り当ての誤りと忘却の関係（参考）: 推定の条件の回ごとに、ARI と id との ACC の差
-    for rule in ("naive", "replay"):
-        tf, ref_c = f"{rule}_frag", f"{rule}_id"
+    for tf, ref_c in (("naive_ev", "naive_id"), ("replay_ev", "replay_id"), ("replay_frag", "replay_id")):
         if tf in by and ref_c in by:
             ks = sorted(k for k in by[tf] if k in by[ref_c])
             ref[f"{tf}: (ARI, n_ctx, ACC − {ref_c})"] = [

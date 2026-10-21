@@ -73,7 +73,7 @@ def test_given_assignments():
 
 def test_inferred_assignments_extremes():
     """δ が大きいと全部が1つの文脈にまとまり、小さいと上限まで文脈を作る。frag と batch のどちらも動く。"""
-    for asg in ("frag", "batch"):
+    for asg in ("frag", "ev", "batch"):
         big = _run("naive", asg, delta=1e9)
         assert big["seg"]["n_ctx"] == 1 and big["seg"]["merged"] == 2
         small = _run("replay", asg, delta=-1e9)
@@ -81,6 +81,16 @@ def test_inferred_assignments_extremes():
         assert len(small["R_ce"]) == 9 and all(len(r) == 3 for r in small["R_ce"])
     frag = _run("naive", "frag", delta=1e9)
     assert len(frag["surprise"]["switch"]) == 8  # 区間の最初の断片ごと（最初の区間を除く）
+
+
+def test_ev_integrates_surprise():
+    """ev は驚きを漏れのある積分で集めるので、λ = 1 なら frag とまったく同じになる。"""
+    a = train_hard(_data(), 8, _cfg("replay", "frag"), [2, 0, 1], torch.Generator().manual_seed(5),
+                   torch.Generator().manual_seed(6))
+    cfg = _cfg("replay", "ev")
+    cfg.leak = 1.0
+    b = train_hard(_data(), 8, cfg, [2, 0, 1], torch.Generator().manual_seed(5), torch.Generator().manual_seed(6))
+    assert a["seg"] == b["seg"] and a["R_ce"] == b["R_ce"]
 
 
 def _fake(cond, s, seed, acc, fgt, ari_=1.0, react=1.0):
@@ -95,14 +105,14 @@ def test_analyze_judgments():
     for s in ("R", "G"):
         for seed in range(5):
             e = 0.01 * seed
-            runs += [_fake("naive_id", s, seed, -2.0, -0.5), _fake("naive_frag", s, seed, -2.1 + e, -0.6),
-                     _fake("replay_id", s, seed, -1.5, -0.05), _fake("replay_frag", s, seed, -1.52 + e, -0.06),
+            runs += [_fake("naive_id", s, seed, -2.0, -0.5), _fake("naive_ev", s, seed, -2.1 + e, -0.6),
+                     _fake("replay_id", s, seed, -1.5, -0.05), _fake("replay_ev", s, seed, -1.52 + e, -0.06),
                      _fake("replay_batch", s, seed, -1.5, -0.05), _fake("replay_blk", s, seed, -1.6 - e, -0.1)]
     j = hb.analyze(runs)["判定"]
     assert j["V"]["合格"] and j["A1"]["合格"] and j["A2"]["合格"] and j["H1"]["合格"] and j["H2"]["合格"]
-    assert j["H3"]["合格"] and abs(j["参考"]["replay_frag: 驚き"]["言語の中で δ を超える割合"] - 1 / 3) < 1e-9
+    assert j["H3"]["合格"] and abs(j["参考"]["replay_ev: 驚き"]["言語の中で δ を超える割合"] - 1 / 3) < 1e-9
     for r in runs:
-        if r["cond"] == "replay_frag":
+        if r["cond"] == "replay_ev":
             r["seg"]["ARI"], r["seg"]["react"] = 0.5, 0.4
             r["metrics"]["ACC"] -= 0.2
     j = hb.analyze(runs)["判定"]
@@ -110,5 +120,5 @@ def test_analyze_judgments():
 
 
 def test_jobs():
-    assert len(hb.jobs_for("dev", ("R", "G"))) == 2 * len(hb.CONDS) * 5 and len(hb.CONDS) == 8
+    assert len(hb.jobs_for("dev", ("R", "G"))) == 2 * len(hb.CONDS) * 5 and len(hb.CONDS) == 7
     assert {j[2] for j in hb.jobs_for("eval", ("R",))} == set(range(5))

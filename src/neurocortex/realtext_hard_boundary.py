@@ -8,6 +8,10 @@
 - 観測を小さくする（assign="frag"）: バッチの各断片（32 文字）を1つずつ順に割り当てる。驚き s_c = L_c − b_c は
   断片1つの損失で測り、普段の損失 b_c は断片ごとの移動平均（最初は標本平均）で更新する。規則は 12.6.245節と
   同じ（持続・再活性化・新しい文脈）。断片ごとに割り当てた文脈のヘッドで学び、断片はその文脈のバッファに入れる。
+- 証拠の蓄積（assign="ev"）: frag と同じく断片ごとに割り当てるが、規則に使う驚きを各文脈の漏れのある積分
+  m_c ← (1 − λ)·m_c + λ·s_c（λ = 1/8）にする。新しい文脈を作ったら、その m を 0 から始める。1断片の驚きの揺らぎを
+  数断片ぶん平均してから判断する（皮質の証拠の蓄積: Gold & Shadlen 2007, Annu Rev Neurosci 30:535。変化の検出の
+  漏れのある積分: Nassar et al. 2010, J Neurosci 30:12366）。
 対照:
 - assign="batch": 12.6.245節と同じバッチごとの割り当て（戻ってくる流れの再活性化だけを試す）。
 - assign="id": 言語の番号を文脈とする（境界も言語の同定も与える）。
@@ -30,7 +34,7 @@ from .realtext_boundary_free import ari, assign
 from .realtext_forgetting import eval_segments, infer_logp
 
 RULES = ("naive", "replay")
-ASSIGNS = ("frag", "batch", "id", "blk")
+ASSIGNS = ("frag", "ev", "batch", "id", "blk")
 
 
 @dataclass
@@ -51,6 +55,7 @@ class HardConfig:
     eval_segments: int = 400
     max_ctx: int = 24  # 用意するヘッドの数（blk は 6 言語 × 3 区間 = 18 個を使う）
     delta: float = 0.3  # 驚きの閾値（nats/文字、12.6.245節と同じ）
+    leak: float = 0.125  # ev の驚きの漏れのある積分の速さ（断片ごと。約 8 断片の時定数）
     ema: float = 0.05  # バッチごとの普段の損失の移動平均の速さ（frag は断片ごとに 1 − (1 − ema)^(1/batch)）
     trace_every: int = 25  # 割り当ての記録の間引き（ステップ）
     sample_every: int = 500  # 驚きの標本の間引き（断片）
@@ -140,6 +145,7 @@ def train_hard(data: list[LangData], vocab: int, cfg: HardConfig, order: list[in
         model = TransformerContextLM(vocab, k_max, t_len, cfg.d, cfg.layers, cfg.heads, hidden=cfg.hidden)
     opt = torch.optim.Adam(model.parameters(), lr=cfg.lr)
     blocks = stream_blocks(n_l, order, cfg.visits, generator)
+    acc_s = torch.zeros(k_max)  # ev の驚きの漏れのある積分
     if cfg.assign == "blk" and len(blocks) > k_max:
         raise ValueError("blk には区間の数以上の max_ctx が要る")
     per_block = cfg.steps_per_lang // cfg.visits
@@ -224,6 +230,9 @@ def train_hard(data: list[LangData], vocab: int, cfg: HardConfig, order: list[in
                     cs = []
                     for i in range(bs):
                         s = nll[i, :n_ctx] - base[:n_ctx]
+                        if cfg.assign == "ev":
+                            acc_s[:n_ctx] = (1 - cfg.leak) * acc_s[:n_ctx] + cfg.leak * s
+                            s = acc_s[:n_ctx].clone()
                         if prev is not None:
                             if j != prev_lang:
                                 s_switch.append(float(s[prev]))
@@ -232,6 +241,7 @@ def train_hard(data: list[LangData], vocab: int, cfg: HardConfig, order: list[in
                         a = assign(s, prev, n_ctx, cfg.delta, k_max)
                         if a == n_ctx:
                             n_ctx += 1
+                            acc_s[a] = 0.0
                         update_base(a, float(nll[i, a]), ema)
                         cs.append(a)
                         prev = a
@@ -240,7 +250,7 @@ def train_hard(data: list[LangData], vocab: int, cfg: HardConfig, order: list[in
                         lang_all.append(j)
                         block_all.append(b)
                     c = torch.tensor(cs)
-            if cfg.assign != "frag":
+            if cfg.assign not in ("frag", "ev"):
                 ctx_all += c.tolist()
                 lang_all += [j] * bs
                 block_all += [b] * bs
