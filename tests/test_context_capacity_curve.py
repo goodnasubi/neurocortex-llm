@@ -96,3 +96,14 @@ def test_residual_none_when_missing():
     line = ({"end": 0.1, "new": -0.03}, {"end": 0.05, "new": -0.03})
     assert exp.residual(line, {"end": 0.1, "new": 0.0}) is None  # 横軸が同じ
     assert exp.residual(({"end": 0.1, "new": -0.03}, {"end": None, "new": 0.0}), {"end": 0.1, "new": 0.0}) is None
+
+
+def test_base_gap_none_is_skipped(tmp_path):
+    """幅を広げた base で本来の文脈に痕跡がない（gap が None の）タスクは、組の分類から外す（12.6.241節の修正1。
+    集計の実装の誤りの修正で、計測は変えない）。"""
+    runs = _runs({"base_h64": (0.0, 0.0), "keep_h64": (0.1, 0.0), "ach_c_h64": (0.1, 0.0)})
+    runs["flip_m1/reset_L0/base_h64"]["per_seed"][0]["gap"] = [0.2, None]
+    p = tmp_path / "r.json"
+    p.write_text(json.dumps({"seeds": [0, 1], "runs": runs}))
+    res = exp._frame(json.loads(p.read_text())["runs"], {0, 1}, 64, False)
+    assert res["over_14bit"]["end_keep_h64"] == pytest.approx(0.1)

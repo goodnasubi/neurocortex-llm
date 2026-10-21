@@ -154,8 +154,8 @@ def analyze(paths: list[Path], rules=RULES) -> dict:
                 r["pre_identical"] &= x["pre_nat"] == b["pre_nat"]
                 de = [a - c for a, c in zip(x["end_nat"], b["end_nat"])]
                 end.append(_avg(de))
-                over_end.append(_avg([de[i] for i, g in enumerate(b["gap"]) if g >= 0.10]))
-                intact_end.append(_avg([de[i] for i, g in enumerate(b["gap"]) if g <= 0.03]))
+                over_end.append(_avg([de[i] for i, g in enumerate(b["gap"]) if g is not None and g >= 0.10]))
+                intact_end.append(_avg([de[i] for i, g in enumerate(b["gap"]) if g is not None and g <= 0.03]))
                 new_d.append(x["new_nat"] - b["new_nat"])
             runs_d[cb][w] = new_d
             r.update({f"end_{w}": _avg(end), f"over_end_{w}": _avg(over_end), f"intact_end_{w}": _avg(intact_end),
