@@ -28,7 +28,7 @@ from pathlib import Path
 
 import torch
 
-from ..context_inference import run_context_sequence
+from ..context_inference import null_stats, run_context_sequence, task_labels
 from ..run_env import env_info
 from .run_context_episodic_readout import FAMILIES, LS, MECHS_USED, SELECTS, specs_for
 from .run_context_evidence_info import MECHS, SELECTION_TRIALS
@@ -119,6 +119,11 @@ def run_job(job: tuple, kw: dict) -> dict:
         row["rep_sparse"] = sum(rep["sparse"][c] for c in old) / len(old)
         row["rep_active"] = sum(rep["active"][c] for c in old) / len(old)
         row["gcos_tr"], row["gcos_old"] = rep["gcos_tr"], rep["gcos_old"]
+    raw = d.get("rep_raw")
+    if raw:  # 12.6.247節: 古いタスクごと（本来の文脈）の表現の動きの読み出しの零空間への分解の平均
+        st = [null_stats(raw["h0"][nat[j]], raw["h1"][nat[j]], raw["head0"], raw["head1"], task_labels(specs[j], raw["x"]))
+              for j in orig]
+        row.update({f"nl_{k}": sum(x[k] for x in st) / len(st) for k in st[0]})
     return {"key": f"{fam}/{mech}_L{L}/{cfg}", "row": row, **({"drive": drv} if drv else {})}
 
 
