@@ -105,6 +105,9 @@ def run_job(job: tuple, kw: dict) -> dict:
     drv = d.get("cascade_drive")
     if drv:  # 12.6.235節: 捕獲の駆動 1 − f の平均（列は drive に返す）
         row["cap_drive"] = sum(drv) / len(drv)
+    het = d.get("het", {}).get(T0)
+    if het:  # 12.6.237節: 競合で弱めた共有のシナプスの割合と、逆向きの割合
+        row["het_frac"], row["het_conflict"] = het["frac"], het["conflict"]
     return {"key": f"{fam}/{mech}_L{L}/{cfg}", "row": row, **({"drive": drv} if drv else {})}
 
 
