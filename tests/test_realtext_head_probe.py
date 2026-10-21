@@ -32,7 +32,7 @@ def test_probe_changes_only_readout_and_lowers_ce():
     d = _data()[1]
     seg = d.test[torch.arange(20)[:, None] + torch.arange(9)[None]]
     ce0 = readout_ce(m, seg, 1)
-    curve = probe_readout(m, d.train, seg, 1, 8, torch.Generator().manual_seed(0), steps=(5, 60), batch=16, lr=1e-2)
+    curve = probe_readout(m, d.train, seg, 1, 8, torch.Generator().manual_seed(0), steps=(5, 60), batch=16, lr=1e-2, pool=50)
     assert len(curve) == 2 and curve[-1] < ce0
     assert all(torch.equal(before[k], v) for k, v in m.state_dict().items())
 
@@ -59,7 +59,8 @@ def test_train_and_probe_records():
     """各言語の3時点の CE・プローブの曲線・分解・CKA を記録し、学習は train_forgetting と同じ。"""
     cfg = _cfg("naive")
     out = train_and_probe(_data(), 8, cfg, [2, 0, 1], torch.Generator().manual_seed(5),
-                          torch.Generator().manual_seed(6), torch.Generator().manual_seed(7), probe_segments=6)
+                          torch.Generator().manual_seed(6), torch.Generator().manual_seed(7), probe_segments=6,
+                          probe_kw={"steps": (5, 10), "pool": 30, "batch": 8})
     ref = train_forgetting(_data(), 8, cfg, [2, 0, 1], torch.Generator().manual_seed(5),
                            torch.Generator().manual_seed(6))
     assert out["R_ce"] == ref["R_ce"]

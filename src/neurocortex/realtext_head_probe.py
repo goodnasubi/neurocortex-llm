@@ -25,9 +25,10 @@ from torch import nn
 from .context_realtext import LangData, TransformerContextLM, _passages
 from .realtext_forgetting import ForgetConfig, eval_segments, train_forgetting
 
-PROBE_STEPS = (150, 300, 600)  # プローブの CE を記録するステップ（最後が主の値。12.6.253節で計測前に固定）
+PROBE_STEPS = (500, 1000, 2000)  # プローブの CE を記録するステップ（最後が主の値。12.6.253節で計測前に固定）
 PROBE_BATCH = 64
-PROBE_LR = 3e-3
+PROBE_LR = 1e-2
+PROBE_POOL = 4000  # プローブの学習データの断片の数（胴体は凍結なので特徴を一度だけ求める）
 
 
 def readout_ce(model: TransformerContextLM, seg: torch.Tensor, c: int) -> float:
@@ -39,9 +40,10 @@ def readout_ce(model: TransformerContextLM, seg: torch.Tensor, c: int) -> float:
 
 def probe_readout(model: TransformerContextLM, flat: torch.Tensor, test: torch.Tensor, c: int, t_len: int,
                   generator: torch.Generator, steps: tuple[int, ...] = PROBE_STEPS, batch: int = PROBE_BATCH,
-                  lr: float = PROBE_LR) -> list[float]:
+                  lr: float = PROBE_LR, pool: int = PROBE_POOL) -> list[float]:
     """胴体を凍結し、文脈 c の読み出し（ctx[c]・head_w[c]・head_b[c]）だけを flat（学習データの文字列）で学び直す。
 
+    flat から無作為な断片を pool 個取り、その胴体の特徴を一度だけ求めて、そこからバッチを引く。
     model は変えない（複製を学ぶ）。steps の各時点の test [N, T + 1] の CE を返す。"""
     m = copy.deepcopy(model).eval()
     for p in m.parameters():
@@ -51,24 +53,27 @@ def probe_readout(model: TransformerContextLM, flat: torch.Tensor, test: torch.T
     b = m.head_b[c].detach().clone().requires_grad_(True)
     opt = torch.optim.Adam([ctx, w, b], lr=lr)
 
-    def logp(x: torch.Tensor) -> torch.Tensor:
+    def feats(seg: torch.Tensor) -> torch.Tensor:
         with torch.no_grad():
-            h = m.trunk(x)
-        return torch.log_softmax(torch.tanh(h + ctx) @ w + b, -1)
+            return torch.cat([m.trunk(seg[i:i + 500, :-1]) for i in range(0, seg.shape[0], 500)])
 
-    def ce(seg: torch.Tensor) -> torch.Tensor:
-        lp = logp(seg[:, :-1])
-        return nn.functional.nll_loss(lp.reshape(-1, lp.shape[-1]), seg[:, 1:].reshape(-1))
+    def ce(h: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        lp = torch.log_softmax(torch.tanh(h + ctx) @ w + b, -1)
+        return nn.functional.nll_loss(lp.reshape(-1, lp.shape[-1]), y.reshape(-1))
 
+    s = torch.randint(0, flat.shape[0] - t_len - 1, (pool,), generator=generator)
+    tr = flat[s[:, None] + torch.arange(t_len + 1)[None]]
+    h_tr, y_tr = feats(tr), tr[:, 1:]
+    h_te, y_te = feats(test), test[:, 1:]
     out = []
     for k in range(1, max(steps) + 1):
-        s = torch.randint(0, flat.shape[0] - t_len - 1, (batch,), generator=generator)
+        i = torch.randint(0, pool, (batch,), generator=generator)
         opt.zero_grad()
-        ce(flat[s[:, None] + torch.arange(t_len + 1)[None]]).backward()
+        ce(h_tr[i], y_tr[i]).backward()
         opt.step()
         if k in steps:
             with torch.no_grad():
-                out.append(float(ce(test)))
+                out.append(float(ce(h_te, y_te)))
     return out
 
 
@@ -98,7 +103,8 @@ def components(ce: dict, probe: dict) -> dict:
 
 def train_and_probe(data: list[LangData], vocab: int, cfg: ForgetConfig, order: list[int],
                     generator: torch.Generator, eval_generator: torch.Generator,
-                    probe_generator: torch.Generator, probe_segments: int = 200) -> dict:
+                    probe_generator: torch.Generator, probe_segments: int = 200,
+                    probe_kw: dict | None = None) -> dict:
     """train_forgetting で言語を順に学び、各言語の学習の前後のスナップショットを取り、最後に読み出しのプローブで分解する。
 
     プローブの評価は各言語のテスト文の断片 probe_segments 個（評価の乱数で別に取る）。学習そのものは train_forgetting と
@@ -121,11 +127,13 @@ def train_and_probe(data: list[LangData], vocab: int, cfg: ForgetConfig, order: 
         for name, m in (("start", snaps[("start", pos)]), ("diag", snaps[("end", pos)]), ("final", final)):
             if name != "start":
                 rec["ce"][name] = readout_ce(m, tests[j], c)
-            rec["probe_curve"][name] = probe_readout(m, flat[j], tests[j], c, cfg.seq_len, probe_generator)
+            rec["probe_curve"][name] = probe_readout(m, flat[j], tests[j], c, cfg.seq_len, probe_generator,
+                                                       **(probe_kw or {}))
         rec["probe"] = {k: v[-1] for k, v in rec["probe_curve"].items()}
         rec["cka_diag_final"] = linear_cka(trunk_features(snaps[("end", pos)], tests[j]),
                                            trunk_features(final, tests[j]))
         rec.update(components(rec["ce"], rec["probe"]))
         langs.append(rec)
-    out["probe"] = {"langs": langs, "steps": list(PROBE_STEPS), "segments": probe_segments}
+    out["probe"] = {"langs": langs, "steps": list((probe_kw or {}).get("steps", PROBE_STEPS)),
+                    "segments": probe_segments}
     return out
