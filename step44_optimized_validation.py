@@ -66,6 +66,8 @@ class OptimizedValidationConfig:
     #   / td_sg, td_rpe_sg（critic 入力で勾配停止）
     bg_critic_mode: str = "legacy"  # 採用候補は td_sg（docs/decisions/2026-09-26-step44-bg-critic-fix.md）
     bg_gamma: float = 0.9
+    # 学習可能な位置埋め込み（ステップ44.7）。False で 44.3〜44.6 の結果を再現する
+    pos_encoding: bool = False
 
     # リソース
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
@@ -258,11 +260,20 @@ class BrainInspiredLLMPhase(nn.Module):
                                                   mode=config.bg_critic_mode, gamma=config.bg_gamma)
         if config.cerebellum_enabled:
             self.cerebellum = CerebellumHead(self.hidden_size, config.vocab_size)
+        # 既存モジュールの後に生成し、pos_encoding=False のときの初期値を従来と同一に保つ
+        if config.pos_encoding:
+            self.pos_embedding = nn.Embedding(config.seq_length, self.hidden_size)
+
+    def encode(self, input_ids: torch.Tensor) -> torch.Tensor:
+        seq_len = input_ids.size(1)
+        x = self.backbone[0](input_ids)
+        if self.config.pos_encoding:
+            x = x + self.pos_embedding(torch.arange(seq_len, device=input_ids.device))
+        causal_mask = nn.Transformer.generate_square_subsequent_mask(seq_len, device=input_ids.device)
+        return self.backbone[1](x, src_mask=causal_mask, is_causal=True)
 
     def forward(self, input_ids: torch.Tensor, labels: Optional[torch.Tensor] = None) -> Dict:
-        seq_len = input_ids.size(1)
-        causal_mask = nn.Transformer.generate_square_subsequent_mask(seq_len, device=input_ids.device)
-        hidden = self.backbone[1](self.backbone[0](input_ids), src_mask=causal_mask, is_causal=True)
+        hidden = self.encode(input_ids)
 
         total_loss = 0.0
         outputs = {'loss': 0.0}

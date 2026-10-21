@@ -1,0 +1,69 @@
+{
+  "phase": "A",
+  "seed": 0,
+  "metric": "backbone lm_head \u306e\u975e\u91cd\u307f\u4ed8\u304d\u6b21\u30c8\u30fc\u30af\u30f3 CE\uff08\u5168\u30d5\u30a7\u30fc\u30ba\u5171\u901a\uff09",
+  "train_losses": [
+    5.4908415298634345,
+    4.522397970713893,
+    4.164335121651684,
+    3.955476749299796
+  ],
+  "val_losses": [
+    4.346183247640343,
+    3.9010640979430837,
+    3.675162473243753,
+    3.53792188081099
+  ],
+  "val_ppls": [
+    77.18331043934695,
+    49.455046129236045,
+    39.45506672914405,
+    34.395367197236524
+  ],
+  "val_head_ce": [
+    {
+      "hippocampus_loss": 4.794522061125602
+    },
+    {
+      "hippocampus_loss": 4.329314931069013
+    },
+    {
+      "hippocampus_loss": 4.067025624408623
+    },
+    {
+      "hippocampus_loss": 3.8969445179163484
+    }
+  ],
+  "config": {
+    "phase": "A",
+    "hippocampus_enabled": true,
+    "basal_ganglia_enabled": false,
+    "cerebellum_enabled": false,
+    "dataset_name": "Salesforce/wikitext",
+    "dataset_config": "wikitext-103-v1",
+    "max_seq_length": 256,
+    "vocab_size": 50257,
+    "hidden_size": 768,
+    "num_layers": 12,
+    "nhead": 12,
+    "data_dir": null,
+    "max_vocab": null,
+    "token_cache_dir": "/content/step44/token_cache",
+    "batch_size": 8,
+    "learning_rate": 5e-05,
+    "num_epochs": 4,
+    "num_seeds": 3,
+    "gradient_accumulation_steps": 8,
+    "hippocampus_loss_weight": 0.05,
+    "basal_ganglia_loss_weight": 0.05,
+    "cerebellum_loss_weight": 0.02,
+    "device": "cuda",
+    "fp16": true,
+    "max_grad_norm": 1.0,
+    "eval_interval": 500,
+    "results_dir": "/content/step44/results",
+    "checkpoint_dir": "/content/step44/results/checkpoints",
+    "checkpoint_every_steps": 2000,
+    "deadline": 1791158292.0195122
+  }
+}
