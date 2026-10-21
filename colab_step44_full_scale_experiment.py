@@ -124,6 +124,33 @@ class Step444Config:
             self.cerebellum_enabled = True
 
 
+class WikiText103Dataset(Dataset):
+    """WikiText-103 実データセット"""
+
+    def __init__(self, texts: List[str], tokenizer, max_length: int = 256):
+        self.max_length = max_length
+        self.tokenizer = tokenizer
+
+        # トークン化
+        self.encodings = tokenizer(
+            texts,
+            truncation=True,
+            max_length=max_length,
+            padding=True,
+            return_tensors="pt"
+        )
+
+    def __len__(self):
+        return len(self.encodings['input_ids'])
+
+    def __getitem__(self, idx):
+        return {
+            'input_ids': self.encodings['input_ids'][idx],
+            'labels': self.encodings['input_ids'][idx].masked_fill(self.encodings['attention_mask'][idx] == 0, -100),
+            'attention_mask': self.encodings['attention_mask'][idx]
+        }
+
+
 class WordChunkDataset(Dataset):
     """単語 ID 列を長さ max_length の重ならない区間に切る（パディングなし）。"""
 
