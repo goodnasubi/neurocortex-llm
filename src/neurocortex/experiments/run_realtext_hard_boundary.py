@@ -63,6 +63,10 @@ def run_one(set_name: str, cond: str, seed: int, steps: int = 1500, corpus: Path
     return out
 
 
+def _run_job(args: tuple) -> dict:
+    return run_one(*args)
+
+
 def analyze(runs: list[dict]) -> dict:
     """条件 × 組の指標の平均と、12.6.249節の判定（同じシード・組の対の差）。"""
     by: dict = {}
@@ -161,6 +165,7 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
     ap.add_argument("--out", type=Path, default=None)
+    ap.add_argument("--partial", type=Path, default=None, help="1回ごとの結果の置き場（既定は結果の隣の .partial）")
     ap.add_argument("--analyze", type=Path, nargs="+", default=None)
     args = ap.parse_args()
     if args.analyze:
@@ -171,8 +176,21 @@ def main() -> None:
         raise SystemExit("pre には --seeds が要る（予備の確認用、評価にも開発にも使わないシード）")
     corpus = fetch_corpus(args.corpus)
     jobs = jobs_for(args.phase, tuple(args.sets), args.conds, args.seeds)
+    # 1回ごとに保存し、中断（コンテナの再起動など）の後は終わった回を読み込んで残りだけを測る
+    part = args.partial or Path("results/context_lm") / f"realtext_hard_boundary_{args.phase}.partial"
+    part.mkdir(parents=True, exist_ok=True)
+    done = {}
+    for f in part.glob("*.json"):
+        r = json.loads(f.read_text(encoding="utf-8"))
+        done[(r["set"], r["cond"], r["seed"])] = r
+    todo = [j for j in jobs if j not in done]
     with Pool(args.workers) as pool:
-        runs = pool.starmap(run_one, [(*j, args.steps, corpus, args.delta) for j in jobs], chunksize=1)
+        for r in pool.imap_unordered(_run_job, [(*j, args.steps, corpus, args.delta) for j in todo]):
+            (part / f"{r['set']}_{r['cond']}_{r['seed']}.json").write_text(json.dumps(r, ensure_ascii=False),
+                                                                          encoding="utf-8")
+            done[(r["set"], r["cond"], r["seed"])] = r
+            print(f"終了 {r['set']} {r['cond']} {r['seed']}（{len(done)}/{len(jobs)}）", flush=True)
+    runs = [done[j] for j in jobs]
     out = {"環境": env_info(),
            "設定": {"corpus": "Europarl（NLTK europarl_raw の標本）",
                   "sets": {k: [LANG_CODES[x] for x in v] for k, v in SETS.items()},
