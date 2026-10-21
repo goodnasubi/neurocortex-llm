@@ -62,6 +62,44 @@ def rep_stats(h0: dict, h1: dict) -> dict:
             "active": {c: float((h1[c].abs() > 0.5).float().mean()) for c in cs}}
 
 
+def null_stats(h0: torch.Tensor, h1: torch.Tensor, head0: list, head1: list, y: torch.Tensor) -> dict:
+    """12.6.247節: 1つの文脈の表現の動き Δh = h1 − h0（同じ探査入力 [N, W]）を、2クラスの読み出しの出力に効く方向
+    （ロジットの差の重み d = w[1] − w[0]。softmax は共通のずれに不変なので、出力に効くのはこの1方向）と零空間に
+    分ける。head0・head1 は新しいタスクの学習の直前・最後の読み出し [weight, bias]、y は探査入力の正解（古いタスク）。
+      d_tot    … mean ||Δh||²（表現の動きの大きさ）
+      f_pot    … (d̂0·Δh)² の平均 / d_tot（古い読み出しの出力に効く方向に入る割合。等方な乱雑な方向なら 1/W）
+      e_iso    … W · f_pot（等方な方向に対する濃縮。< 1 なら零空間に寄る）
+      e_rep    … f_pot / h0 の分散のうち d̂0 方向の割合（表現そのものの広がりに対する濃縮）
+      f_pot1   … 最後の読み出し d̂1 での f_pot
+      pot_rel  … rms(d0·Δh) / rms(m0)（表現の動きが古い読み出しのマージン m0 = d0·h0 + c0 をどれだけ動かすか）
+      harm_rep … mean(s · d0·Δh) / mean|m0|（s = 2y − 1。負なら表現の動きが古いタスクを損なう向き）
+      harm_ro  … mean(s · ((d1 − d0)·h1 + (c1 − c0))) / mean|m0|（読み出しの変化の寄与。harm_rep + harm_ro が全体）
+      comp     … −Σ(d0·Δh)(読み出しの変化の項) / Σ(d0·Δh)²（読み出しの可塑性が表現の動きの出力への効果を打ち消す
+                 割合。1 で完全な補償、0 で補償なし）"""
+    w0, b0 = head0
+    w1, b1 = head1
+    d0, c0 = w0[1] - w0[0], b0[1] - b0[0]
+    d1, c1 = w1[1] - w1[0], b1[1] - b1[0]
+    dh = h1 - h0
+    u0, u1 = d0 / d0.norm().clamp_min(1e-12), d1 / d1.norm().clamp_min(1e-12)
+    d_tot = float((dh ** 2).sum(-1).mean())
+    m0 = h0 @ d0 + c0
+    rep = dh @ d0
+    ro = h1 @ (d1 - d0) + (c1 - c0)
+    s = 2.0 * y.float() - 1.0
+    hc = h0 - h0.mean(0)
+    f_h0 = float(((hc @ u0) ** 2).mean() / (hc ** 2).sum(-1).mean().clamp_min(1e-12))
+    f_pot = float(((dh @ u0) ** 2).mean()) / max(d_tot, 1e-12)
+    am0 = float(m0.abs().mean())
+    return {"d_tot": d_tot, "f_pot": f_pot, "e_iso": h0.shape[1] * f_pot, "e_rep": f_pot / max(f_h0, 1e-12),
+            "f_pot1": float(((dh @ u1) ** 2).mean()) / max(d_tot, 1e-12), "f_h0": f_h0,
+            "pot_rel": float((rep ** 2).mean().sqrt() / (m0 ** 2).mean().sqrt().clamp_min(1e-12)),
+            "harm_rep": float((s * rep).mean()) / max(am0, 1e-12), "harm_ro": float((s * ro).mean()) / max(am0, 1e-12),
+            "comp": float(-(rep * ro).sum() / (rep ** 2).sum().clamp_min(1e-12)),
+            "acc0": float(((m0 > 0).long() == y).float().mean()),
+            "acc1": float(((h1 @ d1 + c1 > 0).long() == y).float().mean())}
+
+
 # 12.6.227節: ach_c の固定化のリプレイを、今の入力との類似度で重みづけする（類似度に基づく選択的リプレイ）
 REPLAY_SIMS = ("hid", "hid_neg", "hid_shuf", "inp", "hid_ctx", "hid_ctx_shuf")
 
@@ -202,7 +240,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
                          cascade_levels: int = 0, cascade_g: float = 0.05, cascade_scope: str = "shared",
                          cascade_capture: float = 0.0, cascade_capture_drive: list[float] | None = None,
                          het_gain: float = 1.0, het_mode: str = "conflict", kwta: int = 0,
-                         rep_diag: bool = False) -> dict:
+                         rep_diag: bool = False, null_diag: bool = False) -> dict:
     """戻り値: {"R": 正確度行列, "assign": 学習中の (タスク, 文脈) の列, "n_contexts": 使った文脈数,
     "selection_acc": 文脈の選択精度（inferred かつ selection_trials > 0 のとき）}
 
@@ -550,6 +588,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
         raise ValueError("kwta は 0 か (0, hidden_dim)（ctx_units = 0 のみ）")
     if rep_diag and not (diagnostics and writeback and condition in ("inferred", "inferred_gated")):
         raise ValueError("rep_diag は diagnostics と writeback があるときだけ")
+    if null_diag and (not rep_diag or ctx_units > 0):
+        raise ValueError("null_diag は rep_diag があるときだけ（ctx_units = 0 のみ）")
     if not 0.0 <= het_gain <= 1.0 or het_mode not in ("conflict", "perm", "wta") or (het_gain < 1.0 and ctx_units > 0):
         raise ValueError("het_gain は [0, 1]（ctx_units = 0 のときだけ 1 未満）、het_mode は conflict・perm・wta")
     rule_from = (writeback_at if writeback else 1) if replay_rule else len(specs)
@@ -1154,6 +1194,7 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
     rep_x = torch.randint(0, 2, (256, specs[0].n_inputs),
                           generator=torch.Generator().manual_seed(generator.initial_seed() + 130_000)).float() * 2 - 1
     rep_h0: dict = {}
+    rep_head0: list = []
 
     def grad_overlap(x: torch.Tensor, y: torch.Tensor, n_new: int, flags: torch.Tensor) -> None:
         """12.6.243節: 共有の重み（文脈の one-hot の列を除く）の上で、新しい入力の勾配と、加えた痕跡（tr）・
@@ -1185,6 +1226,8 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             if rep_diag:  # 12.6.243節: 新しいタスクの学習の直前の表現
                 with torch.no_grad():
                     rep_h0.update({c: model.backbone(with_ctx(rep_x, c)) for c in used})
+                    if null_diag:  # 12.6.247節: 新しいタスクの学習の直前の読み出し
+                        rep_head0[:] = [model.head.weight.detach().clone(), model.head.bias.detach().clone()]
         trained: dict[tuple[int, int], int] = {}
         n_used_at_start = len(used)
         opt = make_opt(k)
@@ -1492,6 +1535,9 @@ def run_context_sequence(condition: str, specs: list, hidden_dim: int, generator
             diag["rep"] = {**rep_stats(rep_h0, rep_h1),
                            **{f"gcos_{n}": (sum(v) / len(v) if v else None) for n, v in rep_d.items()},
                            **{f"n_gcos_{n}": len(v) for n, v in rep_d.items()}}
+            if null_diag:  # 12.6.247節: 表現の動きを読み出しの出力に効く方向と零空間に分ける（呼び出し側で正解と組む）
+                diag["rep_raw"] = {"x": rep_x, "h0": rep_h0, "h1": rep_h1, "head0": rep_head0,
+                                   "head1": [model.head.weight.detach().clone(), model.head.bias.detach().clone()]}
         if condition in ("inferred", "inferred_gated"):
             # 12.6.151節: 入力の出どころごとの正確度（正解は評価するタスク j の規則）
             hc = torch.cat(hold_ctx) if hold_ctx else torch.zeros(0, dtype=torch.long)
