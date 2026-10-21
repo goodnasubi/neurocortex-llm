@@ -1,0 +1,46 @@
+2026-10-21 10:18:23,923 - __main__ - INFO - ================================================================================
+2026-10-21 10:18:23,923 - __main__ - INFO - STEP 44.4: Full-Scale Experiment (WikiText-103 × Phase A/B/C)
+2026-10-21 10:18:23,923 - __main__ - INFO - ================================================================================
+2026-10-21 10:18:23,923 - __main__ - INFO - ================================================================================
+2026-10-21 10:18:23,923 - __main__ - INFO - Phase V | Seed 0 | Full-Scale Experiment
+2026-10-21 10:18:23,923 - __main__ - INFO - ================================================================================
+2026-10-21 10:18:24,211 - __main__ - INFO - Loading local WikiText (word-level) from data/wikitext-2...
+2026-10-21 10:18:42,346 - __main__ - INFO - Epoch 1/3
+/usr/local/lib/python3.11/dist-packages/torch/nn/modules/transformer.py:823: UserWarning: Support for mismatched src_key_padding_mask and src_mask is deprecated. Use same type for both instead.
+  src_key_padding_mask = F._canonical_mask(
+2026-10-21 10:32:25,547 - __main__ - INFO - Epoch 1 | Train(total): 5.8740 | Val CE: 5.2599 | Val PPL: 192.47
+2026-10-21 10:32:26,044 - __main__ - INFO - Epoch 2/3
+2026-10-21 10:45:45,258 - __main__ - INFO - Epoch 2 | Train(total): 5.1750 | Val CE: 4.9352 | Val PPL: 139.10
+2026-10-21 10:45:45,929 - __main__ - INFO - Epoch 3/3
+2026-10-21 10:59:38,807 - __main__ - INFO - Epoch 3 | Train(total): 4.8691 | Val CE: 4.7635 | Val PPL: 117.15
+2026-10-21 11:00:03,488 - __main__ - INFO - Test CE: 4.6761 | Test PPL: 107.35
+2026-10-21 11:00:03,502 - __main__ - INFO - Saved: results/step44_reduced_scale_vanilla/phaseV_seed0.json
+2026-10-21 11:00:03,582 - __main__ - INFO - ================================================================================
+2026-10-21 11:00:03,582 - __main__ - INFO - Phase V | Seed 1 | Full-Scale Experiment
+2026-10-21 11:00:03,582 - __main__ - INFO - ================================================================================
+2026-10-21 11:00:03,585 - __main__ - INFO - Loading local WikiText (word-level) from data/wikitext-2...
+2026-10-21 11:00:04,959 - __main__ - INFO - Epoch 1/3
+/usr/local/lib/python3.11/dist-packages/torch/nn/modules/transformer.py:823: UserWarning: Support for mismatched src_key_padding_mask and src_mask is deprecated. Use same type for both instead.
+  src_key_padding_mask = F._canonical_mask(
+2026-10-21 11:13:55,124 - __main__ - INFO - Epoch 1 | Train(total): 5.8877 | Val CE: 5.2440 | Val PPL: 189.43
+2026-10-21 11:13:55,843 - __main__ - INFO - Epoch 2/3
+2026-10-21 11:27:32,771 - __main__ - INFO - Epoch 2 | Train(total): 5.1821 | Val CE: 4.9585 | Val PPL: 142.37
+2026-10-21 11:27:33,346 - __main__ - INFO - Epoch 3/3
+2026-10-21 11:40:49,115 - __main__ - INFO - Epoch 3 | Train(total): 4.8799 | Val CE: 4.7704 | Val PPL: 117.97
+2026-10-21 11:41:13,667 - __main__ - INFO - Test CE: 4.6818 | Test PPL: 107.96
+2026-10-21 11:41:13,683 - __main__ - INFO - Saved: results/step44_reduced_scale_vanilla/phaseV_seed1.json
+2026-10-21 11:41:13,729 - __main__ - INFO - ================================================================================
+2026-10-21 11:41:13,730 - __main__ - INFO - Phase V | Seed 2 | Full-Scale Experiment
+2026-10-21 11:41:13,730 - __main__ - INFO - ================================================================================
+2026-10-21 11:41:13,730 - __main__ - INFO - Loading local WikiText (word-level) from data/wikitext-2...
+2026-10-21 11:41:15,479 - __main__ - INFO - Epoch 1/3
+/usr/local/lib/python3.11/dist-packages/torch/nn/modules/transformer.py:823: UserWarning: Support for mismatched src_key_padding_mask and src_mask is deprecated. Use same type for both instead.
+  src_key_padding_mask = F._canonical_mask(
+2026-10-21 11:54:48,585 - __main__ - INFO - Epoch 1 | Train(total): 5.8927 | Val CE: 5.2714 | Val PPL: 194.69
+2026-10-21 11:54:49,080 - __main__ - INFO - Epoch 2/3
+2026-10-21 12:08:14,251 - __main__ - INFO - Epoch 2 | Train(total): 5.1886 | Val CE: 4.9329 | Val PPL: 138.78
+2026-10-21 12:08:14,938 - __main__ - INFO - Epoch 3/3
+2026-10-21 12:21:46,972 - __main__ - INFO - Epoch 3 | Train(total): 4.8794 | Val CE: 4.7616 | Val PPL: 116.94
+2026-10-21 12:22:08,862 - __main__ - INFO - Test CE: 4.6706 | Test PPL: 106.77
+2026-10-21 12:22:08,877 - __main__ - INFO - Saved: results/step44_reduced_scale_vanilla/phaseV_seed2.json
+2026-10-21 12:22:08,965 - __main__ - INFO - Summary: {"V": {"final_val_ppl": {"0": 117.15044103181172, "1": 117.96877624285918, "2": 116.93577905464727}, "mean": 117.35166544310607, "std": 0.445076207324087, "n": 3}}
