@@ -1,0 +1,67 @@
+{
+  "phase": "B",
+  "seed": 0,
+  "metric": "backbone lm_head \u306e\u975e\u91cd\u307f\u4ed8\u304d\u6b21\u30c8\u30fc\u30af\u30f3 CE\uff08\u5168\u30d5\u30a7\u30fc\u30ba\u5171\u901a\uff09",
+  "train_losses": [
+    6.494733459809247,
+    5.712817582897111,
+    5.380935168733783
+  ],
+  "val_losses": [
+    5.25973217010498,
+    4.934794639138614,
+    4.765461377536549
+  ],
+  "val_ppls": [
+    192.42994590264524,
+    139.0445852841033,
+    117.38526371967663
+  ],
+  "val_head_ce": [
+    {
+      "hippocampus_loss": 5.53844892726225,
+      "basal_ganglia_loss": 5.3454524881699506
+    },
+    {
+      "hippocampus_loss": 5.1743410043155444,
+      "basal_ganglia_loss": 5.024711424883674
+    },
+    {
+      "hippocampus_loss": 4.992293656293084,
+      "basal_ganglia_loss": 4.85958875431734
+    }
+  ],
+  "test_ce": 4.677677848167539,
+  "test_ppl": 107.52010444419378,
+  "config": {
+    "phase": "B",
+    "hippocampus_enabled": true,
+    "basal_ganglia_enabled": true,
+    "cerebellum_enabled": false,
+    "dataset_name": "wikitext",
+    "dataset_config": "wikitext-103-v1",
+    "max_seq_length": 128,
+    "vocab_size": 50257,
+    "hidden_size": 256,
+    "num_layers": 4,
+    "nhead": 4,
+    "data_dir": "data/wikitext-2",
+    "max_vocab": 10000,
+    "batch_size": 32,
+    "learning_rate": 0.0005,
+    "num_epochs": 3,
+    "num_seeds": 3,
+    "gradient_accumulation_steps": 2,
+    "hippocampus_loss_weight": 0.05,
+    "basal_ganglia_loss_weight": 0.05,
+    "cerebellum_loss_weight": 0.02,
+    "device": "cpu",
+    "fp16": false,
+    "max_grad_norm": 1.0,
+    "eval_interval": 500,
+    "results_dir": "results/step44_reduced_scale",
+    "checkpoint_dir": "results/step44_reduced_scale/checkpoints",
+    "checkpoint_every_steps": 2000,
+    "deadline": null
+  }
+}

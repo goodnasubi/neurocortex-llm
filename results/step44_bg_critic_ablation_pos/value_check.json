@@ -1,0 +1,152 @@
+{
+  "legacy": [
+    {
+      "before": {
+        "pearson_r_position_centered": -0.002745195825695331,
+        "pearson_r": 0.03815890156064917,
+        "explained_variance": 0.0014521479606628418,
+        "mean_V": -0.11614681780338287,
+        "mean_G": -31.518390655517578
+      },
+      "after": {
+        "pearson_r_position_centered": 0.1928988026373297,
+        "pearson_r": 0.1655499698321241,
+        "explained_variance": -63.35346221923828,
+        "mean_V": -2927.664794921875,
+        "mean_G": -9.212040901184082
+      }
+    },
+    {
+      "before": {
+        "pearson_r_position_centered": -0.02472514734718163,
+        "pearson_r": 0.005061713092595652,
+        "explained_variance": -0.0010495185852050781,
+        "mean_V": 0.15372344851493835,
+        "mean_G": -31.08461570739746
+      },
+      "after": {
+        "pearson_r_position_centered": 0.25103418520679643,
+        "pearson_r": 0.18773636058206292,
+        "explained_variance": -44.714256286621094,
+        "mean_V": -2965.656494140625,
+        "mean_G": -10.924666404724121
+      }
+    },
+    {
+      "before": {
+        "pearson_r_position_centered": 0.014796268824493019,
+        "pearson_r": -0.035733975060346805,
+        "explained_variance": -0.0036046504974365234,
+        "mean_V": -0.23460429906845093,
+        "mean_G": -31.24270248413086
+      },
+      "after": {
+        "pearson_r_position_centered": 0.1908997538349498,
+        "pearson_r": 0.12693206725983416,
+        "explained_variance": -46.87492370605469,
+        "mean_V": -2943.571533203125,
+        "mean_G": -9.778464317321777
+      }
+    }
+  ],
+  "td": [
+    {
+      "before": {
+        "pearson_r_position_centered": -0.002745195825695331,
+        "pearson_r": 0.03815890156064917,
+        "explained_variance": 0.0014521479606628418,
+        "mean_V": -0.11614681780338287,
+        "mean_G": -31.518390655517578
+      },
+      "after": {
+        "pearson_r_position_centered": 0.2557571035273593,
+        "pearson_r": 0.6628176542025223,
+        "explained_variance": 0.4174562096595764,
+        "mean_V": -21.02520751953125,
+        "mean_G": -19.590354919433594
+      }
+    },
+    {
+      "before": {
+        "pearson_r_position_centered": -0.02472514734718163,
+        "pearson_r": 0.005061713092595652,
+        "explained_variance": -0.0010495185852050781,
+        "mean_V": 0.15372344851493835,
+        "mean_G": -31.08461570739746
+      },
+      "after": {
+        "pearson_r_position_centered": 0.24779225461462417,
+        "pearson_r": 0.7822614590823523,
+        "explained_variance": 0.6095744371414185,
+        "mean_V": -18.044675827026367,
+        "mean_G": -17.194454193115234
+      }
+    },
+    {
+      "before": {
+        "pearson_r_position_centered": 0.014796268824493019,
+        "pearson_r": -0.035733975060346805,
+        "explained_variance": -0.0036046504974365234,
+        "mean_V": -0.23460429906845093,
+        "mean_G": -31.24270248413086
+      },
+      "after": {
+        "pearson_r_position_centered": 0.2636652959469377,
+        "pearson_r": 0.775608587437591,
+        "explained_variance": 0.5952674150466919,
+        "mean_V": -19.228113174438477,
+        "mean_G": -18.472116470336914
+      }
+    }
+  ],
+  "td_sg": [
+    {
+      "before": {
+        "pearson_r_position_centered": -0.002745195825695331,
+        "pearson_r": 0.03815890156064917,
+        "explained_variance": 0.0014521479606628418,
+        "mean_V": -0.11614681780338287,
+        "mean_G": -31.518390655517578
+      },
+      "after": {
+        "pearson_r_position_centered": 0.21629827861519246,
+        "pearson_r": 0.20120070370663481,
+        "explained_variance": 0.015372872352600098,
+        "mean_V": -7.427207946777344,
+        "mean_G": -6.520625114440918
+      }
+    },
+    {
+      "before": {
+        "pearson_r_position_centered": -0.02472514734718163,
+        "pearson_r": 0.005061713092595652,
+        "explained_variance": -0.0010495185852050781,
+        "mean_V": 0.15372344851493835,
+        "mean_G": -31.08461570739746
+      },
+      "after": {
+        "pearson_r_position_centered": 0.28298761815466356,
+        "pearson_r": 0.2305718696105036,
+        "explained_variance": 0.027284085750579834,
+        "mean_V": -9.143892288208008,
+        "mean_G": -8.212672233581543
+      }
+    },
+    {
+      "before": {
+        "pearson_r_position_centered": 0.014796268824493019,
+        "pearson_r": -0.035733975060346805,
+        "explained_variance": -0.0036046504974365234,
+        "mean_V": -0.23460429906845093,
+        "mean_G": -31.24270248413086
+      },
+      "after": {
+        "pearson_r_position_centered": 0.0931909313025452,
+        "pearson_r": 0.08762791279401161,
+        "explained_variance": -0.06307554244995117,
+        "mean_V": -7.997177600860596,
+        "mean_G": -7.453141212463379
+      }
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """基底核 critic の価値学習の検証: V_t と実現割引リターン G_t = Σ γ^k r_{t+k}（r = −CE, 系列末で打ち切り）の一致度。"""
 
+import argparse
 import json
 from pathlib import Path
 
@@ -13,7 +14,6 @@ from step44_optimized_validation import (
 )
 
 MODES = ["legacy", "td", "td_sg"]
-OUT = Path("results/step44_bg_critic_ablation/value_check.json")
 
 
 def value_fit(model, loader, gamma):
@@ -23,9 +23,7 @@ def value_fit(model, loader, gamma):
         for batch in loader:
             x = batch["input_ids"]
             bg = model.basal_ganglia
-            h = model.backbone[1](model.backbone[0](x),
-                                  src_mask=torch.nn.Transformer.generate_square_subsequent_mask(x.size(1)),
-                                  is_causal=True)
+            h = model.encode(x)
             v = bg.critic(h)[:, :-1, 0]
             logits = bg.actor(h)[:, :-1]
             r = -torch.nn.functional.cross_entropy(
@@ -49,8 +47,8 @@ def value_fit(model, loader, gamma):
     }
 
 
-def run(mode, seed):
-    cfg = OptimizedValidationConfig(phase="B", bg_critic_mode=mode)
+def run(mode, seed, pos_encoding=False):
+    cfg = OptimizedValidationConfig(phase="B", bg_critic_mode=mode, pos_encoding=pos_encoding)
     torch.manual_seed(seed); np.random.seed(seed)
     corpus = load_corpus(seed=0)
     cfg.vocab_size = corpus.vocab_size
@@ -67,9 +65,14 @@ def run(mode, seed):
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--pos-encoding", action="store_true", help="位置埋め込みあり（ステップ44.7）")
+    pe = ap.parse_args().pos_encoding
+    OUT = Path("results/step44_bg_critic_ablation_pos/value_check.json" if pe
+               else "results/step44_bg_critic_ablation/value_check.json")
     out = {}
     for mode in MODES:
-        out[mode] = [run(mode, s) for s in range(3)]
+        out[mode] = [run(mode, s, pe) for s in range(3)]
         a = out[mode]
         print(f"{mode:7s} r: {np.mean([x['before']['pearson_r'] for x in a]):+.3f} -> "
               f"{np.mean([x['after']['pearson_r'] for x in a]):+.3f} | EV: "
