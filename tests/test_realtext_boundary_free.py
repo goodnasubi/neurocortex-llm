@@ -70,7 +70,8 @@ def test_infer_equals_given_when_assignment_matches():
 def _fake(cond, s, seed, acc, bwt, la, ari_=1.0, delays=(2, 3)):
     return {"cond": cond, "set": s, "seed": seed, "order": [0, 1, 2],
             "metrics_nce": {"ACC": acc, "BWT": bwt, "F": -bwt, "LA": la}, "R_id": [[1.0, 0.9]],
-            "seg": {"n_ctx": 3, "ARI": ari_, "delays": list(delays), "missed": 0, "runs": [[0, 0, 1]]}}
+            "seg": {"n_ctx": 3, "ARI": ari_, "delays": list(delays), "missed": 0, "runs": [[0, 0, 1]]},
+            "trace": [[None, 0], [0.0, 0], [1.0, 1], [0.1, 1], [2.0, 2], [0.05, 2]]}
 
 
 def test_analyze_judgments():

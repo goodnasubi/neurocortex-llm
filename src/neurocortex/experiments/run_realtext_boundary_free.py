@@ -153,6 +153,14 @@ def analyze(runs: list[dict], shared: dict | None = None) -> dict:
         ks = sorted(k for k in by["naive_tf"] if k in shared["naive_sh"])
         ref["naive_tf − naive_sh（BWT）"] = paired([by["naive_tf"][k]["metrics_nce"]["BWT"]
                                                   - shared["naive_sh"][k]["BWT"] for k in ks])
+    for c in tf:  # 驚きの余裕（記録は 10 ステップごと）: 境界の直後の最小と、言語の中の最大
+        bnd, within = [], []
+        for r in by[c].values():
+            every = len(r["trace"]) // len(r["order"])
+            for i, (s_, _) in enumerate(r["trace"]):
+                if s_ is not None:
+                    (bnd if i % every == 0 else within).append(s_)
+        ref[f"{c}: 驚き（境界の最小・言語の中の最大）"] = [min(bnd), max(within)] if bnd and within else None
     j["参考"] = ref
     return {"表": table, "判定": j}
 
