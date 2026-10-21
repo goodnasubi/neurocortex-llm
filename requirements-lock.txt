@@ -1,0 +1,16 @@
+# 結果の再現用に、実際に結果を出した環境のバージョンを厳密に記録する（12.6.113節）。
+# CI と pre-commit は requirements-dev.txt（範囲指定）を使う。CPU 版 torch のホイールが同じ番号で
+# 手に入らない環境があるため、CI の依存は厳密に固定しない。
+#
+# 記録した環境: Linux x86_64、Python 3.13.16（クラウドの検証環境、2026-10-15〜17）
+# この環境で出した結果: results/continual_forgetting/、results/context_inference/、
+#   results/step44_cpu_smoke/、results/step44_parameter_sweep_v2_smoke/、results/step44_bg_critic_convergence/
+# 9月以前の結果（torch 2.14.0+cpu、Windows/ローカル）は、この環境では数値が完全には再現しない（12.6.103節）。
+torch==2.14.1
+numpy==2.5.3
+pytest==9.1.1
+# ステップ44（WikiText のスクリプト）でのみ使う
+datasets==5.1.0
+transformers==5.20.0
+tokenizers==0.23.3
+tqdm==4.70.1

@@ -1,0 +1,31 @@
+{
+  "phase": "C",
+  "weights": [
+    0.01,
+    0.01,
+    0.015
+  ],
+  "seed": 0,
+  "steps": 20,
+  "final_train_loss": 11.768497705459595,
+  "val_ce": 9.784546975166567,
+  "val_ppl": 17757.211164085456,
+  "head_ce": {
+    "hippocampus_loss": 10.730639363488843,
+    "basal_ganglia_loss": 120.9080840003106,
+    "bg_critic_loss": 110.31066564590701,
+    "cerebellum_loss": 10.74691744100663
+  },
+  "preset": "smoke",
+  "budget": {
+    "dataset_config": "wikitext-2-v1",
+    "hidden_size": 48,
+    "num_layers": 1,
+    "seq_len": 32,
+    "batch_size": 8,
+    "steps": 20,
+    "n_train": 400,
+    "n_val": 40,
+    "lr": 0.001
+  }
+}

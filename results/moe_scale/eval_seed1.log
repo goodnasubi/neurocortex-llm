@@ -1,0 +1,118 @@
+seed=1 E8_L1/aux0 gini=0.816 used=3.0 base=0.3244 dT=1.174 dR=0.013 ratio=91.51 perload T=1.198 R=1.922 pergate R=2.871 gate=0.841 g1 base=0.335 perload R=1.925
+seed=1 E8_L1/aux0.05 gini=0.036 used=8.0 base=0.3230 dT=0.333 dR=0.234 ratio=1.42 perload T=1.223 R=0.964 pergate R=1.546 gate=0.620 g1 base=0.358 perload R=0.929
+seed=1 E8_L1/gate0.1 gini=0.034 used=8.0 base=0.3234 dT=0.276 dR=0.259 ratio=1.07 perload T=1.027 R=1.063 pergate R=1.704 gate=0.603 g1 base=0.373 perload R=1.007 th_range=15.61 off_gini=0.609 off_dce=2.434
+seed=1 E8_L1/sel0.01 gini=0.178 used=8.0 base=0.3263 dT=0.171 dR=0.129 ratio=1.33 perload T=0.473 R=0.622 pergate R=1.498 gate=0.423 g1 base=0.392 perload R=0.554 th_range=0.65 off_gini=0.167 off_dce=0.000
+seed=1 E8_L1/sel0.03 gini=0.071 used=8.0 base=0.3205 dT=0.277 dR=0.187 ratio=1.48 perload T=0.955 R=0.791 pergate R=1.324 gate=0.563 g1 base=0.382 perload R=0.769 th_range=0.81 off_gini=0.130 off_dce=0.014
+seed=1 E8_L1/sel0.1 gini=0.054 used=8.0 base=0.3202 dT=0.294 dR=0.199 ratio=1.47 perload T=1.047 R=0.829 pergate R=1.455 gate=0.579 g1 base=0.379 perload R=0.772 th_range=0.62 off_gini=0.106 off_dce=0.001
+seed=1 E16_L1/aux0 gini=0.928 used=3.0 base=0.3230 dT=1.103 dR=0.000 ratio=11032.41 perload T=1.103 R=nan pergate R=nan gate=0.874 g1 base=0.334 perload R=nan
+seed=1 E16_L1/aux0.05 gini=0.066 used=16.0 base=0.3213 dT=0.329 dR=0.279 ratio=1.18 perload T=1.164 R=1.161 pergate R=2.434 gate=0.473 g1 base=0.409 perload R=1.080
+seed=1 E16_L1/gate0.1 gini=0.048 used=16.0 base=0.3248 dT=0.286 dR=0.281 ratio=1.02 perload T=1.022 R=1.167 pergate R=2.265 gate=0.492 g1 base=0.488 perload R=1.015 th_range=25.17 off_gini=0.832 off_dce=6.754
+seed=1 E16_L1/sel0.01 gini=0.197 used=16.0 base=0.3228 dT=0.141 dR=0.112 ratio=1.26 perload T=0.392 R=0.519 pergate R=1.748 gate=0.299 g1 base=0.496 perload R=0.406 th_range=1.05 off_gini=0.367 off_dce=0.009
+seed=1 E16_L1/sel0.03 gini=0.149 used=16.0 base=0.3227 dT=0.238 dR=0.153 ratio=1.56 perload T=0.698 R=0.694 pergate R=1.746 gate=0.399 g1 base=0.477 perload R=0.585 th_range=1.42 off_gini=0.248 off_dce=0.014
+seed=1 E16_L1/sel0.1 gini=0.120 used=16.0 base=0.3222 dT=0.288 dR=0.188 ratio=1.53 perload T=0.891 R=0.828 pergate R=1.856 gate=0.428 g1 base=0.524 perload R=0.682 th_range=1.33 off_gini=0.226 off_dce=0.025
+seed=1 E32_L1/aux0 gini=0.922 used=4.0 base=0.3193 dT=1.189 dR=0.000 ratio=11887.46 perload T=1.189 R=nan pergate R=nan gate=0.787 g1 base=0.341 perload R=nan
+seed=1 E32_L1/aux0.05 gini=0.144 used=32.0 base=0.3265 dT=0.290 dR=0.230 ratio=1.26 perload T=0.872 R=1.039 pergate R=3.304 gate=0.306 g1 base=0.493 perload R=0.862
+seed=1 E32_L1/gate0.1 gini=0.117 used=32.0 base=0.3223 dT=0.240 dR=0.232 ratio=1.04 perload T=0.752 R=1.030 pergate R=2.631 gate=0.371 g1 base=0.519 perload R=0.857 th_range=18.64 off_gini=0.783 off_dce=7.571
+seed=1 E32_L1/sel0.01 gini=0.189 used=32.0 base=0.3244 dT=0.159 dR=0.091 ratio=1.74 perload T=0.436 R=0.431 pergate R=1.755 gate=0.213 g1 base=0.994 perload R=0.170 th_range=3.17 off_gini=0.573 off_dce=0.105
+seed=1 E32_L1/sel0.03 gini=0.112 used=32.0 base=0.3200 dT=0.124 dR=0.117 ratio=1.06 perload T=0.400 R=0.511 pergate R=2.086 gate=0.251 g1 base=0.663 perload R=0.191 th_range=2.08 off_gini=0.407 off_dce=0.054
+seed=1 E32_L1/sel0.1 gini=0.148 used=32.0 base=0.3215 dT=0.137 dR=0.181 ratio=0.76 perload T=0.398 R=0.832 pergate R=2.509 gate=0.290 g1 base=0.629 perload R=0.663 th_range=1.64 off_gini=0.236 off_dce=0.020
+seed=1 E8_L2/aux0 gini=0.646 used=6.0 base=0.3195 dT=1.085 dR=0.152 ratio=7.15 perload T=1.449 R=1.767 pergate R=3.401 gate=0.651 g1 base=0.616 perload R=1.052
+seed=1 E8_L2/aux0.05 gini=0.031 used=8.0 base=0.3253 dT=0.228 dR=0.323 ratio=0.71 perload T=0.838 R=1.331 pergate R=2.435 gate=0.557 g1 base=0.982 perload R=0.439
+seed=1 E8_L2/gate0.1 gini=0.030 used=8.0 base=0.3237 dT=0.509 dR=0.365 ratio=1.39 perload T=1.898 R=1.493 pergate R=2.527 gate=0.582 g1 base=0.774 perload R=1.174 th_range=10.16 off_gini=0.467 off_dce=2.017
+seed=1 E8_L2/sel0.01 gini=0.112 used=8.0 base=0.3246 dT=0.287 dR=0.288 ratio=1.00 perload T=0.915 R=1.237 pergate R=2.435 gate=0.459 g1 base=1.783 perload R=0.569 th_range=2.40 off_gini=0.408 off_dce=0.130
+seed=1 E8_L2/sel0.03 gini=0.050 used=8.0 base=0.3210 dT=0.342 dR=0.246 ratio=1.39 perload T=1.234 R=1.020 pergate R=2.090 gate=0.500 g1 base=1.479 perload R=-0.685 th_range=1.99 off_gini=0.199 off_dce=0.088
+seed=1 E8_L2/sel0.1 gini=0.051 used=8.0 base=0.3202 dT=0.237 dR=0.263 ratio=0.90 perload T=0.860 R=1.086 pergate R=2.198 gate=0.502 g1 base=0.630 perload R=1.165 th_range=1.24 off_gini=0.177 off_dce=0.028
+seed=1 E16_L2/aux0 gini=0.911 used=5.5 base=0.3280 dT=1.477 dR=0.000 ratio=14765.22 perload T=1.482 R=0.330 pergate R=1.648 gate=0.784 g1 base=0.443 perload R=0.091
+seed=1 E16_L2/aux0.05 gini=0.058 used=16.0 base=0.3237 dT=0.474 dR=0.330 ratio=1.44 perload T=1.679 R=1.379 pergate R=3.193 gate=0.415 g1 base=2.434 perload R=-1.482
+seed=1 E16_L2/gate0.1 gini=0.067 used=16.0 base=0.3218 dT=0.340 dR=0.339 ratio=1.00 perload T=1.171 R=1.433 pergate R=3.120 gate=0.459 g1 base=1.811 perload R=0.391 th_range=8.66 off_gini=0.559 off_dce=5.545
+seed=1 E16_L2/sel0.01 gini=0.108 used=16.0 base=0.3238 dT=0.195 dR=0.222 ratio=0.88 perload T=0.627 R=0.960 pergate R=2.825 gate=0.358 g1 base=6.372 perload R=-6.212 th_range=3.86 off_gini=0.544 off_dce=0.200
+seed=1 E16_L2/sel0.03 gini=0.081 used=16.0 base=0.3241 dT=0.210 dR=0.229 ratio=0.91 perload T=0.699 R=0.984 pergate R=2.524 gate=0.367 g1 base=4.296 perload R=-5.834 th_range=3.15 off_gini=0.381 off_dce=0.089
+seed=1 E16_L2/sel0.1 gini=0.070 used=16.0 base=0.3257 dT=0.273 dR=0.277 ratio=0.98 perload T=0.931 R=1.173 pergate R=2.833 gate=0.371 g1 base=3.262 perload R=-2.204 th_range=1.44 off_gini=0.229 off_dce=0.019
+seed=1 E32_L2/aux0 gini=0.940 used=6.0 base=0.3249 dT=1.474 dR=0.000 ratio=14741.86 perload T=1.474 R=nan pergate R=nan gate=0.710 g1 base=0.985 perload R=-10.421
+seed=1 E32_L2/aux0.05 gini=0.125 used=32.0 base=0.3258 dT=0.241 dR=0.288 ratio=0.84 perload T=0.753 R=1.273 pergate R=4.630 gate=0.262 g1 base=6.957 perload R=-7.846
+seed=1 E32_L2/gate0.1 gini=0.107 used=32.0 base=0.3238 dT=0.343 dR=0.289 ratio=1.19 perload T=1.096 R=1.261 pergate R=4.093 gate=0.296 g1 base=8.223 perload R=-11.326 th_range=13.17 off_gini=0.777 off_dce=21.421
+seed=1 E32_L2/sel0.01 gini=0.156 used=32.0 base=0.3263 dT=0.184 dR=0.122 ratio=1.51 perload T=0.550 R=0.551 pergate R=2.334 gate=0.248 g1 base=12.513 perload R=-18.258 th_range=3.95 off_gini=0.610 off_dce=0.106
+seed=1 E32_L2/sel0.03 gini=0.151 used=32.0 base=0.3238 dT=0.182 dR=0.176 ratio=1.03 perload T=0.546 R=0.798 pergate R=2.792 gate=0.246 g1 base=6.909 perload R=-6.095 th_range=2.70 off_gini=0.465 off_dce=0.059
+seed=1 E32_L2/sel0.1 gini=0.159 used=32.0 base=0.3201 dT=0.245 dR=0.193 ratio=1.27 perload T=0.712 R=0.886 pergate R=3.256 gate=0.251 g1 base=11.338 perload R=-14.951 th_range=2.46 off_gini=0.343 off_dce=0.025
+{
+ "判定": {
+  "E8_L1": {
+   "eta": 0.01,
+   "比較のゲート込み条件": "gate0.1",
+   "H1_崩壊を防ぐ": true,
+   "H2_ハブの非対称性を消す": true,
+   "H3_性能を損なわない": true,
+   "H4_閾値の幅が小さい": true,
+   "H5_閾値を外したときの悪化が小さい": true,
+   "H6_ゲートの質量あたりでも頑健": false,
+   "H6_比_選択専用÷補助損失0.05": 0.9689446377962678,
+   "H7_重みが均等な使い方を身につける": true,
+   "eta_selected_on": "引数 --eta-star（開発用シードで選択済み）"
+  },
+  "E16_L1": {
+   "eta": 0.01,
+   "比較のゲート込み条件": "gate0.1",
+   "H1_崩壊を防ぐ": true,
+   "H2_ハブの非対称性を消す": true,
+   "H3_性能を損なわない": true,
+   "H4_閾値の幅が小さい": true,
+   "H5_閾値を外したときの悪化が小さい": true,
+   "H6_ゲートの質量あたりでも頑健": true,
+   "H6_比_選択専用÷補助損失0.05": 0.718204617162126,
+   "H7_重みが均等な使い方を身につける": false,
+   "eta_selected_on": "引数 --eta-star（開発用シードで選択済み）"
+  },
+  "E32_L1": {
+   "eta": 0.01,
+   "比較のゲート込み条件": "gate0.1",
+   "H1_崩壊を防ぐ": true,
+   "H2_ハブの非対称性を消す": false,
+   "H3_性能を損なわない": true,
+   "H4_閾値の幅が小さい": true,
+   "H5_閾値を外したときの悪化が小さい": true,
+   "H6_ゲートの質量あたりでも頑健": true,
+   "H6_比_選択専用÷補助損失0.05": 0.5310824609562038,
+   "H7_重みが均等な使い方を身につける": false,
+   "eta_selected_on": "引数 --eta-star（開発用シードで選択済み）"
+  },
+  "E8_L2": {
+   "eta": 0.01,
+   "比較のゲート込み条件": "gate0.1",
+   "H1_崩壊を防ぐ": true,
+   "H2_ハブの非対称性を消す": true,
+   "H3_性能を損なわない": true,
+   "H4_閾値の幅が小さい": false,
+   "H5_閾値を外したときの悪化が小さい": true,
+   "H6_ゲートの質量あたりでも頑健": false,
+   "H6_比_選択専用÷補助損失0.05": 1.0000699834895113,
+   "H7_重みが均等な使い方を身につける": false,
+   "eta_selected_on": "引数 --eta-star（開発用シードで選択済み）"
+  },
+  "E16_L2": {
+   "eta": 0.01,
+   "比較のゲート込み条件": "gate0.1",
+   "H1_崩壊を防ぐ": true,
+   "H2_ハブの非対称性を消す": true,
+   "H3_性能を損なわない": true,
+   "H4_閾値の幅が小さい": false,
+   "H5_閾値を外したときの悪化が小さい": true,
+   "H6_ゲートの質量あたりでも頑健": false,
+   "H6_比_選択専用÷補助損失0.05": 0.8846933479941606,
+   "H7_重みが均等な使い方を身につける": false,
+   "eta_selected_on": "引数 --eta-star（開発用シードで選択済み）"
+  },
+  "E32_L2": {
+   "eta": 0.01,
+   "比較のゲート込み条件": "gate0.1",
+   "H1_崩壊を防ぐ": true,
+   "H2_ハブの非対称性を消す": false,
+   "H3_性能を損なわない": true,
+   "H4_閾値の幅が小さい": false,
+   "H5_閾値を外したときの悪化が小さい": true,
+   "H6_ゲートの質量あたりでも頑健": true,
+   "H6_比_選択専用÷補助損失0.05": 0.5041073929962363,
+   "H7_重みが均等な使い方を身につける": false,
+   "eta_selected_on": "引数 --eta-star（開発用シードで選択済み）"
+  }
+ }
+}

@@ -1,0 +1,9 @@
+seed=102 cross hubcap0.1 gini=0.399 used=8 top2=0.587 gate=0.491 ce=0.5801 b2=0.3600 Phub=0.87 Prest=0.75 hubb2=0.60/0.59 lesT=0.173 lesO=0.379 cutT=0.277 widths=[146, 146, 37, 37, 37, 37, 36, 36] hubw=[146, 146]
+seed=102 cross hubrand0.1 gini=0.337 used=8 top2=0.562 gate=0.527 ce=0.5725 b2=0.3387 Phub=0.91 Prest=0.35 hubb2=0.75/0.56 lesT=0.326 lesO=0.171 cutT=0.203 widths=[146, 37, 146, 36, 36, 37, 37, 37] hubw=[146, 37]
+seed=102 cross hubeq0.1 gini=0.440 used=8 top2=0.634 gate=0.495 ce=0.5802 b2=0.3514 Phub=0.90 Prest=0.71 hubb2=0.67/0.63 lesT=0.183 lesO=0.303 cutT=0.228 widths=[64, 64, 64, 64, 64, 64, 64, 64] hubw=[64, 64]
+seed=102 within hubcap0.1 gini=0.502 used=8 top2=0.700 gate=0.426 ce=0.5531 b2=0.5508 Phub=0.87 Prest=0.49 hubb2=0.72/0.70 lesT=0.105 lesO=0.311 cutT=0.020 widths=[146, 146, 37, 37, 37, 37, 36, 36] hubw=[146, 146]
+seed=102 within hubrand0.1 gini=0.386 used=8 top2=0.537 gate=0.430 ce=0.5451 b2=0.5098 Phub=0.92 Prest=0.29 hubb2=0.77/0.54 lesT=0.146 lesO=0.113 cutT=0.013 widths=[146, 37, 146, 36, 36, 37, 37, 37] hubw=[146, 37]
+seed=102 within hubeq0.1 gini=0.578 used=8 top2=0.723 gate=0.456 ce=0.5537 b2=0.5477 Phub=0.82 Prest=0.42 hubb2=0.79/0.72 lesT=0.072 lesO=0.181 cutT=0.016 widths=[64, 64, 64, 64, 64, 64, 64, 64] hubw=[64, 64]
+{
+ "判定": {}
+}

@@ -50,5 +50,16 @@ OUT = '/content/drive/MyDrive/neurocortex/step44'
 
 ## 注意
 
-- 基底核ヘッドの critic は、このスクリプトでは学習されない（小規模検証で採用候補とした `td_sg` は未移植）。
+- 基底核ヘッドの critic は `td_sg` で学習する（2026-10-15 移植）。Phase B/C の `bg_critic_loss` が学習とともに下がるかを確認する（CPU 予備実行では短時間のため約90〜116のままだった）。
 - 1ステップ目で GPU メモリ不足になった場合は、`Step444Config.batch_size` を下げ、同じ比率で `gradient_accumulation_steps` を上げる（実効バッチ64を保つ）。
+
+## パラメータスイープ（本実験の後）
+
+```python
+SW = '/content/drive/MyDrive/neurocortex/step44_sweep'
+!python colab_step44_parameter_sweep.py --results-dir {SW} --seeds 0
+```
+
+- 全格子は1シードあたり84実行（各5000ステップ）で、T4 では数十時間かかる見込み。`--phases` / `--seeds` / `--steps` で範囲を絞る。
+- 実行ごとに `{SW}/phase*_seed*.json` を保存し、再実行時は完了済みを飛ばす（チェックポイントはないため、中断した実行は最初からやり直しになる）。
+- `{SW}/summary.json` に、同じ w_h の Phase A とのペア差 ΔPPL を昇順で出力する。

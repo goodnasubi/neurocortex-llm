@@ -1,0 +1,41 @@
+seed=3 aux0 gini=0.855 mom=7.37 used=2 top2=1.000 rho=1.00 gate=0.888 base=0.3226 dT=1.076 dR=0.000
+seed=3 aux0.01 gini=0.527 mom=2.56 used=8 top2=0.603 rho=0.98 gate=0.564 base=0.3185 dT=0.734 dR=0.121
+seed=3 aux0.05 gini=0.076 mom=1.21 used=8 top2=0.299 rho=0.37 gate=0.622 base=0.3182 dT=0.332 dR=0.274
+seed=3 point0.01 gini=0.105 mom=1.37 used=8 top2=0.329 rho=0.07 gate=0.421 base=0.3182 dT=0.183 dR=0.158
+seed=3 point0.03 gini=0.082 mom=1.21 used=8 top2=0.292 rho=0.64 gate=0.506 base=0.3206 dT=0.242 dR=0.167
+seed=3 point0.1 gini=0.030 mom=1.08 used=8 top2=0.266 rho=0.43 gate=0.536 base=0.3166 dT=0.255 dR=0.158
+seed=3 band0.01 gini=0.336 mom=2.88 used=8 top2=0.491 rho=0.69 gate=0.421 base=0.3181 dT=0.423 dR=0.117
+seed=3 band0.03 gini=0.319 mom=2.86 used=8 top2=0.481 rho=0.60 gate=0.463 base=0.3178 dT=0.327 dR=0.124
+seed=3 band0.1 gini=0.334 mom=2.27 used=8 top2=0.532 rho=0.67 gate=0.541 base=0.3182 dT=0.423 dR=0.140
+seed=3 wide0.01 gini=0.378 mom=2.43 used=8 top2=0.546 rho=0.98 gate=0.447 base=0.3184 dT=0.482 dR=0.096
+seed=3 wide0.03 gini=0.501 mom=3.18 used=8 top2=0.593 rho=0.95 gate=0.423 base=0.3172 dT=0.453 dR=0.113
+seed=3 wide0.1 gini=0.362 mom=2.44 used=8 top2=0.520 rho=0.83 gate=0.523 base=0.3188 dT=0.321 dR=0.132
+{
+ "判定": {
+  "eta": 0.01,
+  "H1_負荷集中を下げる": true,
+  "H2_性能を保つ": true,
+  "H3_ハブを保つ": true,
+  "H3b_ハブの利点（帯域が一点の目標より CE が低い）": false,
+  "H4_ハブを壊したときの頑健さ": true,
+  "参考_ハブ除去のゲートの質量あたり_帯域÷補助損失なし": 1.6099542789099783,
+  "値": {
+   "gini_帯域": 0.3355712890625,
+   "gini_なし": 0.85528564453125,
+   "max_over_mean_帯域": 2.8828125,
+   "max_over_mean_なし": 7.369140625,
+   "CE": {
+    "band0.01": 0.31811410188674927,
+    "point0.01": 0.31820133328437805,
+    "aux0": 0.3226367235183716,
+    "aux0.05": 0.3181893229484558
+   },
+   "topk_share_帯域": 0.491455078125,
+   "topk_share_一点": 0.329345703125,
+   "spearman_帯域": 0.6904761904761906,
+   "dT_帯域": 0.42331087589263916,
+   "dT_なし": 1.0755133628845215
+  },
+  "eta_selected_on": "引数 --eta-star（開発用シードで選択済み）"
+ }
+}

@@ -1,0 +1,270 @@
+seed=0 E16_L1/aux0 gini=0.906 used=3.0 base=0.3232 ratio=12066.74 gate=0.848
+seed=0 E16_L1/aux0.05 gini=0.072 used=16.0 base=0.3262 ratio=1.51 gate=0.465
+seed=0 E16_L1/gate0.1 gini=0.085 used=16.0 base=0.3242 ratio=0.77 gate=0.469 off_gini=0.694 agree=0.339 dce_off=4.2124 norm=0.2897
+seed=0 E16_L1/sel0.01 gini=0.127 used=16.0 base=0.3239 ratio=1.75 gate=0.272 off_gini=0.426 agree=0.562 dce_off=0.0511 norm=0.0042
+seed=0 E16_L1/sel0.03 gini=0.093 used=16.0 base=0.3230 ratio=0.48 gate=0.349 off_gini=0.294 agree=0.759 dce_off=0.0136 norm=0.0011
+seed=0 E16_L1/sel0.1 gini=0.120 used=16.0 base=0.3224 ratio=1.17 gate=0.377 off_gini=0.188 agree=0.835 dce_off=0.0134 norm=0.0011
+seed=0 E16_L1/sel0.3 gini=0.095 used=16.0 base=0.3260 ratio=0.90 gate=0.468 off_gini=0.140 agree=0.886 dce_off=0.0051 norm=0.0004
+seed=0 E16_L1/ann0.01 gini=0.546 used=16.0 base=0.3300 ratio=4.89 gate=0.439 off_gini=0.546 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=0 E16_L1/ann0.1 gini=0.175 used=16.0 base=0.3331 ratio=1.99 gate=0.383 off_gini=0.175 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=0 E16_L1/cp0.3_o0.5_r0.5 gini=0.156 used=16.0 base=0.3255 ratio=1.38 gate=0.484 off_gini=0.156 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=0 E16_L1/long/aux0 gini=0.908 used=3.0 base=0.3258 ratio=11279.27 gate=0.783
+seed=0 E16_L1/long/aux0.05 gini=0.063 used=16.0 base=0.3236 ratio=1.71 gate=0.462
+seed=0 E16_L1/long/gate0.1 gini=0.070 used=16.0 base=0.3229 ratio=1.28 gate=0.465 off_gini=0.708 agree=0.345 dce_off=4.6519 norm=0.3020
+seed=0 E16_L1/long/sel0.01 gini=0.099 used=16.0 base=0.3231 ratio=0.91 gate=0.286 off_gini=0.406 agree=0.667 dce_off=0.0413 norm=0.0035
+seed=0 E32_L1/aux0 gini=0.937 used=5.0 base=0.3231 ratio=12575.26 gate=0.834
+seed=0 E32_L1/aux0.05 gini=0.129 used=32.0 base=0.3218 ratio=1.31 gate=0.324
+seed=0 E32_L1/gate0.1 gini=0.152 used=32.0 base=0.3258 ratio=0.81 gate=0.302 off_gini=0.729 agree=0.335 dce_off=5.8467 norm=0.4424
+seed=0 E32_L1/sel0.01 gini=0.160 used=32.0 base=0.3226 ratio=1.05 gate=0.210 off_gini=0.387 agree=0.581 dce_off=0.0453 norm=0.0035
+seed=0 E32_L1/sel0.03 gini=0.183 used=32.0 base=0.3200 ratio=1.47 gate=0.251 off_gini=0.346 agree=0.723 dce_off=0.0148 norm=0.0013
+seed=0 E32_L1/sel0.1 gini=0.153 used=32.0 base=0.3197 ratio=1.25 gate=0.259 off_gini=0.344 agree=0.710 dce_off=0.0525 norm=0.0052
+seed=0 E32_L1/sel0.3 gini=0.096 used=32.0 base=0.3201 ratio=0.80 gate=0.316 off_gini=0.235 agree=0.798 dce_off=0.0748 norm=0.0053
+seed=0 E32_L1/sel1 gini=0.096 used=32.0 base=0.3208 ratio=0.95 gate=0.351 off_gini=0.270 agree=0.773 dce_off=0.0704 norm=0.0048
+seed=0 E32_L1/sel3 gini=0.180 used=32.0 base=0.3215 ratio=0.90 gate=0.239 off_gini=0.280 agree=0.727 dce_off=0.0031 norm=0.0005
+seed=0 E32_L1/ann0.01 gini=0.456 used=30.0 base=0.3259 ratio=1.94 gate=0.271 off_gini=0.456 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=0 E32_L1/ann0.1 gini=0.326 used=32.0 base=0.3219 ratio=1.48 gate=0.278 off_gini=0.326 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=0 E32_L1/cp1_o0.5_r0.5 gini=0.279 used=31.0 base=0.3301 ratio=1.34 gate=0.365 off_gini=0.279 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=0 E32_L1/long/aux0 gini=0.940 used=4.0 base=0.3200 ratio=10108.10 gate=0.750
+seed=0 E32_L1/long/aux0.05 gini=0.080 used=32.0 base=0.3199 ratio=0.99 gate=0.273
+seed=0 E32_L1/long/gate0.1 gini=0.092 used=32.0 base=0.3213 ratio=0.92 gate=0.322 off_gini=0.750 agree=0.295 dce_off=7.2251 norm=0.5596
+seed=0 E32_L1/long/sel0.01 gini=0.174 used=32.0 base=0.3208 ratio=0.87 gate=0.203 off_gini=0.441 agree=0.649 dce_off=0.0385 norm=0.0035
+seed=0 E32_L2/aux0 gini=0.899 used=8.5 base=0.3216 ratio=15012.52 gate=0.678
+seed=0 E32_L2/aux0.05 gini=0.115 used=32.0 base=0.3227 ratio=1.52 gate=0.289
+seed=0 E32_L2/gate0.1 gini=0.111 used=32.0 base=0.3251 ratio=1.09 gate=0.324 off_gini=0.720 agree=0.330 dce_off=8.0549 norm=0.5851
+seed=0 E32_L2/sel0.01 gini=0.176 used=32.0 base=0.3267 ratio=0.90 gate=0.248 off_gini=0.653 agree=0.384 dce_off=0.3582 norm=0.0292
+seed=0 E32_L2/ann0.01 gini=0.643 used=25.5 base=0.3449 ratio=2.75 gate=0.365 off_gini=0.643 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=0 E32_L2/ann0.1 gini=0.347 used=32.0 base=0.3252 ratio=1.63 gate=0.248 off_gini=0.347 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=0 E32_L2/sel0.03 gini=0.129 used=32.0 base=0.3212 ratio=0.94 gate=0.254 off_gini=0.452 agree=0.588 dce_off=0.1635 norm=0.0159
+seed=0 E32_L2/sel0.1 gini=0.162 used=32.0 base=0.3221 ratio=0.81 gate=0.230 off_gini=0.397 agree=0.626 dce_off=0.0320 norm=0.0036
+seed=0 E32_L2/sel0.3 gini=0.131 used=32.0 base=0.3210 ratio=0.91 gate=0.297 off_gini=0.315 agree=0.727 dce_off=0.0581 norm=0.0048
+seed=0 E32_L2/sel1 gini=0.123 used=32.0 base=0.3199 ratio=0.81 gate=0.303 off_gini=0.281 agree=0.729 dce_off=0.0660 norm=0.0053
+seed=0 E32_L2/sel3 gini=0.221 used=32.0 base=0.3246 ratio=1.43 gate=0.188 off_gini=0.366 agree=0.665 dce_off=0.0001 norm=0.0000
+seed=0 E32_L2/long/aux0.05 gini=0.123 used=32.0 base=0.3181 ratio=0.75 gate=0.237
+seed=0 E32_L2/long/aux0 gini=0.890 used=12.5 base=0.3177 ratio=606.15 gate=0.599
+seed=0 E32_L2/long/gate0.1 gini=0.090 used=32.0 base=0.3209 ratio=0.99 gate=0.326 off_gini=0.653 agree=0.406 dce_off=4.2794 norm=0.3267
+seed=0 E32_L2/long/sel0.01 gini=0.147 used=32.0 base=0.3204 ratio=0.84 gate=0.225 off_gini=0.655 agree=0.406 dce_off=0.2112 norm=0.0196
+seed=0 E8_L1/aux0 gini=0.682 used=3.0 base=0.3211 ratio=9.20 gate=0.853
+seed=0 E8_L1/aux0.05 gini=0.081 used=8.0 base=0.3231 ratio=0.88 gate=0.623
+seed=0 E8_L1/gate0.1 gini=0.036 used=8.0 base=0.3246 ratio=0.89 gate=0.608 off_gini=0.530 agree=0.531 dce_off=2.0707 norm=0.1260
+seed=0 E8_L1/sel0.01 gini=0.162 used=8.0 base=0.3247 ratio=1.66 gate=0.475 off_gini=0.252 agree=0.809 dce_off=0.0150 norm=0.0009
+seed=0 E8_L1/sel0.03 gini=0.125 used=8.0 base=0.3260 ratio=1.00 gate=0.545 off_gini=0.103 agree=0.879 dce_off=0.0033 norm=0.0002
+seed=0 E8_L1/sel0.1 gini=0.047 used=8.0 base=0.3243 ratio=0.85 gate=0.579 off_gini=0.085 agree=0.924 dce_off=0.0103 norm=0.0007
+seed=0 E8_L1/sel0.3 gini=0.064 used=8.0 base=0.3265 ratio=1.28 gate=0.631 off_gini=0.106 agree=0.869 dce_off=0.0052 norm=0.0003
+seed=0 E8_L1/ann0.01 gini=0.328 used=8.0 base=0.3241 ratio=1.49 gate=0.533 off_gini=0.328 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=0 E8_L1/ann0.1 gini=0.061 used=8.0 base=0.3252 ratio=1.27 gate=0.583 off_gini=0.061 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=1 E16_L1/aux0 gini=0.928 used=3.0 base=0.3230 ratio=11032.41 gate=0.874
+seed=1 E16_L1/aux0.05 gini=0.066 used=16.0 base=0.3213 ratio=1.18 gate=0.473
+seed=1 E16_L1/gate0.1 gini=0.048 used=16.0 base=0.3248 ratio=1.02 gate=0.492 off_gini=0.832 agree=0.233 dce_off=6.7539 norm=0.4024
+seed=1 E16_L1/sel0.01 gini=0.197 used=16.0 base=0.3228 ratio=1.26 gate=0.299 off_gini=0.367 agree=0.698 dce_off=0.0094 norm=0.0008
+seed=1 E16_L1/sel0.03 gini=0.149 used=16.0 base=0.3227 ratio=1.56 gate=0.399 off_gini=0.248 agree=0.816 dce_off=0.0136 norm=0.0011
+seed=1 E16_L1/sel0.1 gini=0.120 used=16.0 base=0.3222 ratio=1.53 gate=0.428 off_gini=0.226 agree=0.790 dce_off=0.0248 norm=0.0019
+seed=1 E16_L1/sel0.3 gini=0.045 used=16.0 base=0.3203 ratio=0.84 gate=0.471 off_gini=0.173 agree=0.888 dce_off=0.0285 norm=0.0018
+seed=1 E16_L1/ann0.01 gini=0.376 used=16.0 base=0.3203 ratio=1.20 gate=0.335 off_gini=0.376 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=1 E16_L1/ann0.1 gini=0.265 used=16.0 base=0.3234 ratio=1.09 gate=0.446 off_gini=0.265 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=1 E16_L1/cp0.3_o0.5_r0.5 gini=0.192 used=16.0 base=0.3232 ratio=1.21 gate=0.479 off_gini=0.192 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=1 E16_L1/long/aux0 gini=0.928 used=3.0 base=0.3161 ratio=10308.88 gate=0.792
+seed=1 E16_L1/long/aux0.05 gini=0.039 used=16.0 base=0.3158 ratio=0.92 gate=0.445
+seed=1 E16_L1/long/gate0.1 gini=0.060 used=16.0 base=0.3139 ratio=0.85 gate=0.489 off_gini=0.838 agree=0.207 dce_off=7.3265 norm=0.4325
+seed=1 E16_L1/long/sel0.01 gini=0.123 used=16.0 base=0.3161 ratio=0.90 gate=0.280 off_gini=0.318 agree=0.680 dce_off=0.0056 norm=0.0005
+seed=1 E32_L1/aux0 gini=0.922 used=4.0 base=0.3193 ratio=11887.46 gate=0.787
+seed=1 E32_L1/aux0.05 gini=0.144 used=32.0 base=0.3265 ratio=1.26 gate=0.306
+seed=1 E32_L1/gate0.1 gini=0.117 used=32.0 base=0.3223 ratio=1.04 gate=0.371 off_gini=0.783 agree=0.323 dce_off=7.5714 norm=0.4554
+seed=1 E32_L1/sel0.01 gini=0.189 used=32.0 base=0.3244 ratio=1.74 gate=0.213 off_gini=0.573 agree=0.423 dce_off=0.1047 norm=0.0076
+seed=1 E32_L1/sel0.03 gini=0.112 used=32.0 base=0.3200 ratio=1.06 gate=0.251 off_gini=0.407 agree=0.660 dce_off=0.0540 norm=0.0045
+seed=1 E32_L1/sel0.1 gini=0.148 used=32.0 base=0.3215 ratio=0.76 gate=0.290 off_gini=0.236 agree=0.789 dce_off=0.0197 norm=0.0017
+seed=1 E32_L1/sel0.3 gini=0.129 used=32.0 base=0.3212 ratio=0.81 gate=0.318 off_gini=0.286 agree=0.764 dce_off=0.0259 norm=0.0020
+seed=1 E32_L1/sel1 gini=0.095 used=32.0 base=0.3220 ratio=1.04 gate=0.353 off_gini=0.266 agree=0.757 dce_off=0.0328 norm=0.0023
+seed=1 E32_L1/sel3 gini=0.155 used=32.0 base=0.3229 ratio=0.87 gate=0.233 off_gini=0.279 agree=0.731 dce_off=0.0011 norm=0.0002
+seed=1 E32_L1/ann0.01 gini=0.620 used=28.0 base=0.3282 ratio=4.08 gate=0.325 off_gini=0.620 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=1 E32_L1/ann0.1 gini=0.260 used=31.0 base=0.3213 ratio=1.11 gate=0.302 off_gini=0.260 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=1 E32_L1/cp1_o0.5_r0.5 gini=0.229 used=32.0 base=0.3257 ratio=1.74 gate=0.372 off_gini=0.229 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=1 E32_L1/long/aux0 gini=0.924 used=4.0 base=0.3148 ratio=10106.70 gate=0.654
+seed=1 E32_L1/long/aux0.05 gini=0.079 used=32.0 base=0.3150 ratio=1.10 gate=0.292
+seed=1 E32_L1/long/gate0.1 gini=0.120 used=32.0 base=0.3217 ratio=0.88 gate=0.325 off_gini=0.806 agree=0.271 dce_off=9.6870 norm=0.6554
+seed=1 E32_L1/long/sel0.01 gini=0.152 used=32.0 base=0.3144 ratio=0.99 gate=0.209 off_gini=0.528 agree=0.564 dce_off=0.1160 norm=0.0113
+seed=1 E32_L2/aux0 gini=0.940 used=6.0 base=0.3249 ratio=14741.86 gate=0.710
+seed=1 E32_L2/aux0.05 gini=0.125 used=32.0 base=0.3258 ratio=0.84 gate=0.262
+seed=1 E32_L2/gate0.1 gini=0.107 used=32.0 base=0.3238 ratio=1.19 gate=0.296 off_gini=0.777 agree=0.263 dce_off=21.4214 norm=1.8384
+seed=1 E32_L2/sel0.01 gini=0.156 used=32.0 base=0.3263 ratio=1.51 gate=0.248 off_gini=0.610 agree=0.439 dce_off=0.1058 norm=0.0080
+seed=1 E32_L2/ann0.01 gini=0.688 used=22.0 base=0.3332 ratio=5.00 gate=0.386 off_gini=0.688 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=1 E32_L2/ann0.1 gini=0.349 used=30.5 base=0.3232 ratio=1.30 gate=0.276 off_gini=0.349 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=1 E32_L2/sel0.03 gini=0.151 used=32.0 base=0.3238 ratio=1.03 gate=0.246 off_gini=0.465 agree=0.576 dce_off=0.0594 norm=0.0061
+seed=1 E32_L2/sel0.1 gini=0.159 used=32.0 base=0.3201 ratio=1.27 gate=0.251 off_gini=0.343 agree=0.646 dce_off=0.0247 norm=0.0025
+seed=1 E32_L2/sel0.3 gini=0.093 used=32.0 base=0.3216 ratio=1.15 gate=0.270 off_gini=0.393 agree=0.642 dce_off=0.1269 norm=0.0130
+seed=1 E32_L2/sel1 gini=0.117 used=32.0 base=0.3214 ratio=1.37 gate=0.309 off_gini=0.273 agree=0.742 dce_off=0.0198 norm=0.0018
+seed=1 E32_L2/sel3 gini=0.223 used=31.5 base=0.3213 ratio=1.54 gate=0.172 off_gini=0.443 agree=0.532 dce_off=0.0167 norm=0.0040
+seed=1 E32_L2/long/aux0.05 gini=0.090 used=32.0 base=0.3164 ratio=1.59 gate=0.224
+seed=1 E32_L2/long/aux0 gini=0.922 used=12.5 base=0.3152 ratio=12830.74 gate=0.619
+seed=1 E32_L2/long/gate0.1 gini=0.136 used=32.0 base=0.3152 ratio=1.21 gate=0.288 off_gini=0.772 agree=0.240 dce_off=29.6664 norm=2.3307
+seed=1 E32_L2/long/sel0.01 gini=0.130 used=32.0 base=0.3141 ratio=1.48 gate=0.247 off_gini=0.602 agree=0.467 dce_off=0.1117 norm=0.0085
+seed=1 E8_L1/aux0 gini=0.816 used=3.0 base=0.3244 ratio=91.51 gate=0.841
+seed=1 E8_L1/aux0.05 gini=0.036 used=8.0 base=0.3230 ratio=1.42 gate=0.620
+seed=1 E8_L1/gate0.1 gini=0.034 used=8.0 base=0.3234 ratio=1.07 gate=0.603 off_gini=0.609 agree=0.458 dce_off=2.4341 norm=0.1634
+seed=1 E8_L1/sel0.01 gini=0.178 used=8.0 base=0.3263 ratio=1.33 gate=0.423 off_gini=0.167 agree=0.922 dce_off=0.0004 norm=0.0000
+seed=1 E8_L1/sel0.03 gini=0.071 used=8.0 base=0.3205 ratio=1.48 gate=0.563 off_gini=0.130 agree=0.843 dce_off=0.0137 norm=0.0010
+seed=1 E8_L1/sel0.1 gini=0.054 used=8.0 base=0.3202 ratio=1.47 gate=0.579 off_gini=0.106 agree=0.920 dce_off=0.0011 norm=0.0001
+seed=1 E8_L1/sel0.3 gini=0.024 used=8.0 base=0.3194 ratio=0.90 gate=0.623 off_gini=0.040 agree=0.950 dce_off=0.0055 norm=0.0004
+seed=1 E8_L1/ann0.01 gini=0.188 used=8.0 base=0.3268 ratio=1.34 gate=0.453 off_gini=0.188 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=1 E8_L1/ann0.1 gini=0.083 used=8.0 base=0.3218 ratio=1.13 gate=0.582 off_gini=0.083 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=2 E16_L1/aux0 gini=0.853 used=5.0 base=0.3169 ratio=859.52 gate=0.781
+seed=2 E16_L1/aux0.05 gini=0.070 used=16.0 base=0.3181 ratio=1.06 gate=0.465
+seed=2 E16_L1/gate0.1 gini=0.068 used=16.0 base=0.3167 ratio=1.05 gate=0.489 off_gini=0.592 agree=0.438 dce_off=2.3643 norm=0.1509
+seed=2 E16_L1/sel0.01 gini=0.160 used=16.0 base=0.3182 ratio=1.53 gate=0.338 off_gini=0.300 agree=0.747 dce_off=0.0276 norm=0.0019
+seed=2 E16_L1/sel0.03 gini=0.075 used=16.0 base=0.3128 ratio=1.16 gate=0.355 off_gini=0.308 agree=0.770 dce_off=0.0374 norm=0.0030
+seed=2 E16_L1/sel0.1 gini=0.128 used=16.0 base=0.3171 ratio=0.76 gate=0.381 off_gini=0.200 agree=0.852 dce_off=0.0039 norm=0.0003
+seed=2 E16_L1/sel0.3 gini=0.057 used=16.0 base=0.3118 ratio=0.84 gate=0.484 off_gini=0.105 agree=0.917 dce_off=0.0016 norm=0.0001
+seed=2 E16_L1/ann0.01 gini=0.354 used=15.0 base=0.3188 ratio=1.40 gate=0.387 off_gini=0.354 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=2 E16_L1/ann0.1 gini=0.212 used=16.0 base=0.3189 ratio=0.97 gate=0.394 off_gini=0.212 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=2 E16_L1/cp0.3_o0.5_r0.5 gini=0.080 used=16.0 base=0.3143 ratio=1.02 gate=0.491 off_gini=0.080 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=2 E16_L1/long/aux0 gini=0.850 used=6.0 base=0.3119 ratio=983.45 gate=0.730
+seed=2 E16_L1/long/aux0.05 gini=0.050 used=16.0 base=0.3142 ratio=1.10 gate=0.441
+seed=2 E16_L1/long/gate0.1 gini=0.088 used=16.0 base=0.3124 ratio=0.72 gate=0.475 off_gini=0.612 agree=0.480 dce_off=2.8510 norm=0.1804
+seed=2 E16_L1/long/sel0.01 gini=0.101 used=16.0 base=0.3122 ratio=0.70 gate=0.315 off_gini=0.276 agree=0.746 dce_off=0.0236 norm=0.0018
+seed=2 E32_L1/aux0 gini=0.964 used=3.0 base=0.3181 ratio=11757.63 gate=0.875
+seed=2 E32_L1/aux0.05 gini=0.137 used=32.0 base=0.3248 ratio=1.29 gate=0.326
+seed=2 E32_L1/gate0.1 gini=0.080 used=32.0 base=0.3176 ratio=1.17 gate=0.315 off_gini=0.851 agree=0.181 dce_off=6.8717 norm=0.4853
+seed=2 E32_L1/sel0.01 gini=0.176 used=32.0 base=0.3206 ratio=1.35 gate=0.224 off_gini=0.521 agree=0.524 dce_off=0.1194 norm=0.0098
+seed=2 E32_L1/sel0.03 gini=0.099 used=32.0 base=0.3139 ratio=0.97 gate=0.215 off_gini=0.419 agree=0.651 dce_off=0.0381 norm=0.0038
+seed=2 E32_L1/sel0.1 gini=0.125 used=32.0 base=0.3150 ratio=1.55 gate=0.272 off_gini=0.335 agree=0.707 dce_off=0.0304 norm=0.0025
+seed=2 E32_L1/sel0.3 gini=0.108 used=32.0 base=0.3136 ratio=1.50 gate=0.321 off_gini=0.284 agree=0.737 dce_off=0.0883 norm=0.0067
+seed=2 E32_L1/sel1 gini=0.106 used=32.0 base=0.3167 ratio=1.00 gate=0.342 off_gini=0.320 agree=0.745 dce_off=0.0261 norm=0.0019
+seed=2 E32_L1/sel3 gini=0.139 used=32.0 base=0.3145 ratio=1.19 gate=0.203 off_gini=0.313 agree=0.712 dce_off=0.0036 norm=0.0007
+seed=2 E32_L1/ann0.01 gini=0.624 used=26.0 base=0.3265 ratio=3.84 gate=0.348 off_gini=0.624 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=2 E32_L1/ann0.1 gini=0.342 used=31.0 base=0.3159 ratio=1.66 gate=0.291 off_gini=0.342 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=2 E32_L1/cp1_o0.5_r0.5 gini=0.319 used=32.0 base=0.3185 ratio=1.66 gate=0.362 off_gini=0.319 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=2 E32_L1/long/aux0 gini=0.953 used=7.0 base=0.3083 ratio=9826.80 gate=0.723
+seed=2 E32_L1/long/aux0.05 gini=0.100 used=32.0 base=0.3096 ratio=1.25 gate=0.280
+seed=2 E32_L1/long/gate0.1 gini=0.102 used=32.0 base=0.3065 ratio=1.21 gate=0.328 off_gini=0.875 agree=0.153 dce_off=7.1274 norm=0.5206
+seed=2 E32_L1/long/sel0.01 gini=0.197 used=31.0 base=0.3095 ratio=1.46 gate=0.187 off_gini=0.528 agree=0.548 dce_off=0.0345 norm=0.0029
+seed=2 E32_L2/aux0 gini=0.953 used=4.0 base=0.3189 ratio=14402.40 gate=0.757
+seed=2 E32_L2/aux0.05 gini=0.125 used=32.0 base=0.3127 ratio=1.52 gate=0.253
+seed=2 E32_L2/gate0.1 gini=0.104 used=32.0 base=0.3182 ratio=1.24 gate=0.301 off_gini=0.719 agree=0.313 dce_off=8.6740 norm=0.7042
+seed=2 E32_L2/sel0.01 gini=0.182 used=32.0 base=0.3208 ratio=1.32 gate=0.187 off_gini=0.611 agree=0.386 dce_off=0.0884 norm=0.0097
+seed=2 E32_L2/ann0.01 gini=0.661 used=27.0 base=0.3235 ratio=6.13 gate=0.311 off_gini=0.661 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=2 E32_L2/ann0.1 gini=0.322 used=31.5 base=0.3196 ratio=1.22 gate=0.254 off_gini=0.322 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=2 E32_L2/sel0.03 gini=0.146 used=32.0 base=0.3160 ratio=1.07 gate=0.240 off_gini=0.495 agree=0.519 dce_off=0.1268 norm=0.0130
+seed=2 E32_L2/sel0.1 gini=0.092 used=32.0 base=0.3126 ratio=1.41 gate=0.238 off_gini=0.360 agree=0.659 dce_off=0.0525 norm=0.0055
+seed=2 E32_L2/sel0.3 gini=0.111 used=32.0 base=0.3151 ratio=0.94 gate=0.281 off_gini=0.299 agree=0.716 dce_off=0.0165 norm=0.0016
+seed=2 E32_L2/sel1 gini=0.117 used=32.0 base=0.3174 ratio=1.31 gate=0.296 off_gini=0.285 agree=0.718 dce_off=0.0464 norm=0.0041
+seed=2 E32_L2/sel3 gini=0.164 used=32.0 base=0.3133 ratio=1.35 gate=0.196 off_gini=0.361 agree=0.676 dce_off=0.0024 norm=0.0005
+seed=2 E32_L2/long/aux0.05 gini=0.099 used=32.0 base=0.3086 ratio=1.05 gate=0.210
+seed=2 E32_L2/long/aux0 gini=0.941 used=9.5 base=0.3106 ratio=12793.20 gate=0.656
+seed=2 E32_L2/long/gate0.1 gini=0.099 used=32.0 base=0.3124 ratio=1.34 gate=0.283 off_gini=0.657 agree=0.333 dce_off=4.9485 norm=0.4900
+seed=2 E32_L2/long/sel0.01 gini=0.159 used=32.0 base=0.3090 ratio=1.21 gate=0.208 off_gini=0.610 agree=0.436 dce_off=0.0823 norm=0.0081
+seed=2 E8_L1/aux0 gini=0.755 used=3.0 base=0.3193 ratio=12465.88 gate=0.844
+seed=2 E8_L1/aux0.05 gini=0.061 used=8.0 base=0.3162 ratio=1.54 gate=0.661
+seed=2 E8_L1/gate0.1 gini=0.061 used=8.0 base=0.3174 ratio=0.84 gate=0.645 off_gini=0.613 agree=0.439 dce_off=3.2384 norm=0.1928
+seed=2 E8_L1/sel0.01 gini=0.159 used=8.0 base=0.3177 ratio=0.79 gate=0.489 off_gini=0.196 agree=0.898 dce_off=0.0089 norm=0.0006
+seed=2 E8_L1/sel0.03 gini=0.030 used=8.0 base=0.3128 ratio=0.83 gate=0.529 off_gini=0.167 agree=0.874 dce_off=0.0049 norm=0.0003
+seed=2 E8_L1/sel0.1 gini=0.021 used=8.0 base=0.3164 ratio=0.72 gate=0.587 off_gini=0.092 agree=0.935 dce_off=0.0101 norm=0.0007
+seed=2 E8_L1/sel0.3 gini=0.088 used=8.0 base=0.3206 ratio=0.92 gate=0.614 off_gini=0.072 agree=0.945 dce_off=-0.0014 norm=-0.0001
+seed=2 E8_L1/ann0.01 gini=0.087 used=8.0 base=0.3159 ratio=1.43 gate=0.483 off_gini=0.087 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=2 E8_L1/ann0.1 gini=0.109 used=8.0 base=0.3168 ratio=1.15 gate=0.585 off_gini=0.109 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=3 E16_L1/aux0 gini=0.918 used=3.0 base=0.3239 ratio=10283.96 gate=0.855
+seed=3 E16_L1/aux0.05 gini=0.156 used=16.0 base=0.3200 ratio=1.52 gate=0.466
+seed=3 E16_L1/gate0.1 gini=0.063 used=16.0 base=0.3202 ratio=1.00 gate=0.481 off_gini=0.710 agree=0.384 dce_off=3.1320 norm=0.2077
+seed=3 E16_L1/sel0.01 gini=0.174 used=16.0 base=0.3183 ratio=1.52 gate=0.330 off_gini=0.374 agree=0.660 dce_off=0.0213 norm=0.0017
+seed=3 E16_L1/sel0.03 gini=0.122 used=16.0 base=0.3161 ratio=0.65 gate=0.370 off_gini=0.326 agree=0.732 dce_off=0.0153 norm=0.0012
+seed=3 E16_L1/sel0.1 gini=0.071 used=16.0 base=0.3149 ratio=1.13 gate=0.397 off_gini=0.185 agree=0.804 dce_off=0.0129 norm=0.0010
+seed=3 E16_L1/sel0.3 gini=0.052 used=16.0 base=0.3146 ratio=1.15 gate=0.487 off_gini=0.125 agree=0.884 dce_off=0.0286 norm=0.0020
+seed=3 E16_L1/ann0.01 gini=0.355 used=15.0 base=0.3195 ratio=1.57 gate=0.389 off_gini=0.355 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=3 E16_L1/ann0.1 gini=0.207 used=16.0 base=0.3230 ratio=1.40 gate=0.413 off_gini=0.207 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=3 E16_L1/cp0.3_o0.5_r0.5 gini=0.122 used=16.0 base=0.3147 ratio=1.22 gate=0.490 off_gini=0.122 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=3 E16_L1/long/aux0 gini=0.904 used=5.0 base=0.3089 ratio=9906.32 gate=0.793
+seed=3 E16_L1/long/aux0.05 gini=0.071 used=16.0 base=0.3087 ratio=1.46 gate=0.430
+seed=3 E16_L1/long/gate0.1 gini=0.050 used=16.0 base=0.3065 ratio=0.88 gate=0.479 off_gini=0.677 agree=0.396 dce_off=2.5434 norm=0.1703
+seed=3 E16_L1/long/sel0.01 gini=0.097 used=16.0 base=0.3064 ratio=0.94 gate=0.309 off_gini=0.287 agree=0.747 dce_off=0.0060 norm=0.0005
+seed=3 E32_L1/aux0 gini=0.965 used=4.0 base=0.3215 ratio=10868.93 gate=0.920
+seed=3 E32_L1/aux0.05 gini=0.123 used=32.0 base=0.3182 ratio=1.22 gate=0.312
+seed=3 E32_L1/gate0.1 gini=0.115 used=32.0 base=0.3243 ratio=1.92 gate=0.288 off_gini=0.825 agree=0.248 dce_off=9.0980 norm=0.7361
+seed=3 E32_L1/sel0.01 gini=0.139 used=32.0 base=0.3200 ratio=2.19 gate=0.197 off_gini=0.504 agree=0.514 dce_off=0.0377 norm=0.0031
+seed=3 E32_L1/sel0.03 gini=0.138 used=32.0 base=0.3164 ratio=1.04 gate=0.223 off_gini=0.393 agree=0.680 dce_off=0.0390 norm=0.0039
+seed=3 E32_L1/sel0.1 gini=0.180 used=32.0 base=0.3115 ratio=1.42 gate=0.255 off_gini=0.334 agree=0.722 dce_off=0.0139 norm=0.0014
+seed=3 E32_L1/sel0.3 gini=0.112 used=32.0 base=0.3152 ratio=1.01 gate=0.327 off_gini=0.254 agree=0.799 dce_off=0.0648 norm=0.0049
+seed=3 E32_L1/sel1 gini=0.092 used=32.0 base=0.3166 ratio=1.12 gate=0.367 off_gini=0.266 agree=0.802 dce_off=0.0188 norm=0.0012
+seed=3 E32_L1/sel3 gini=0.142 used=32.0 base=0.3141 ratio=1.21 gate=0.238 off_gini=0.274 agree=0.775 dce_off=0.0008 norm=0.0001
+seed=3 E32_L1/ann0.01 gini=0.555 used=28.0 base=0.3189 ratio=2.30 gate=0.270 off_gini=0.555 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=3 E32_L1/ann0.1 gini=0.310 used=31.0 base=0.3179 ratio=2.12 gate=0.278 off_gini=0.310 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=3 E32_L1/cp1_o0.5_r0.5 gini=0.235 used=31.0 base=0.3222 ratio=1.60 gate=0.375 off_gini=0.235 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=3 E32_L1/long/aux0 gini=0.965 used=4.0 base=0.3103 ratio=9445.64 gate=0.848
+seed=3 E32_L1/long/aux0.05 gini=0.128 used=32.0 base=0.3082 ratio=0.77 gate=0.279
+seed=3 E32_L1/long/gate0.1 gini=0.110 used=32.0 base=0.3122 ratio=1.12 gate=0.329 off_gini=0.846 agree=0.183 dce_off=8.8278 norm=0.6286
+seed=3 E32_L1/long/sel0.01 gini=0.134 used=32.0 base=0.3100 ratio=0.95 gate=0.188 off_gini=0.468 agree=0.630 dce_off=0.0410 norm=0.0037
+seed=3 E32_L2/aux0 gini=0.925 used=4.0 base=0.3175 ratio=15002.96 gate=0.768
+seed=3 E32_L2/aux0.05 gini=0.107 used=32.0 base=0.3159 ratio=1.33 gate=0.273
+seed=3 E32_L2/gate0.1 gini=0.111 used=32.0 base=0.3167 ratio=0.98 gate=0.307 off_gini=0.644 agree=0.416 dce_off=7.7619 norm=0.6083
+seed=3 E32_L2/sel0.01 gini=0.166 used=32.0 base=0.3156 ratio=1.18 gate=0.235 off_gini=0.581 agree=0.511 dce_off=0.1629 norm=0.0133
+seed=3 E32_L2/ann0.01 gini=0.645 used=28.5 base=0.3382 ratio=4.79 gate=0.327 off_gini=0.645 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=3 E32_L2/ann0.1 gini=0.325 used=32.0 base=0.3189 ratio=1.66 gate=0.254 off_gini=0.325 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=3 E32_L2/sel0.03 gini=0.148 used=32.0 base=0.3175 ratio=1.35 gate=0.251 off_gini=0.478 agree=0.581 dce_off=0.0568 norm=0.0053
+seed=3 E32_L2/sel0.1 gini=0.124 used=32.0 base=0.3163 ratio=1.28 gate=0.245 off_gini=0.367 agree=0.678 dce_off=0.0213 norm=0.0022
+seed=3 E32_L2/sel0.3 gini=0.108 used=32.0 base=0.3160 ratio=1.28 gate=0.285 off_gini=0.359 agree=0.729 dce_off=0.0200 norm=0.0017
+seed=3 E32_L2/sel1 gini=0.131 used=32.0 base=0.3195 ratio=0.70 gate=0.290 off_gini=0.307 agree=0.731 dce_off=0.0216 norm=0.0020
+seed=3 E32_L2/sel3 gini=0.193 used=32.0 base=0.3150 ratio=0.81 gate=0.177 off_gini=0.390 agree=0.603 dce_off=0.0053 norm=0.0013
+seed=3 E32_L2/long/aux0.05 gini=0.098 used=32.0 base=0.3091 ratio=0.81 gate=0.230
+seed=3 E32_L2/long/aux0 gini=0.914 used=9.0 base=0.3102 ratio=13760.91 gate=0.679
+seed=3 E32_L2/long/gate0.1 gini=0.168 used=32.0 base=0.3153 ratio=0.75 gate=0.294 off_gini=0.691 agree=0.396 dce_off=6.6908 norm=0.5266
+seed=3 E32_L2/long/sel0.01 gini=0.116 used=32.0 base=0.3104 ratio=1.11 gate=0.204 off_gini=0.630 agree=0.426 dce_off=0.2919 norm=0.0252
+seed=3 E8_L1/aux0 gini=0.855 used=2.0 base=0.3226 ratio=10755.13 gate=0.888
+seed=3 E8_L1/aux0.05 gini=0.076 used=8.0 base=0.3182 ratio=1.21 gate=0.622
+seed=3 E8_L1/gate0.1 gini=0.083 used=8.0 base=0.3176 ratio=0.73 gate=0.577 off_gini=0.625 agree=0.449 dce_off=2.3089 norm=0.1478
+seed=3 E8_L1/sel0.01 gini=0.100 used=8.0 base=0.3160 ratio=1.60 gate=0.447 off_gini=0.263 agree=0.842 dce_off=0.0082 norm=0.0007
+seed=3 E8_L1/sel0.03 gini=0.070 used=8.0 base=0.3222 ratio=1.37 gate=0.557 off_gini=0.073 agree=0.904 dce_off=-0.0018 norm=-0.0001
+seed=3 E8_L1/sel0.1 gini=0.052 used=8.0 base=0.3170 ratio=1.24 gate=0.517 off_gini=0.109 agree=0.880 dce_off=0.0002 norm=0.0000
+seed=3 E8_L1/sel0.3 gini=0.052 used=8.0 base=0.3176 ratio=1.00 gate=0.622 off_gini=0.128 agree=0.866 dce_off=0.0399 norm=0.0026
+seed=3 E8_L1/ann0.01 gini=0.365 used=8.0 base=0.3200 ratio=1.26 gate=0.471 off_gini=0.365 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=3 E8_L1/ann0.1 gini=0.104 used=8.0 base=0.3170 ratio=1.03 gate=0.526 off_gini=0.104 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=4 E16_L1/aux0 gini=0.936 used=3.0 base=0.3083 ratio=11603.92 gate=0.938
+seed=4 E16_L1/aux0.05 gini=0.125 used=16.0 base=0.3102 ratio=1.75 gate=0.493
+seed=4 E16_L1/gate0.1 gini=0.114 used=16.0 base=0.3139 ratio=1.44 gate=0.475 off_gini=0.726 agree=0.319 dce_off=4.6141 norm=0.3025
+seed=4 E16_L1/sel0.01 gini=0.222 used=16.0 base=0.3101 ratio=1.24 gate=0.364 off_gini=0.339 agree=0.758 dce_off=0.0205 norm=0.0014
+seed=4 E16_L1/sel0.03 gini=0.078 used=16.0 base=0.3141 ratio=0.81 gate=0.383 off_gini=0.307 agree=0.770 dce_off=0.0388 norm=0.0030
+seed=4 E16_L1/sel0.1 gini=0.123 used=16.0 base=0.3116 ratio=0.78 gate=0.398 off_gini=0.151 agree=0.870 dce_off=0.0058 norm=0.0004
+seed=4 E16_L1/sel0.3 gini=0.057 used=16.0 base=0.3104 ratio=0.83 gate=0.461 off_gini=0.180 agree=0.839 dce_off=0.0371 norm=0.0026
+seed=4 E16_L1/ann0.01 gini=0.355 used=16.0 base=0.3151 ratio=1.78 gate=0.438 off_gini=0.355 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=4 E16_L1/ann0.1 gini=0.194 used=16.0 base=0.3122 ratio=1.16 gate=0.410 off_gini=0.194 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=4 E16_L1/cp0.3_o0.5_r0.5 gini=0.169 used=16.0 base=0.3132 ratio=1.37 gate=0.476 off_gini=0.169 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=4 E16_L1/long/aux0 gini=0.936 used=3.0 base=0.3122 ratio=10967.69 gate=0.902
+seed=4 E16_L1/long/aux0.05 gini=0.057 used=16.0 base=0.3127 ratio=0.94 gate=0.450
+seed=4 E16_L1/long/gate0.1 gini=0.089 used=16.0 base=0.3154 ratio=1.36 gate=0.481 off_gini=0.705 agree=0.273 dce_off=4.0827 norm=0.2673
+seed=4 E16_L1/long/sel0.01 gini=0.124 used=16.0 base=0.3090 ratio=1.17 gate=0.347 off_gini=0.278 agree=0.774 dce_off=0.0146 norm=0.0009
+seed=4 E32_L1/aux0 gini=0.901 used=6.0 base=0.3095 ratio=12145.53 gate=0.766
+seed=4 E32_L1/aux0.05 gini=0.131 used=32.0 base=0.3116 ratio=2.12 gate=0.306
+seed=4 E32_L1/gate0.1 gini=0.107 used=32.0 base=0.3156 ratio=1.84 gate=0.350 off_gini=0.903 agree=0.122 dce_off=13.3352 norm=0.8973
+seed=4 E32_L1/sel0.01 gini=0.177 used=32.0 base=0.3177 ratio=1.83 gate=0.202 off_gini=0.492 agree=0.562 dce_off=0.0164 norm=0.0013
+seed=4 E32_L1/sel0.03 gini=0.169 used=32.0 base=0.3141 ratio=1.39 gate=0.256 off_gini=0.314 agree=0.731 dce_off=0.0317 norm=0.0027
+seed=4 E32_L1/sel0.1 gini=0.138 used=32.0 base=0.3133 ratio=1.32 gate=0.269 off_gini=0.344 agree=0.700 dce_off=0.0232 norm=0.0021
+seed=4 E32_L1/sel0.3 gini=0.134 used=32.0 base=0.3138 ratio=1.04 gate=0.328 off_gini=0.266 agree=0.734 dce_off=0.0462 norm=0.0034
+seed=4 E32_L1/sel1 gini=0.114 used=32.0 base=0.3151 ratio=1.16 gate=0.353 off_gini=0.214 agree=0.786 dce_off=-0.0017 norm=-0.0001
+seed=4 E32_L1/sel3 gini=0.141 used=32.0 base=0.3134 ratio=1.10 gate=0.217 off_gini=0.349 agree=0.658 dce_off=0.0016 norm=0.0003
+seed=4 E32_L1/ann0.01 gini=0.472 used=31.0 base=0.3136 ratio=1.77 gate=0.274 off_gini=0.472 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=4 E32_L1/ann0.1 gini=0.366 used=32.0 base=0.3138 ratio=1.34 gate=0.298 off_gini=0.366 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=4 E32_L1/cp1_o0.5_r0.5 gini=0.247 used=31.0 base=0.3113 ratio=1.61 gate=0.375 off_gini=0.247 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=4 E32_L1/long/aux0 gini=0.909 used=5.0 base=0.3082 ratio=10145.97 gate=0.660
+seed=4 E32_L1/long/aux0.05 gini=0.092 used=32.0 base=0.3068 ratio=0.79 gate=0.279
+seed=4 E32_L1/long/gate0.1 gini=0.115 used=32.0 base=0.3110 ratio=1.24 gate=0.352 off_gini=0.934 agree=0.068 dce_off=29.1289 norm=1.8780
+seed=4 E32_L1/long/sel0.01 gini=0.160 used=32.0 base=0.3085 ratio=1.01 gate=0.191 off_gini=0.471 agree=0.581 dce_off=0.0307 norm=0.0030
+seed=4 E32_L2/aux0 gini=0.896 used=8.5 base=0.3097 ratio=15806.76 gate=0.665
+seed=4 E32_L2/aux0.05 gini=0.162 used=31.5 base=0.3167 ratio=1.85 gate=0.264
+seed=4 E32_L2/gate0.1 gini=0.113 used=32.0 base=0.3119 ratio=0.88 gate=0.312 off_gini=0.707 agree=0.350 dce_off=8.8374 norm=0.7123
+seed=4 E32_L2/sel0.01 gini=0.137 used=32.0 base=0.3126 ratio=1.38 gate=0.281 off_gini=0.650 agree=0.401 dce_off=0.1535 norm=0.0094
+seed=4 E32_L2/ann0.01 gini=0.674 used=25.5 base=0.3251 ratio=9.90 gate=0.407 off_gini=0.674 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=4 E32_L2/ann0.1 gini=0.340 used=31.0 base=0.3176 ratio=1.18 gate=0.266 off_gini=0.340 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=4 E32_L2/sel0.03 gini=0.129 used=32.0 base=0.3110 ratio=0.65 gate=0.251 off_gini=0.570 agree=0.487 dce_off=0.3853 norm=0.0355
+seed=4 E32_L2/sel0.1 gini=0.143 used=32.0 base=0.3114 ratio=0.74 gate=0.256 off_gini=0.403 agree=0.656 dce_off=0.0776 norm=0.0083
+seed=4 E32_L2/sel0.3 gini=0.144 used=32.0 base=0.3137 ratio=1.20 gate=0.308 off_gini=0.309 agree=0.713 dce_off=0.0264 norm=0.0022
+seed=4 E32_L2/sel1 gini=0.114 used=32.0 base=0.3125 ratio=0.94 gate=0.286 off_gini=0.342 agree=0.681 dce_off=0.2387 norm=0.0210
+seed=4 E32_L2/sel3 gini=0.213 used=32.0 base=0.3092 ratio=1.18 gate=0.182 off_gini=0.411 agree=0.635 dce_off=0.0071 norm=0.0016
+seed=4 E32_L2/long/aux0.05 gini=0.116 used=32.0 base=0.3088 ratio=1.45 gate=0.218
+seed=4 E32_L2/long/aux0 gini=0.891 used=9.5 base=0.3070 ratio=1014.04 gate=0.580
+seed=4 E32_L2/long/gate0.1 gini=0.124 used=32.0 base=0.3125 ratio=0.89 gate=0.296 off_gini=0.657 agree=0.377 dce_off=2.6343 norm=0.2297
+seed=4 E32_L2/long/sel0.01 gini=0.152 used=32.0 base=0.3088 ratio=0.74 gate=0.284 off_gini=0.624 agree=0.473 dce_off=0.2719 norm=0.0200
+seed=4 E8_L1/aux0 gini=0.719 used=4.0 base=0.3096 ratio=20.28 gate=0.821
+seed=4 E8_L1/aux0.05 gini=0.069 used=8.0 base=0.3111 ratio=0.84 gate=0.666
+seed=4 E8_L1/gate0.1 gini=0.058 used=8.0 base=0.3197 ratio=0.86 gate=0.613 off_gini=0.730 agree=0.257 dce_off=4.1578 norm=0.2610
+seed=4 E8_L1/sel0.01 gini=0.165 used=8.0 base=0.3148 ratio=1.39 gate=0.467 off_gini=0.178 agree=0.927 dce_off=0.0022 norm=0.0002
+seed=4 E8_L1/sel0.03 gini=0.068 used=8.0 base=0.3065 ratio=0.80 gate=0.516 off_gini=0.116 agree=0.894 dce_off=0.0044 norm=0.0003
+seed=4 E8_L1/sel0.1 gini=0.052 used=8.0 base=0.3107 ratio=1.16 gate=0.574 off_gini=0.166 agree=0.879 dce_off=0.0071 norm=0.0005
+seed=4 E8_L1/sel0.3 gini=0.035 used=8.0 base=0.3122 ratio=0.79 gate=0.611 off_gini=0.107 agree=0.899 dce_off=0.0097 norm=0.0007
+seed=4 E8_L1/ann0.01 gini=0.160 used=8.0 base=0.3135 ratio=0.79 gate=0.488 off_gini=0.160 agree=1.000 dce_off=0.0000 norm=0.0000
+seed=4 E8_L1/ann0.1 gini=0.165 used=8.0 base=0.3138 ratio=0.73 gate=0.591 off_gini=0.165 agree=1.000 dce_off=0.0000 norm=0.0000

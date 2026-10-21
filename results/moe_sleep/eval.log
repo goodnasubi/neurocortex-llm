@@ -1,0 +1,60 @@
+seed=0 aux0 gini=0.937 used=5.0 base=0.3231 ratio=12575.26 gate=0.834 train_sec=67.7
+seed=0 aux0.05 gini=0.129 used=32.0 base=0.3218 ratio=1.31 gate=0.324 train_sec=78.3
+seed=0 gate0.1 gini=0.152 used=32.0 base=0.3258 ratio=0.81 gate=0.302 train_sec=89.4
+seed=0 cp gini=0.451 used=28.0 base=0.3201 ratio=2.49 gate=0.406 on_open=0.110 off_open=0.311 end=0.451 dormant_end=7 train_sec=86.5
+seed=0 cp_rand3 gini=0.238 used=30.0 base=0.3198 ratio=1.38 gate=0.527 on_open=0.099 off_open=0.203 end=0.238 dormant_end=2 train_sec=109.4
+seed=0 abrupt gini=0.247 used=31.0 base=0.3206 ratio=1.34 gate=0.551 on_open=0.099 off_open=0.203 end=0.247 dormant_end=2 train_sec=107.7
+seed=0 sleep_w gini=0.180 used=31.0 base=0.3211 ratio=1.32 gate=0.537 on_open=0.099 off_open=0.203 end=0.180 dormant_end=1 slept_off=0.098 slept_agree=0.983 train_sec=107.7
+seed=0 sleep_wb gini=0.161 used=31.0 base=0.3186 ratio=1.49 gate=0.535 on_open=0.099 off_open=0.203 end=0.161 dormant_end=1 slept_off=0.097 slept_agree=0.985 train_sec=106.7
+seed=0 sleep_perm gini=0.313 used=29.0 base=0.3177 ratio=1.31 gate=0.546 on_open=0.099 off_open=0.203 end=0.313 dormant_end=3 slept_off=0.424 slept_agree=0.636 train_sec=110.1
+seed=0 fold gini=0.234 used=30.0 base=0.3202 ratio=1.56 gate=0.524 on_open=0.099 off_open=0.203 end=0.234 dormant_end=2 train_sec=111.8
+seed=0 cp_abrupt gini=0.512 used=28.0 base=0.3199 ratio=3.61 gate=0.410 on_open=0.110 off_open=0.311 end=0.512 dormant_end=8 train_sec=72.9
+seed=0 cp_sleep_w gini=0.356 used=30.0 base=0.3188 ratio=1.90 gate=0.391 on_open=0.110 off_open=0.311 end=0.356 dormant_end=3 slept_off=0.106 slept_agree=0.961 train_sec=69.0
+seed=1 aux0 gini=0.922 used=4.0 base=0.3193 ratio=11887.46 gate=0.787 train_sec=72.4
+seed=1 aux0.05 gini=0.144 used=32.0 base=0.3265 ratio=1.26 gate=0.306 train_sec=68.6
+seed=1 gate0.1 gini=0.117 used=32.0 base=0.3223 ratio=1.04 gate=0.371 train_sec=75.6
+seed=1 cp gini=0.331 used=31.0 base=0.3274 ratio=1.96 gate=0.391 on_open=0.113 off_open=0.291 end=0.331 dormant_end=3 train_sec=75.3
+seed=1 cp_rand3 gini=0.231 used=31.0 base=0.3227 ratio=1.25 gate=0.562 on_open=0.106 off_open=0.181 end=0.231 dormant_end=1 train_sec=95.5
+seed=1 abrupt gini=0.225 used=32.0 base=0.3243 ratio=1.34 gate=0.563 on_open=0.106 off_open=0.181 end=0.225 dormant_end=1 train_sec=94.5
+seed=1 sleep_w gini=0.192 used=32.0 base=0.3287 ratio=1.32 gate=0.546 on_open=0.106 off_open=0.181 end=0.192 dormant_end=0 slept_off=0.109 slept_agree=0.950 train_sec=94.0
+seed=1 sleep_wb gini=0.231 used=32.0 base=0.3231 ratio=1.27 gate=0.554 on_open=0.106 off_open=0.181 end=0.231 dormant_end=0 slept_off=0.104 slept_agree=0.956 train_sec=91.0
+seed=1 sleep_perm gini=0.338 used=31.0 base=0.3219 ratio=2.26 gate=0.573 on_open=0.106 off_open=0.181 end=0.338 dormant_end=3 slept_off=0.339 slept_agree=0.719 train_sec=102.0
+seed=1 fold gini=0.297 used=31.0 base=0.3260 ratio=1.67 gate=0.563 on_open=0.106 off_open=0.181 end=0.297 dormant_end=2 train_sec=91.4
+seed=1 cp_abrupt gini=0.380 used=29.0 base=0.3226 ratio=2.20 gate=0.401 on_open=0.113 off_open=0.291 end=0.380 dormant_end=5 train_sec=82.8
+seed=1 cp_sleep_w gini=0.293 used=31.0 base=0.3192 ratio=2.00 gate=0.394 on_open=0.113 off_open=0.291 end=0.293 dormant_end=2 slept_off=0.125 slept_agree=0.968 train_sec=85.6
+seed=2 aux0 gini=0.964 used=3.0 base=0.3181 ratio=11757.63 gate=0.875 train_sec=68.6
+seed=2 aux0.05 gini=0.137 used=32.0 base=0.3248 ratio=1.29 gate=0.326 train_sec=78.1
+seed=2 gate0.1 gini=0.080 used=32.0 base=0.3176 ratio=1.17 gate=0.315 train_sec=84.9
+seed=2 cp gini=0.392 used=31.0 base=0.3139 ratio=1.93 gate=0.385 on_open=0.091 off_open=0.263 end=0.392 dormant_end=5 train_sec=79.5
+seed=2 cp_rand3 gini=0.237 used=31.0 base=0.3143 ratio=1.90 gate=0.532 on_open=0.067 off_open=0.216 end=0.237 dormant_end=3 train_sec=91.8
+seed=2 abrupt gini=0.229 used=31.0 base=0.3160 ratio=1.34 gate=0.530 on_open=0.067 off_open=0.216 end=0.229 dormant_end=2 train_sec=94.7
+seed=2 sleep_w gini=0.214 used=31.0 base=0.3147 ratio=1.45 gate=0.534 on_open=0.067 off_open=0.216 end=0.214 dormant_end=2 slept_off=0.064 slept_agree=0.973 train_sec=96.6
+seed=2 sleep_wb gini=0.242 used=31.0 base=0.3155 ratio=1.24 gate=0.537 on_open=0.067 off_open=0.216 end=0.242 dormant_end=2 slept_off=0.068 slept_agree=0.980 train_sec=95.7
+seed=2 sleep_perm gini=0.284 used=31.0 base=0.3178 ratio=1.68 gate=0.535 on_open=0.067 off_open=0.216 end=0.284 dormant_end=3 slept_off=0.361 slept_agree=0.735 train_sec=82.1
+seed=2 fold gini=0.262 used=32.0 base=0.3139 ratio=1.32 gate=0.542 on_open=0.067 off_open=0.216 end=0.262 dormant_end=3 train_sec=99.5
+seed=2 cp_abrupt gini=0.473 used=26.0 base=0.3138 ratio=2.35 gate=0.398 on_open=0.091 off_open=0.263 end=0.473 dormant_end=7 train_sec=80.0
+seed=2 cp_sleep_w gini=0.324 used=31.0 base=0.3138 ratio=1.92 gate=0.380 on_open=0.091 off_open=0.263 end=0.324 dormant_end=2 slept_off=0.092 slept_agree=0.972 train_sec=68.2
+seed=3 aux0 gini=0.965 used=4.0 base=0.3215 ratio=10868.93 gate=0.920 train_sec=67.9
+seed=3 aux0.05 gini=0.123 used=32.0 base=0.3182 ratio=1.22 gate=0.312 train_sec=78.1
+seed=3 gate0.1 gini=0.115 used=32.0 base=0.3243 ratio=1.92 gate=0.288 train_sec=85.3
+seed=3 cp gini=0.382 used=30.0 base=0.3190 ratio=2.20 gate=0.398 on_open=0.125 off_open=0.291 end=0.382 dormant_end=4 train_sec=85.0
+seed=3 cp_rand3 gini=0.214 used=31.0 base=0.3136 ratio=1.33 gate=0.559 on_open=0.120 off_open=0.196 end=0.214 dormant_end=1 train_sec=103.6
+seed=3 abrupt gini=0.298 used=29.0 base=0.3203 ratio=1.77 gate=0.572 on_open=0.120 off_open=0.196 end=0.298 dormant_end=3 train_sec=102.6
+seed=3 sleep_w gini=0.185 used=32.0 base=0.3195 ratio=1.53 gate=0.564 on_open=0.120 off_open=0.196 end=0.185 dormant_end=0 slept_off=0.114 slept_agree=0.967 train_sec=99.8
+seed=3 sleep_wb gini=0.188 used=32.0 base=0.3183 ratio=1.50 gate=0.564 on_open=0.120 off_open=0.196 end=0.188 dormant_end=0 slept_off=0.118 slept_agree=0.983 train_sec=102.1
+seed=3 sleep_perm gini=0.339 used=29.0 base=0.3162 ratio=1.87 gate=0.587 on_open=0.120 off_open=0.196 end=0.339 dormant_end=3 slept_off=0.393 slept_agree=0.679 train_sec=101.1
+seed=3 fold gini=0.204 used=32.0 base=0.3206 ratio=1.29 gate=0.552 on_open=0.120 off_open=0.196 end=0.204 dormant_end=0 train_sec=107.7
+seed=3 cp_abrupt gini=0.459 used=26.0 base=0.3170 ratio=2.46 gate=0.422 on_open=0.125 off_open=0.291 end=0.459 dormant_end=7 train_sec=79.4
+seed=3 cp_sleep_w gini=0.309 used=31.0 base=0.3155 ratio=1.96 gate=0.397 on_open=0.125 off_open=0.291 end=0.309 dormant_end=2 slept_off=0.138 slept_agree=0.948 train_sec=68.7
+seed=4 aux0 gini=0.901 used=6.0 base=0.3095 ratio=12145.53 gate=0.766 train_sec=69.2
+seed=4 aux0.05 gini=0.131 used=32.0 base=0.3116 ratio=2.12 gate=0.306 train_sec=69.3
+seed=4 gate0.1 gini=0.107 used=32.0 base=0.3156 ratio=1.84 gate=0.350 train_sec=75.2
+seed=4 cp gini=0.323 used=29.0 base=0.3099 ratio=1.70 gate=0.391 on_open=0.111 off_open=0.316 end=0.323 dormant_end=3 train_sec=72.2
+seed=4 cp_rand3 gini=0.278 used=31.0 base=0.3094 ratio=1.36 gate=0.544 on_open=0.113 off_open=0.232 end=0.278 dormant_end=3 train_sec=96.5
+seed=4 abrupt gini=0.258 used=31.0 base=0.3102 ratio=1.41 gate=0.539 on_open=0.113 off_open=0.232 end=0.258 dormant_end=2 train_sec=94.1
+seed=4 sleep_w gini=0.220 used=31.0 base=0.3114 ratio=1.25 gate=0.544 on_open=0.113 off_open=0.232 end=0.220 dormant_end=1 slept_off=0.125 slept_agree=0.976 train_sec=93.4
+seed=4 sleep_wb gini=0.209 used=31.0 base=0.3129 ratio=1.34 gate=0.547 on_open=0.113 off_open=0.232 end=0.209 dormant_end=1 slept_off=0.125 slept_agree=0.983 train_sec=95.1
+seed=4 sleep_perm gini=0.313 used=31.0 base=0.3097 ratio=1.74 gate=0.556 on_open=0.113 off_open=0.232 end=0.313 dormant_end=3 slept_off=0.329 slept_agree=0.722 train_sec=91.3
+seed=4 fold gini=0.261 used=31.0 base=0.3106 ratio=1.25 gate=0.551 on_open=0.113 off_open=0.232 end=0.261 dormant_end=3 train_sec=97.6
+seed=4 cp_abrupt gini=0.361 used=28.0 base=0.3147 ratio=1.52 gate=0.403 on_open=0.111 off_open=0.316 end=0.361 dormant_end=4 train_sec=79.9
+seed=4 cp_sleep_w gini=0.336 used=29.0 base=0.3085 ratio=1.70 gate=0.394 on_open=0.111 off_open=0.316 end=0.336 dormant_end=3 slept_off=0.105 slept_agree=0.961 train_sec=69.8

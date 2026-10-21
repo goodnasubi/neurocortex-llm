@@ -251,17 +251,23 @@ class RunResult:
     per_task_acc: list[float]  # 最終モデルでの、各旧タスク（最終タスクを除く）の正解率
     mean_old_task_acc: float   # H1: 旧タスク全体の平均正解率
     oldest_task_acc: float     # H2: 最古タスク（タスク1）の正解率
+    # 正確度行列 R[i][j]（タスク i 学習後のタスク j の正解率, 12.6.101節）。eval_generator を渡したときのみ
+    acc_matrix: list[list[float]] | None = None
 
 
 def run_condition(condition: str, task_specs: list[ParitySpec], hidden_dim: int, capacity: int,
                   snapshot_size: int, task_steps: int, batch_size: int, lr: float,
                   fisher_batches: int, fisher_batch_size: int, eval_n: int,
-                  generator: torch.Generator, fisher_decay_weight_decay: float = 0.01) -> RunResult:
+                  generator: torch.Generator, fisher_decay_weight_decay: float = 0.01,
+                  eval_generator: torch.Generator | None = None) -> RunResult:
     """1条件・1シードぶんの実行。タスク1..Nを順に学習し、最終モデルで旧タスク
     （タスク1..N-1）の保持率を測定する。
 
     `fisher_decay_weight_decay`は`importance-weighted-fisher-decay`条件でのみ使う
     （12.6.34節、ステップ13の本設計a）。
+
+    `eval_generator`を渡すと、各タスクの学習後に全タスクを評価して正確度行列を記録する
+    （12.6.101節の忘却指標用）。評価には`eval_generator`だけを使うので、学習の過程は変わらない。
     """
     if condition not in CONDITIONS:
         raise ValueError(condition)
@@ -271,6 +277,7 @@ def run_condition(condition: str, task_specs: list[ParitySpec], hidden_dim: int,
     model = make_model(model_input_dim(n_inputs, n_tasks), hidden_dim)
     buffer: Buffer = OrderedDict()
     importances: dict[int, float] = {}
+    acc_matrix: list[list[float]] | None = [] if eval_generator is not None else None
 
     weight_decay = fisher_decay_weight_decay if condition == "importance-weighted-fisher-decay" else 0.0
 
@@ -297,9 +304,14 @@ def run_condition(condition: str, task_specs: list[ParitySpec], hidden_dim: int,
             buffer = evict_importance_weighted(buffer, importances, capacity, generator)
             importances = {t: v for t, v in importances.items() if t in buffer}
 
+        if acc_matrix is not None:
+            acc_matrix.append([evaluate(model, s, j, n_tasks, eval_n, eval_generator)
+                               for j, s in enumerate(task_specs)])
+
     old_specs = task_specs[:-1]
     per_task_acc = [evaluate(model, spec, t, n_tasks, eval_n, generator)
                     for t, spec in enumerate(old_specs)]
     mean_old = sum(per_task_acc) / len(per_task_acc)
     oldest = per_task_acc[0]
-    return RunResult(per_task_acc=per_task_acc, mean_old_task_acc=mean_old, oldest_task_acc=oldest)
+    return RunResult(per_task_acc=per_task_acc, mean_old_task_acc=mean_old, oldest_task_acc=oldest,
+                     acc_matrix=acc_matrix)

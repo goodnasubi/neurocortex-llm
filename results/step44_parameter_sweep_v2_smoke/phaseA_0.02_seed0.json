@@ -1,0 +1,26 @@
+{
+  "phase": "A",
+  "weights": [
+    0.02
+  ],
+  "seed": 0,
+  "steps": 20,
+  "final_train_loss": 10.448731088638306,
+  "val_ce": 9.781785540042385,
+  "val_ppl": 17708.24341921182,
+  "head_ce": {
+    "hippocampus_loss": 10.71774047805417
+  },
+  "preset": "smoke",
+  "budget": {
+    "dataset_config": "wikitext-2-v1",
+    "hidden_size": 48,
+    "num_layers": 1,
+    "seq_len": 32,
+    "batch_size": 8,
+    "steps": 20,
+    "n_train": 400,
+    "n_val": 40,
+    "lr": 0.001
+  }
+}

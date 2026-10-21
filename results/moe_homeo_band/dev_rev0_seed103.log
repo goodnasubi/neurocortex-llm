@@ -1,0 +1,41 @@
+seed=103 aux0 gini=0.803 mom=6.37 used=4 top2=0.936 rho=1.00 gate=0.891 base=0.3178 dT=1.045 dR=0.037
+seed=103 aux0.01 gini=0.561 mom=2.72 used=7 top2=0.642 rho=0.93 gate=0.576 base=0.3187 dT=0.759 dR=0.109
+seed=103 aux0.05 gini=0.087 mom=1.30 used=8 top2=0.302 rho=0.55 gate=0.642 base=0.3176 dT=0.397 dR=0.288
+seed=103 point0.01 gini=0.124 mom=1.41 used=8 top2=0.333 rho=-0.26 gate=0.536 base=0.3168 dT=0.177 dR=0.229
+seed=103 point0.03 gini=0.150 mom=1.52 used=8 top2=0.330 rho=0.32 gate=0.556 base=0.3203 dT=0.168 dR=0.223
+seed=103 point0.1 gini=0.034 mom=1.15 used=8 top2=0.274 rho=-0.19 gate=0.558 base=0.3175 dT=0.143 dR=0.229
+seed=103 band0.01 gini=0.392 mom=3.04 used=8 top2=0.554 rho=0.90 gate=0.436 base=0.3250 dT=0.376 dR=0.105
+seed=103 band0.03 gini=0.284 mom=2.27 used=8 top2=0.447 rho=0.83 gate=0.493 base=0.3211 dT=0.305 dR=0.142
+seed=103 band0.1 gini=0.300 mom=2.35 used=8 top2=0.511 rho=0.38 gate=0.607 base=0.3206 dT=0.435 dR=0.138
+seed=103 wide0.01 gini=0.590 mom=3.86 used=8 top2=0.729 rho=0.88 gate=0.466 base=0.3224 dT=0.566 dR=0.069
+seed=103 wide0.03 gini=0.314 mom=1.78 used=8 top2=0.434 rho=0.79 gate=0.474 base=0.3243 dT=0.261 dR=0.135
+seed=103 wide0.1 gini=0.350 mom=2.35 used=8 top2=0.492 rho=0.83 gate=0.522 base=0.3201 dT=0.411 dR=0.128
+{
+ "判定": {
+  "eta": 0.01,
+  "H1_負荷集中を下げる": true,
+  "H2_性能を保つ": false,
+  "H3_ハブを保つ": true,
+  "H3b_ハブの利点（帯域が一点の目標より CE が低い）": false,
+  "H4_ハブを壊したときの頑健さ": true,
+  "参考_ハブ除去のゲートの質量あたり_帯域÷補助損失なし": 1.2160292051743633,
+  "値": {
+   "gini_帯域": 0.39202880859375,
+   "gini_なし": 0.8031005859375,
+   "max_over_mean_帯域": 3.04296875,
+   "max_over_mean_なし": 6.369140625,
+   "CE": {
+    "band0.01": 0.3250052034854889,
+    "point0.01": 0.3167848289012909,
+    "aux0": 0.317787230014801,
+    "aux0.05": 0.31763139367103577
+   },
+   "topk_share_帯域": 0.5537109375,
+   "topk_share_一点": 0.33349609375,
+   "spearman_帯域": 0.8982196964349441,
+   "dT_帯域": 0.3757697641849518,
+   "dT_なし": 1.0453940033912659
+  },
+  "eta_selected_on": "このシードでの選択（12.6.195節の選び方）"
+ }
+}

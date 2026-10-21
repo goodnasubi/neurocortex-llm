@@ -1,0 +1,7 @@
+seed=101 cross split/point0.03 gini=0.457 used=8 top2=0.584 gate=0.423 ce=0.6335 b2=0.5606 Phub=0.78 Prest=0.36 hubb2=0.64/0.58 lesT=0.067 lesO=0.173 cutT=0.021 hubcutT=0.013 nhcutT=0.002
+seed=101 cross split/band0.03 gini=0.357 used=8 top2=0.523 gate=0.429 ce=0.6221 b2=0.5325 Phub=0.80 Prest=0.48 hubb2=0.62/0.52 lesT=0.144 lesO=0.132 cutT=0.062 hubcutT=0.037 nhcutT=0.008
+seed=101 within split/point0.03 gini=0.398 used=8 top2=0.503 gate=0.370 ce=0.5477 b2=0.5149 Phub=0.71 Prest=0.23 hubb2=0.55/0.50 lesT=0.065 lesO=0.086 cutT=0.025 hubcutT=0.009 nhcutT=0.005
+seed=101 within split/band0.03 gini=0.365 used=8 top2=0.539 gate=0.331 ce=0.5617 b2=0.5680 Phub=0.68 Prest=0.49 hubb2=0.53/0.54 lesT=0.075 lesO=0.157 cutT=0.051 hubcutT=0.028 nhcutT=0.008
+{
+ "判定": {}
+}

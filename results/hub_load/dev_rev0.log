@@ -1,0 +1,35 @@
+seed=100 coef=0 gini=0.874 used=2 base=0.313 dT=1.142 dR=0.000 ratio=11419.42 | reroute dT=2.035 dR=-0.000
+seed=100 coef=0.05 gini=0.075 used=8 base=0.316 dT=0.440 dR=0.245 ratio=1.79 | reroute dT=0.908 dR=0.446
+seed=101 coef=0 gini=0.873 used=3 base=0.313 dT=1.141 dR=0.001 ratio=852.14 | reroute dT=1.463 dR=0.003
+seed=101 coef=0.05 gini=0.045 used=8 base=0.308 dT=0.296 dR=0.298 ratio=1.00 | reroute dT=0.796 dR=0.502
+seed=102 coef=0 gini=0.753 used=3 base=0.315 dT=1.203 dR=0.004 ratio=311.49 | reroute dT=1.433 dR=0.005
+seed=102 coef=0.05 gini=0.069 used=8 base=0.317 dT=0.408 dR=0.283 ratio=1.44 | reroute dT=0.785 dR=0.465
+seed=103 coef=0 gini=0.803 used=4 base=0.318 dT=1.047 dR=0.037 ratio=28.12 | reroute dT=2.956 dR=0.052
+seed=103 coef=0.05 gini=0.075 used=8 base=0.320 dT=0.449 dR=0.269 ratio=1.67 | reroute dT=0.635 dR=0.470
+seed=104 coef=0 gini=0.801 used=3 base=0.322 dT=1.189 dR=0.000 ratio=8055.11 | reroute dT=1.696 dR=0.002
+seed=104 coef=0.05 gini=0.064 used=8 base=0.316 dT=0.271 dR=0.320 ratio=0.85 | reroute dT=0.796 dR=0.579
+Traceback (most recent call last):
+  File "/usr/lib/python3.13/statistics.py", line 1210, in stdev
+    mss_numerator = mss.numerator
+                    ^^^^^^^^^^^^^
+AttributeError: 'float' object has no attribute 'numerator'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 203, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/user/neurocortex-llm/src/neurocortex/experiments/run_hub_load.py", line 132, in <module>
+    main()
+    ~~~~^^
+  File "/home/user/neurocortex-llm/src/neurocortex/experiments/run_hub_load.py", line 123, in main
+    s = summarize(runs, args.coefs, args.eps)
+  File "/home/user/neurocortex-llm/src/neurocortex/experiments/run_hub_load.py", line 65, in summarize
+    d = {m: ms([r[m] for r in rs]) for m in ("gini", "max_over_mean", "entropy", "n_used", "train_ce",
+            ~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/neurocortex-llm/src/neurocortex/experiments/run_hub_load.py", line 59, in ms
+    return {"mean": statistics.mean(vals), "sd": statistics.stdev(vals) if len(vals) > 1 else 0.0}
+                                                 ~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/lib/python3.13/statistics.py", line 1213, in stdev
+    raise ValueError('inf or nan encountered in data')
+ValueError: inf or nan encountered in data

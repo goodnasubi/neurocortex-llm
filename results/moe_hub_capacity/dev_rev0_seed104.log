@@ -1,0 +1,81 @@
+seed=104 cross aux0.05 gini=0.086 used=8 top2=0.306 gate=0.589 ce=0.5458 b2=0.2376 Phub=0.77 Prest=0.55 hubb2=0.17/0.31 lesT=0.127 lesO=0.354 cutT=0.636
+seed=104 cross point0.1 gini=0.121 used=8 top2=0.318 gate=0.503 ce=0.5657 b2=0.3084 Phub=0.54 Prest=0.59 hubb2=0.19/0.32 lesT=0.052 lesO=0.190 cutT=0.412
+seed=104 cross band0.1 gini=0.297 used=8 top2=0.475 gate=0.444 ce=0.5958 b2=0.4297 Phub=0.82 Prest=0.33 hubb2=0.62/0.48 lesT=0.175 lesO=0.076 cutT=0.166
+seed=104 cross bandcap0.1 gini=0.241 used=8 top2=0.408 gate=0.408 ce=0.6148 b2=0.4941 Phub=0.85 Prest=0.46 hubb2=0.40/0.41 lesT=0.062 lesO=0.124 cutT=0.079 widths=[116, 37, 31, 23, 53, 31, 192, 29] hubw=[116, 29]
+seed=104 cross bandrand0.1 gini=0.242 used=8 top2=0.397 gate=0.454 ce=0.6031 b2=0.4526 Phub=0.81 Prest=0.56 hubb2=0.41/0.40 lesT=0.090 lesO=0.159 cutT=0.151 widths=[53, 31, 37, 31, 29, 23, 116, 192] hubw=[192, 31]
+seed=104 within aux0.05 gini=0.035 used=8 top2=0.268 gate=0.600 ce=0.5274 b2=0.4595 Phub=0.01 Prest=0.46 hubb2=0.25/0.27 lesT=0.163 lesO=0.282 cutT=0.085
+seed=104 within point0.1 gini=0.261 used=8 top2=0.412 gate=0.389 ce=0.5395 b2=0.4992 Phub=0.32 Prest=0.50 hubb2=0.44/0.41 lesT=0.065 lesO=0.091 cutT=0.016
+seed=104 within band0.1 gini=0.304 used=8 top2=0.457 gate=0.447 ce=0.5503 b2=0.5237 Phub=0.89 Prest=0.28 hubb2=0.60/0.46 lesT=0.124 lesO=0.086 cutT=0.015
+seed=104 within bandcap0.1 gini=0.435 used=8 top2=0.576 gate=0.500 ce=0.5569 b2=0.5537 Phub=0.88 Prest=0.25 hubb2=0.68/0.58 lesT=0.086 lesO=0.086 cutT=0.015 widths=[16, 168, 28, 167, 35, 41, 24, 33] hubw=[168, 167]
+seed=104 within bandrand0.1 gini=0.261 used=8 top2=0.449 gate=0.487 ce=0.5517 b2=0.5443 Phub=0.76 Prest=0.27 hubb2=0.56/0.45 lesT=0.103 lesO=0.091 cutT=0.015 widths=[41, 28, 35, 33, 24, 16, 167, 168] hubw=[167, 28]
+{
+ "判定": {
+  "eta": 0.1,
+  "need": 1,
+  "M_操作（統合課題の bandcap で学習後のハブ2個がともに広げた専門家）": false,
+  "V_橋渡し（bandcap で、領域をまたぐ読み取りの切断が統合課題の b2 を対照より 0.1 以上悪くする）": false,
+  "H1_交互作用（bandcap−一点）": false,
+  "H2_ボトルネックの解消（bandcap−均等な目標域）": false,
+  "H3_負荷に特有（bandcap−bandrand）": false,
+  "H4_交互作用（bandcap−補助損失0.05）": false,
+  "H5_領域をまたぐ読み取りの利用が増える（統合課題の切断の損害 bandcap−均等な目標域）": false,
+  "値": {
+   "interaction_point": [
+    0.13121026754379272
+   ],
+   "interaction_point_mean": 0.13121026754379272,
+   "interaction_point_t": NaN,
+   "interaction_band": [
+    0.03443491458892822
+   ],
+   "interaction_band_mean": 0.03443491458892822,
+   "interaction_band_t": NaN,
+   "interaction_rand": [
+    0.0320204496383667
+   ],
+   "interaction_rand_mean": 0.0320204496383667,
+   "interaction_rand_t": NaN,
+   "interaction_aux": [
+    0.1622716188430786
+   ],
+   "interaction_aux_mean": 0.1622716188430786,
+   "interaction_aux_t": NaN,
+   "hubs_widened_cap": [
+    1
+   ],
+   "hubs_widened_rand": [
+    1
+   ],
+   "bridge_cap": [
+    0.0637282133102417
+   ],
+   "cut_use_cap_minus_band": [
+    -0.08713734149932861
+   ],
+   "cross_b2": {
+    "bandcap0.1": [
+     0.49411046504974365
+    ],
+    "bandrand0.1": [
+     0.45263344049453735
+    ],
+    "band0.1": [
+     0.42968493700027466
+    ],
+    "point0.1": [
+     0.30842727422714233
+    ],
+    "aux0.05": [
+     0.23761466145515442
+    ]
+   },
+   "cross_b2_mean": {
+    "bandcap0.1": 0.49411046504974365,
+    "bandrand0.1": 0.45263344049453735,
+    "band0.1": 0.42968493700027466,
+    "point0.1": 0.30842727422714233,
+    "aux0.05": 0.23761466145515442
+   }
+  }
+ }
+}
