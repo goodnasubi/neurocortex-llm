@@ -13283,6 +13283,8 @@ replay_bd は 12.6.240節の replay（推定の読み出し、−1.512 / −1.67
 
 **テスト**: `tests/test_readout_dim.py`（6件）。
 
+全体のテスト: `PYTHONPATH=src pytest` で 975 passed, 9 skipped, 36 failed, 8 errors（評価用シードの計測の後に実行）。失敗とエラーはすべて faiss を入れていない環境での6ファイル（`test_faiss_batch_optimization`・`test_faiss_integration`・`test_hybrid_rerank`・`test_pq_gpu_scaling`・`test_pq_tradeoff_analysis`・`test_product_quantization`）で、12.6.248節と同じ。本節の変更と関係しない。
+
 ### ステップ44.4 再実験: Kaggle Notebooks 対応（2026-09-26）
 
 ユーザーが Colab を使えないため、Kaggle Notebooks で実行できるようにした。実験規模は変えていない。
