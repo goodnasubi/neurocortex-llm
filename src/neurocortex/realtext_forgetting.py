@@ -26,6 +26,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import torch
@@ -129,10 +130,13 @@ def fisher_diag(model: TransformerContextLM, segs: torch.Tensor, c: int, batches
 
 
 def train_forgetting(data: list[LangData], vocab: int, cfg: ForgetConfig, order: list[int],
-                     generator: torch.Generator, eval_generator: torch.Generator) -> dict:
+                     generator: torch.Generator, eval_generator: torch.Generator,
+                     hook: Callable[[str, int, TransformerContextLM], None] | None = None) -> dict:
     """言語を order の順に学び、各言語の学習の後に正確度行列の行を測る（joint は最後の行だけ）。
 
-    R[i][j] は order の i 番目の言語の学習後の、order の j 番目の言語の値（学習の順に並べ替えた行列）。"""
+    R[i][j] は order の i 番目の言語の学習後の、order の j 番目の言語の値（学習の順に並べ替えた行列）。
+    hook があれば、order の pos 番目の言語の学習の前に hook("start", pos, model)、後に hook("end", pos, model) を呼ぶ
+    （12.6.253節の診断のスナップショット用。学習の乱数は消費しない。joint では呼ばない）。"""
     if cfg.rule not in RULES:
         raise ValueError(f"rule は {RULES}")
     n_l, t_len = len(data), cfg.seq_len
@@ -195,6 +199,8 @@ def train_forgetting(data: list[LangData], vocab: int, cfg: ForgetConfig, order:
     else:
         for pos, j in enumerate(order):
             past = order[:pos]
+            if hook is not None:
+                hook("start", pos, model)
             model.train()
             for _ in range(cfg.steps_per_lang):
                 seg, c = batch_from(j, cfg.batch), torch.full((cfg.batch,), ctx(j))
@@ -213,6 +219,8 @@ def train_forgetting(data: list[LangData], vocab: int, cfg: ForgetConfig, order:
                 fisher = [f / scale for f in fisher_raw]  # 罰則に使うのは全パラメータの平均が 1 になる形
                 anchor = [p.detach().clone() for p in model.parameters()]
             record([order[k] for k in range(pos + 1)])
+            if hook is not None:
+                hook("end", pos, model)
     out = {"R_acc": rows_acc, "R_ce": rows_ce, "final_loss": sum(losses[-100:]) / 100,
            "order": order}
     if not sh:
