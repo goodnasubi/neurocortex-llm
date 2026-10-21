@@ -1,0 +1,15 @@
+vocab 9372
+/usr/local/lib/python3.11/dist-packages/torch/nn/modules/transformer.py:823: UserWarning: Support for mismatched src_key_padding_mask and src_mask is deprecated. Use same type for both instead.
+  src_key_padding_mask = F._canonical_mask(
+[R seed3] task0 finnish done 388s mem 64 replayed 0 diag ce 4.721 acc 0.300 | row ce 4.72 10.80 9.97 10.42
+[R seed3] task1 english done 688s mem 128 replayed 992 diag ce 5.347 acc 0.109 | row ce 4.80 5.35 9.82 10.18
+[R seed3] task2 german done 983s mem 192 replayed 992 diag ce 5.244 acc 0.161 | row ce 4.87 5.36 5.24 10.38
+[R seed3] task3 french done 1285s mem 256 replayed 992 diag ce 4.977 acc 0.144 | row ce 4.93 5.36 5.30 4.98
+saved results/step44_continual_replay/eval/phaseR_seed3.json metrics {'ACC_acc': 0.18095093882495455, 'BWT_acc': 0.003499562554680665, 'F_acc': 0.0038764385221078113, 'LA_acc': 0.17832626690894407, 'F_ce': 0.0951271460189324, 'dCE': 0.0951271460189324, 'ACC_ce': 5.143800049321039, 'LA_ce': 5.07245468980684}
+/usr/local/lib/python3.11/dist-packages/torch/nn/modules/transformer.py:823: UserWarning: Support for mismatched src_key_padding_mask and src_mask is deprecated. Use same type for both instead.
+  src_key_padding_mask = F._canonical_mask(
+[R seed4] task0 english done 202s mem 64 replayed 0 diag ce 5.338 acc 0.121 | row ce 5.34 9.87 10.35 8.41
+[R seed4] task1 german done 506s mem 128 replayed 992 diag ce 5.343 acc 0.163 | row ce 5.31 5.34 10.42 8.10
+[R seed4] task2 french done 808s mem 192 replayed 992 diag ce 5.030 acc 0.144 | row ce 5.39 5.34 5.03 8.25
+[R seed4] task3 finnish done 1101s mem 256 replayed 992 diag ce 4.604 acc 0.308 | row ce 5.47 5.39 5.01 4.60
+saved results/step44_continual_replay/eval/phaseR_seed4.json metrics {'ACC_acc': 0.18913789622451038, 'BWT_acc': 0.007079884245238574, 'F_acc': 1.345985597953995e-05, 'LA_acc': 0.18382798304058146, 'F_ce': 0.0613679081412147, 'dCE': 0.052008060337484764, 'ACC_ce': 5.117663958692175, 'LA_ce': 5.078657913439061}

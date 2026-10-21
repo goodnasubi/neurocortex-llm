@@ -1,0 +1,8 @@
+vocab 9372
+/usr/local/lib/python3.11/dist-packages/torch/nn/modules/transformer.py:823: UserWarning: Support for mismatched src_key_padding_mask and src_mask is deprecated. Use same type for both instead.
+  src_key_padding_mask = F._canonical_mask(
+[R seed100] task0 english done 299s mem 64 replayed 0 diag ce 5.342 acc 0.117 | row ce 5.34 9.91 10.31 8.38
+[R seed100] task1 german done 791s mem 128 replayed 992 diag ce 5.288 acc 0.168 | row ce 5.36 5.29 10.48 8.25
+[R seed100] task2 french done 1262s mem 192 replayed 992 diag ce 5.130 acc 0.136 | row ce 5.40 5.34 5.13 8.34
+[R seed100] task3 finnish done 1628s mem 256 replayed 992 diag ce 4.601 acc 0.309 | row ce 5.47 5.39 5.11 4.60
+saved results/step44_continual_replay/dev/phaseR_seed100.json metrics {'ACC_acc': 0.18900666262870988, 'BWT_acc': 0.008358570563294981, 'F_acc': 0.00018843798371356857, 'LA_acc': 0.18273773470623864, 'F_ce': 0.07195121939197247, 'dCE': 0.07195121939197247, 'ACC_ce': 5.144284702719233, 'LA_ce': 5.090321288175253}
