@@ -1,0 +1,70 @@
+vocab 9372 unigram_ce {'english': 5.606, 'german': 5.519, 'french': 5.662, 'finnish': 4.928}
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+[H4 seed103] task0 finnish done 389s replayed 0 diag ce 4.696 | row ce 4.70 10.55 9.79 10.14 | marg 4.95 10.49 9.74 10.11
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+[H4 seed103] task1 english done 1015s replayed 992 diag ce 5.622 | row ce 7.61 5.62 10.39 10.67 | marg 7.62 5.63 10.40 10.67
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+[H4 seed103] task2 german done 1670s replayed 992 diag ce 5.467 | row ce 7.36 9.26 5.47 10.83 | marg 7.38 9.29 5.58 10.83
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+WARNING clustering 8192 points to 256 centroids: please provide at least 9984 training points
+[H4 seed103] task3 french done 2148s replayed 992 diag ce 5.711 | row ce 7.54 9.42 9.26 5.71 | marg 7.54 9.42 9.26 5.71
+saved results/step44_compressed_replay/dev/H4_M64_r16_pq16x8_seed103.json metrics {'ACC_acc': 0.15099939430648093, 'BWT_acc': -0.005855037351100351, 'F_acc': 0.005855037351100351, 'LA_acc': 0.1553906723198062, 'F_ce': 3.4790896832569906, 'dCE': 3.4790896832569906, 'ACC_ce': 7.983455270558879, 'LA_ce': 5.374138008116136, 'dCE_marg': 3.3585511875642076, 'dG': -0.12053849569278292, 'G_last_past': 0.0026571072584046598, 'G_diag': 0.09271481961519368, 'CE_marg_last_past': 8.743458248664707}

@@ -1,0 +1,6 @@
+vocab 9372 unigram_ce {'english': 5.606, 'german': 5.519, 'french': 5.662, 'finnish': 4.928}
+[C seed0] task0 english done 396s replayed 0 diag ce 5.295 | row ce 5.30 9.81 10.22 8.27 | marg 5.65 9.77 10.18 8.27
+[C seed0] task1 german done 956s replayed 992 diag ce 5.301 | row ce 9.04 5.30 10.76 8.52 | marg 9.24 5.56 10.72 8.53
+[C seed0] task2 french done 1530s replayed 992 diag ce 5.145 | row ce 8.84 8.87 5.15 8.77 | marg 8.96 8.95 5.71 8.72
+[C seed0] task3 finnish done 2107s replayed 992 diag ce 4.661 | row ce 9.29 9.06 9.15 4.66 | marg 9.43 9.16 9.46 4.97
+saved results/step44_compressed_replay/eval/C_M64_r16_seed0.json metrics {'ACC_acc': 0.15174641631334546, 'BWT_acc': -0.03869708594118044, 'F_acc': 0.03869708594118044, 'LA_acc': 0.1807692307692308, 'F_ce': 3.9187030334493187, 'dCE': 3.9187030334493187, 'ACC_ce': 8.039768009967522, 'LA_ce': 5.100740734880533, 'dCE_marg': 3.7119029660181453, 'dG': -0.20680006743117385, 'G_last_past': 0.18290903364728628, 'G_diag': 0.3697471816489193, 'CE_marg_last_past': 9.348795169969339}
