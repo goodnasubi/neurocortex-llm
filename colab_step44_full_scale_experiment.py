@@ -59,7 +59,7 @@ class Step444Config:
     """ステップ44.4 フル規模実験設定"""
 
     # フェーズ制御
-    phase: str = "A"  # "A", "B", or "C"
+    phase: str = "A"  # "A", "B", "C", or "V"（V = モジュール・補助損失なしの vanilla 対照。ステップ44.8）
     hippocampus_enabled: bool = True
     basal_ganglia_enabled: bool = False  # Phase B/C で有効
     cerebellum_enabled: bool = False  # Phase C で有効
@@ -117,7 +117,12 @@ class Step444Config:
 
     def __post_init__(self):
         # Phase に応じた有効化制御
-        if self.phase == "B":
+        if self.phase == "V":
+            # vanilla 対照: 海馬ヘッドを含む全モジュールと補助損失を持たない（backbone と主損失は A/B/C と同一）
+            self.hippocampus_enabled = False
+            self.basal_ganglia_enabled = False
+            self.cerebellum_enabled = False
+        elif self.phase == "B":
             self.basal_ganglia_enabled = True
         elif self.phase == "C":
             self.basal_ganglia_enabled = True
@@ -753,7 +758,7 @@ def main(argv: Optional[List[str]] = None):
     """
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--phases', nargs='+', default=['A', 'B', 'C'], choices=['A', 'B', 'C'])
+    parser.add_argument('--phases', nargs='+', default=['A', 'B', 'C'], choices=['A', 'B', 'C', 'V'])
     parser.add_argument('--seeds', nargs='+', type=int, default=None)
     parser.add_argument('--results-dir', default=None)
     parser.add_argument('--checkpoint-dir', default=None)

@@ -218,3 +218,22 @@ def test_td_sg_critic_does_not_change_backbone_updates():
             t.train_step({"input_ids": x, "labels": x, "attention_mask": torch.ones_like(x)})
         emb[mode] = m.embedding.weight.detach()
     assert torch.allclose(emb["none"], emb["td_sg"], atol=1e-6)
+
+
+def test_vanilla_phase_has_no_modules_and_same_backbone_as_a():
+    cfg_v, mv = _model("V")
+    _, ma = _model("A")
+    assert not (cfg_v.hippocampus_enabled or cfg_v.basal_ganglia_enabled or cfg_v.cerebellum_enabled)
+    assert mv.hippocampus is None and mv.basal_ganglia is None and mv.cerebellum is None
+    # 同一 seed ならバックボーンの初期値が A と一致する（海馬ヘッドは後から生成される）
+    sa = ma.state_dict()
+    for k, v in mv.state_dict().items():
+        assert torch.equal(v, sa[k]), k
+    batch = _batches()[0]
+    with torch.no_grad():
+        out = mv(**batch)
+    assert out["losses"].keys() == {"backbone_loss"}
+    assert torch.allclose(out["loss"], out["backbone_ce"])  # 総損失 = 主損失のみ
+    trainer = FullScaleTrainer(mv, Step444Config(phase="V", device="cpu", fp16=False))
+    ev = trainer.evaluate(DataLoader([{k: t[i] for k, t in batch.items()} for i in range(4)], batch_size=2))
+    assert ev["head_ce"] == {} and ev["val_ppl"] > 1

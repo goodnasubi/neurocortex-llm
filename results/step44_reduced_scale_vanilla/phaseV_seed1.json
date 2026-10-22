@@ -1,0 +1,73 @@
+{
+  "phase": "V",
+  "seed": 1,
+  "metric": "backbone lm_head \u306e\u975e\u91cd\u307f\u4ed8\u304d\u6b21\u30c8\u30fc\u30af\u30f3 CE\uff08\u5168\u30d5\u30a7\u30fc\u30ba\u5171\u901a\uff09",
+  "train_losses": [
+    5.88767697390388,
+    5.182065772075279,
+    4.879870898115868
+  ],
+  "val_losses": [
+    5.244018937279196,
+    4.958453641779283,
+    4.770419981339399
+  ],
+  "val_ppls": [
+    189.42988144318952,
+    142.37346520747198,
+    117.96877624285918
+  ],
+  "val_head_ce": [
+    {},
+    {},
+    {}
+  ],
+  "test_ce": 4.6817874988003,
+  "test_ppl": 107.96288372034037,
+  "config": {
+    "phase": "V",
+    "hippocampus_enabled": false,
+    "basal_ganglia_enabled": false,
+    "cerebellum_enabled": false,
+    "dataset_name": "Salesforce/wikitext",
+    "dataset_config": "wikitext-103-v1",
+    "max_seq_length": 128,
+    "vocab_size": 50257,
+    "hidden_size": 256,
+    "num_layers": 4,
+    "nhead": 4,
+    "data_dir": "data/wikitext-2",
+    "max_vocab": 10000,
+    "token_cache_dir": "results/step44_full_scale_experiment/token_cache",
+    "batch_size": 32,
+    "learning_rate": 0.0005,
+    "num_epochs": 3,
+    "num_seeds": 3,
+    "gradient_accumulation_steps": 2,
+    "hippocampus_loss_weight": 0.05,
+    "basal_ganglia_loss_weight": 0.05,
+    "cerebellum_loss_weight": 0.02,
+    "bg_critic_mode": "td_sg",
+    "bg_gamma": 0.9,
+    "bg_value_init": false,
+    "bg_reward_baseline": "none",
+    "device": "cpu",
+    "fp16": false,
+    "max_grad_norm": 1.0,
+    "eval_interval": 500,
+    "results_dir": "results/step44_reduced_scale_vanilla",
+    "checkpoint_dir": "results/step44_reduced_scale_vanilla/checkpoints",
+    "checkpoint_every_steps": 2000,
+    "deadline": null,
+    "stop_file": null
+  },
+  "environment": {
+    "python": "3.11.15",
+    "platform": "Linux x86_64",
+    "torch": "2.14.0+cu130",
+    "numpy": "2.4.6",
+    "git_commit": "8ae95562dfea3df50728ce2465b5a03d32b5b2c2+dirty",
+    "utc": "2026-10-21T11:41:13+00:00",
+    "cuda": null
+  }
+}

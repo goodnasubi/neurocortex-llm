@@ -13,6 +13,9 @@
   各言語の学習の終わりに、バッファの断片で対角のフィッシャー情報量を求めて足し合わせ、その時点の重みからのずれに
   λ/2·Σ F (θ − θ*)² の罰則をかける（タスクを跨いだ online EWC）。F は全パラメータの平均で割って正規化する。
 - replay_ewc: 両方。
+- replay_ro・replay_body（12.6.255〜256節）: リプレイの断片の勾配を、過去の言語の読み出し（文脈のバイアス・ヘッド）に
+  だけ流す（胴体の特徴を detach）／胴体にだけ流す（読み出しを detach）。新しい言語のバッチは replay と同じく全体に流す。
+  損失は replay と同じ（新旧の断片を連結した全位置の平均）で、勾配の行き先だけが違う。
 - joint: 全言語を毎ステップ混ぜて学ぶ（同じ総ステップ数。順に学ばないので最後の行だけを測る参照）。
 
 正確度・CE は、テスト文（学習・話し手とは別の日）の無作為な断片（長さ T + 1）の全位置の次の文字で測る。評価の断片は
@@ -26,6 +29,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import torch
@@ -34,7 +38,9 @@ from torch import nn
 from .context_realtext import LangData, TransformerContextLM, _passages
 from .continual_metrics import forgetting_metrics
 
-RULES = ("naive", "replay", "ewc", "replay_ewc", "joint")
+RULES = ("naive", "replay", "ewc", "replay_ewc", "joint", "replay_ro", "replay_body")
+# リプレイの勾配の行き先を絞る規則: (胴体の特徴を detach, 読み出しを detach)
+REPLAY_SPLIT = {"replay_ro": (True, False), "replay_body": (False, True)}
 
 
 @dataclass
@@ -55,6 +61,19 @@ class ForgetConfig:
     fisher_batch: int = 8
     eval_segments: int = 400  # 評価の断片の数（言語ごと）
     shared_head: bool = False  # True なら文脈を持たない1つのヘッド（全言語が文脈 0）
+
+
+def split_replay_logp(model: TransformerContextLM, x: torch.Tensor, c: torch.Tensor,
+                      detach_trunk: bool, detach_readout: bool) -> torch.Tensor:
+    """seq_logp と同じ値で、勾配の行き先だけを絞る（胴体の特徴か文脈の読み出しを detach）。"""
+    h = model.trunk(x)
+    if detach_trunk:
+        h = h.detach()
+    ctx, w, b = model.ctx(c), model.head_w[c], model.head_b[c]
+    if detach_readout:
+        ctx, w, b = ctx.detach(), w.detach(), b.detach()
+    z = torch.tanh(h + ctx[:, None, :])
+    return torch.log_softmax(torch.einsum("bth,bhv->btv", z, w) + b[:, None], -1)
 
 
 def eval_segments(data: list[LangData], n: int, t_len: int, generator: torch.Generator) -> list[torch.Tensor]:
@@ -129,10 +148,13 @@ def fisher_diag(model: TransformerContextLM, segs: torch.Tensor, c: int, batches
 
 
 def train_forgetting(data: list[LangData], vocab: int, cfg: ForgetConfig, order: list[int],
-                     generator: torch.Generator, eval_generator: torch.Generator) -> dict:
+                     generator: torch.Generator, eval_generator: torch.Generator,
+                     hook: Callable[[str, int, TransformerContextLM], None] | None = None) -> dict:
     """言語を order の順に学び、各言語の学習の後に正確度行列の行を測る（joint は最後の行だけ）。
 
-    R[i][j] は order の i 番目の言語の学習後の、order の j 番目の言語の値（学習の順に並べ替えた行列）。"""
+    R[i][j] は order の i 番目の言語の学習後の、order の j 番目の言語の値（学習の順に並べ替えた行列）。
+    hook があれば、order の pos 番目の言語の学習の前に hook("start", pos, model)、後に hook("end", pos, model) を呼ぶ
+    （12.6.253節の診断のスナップショット用。学習の乱数は消費しない。joint では呼ばない）。"""
     if cfg.rule not in RULES:
         raise ValueError(f"rule は {RULES}")
     n_l, t_len = len(data), cfg.seq_len
@@ -142,7 +164,8 @@ def train_forgetting(data: list[LangData], vocab: int, cfg: ForgetConfig, order:
         torch.manual_seed(int(torch.randint(0, 2 ** 31 - 1, (1,), generator=generator)))
         model = TransformerContextLM(vocab, 1 if cfg.shared_head else n_l, t_len, cfg.d, cfg.layers, cfg.heads, hidden=cfg.hidden)
     opt = torch.optim.Adam(model.parameters(), lr=cfg.lr)
-    use_replay = cfg.rule in ("replay", "replay_ewc")
+    use_replay = cfg.rule in ("replay", "replay_ewc") or cfg.rule in REPLAY_SPLIT
+    split = REPLAY_SPLIT.get(cfg.rule)
     use_ewc = cfg.rule in ("ewc", "replay_ewc") and cfg.ewc_lambda > 0
     sh = cfg.shared_head
     ctx = (lambda j: 0) if sh else (lambda j: j)  # noqa: E731  共有のヘッドなら全言語が文脈 0
@@ -155,9 +178,13 @@ def train_forgetting(data: list[LangData], vocab: int, cfg: ForgetConfig, order:
         s = torch.randint(0, flat[j].shape[0] - t_len - 1, (n,), generator=generator)
         return flat[j][s[:, None] + torch.arange(t_len + 1)[None]]
 
-    def step(seg: torch.Tensor, c: torch.Tensor) -> float:
+    def step(seg: torch.Tensor, c: torch.Tensor, n_new: int | None = None) -> float:
         opt.zero_grad()
-        lp = model.seq_logp(seg[:, :-1], c)
+        if split is not None and n_new is not None and n_new < seg.shape[0]:  # 新しい断片と、行き先を絞ったリプレイ
+            lp = torch.cat([model.seq_logp(seg[:n_new, :-1], c[:n_new]),
+                            split_replay_logp(model, seg[n_new:, :-1], c[n_new:], *split)])
+        else:
+            lp = model.seq_logp(seg[:, :-1], c)
         loss = nn.functional.nll_loss(lp.reshape(-1, lp.shape[-1]), seg[:, 1:].reshape(-1))
         total = loss
         if use_ewc and anchor is not None:
@@ -195,6 +222,8 @@ def train_forgetting(data: list[LangData], vocab: int, cfg: ForgetConfig, order:
     else:
         for pos, j in enumerate(order):
             past = order[:pos]
+            if hook is not None:
+                hook("start", pos, model)
             model.train()
             for _ in range(cfg.steps_per_lang):
                 seg, c = batch_from(j, cfg.batch), torch.full((cfg.batch,), ctx(j))
@@ -203,7 +232,7 @@ def train_forgetting(data: list[LangData], vocab: int, cfg: ForgetConfig, order:
                     ri = torch.randint(0, cfg.buffer, (cfg.replay_batch,), generator=generator)
                     rseg = torch.stack([buf[a][b] for a, b in zip(rc.tolist(), ri.tolist())])
                     seg, c = torch.cat([seg, rseg]), torch.cat([c, rc if not sh else torch.zeros_like(rc)])
-                losses.append(step(seg, c))
+                losses.append(step(seg, c, cfg.batch))
             model.eval()
             buf[j] = batch_from(j, cfg.buffer)
             if use_ewc:
@@ -213,6 +242,8 @@ def train_forgetting(data: list[LangData], vocab: int, cfg: ForgetConfig, order:
                 fisher = [f / scale for f in fisher_raw]  # 罰則に使うのは全パラメータの平均が 1 になる形
                 anchor = [p.detach().clone() for p in model.parameters()]
             record([order[k] for k in range(pos + 1)])
+            if hook is not None:
+                hook("end", pos, model)
     out = {"R_acc": rows_acc, "R_ce": rows_ce, "final_loss": sum(losses[-100:]) / 100,
            "order": order}
     if not sh:
