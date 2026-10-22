@@ -62,7 +62,13 @@ def run_continual_replay(seed: int, data: dict, args, log=print, base_phase: str
     """条件 R: base_phase（既定 A）のモデルに外部エピソードメモリの保存・再生を加えて K タスクを順に学ぶ。
 
     run_continual（44.9）と同じ初期化・データ順・評価で、違いはメモリの保存と再生だけ。replay_size=0 なら A と同一。
+    replay_source="current"（44.11 の計算量対照 C1）では、メモリの代わりに現在のタスクの学習断片から r 本を
+    復元抽出して連結する（更新回数・断片数・抽出の乱数は R と同一。メモリは使わず保存もしない）。
     """
+    source = getattr(args, "replay_source", "memory")
+    label = getattr(args, "label", None) or "R"
+    if source not in ("memory", "current"):
+        raise ValueError(f"replay_source: {source}")
     torch.manual_seed(seed)
     np.random.seed(seed)
     cfg = cf.make_config(base_phase, args)
@@ -79,24 +85,30 @@ def run_continual_replay(seed: int, data: dict, args, log=print, base_phase: str
         trainer.optimizer.zero_grad()
         task_losses, nrep = [], 0
         g_rep = torch.Generator().manual_seed(seed * 1000 + 700 + i)
+        train = data["tasks"][lang]["train"]
         for epoch in range(args.epochs):
             g = torch.Generator().manual_seed(seed * 1000 + i * 10 + epoch)  # 44.9 と同じ並び
-            for batch in DataLoader(data["tasks"][lang]["train"], batch_size=cfg.batch_size, shuffle=True,
-                                    generator=g):
-                if len(memory) and args.replay_size > 0:
+            for batch in DataLoader(train, batch_size=cfg.batch_size, shuffle=True, generator=g):
+                if args.replay_size > 0 and i > 0 and source == "current":
+                    extra = train.chunks[torch.randint(0, len(train), (args.replay_size,), generator=g_rep)]
+                    batch = concat_replay(batch, extra)
+                    nrep += args.replay_size
+                elif len(memory) and args.replay_size > 0:
                     batch = concat_replay(batch, memory.sample(args.replay_size, g_rep))
                     nrep += args.replay_size
                 task_losses.append(trainer.train_step(batch))
         losses.append(float(np.mean(task_losses[-20:])))
         n_replayed.append(nrep)
-        idx = memory.store(data["tasks"][lang]["train"], torch.Generator().manual_seed(seed * 1000 + 500 + i))
-        stored.append(idx.tolist())
+        if source == "memory":
+            idx = memory.store(train, torch.Generator().manual_seed(seed * 1000 + 500 + i))
+            stored.append(idx.tolist())
         for j, lj in enumerate(order):
             ce[i][j], acc[i][j] = cf.eval_task(model, data["tasks"][lj]["eval"])
-        log(f"[R seed{seed}] task{i} {lang} done {time.time() - t0:.0f}s mem {len(memory)} replayed {nrep} "
+        log(f"[{label} seed{seed}] task{i} {lang} done {time.time() - t0:.0f}s mem {len(memory)} replayed {nrep} "
             f"diag ce {ce[i][i]:.3f} acc {acc[i][i]:.3f} | row ce " + " ".join(f"{c:.2f}" for c in ce[i]))
     params = sum(p.numel() for p in model.parameters())
-    return {"phase": "R", "base_phase": base_phase, "seed": seed, "order": order, "acc": acc, "ce": ce,
+    return {"phase": label, "base_phase": base_phase, "replay_source": source, "seed": seed, "order": order,
+            "acc": acc, "ce": ce,
             "metrics": cf.summarize(acc, ce), "final_train_loss_per_task": losses, "n_params": params,
             "n_params_backbone": sum(p.numel() for n, p in model.named_parameters()
                                      if not n.startswith(("hippocampus", "basal_ganglia", "cerebellum"))),
@@ -111,6 +123,9 @@ def main(argv=None):
     ap.add_argument("--out-dir", required=True)
     ap.add_argument("--memory-per-task", type=int, default=64)
     ap.add_argument("--replay-size", type=int, default=16)
+    ap.add_argument("--replay-source", choices=("memory", "current"), default="memory",
+                    help="memory: 外部エピソードメモリから再生（R）。current: 現在のタスクの断片を追加（44.11 の C1）")
+    ap.add_argument("--label", default="R", help="結果の条件名（ファイル名 phase<label>_seed<seed>.json）")
     ap.add_argument("--europarl-dir", default=str(ROOT / "data" / "europarl_raw"))
     ap.add_argument("--langs", nargs="+", default=list(cf.LANGS))
     ap.add_argument("--per-lang-vocab", type=int, default=2500)
@@ -134,7 +149,7 @@ def main(argv=None):
                           args.max_seq_length)
     print(f"vocab {data['vocab_size']}", flush=True)
     for seed in args.seeds:
-        path = out / f"phaseR_seed{seed}.json"
+        path = out / f"phase{args.label}_seed{seed}.json"
         if path.exists():
             continue
         res = run_continual_replay(seed, data, args, log=lambda s: print(s, flush=True))
