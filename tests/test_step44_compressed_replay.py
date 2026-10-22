@@ -113,3 +113,38 @@ def test_tag_of():
     assert cr2.tag_of(a) == "H2_M64_r16_pq16x8"
     assert cr2.tag_of(_args(mode="V")) == "V"
     assert cr2.tag_of(_args(mode="R", memory_per_task=4)) == "R_M4_r2"
+
+
+def _fake_run(tag, seed, f, la, g=0.5, nbytes=10, h=False):
+    m = {k: 0.1 for k in cr2_analysis().METRICS}
+    m.update({"F_ce": f, "LA_ce": la, "G_last_past": g})
+    r = {"order": ["a", "b"], "metrics": m, "memory_bytes_total": nbytes, "train_seconds": 1.0}
+    if h:
+        r.update({"pq_recon_rel_err": [0.1, 0.1], "drift_final": [0.2, 0.0]})
+    return r
+
+
+def cr2_analysis():
+    import step44_compressed_analysis as an
+    return an
+
+
+def test_analysis_hypotheses(tmp_path):
+    import json
+    an = cr2_analysis()
+    F = {"V": 4.0, "R": 0.1, "S": 0.3, "C": 3.9, "H2": 2.0, "H4": 1.0, "R_M4": 1.5, "R_r2": 0.5}
+    for i, s in enumerate(range(5)):
+        for k, tag in an.COND.items():
+            j = 0.01 * ((i * 7 + len(k)) % 5)
+            g = 0.8 + j if k == "R" else 0.5 + j
+            r = _fake_run(tag, s, F[k] + j, 5.0 + j, g=g, nbytes=100 if k.startswith("H") else 6, h=k.startswith("H"))
+            (tmp_path / f"{tag}_seed{s}.json").write_text(json.dumps(r))
+    out = an.analyze(tmp_path, list(range(5)))
+    h = out["hypotheses"]
+    assert h["H1_V->H2"] == "支持"
+    assert h["H2_R->H2"].startswith("R が H を支配") and h["H2_bytes_ratio_H2/R"] == 100 / 6
+    assert abs(h["H3a_share_freq_mean"] - 3.7 / 3.9) < 0.02 and h["H3a"].startswith("大部分")
+    assert h["H3b"].startswith("R は頻度を超えて")
+    assert h["H4_C->R"].startswith("軽減は再生の内容")
+    assert h["H5_V->R_M4"] == "支持"
+    assert "| F_ce |" in an.to_markdown(out)
