@@ -220,8 +220,12 @@ def latent_step(trainer, model, batch: dict, h_rep: torch.Tensor, y_rep: torch.T
     return loss.item()
 
 
-def run(mode: str, seed: int, data: dict, args, log=print) -> dict:
-    """1 つの (条件, seed) で K タスクを順に学ぶ。V 以外はフェーズ A のモデル。初期化・データ順は 44.9/44.10 と同じ。"""
+def run(mode: str, seed: int, data: dict, args, log=print, ckpt: str | None = None) -> dict:
+    """1 つの (条件, seed) で K タスクを順に学ぶ。V 以外はフェーズ A のモデル。初期化・データ順は 44.9/44.10 と同じ。
+
+    ckpt を渡すと各タスクの評価の後に状態（モデル・オプティマイザ・メモリ・乱数・途中の結果）を保存し、
+    次回はそこから再開する（中断しない場合とビット一致。コンテナの再起動対策）。
+    """
     assert mode in MODES
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -237,7 +241,22 @@ def run(mode: str, seed: int, data: dict, args, log=print) -> dict:
     T = len(order)
     rows = [[None] * T for _ in range(T)]
     losses, n_replayed, nbytes, drift, t0 = [], [], [], [], time.time()
+    start = 0
+    if ckpt and Path(ckpt).exists():
+        st = torch.load(ckpt, weights_only=False)
+        model.load_state_dict(st["model"])
+        trainer.optimizer.load_state_dict(st["optimizer"])
+        trainer.step_count = st["step_count"]
+        if memory is not None:
+            memory.__dict__.update(st["memory"])
+        rows, losses, n_replayed, nbytes, drift = st["rows"], st["losses"], st["n_replayed"], st["nbytes"], st["drift"]
+        torch.set_rng_state(st["torch_rng"])
+        np.random.set_state(st["np_rng"])
+        start, t0 = st["next_task"], time.time() - st["elapsed"]
+        log(f"[{mode} seed{seed}] resumed from task{start}")
     for i, lang in enumerate(order):
+        if i < start:
+            continue
         trainer.optimizer.zero_grad()
         task_losses, nrep = [], 0
         g_rep = torch.Generator().manual_seed(seed * 1000 + 700 + i)
@@ -274,6 +293,14 @@ def run(mode: str, seed: int, data: dict, args, log=print) -> dict:
         log(f"[{mode}{'' if mode != 'H' else layer} seed{seed}] task{i} {lang} done {time.time() - t0:.0f}s "
             f"replayed {nrep} diag ce {rows[i][i]['ce']:.3f} | row ce "
             + " ".join(f"{r['ce']:.2f}" for r in rows[i]) + " | marg " + " ".join(f"{r['ce_marg']:.2f}" for r in rows[i]))
+        if ckpt and i < T - 1:
+            tmp = f"{ckpt}.tmp"
+            torch.save({"model": model.state_dict(), "optimizer": trainer.optimizer.state_dict(),
+                        "step_count": trainer.step_count, "memory": dict(memory.__dict__) if memory is not None else None,
+                        "rows": rows, "losses": losses, "n_replayed": n_replayed, "nbytes": nbytes, "drift": drift,
+                        "torch_rng": torch.get_rng_state(), "np_rng": np.random.get_state(), "next_task": i + 1,
+                        "elapsed": time.time() - t0}, tmp)
+            Path(tmp).replace(ckpt)
     acc = [[r["acc"] for r in row] for row in rows]
     ce = [[r["ce"] for r in row] for row in rows]
     metrics = cf.summarize(acc, ce)
@@ -333,6 +360,7 @@ def main(argv=None):
     ap.add_argument("--grad-accum", type=int, default=1)
     ap.add_argument("--lr", type=float, default=5e-4)
     ap.add_argument("--threads", type=int, default=None)
+    ap.add_argument("--ckpt-dir", default=None, help="タスクごとのチェックポイントの置き場（再起動からの再開用）")
     args = ap.parse_args(argv)
     assert args.grad_accum == 1, "再生の更新は勾配累積 1 を前提とする"
     if args.threads:
@@ -352,11 +380,17 @@ def main(argv=None):
         path = out / f"{tag_of(args)}_seed{seed}.json"
         if path.exists():
             continue
-        res = run(args.mode, seed, data, args, log=lambda s: print(s, flush=True))
+        ck = None
+        if args.ckpt_dir:
+            Path(args.ckpt_dir).mkdir(parents=True, exist_ok=True)
+            ck = str(Path(args.ckpt_dir) / f"{tag_of(args)}_seed{seed}.pt")
+        res = run(args.mode, seed, data, args, log=lambda s: print(s, flush=True), ckpt=ck)
         res["tag"] = tag_of(args)
         res["config"] = {k: v for k, v in vars(args).items()}
         path.write_text(json.dumps(res, ensure_ascii=False, indent=1))
         print(f"saved {path} metrics {res['metrics']}", flush=True)
+        if ck and Path(ck).exists():
+            Path(ck).unlink()
 
 
 if __name__ == "__main__":

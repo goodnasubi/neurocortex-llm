@@ -148,3 +148,16 @@ def test_analysis_hypotheses(tmp_path):
     assert h["H4_C->R"].startswith("軽減は再生の内容")
     assert h["H5_V->R_M4"] == "支持"
     assert "| F_ce |" in an.to_markdown(out)
+
+
+@pytest.mark.parametrize("mode,layer", [("R", None), ("H", 1)])
+def test_resume_from_checkpoint_is_bit_identical(tmp_path, mode, layer):
+    d = _data()
+    ck = str(tmp_path / "ck.pt")
+    full = cr2.run(mode, 4, d, _args(layer=layer), log=lambda s: None, ckpt=ck)
+    # 最後のタスクの前のチェックポイントが残っているので、もう一度呼ぶとそこから再開する
+    resumed = cr2.run(mode, 4, d, _args(layer=layer), log=lambda s: None, ckpt=ck)
+    assert resumed["ce"] == full["ce"] and resumed["ce_marg"] == full["ce_marg"]
+    assert resumed["memory_bytes_per_task"] == full["memory_bytes_per_task"]
+    plain = cr2.run(mode, 4, d, _args(layer=layer), log=lambda s: None)
+    assert plain["ce"] == full["ce"]
