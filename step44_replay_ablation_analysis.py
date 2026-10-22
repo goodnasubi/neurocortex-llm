@@ -23,7 +23,7 @@ NEW = ("C1", "Rmid", "Rsmall")
 DOSE = (("A", 0), ("Rsmall", 8), ("Rmid", 16), ("R", 64))
 PAIRS = (("R", "C1"), ("V", "C1"), ("A", "C1"), ("V", "Rmid"), ("V", "Rsmall"), ("V", "R"),
          ("A", "Rsmall"), ("Rsmall", "Rmid"), ("Rmid", "R"))
-VARYING_KEYS = ("seeds", "out_dir", "memory_per_task", "replay_size", "replay_source", "label", "europarl_dir")
+VARYING_KEYS = ("seeds", "phases", "out_dir", "memory_per_task", "replay_size", "replay_source", "label", "europarl_dir")
 SAME_ENV_KEYS = ("python", "torch", "numpy")
 
 
