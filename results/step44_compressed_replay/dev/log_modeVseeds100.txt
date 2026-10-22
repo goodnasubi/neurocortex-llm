@@ -1,1 +1,0 @@
-vocab 9372 unigram_ce {'english': 5.606, 'german': 5.519, 'french': 5.662, 'finnish': 4.928}
