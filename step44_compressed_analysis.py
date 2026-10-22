@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ステップ44.11: 圧縮表現の再生（H2/H4）・生の断片（R）・頻度だけ（S）・計算量の対照（C）・下限（R_M4/R_r2）の比較と、
+"""ステップ44.12: 圧縮表現の再生（H2/H4）・生の断片（R）・頻度だけ（S）・計算量の対照（C）・下限（R_M4/R_r2）の比較と、
 事前登録した仮説 H1〜H5 の判定。
 
 使い方: python step44_compressed_analysis.py <結果ディレクトリ> <seed...> [--out analysis.json] [--ref44 <44.9 と 44.10 の eval>]

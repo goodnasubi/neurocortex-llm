@@ -1,0 +1,16 @@
+vocab 9372
+/usr/local/lib/python3.11/dist-packages/torch/nn/modules/transformer.py:823: UserWarning: Support for mismatched src_key_padding_mask and src_mask is deprecated. Use same type for both instead.
+  src_key_padding_mask = F._canonical_mask(
+[Rmid seed100] task0 english done 229s mem 16 replayed 0 diag ce 5.342 acc 0.117 | row ce 5.34 9.91 10.31 8.38
+[Rmid seed100] task1 german done 476s mem 32 replayed 248 diag ce 5.258 acc 0.169 | row ce 5.51 5.26 10.57 8.32
+[Rmid seed100] task2 french done 722s mem 48 replayed 248 diag ce 5.116 acc 0.136 | row ce 5.68 5.52 5.12 8.69
+[Rmid seed100] task3 finnish done 963s mem 64 replayed 248 diag ce 4.623 acc 0.308 | row ce 5.74 5.58 5.30 4.62
+saved results/step44_continual_replay_ablation/dev/phaseRmid_seed100.json metrics {'ACC_acc': 0.1810821724207551, 'BWT_acc': -0.002126657244767479, 'F_acc': 0.0039168180900464354, 'LA_acc': 0.1826771653543307, 'F_ce': 0.30057325973526144, 'dCE': 0.30057325973526144, 'ACC_ce': 5.310391939603365, 'LA_ce': 5.084961994801919}
+vocab 9372
+/usr/local/lib/python3.11/dist-packages/torch/nn/modules/transformer.py:823: UserWarning: Support for mismatched src_key_padding_mask and src_mask is deprecated. Use same type for both instead.
+  src_key_padding_mask = F._canonical_mask(
+[Rsmall seed100] task0 english done 223s mem 8 replayed 0 diag ce 5.342 acc 0.117 | row ce 5.34 9.91 10.31 8.38
+[Rsmall seed100] task1 german done 438s mem 16 replayed 124 diag ce 5.265 acc 0.163 | row ce 5.63 5.27 10.59 8.35
+[Rsmall seed100] task2 french done 672s mem 24 replayed 124 diag ce 5.183 acc 0.130 | row ce 5.73 5.63 5.18 8.48
+[Rsmall seed100] task3 finnish done 902s mem 32 replayed 124 diag ce 4.633 acc 0.306 | row ce 5.79 5.66 5.43 4.63
+saved results/step44_continual_replay_ablation/dev/phaseRsmall_seed100.json metrics {'ACC_acc': 0.17464163133454472, 'BWT_acc': -0.005922336630998041, 'F_acc': 0.006285752742445652, 'LA_acc': 0.17908338380779326, 'F_ce': 0.3634925822260498, 'dCE': 0.3634925822260498, 'ACC_ce': 5.378620428512391, 'LA_ce': 5.106000991842854}
