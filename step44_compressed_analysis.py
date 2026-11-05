@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """ステップ44.12: 圧縮表現の再生（H2/H4）・生の断片（R）・頻度だけ（S）・計算量の対照（C）・下限（R_M4/R_r2）の比較と、
-事前登録した仮説 H1〜H5 の判定。
+事前登録した仮説 H1〜H5 の判定。ステップ44.13 の条件（HR: 再固定化、G: 生成的リプレイ）と仮説 s13_H1〜s13_H5 の判定も扱う。
 
 使い方: python step44_compressed_analysis.py <結果ディレクトリ> <seed...> [--out analysis.json] [--ref44 <44.9 と 44.10 の eval>]
 差 = 後 − 前、2×SE 超で差あり（44.9/44.10 と同じ step44_continual_analysis.compare）。
@@ -15,16 +15,18 @@ import step44_continual_analysis as ca
 
 COND = {"V": "V", "R": "R_M64_r16", "S": "S_M64_r16", "C": "C_M64_r16", "H2": "H2_M64_r16_pq16x8",
         "H4": "H4_M64_r16_pq16x8", "R_M4": "R_M4_r16", "R_r2": "R_M64_r2"}
+COND13 = {"HR": "HR2_M64_r16_pq16x8", "G": "G_M64_r16"}  # 44.13 の条件（結果ファイルがある場合だけ読み込む）
 DECOMP = ("dCE_marg", "dG", "G_last_past", "G_diag", "CE_marg_last_past")
 LOWER = ca.LOWER_BETTER + ("dCE_marg", "CE_marg_last_past")  # dG・G は大きいほどよい
 METRICS = ca.METRICS + DECOMP
 PAIRS = (("V", "H2"), ("R", "H2"), ("R", "H4"), ("V", "H4"), ("H2", "H4"), ("V", "R"), ("V", "S"), ("S", "R"),
-         ("V", "C"), ("C", "R"), ("V", "R_M4"), ("V", "R_r2"), ("R_M4", "R"), ("R_r2", "R"))
+         ("V", "C"), ("C", "R"), ("V", "R_M4"), ("V", "R_r2"), ("R_M4", "R"), ("R_r2", "R"),
+         ("H2", "HR"), ("V", "HR"), ("HR", "R"), ("V", "G"), ("S", "G"), ("G", "R"), ("H2", "G"))
 
 
 def load(d, seeds):
     runs = {}
-    for k, tag in COND.items():
+    for k, tag in {**COND, **COND13}.items():
         paths = [Path(d) / f"{tag}_seed{s}.json" for s in seeds]
         if all(p.exists() for p in paths):
             runs[k] = [json.loads(p.read_text()) for p in paths]
@@ -40,8 +42,8 @@ def analyze(d, seeds):
     runs = load(d, seeds)
     for i, s in enumerate(seeds):
         assert len({tuple(runs[k][i]["order"]) for k in runs}) == 1, f"seed {s}: タスク順が一致しない"
-    out = {"seeds": list(seeds), "conditions": {k: COND[k] for k in runs}, "phases": {}, "comparisons": {},
-           "hypotheses": {}}
+    out = {"seeds": list(seeds), "conditions": {k: {**COND, **COND13}[k] for k in runs}, "phases": {},
+           "comparisons": {}, "hypotheses": {}, "drift_dose_response": []}
     for k, rs in runs.items():
         out["phases"][k] = {m: {"per_seed": [r["metrics"][m] for r in rs],
                                 "mean": float(np.mean([r["metrics"][m] for r in rs])),
@@ -51,12 +53,26 @@ def analyze(d, seeds):
         if k.startswith("H"):
             out["phases"][k]["pq_recon_rel_err_mean"] = float(np.mean([np.mean(r["pq_recon_rel_err"]) for r in rs]))
             # 最終時点の過去タスク（最後に保存したものを除く）の隠れ状態の古さ
-            out["phases"][k]["drift_final_past_mean"] = float(np.mean([np.mean(r["drift_final"][:-1]) for r in rs]))
+            dfp = [float(np.mean(r["drift_final"][:-1])) for r in rs]
+            out["phases"][k]["drift_final_past_per_seed"] = dfp
+            out["phases"][k]["drift_final_past_mean"] = float(np.mean(dfp))
+            for i, s in enumerate(seeds):  # drift の用量反応（記述的）: 古さと F_ce を seed ごとに並べる
+                out["drift_dose_response"].append({"condition": k, "seed": s, "drift_final_past": dfp[i],
+                                                   "F_ce": rs[i]["metrics"]["F_ce"]})
+        if k == "HR":
+            after = [float(np.mean([v for e in r.get("refresh_drift", []) for v in e["after"]])) for r in rs]
+            before = [float(np.mean([v for e in r.get("refresh_drift", []) for v in e["before"]])) for r in rs]
+            if all(np.isfinite(after)):
+                out["phases"][k]["drift_after_refresh_mean"] = float(np.mean(after))
+                out["phases"][k]["drift_before_refresh_mean"] = float(np.mean(before))
     for a, b in PAIRS:
         if a in runs and b in runs:
             for m in METRICS:
                 out["comparisons"][f"{a}->{b}_{m}"] = ca.compare([r["metrics"][m] for r in runs[a]],
                                                                  [r["metrics"][m] for r in runs[b]], m in LOWER)
+    if {"H2", "HR"} <= set(runs):  # 古さそのものの比較（drift は小さいほどよい）
+        out["comparisons"]["H2->HR_drift_final_past"] = ca.compare(
+            out["phases"]["H2"]["drift_final_past_per_seed"], out["phases"]["HR"]["drift_final_past_per_seed"], True)
     c, h = out["comparisons"], out["hypotheses"]
     F = lambda k: [r["metrics"]["F_ce"] for r in runs[k]]
     both = lambda x, v: x["verdict_paired"] == v and x["verdict_unpaired"] == v
@@ -84,6 +100,40 @@ def analyze(d, seeds):
     for k in ("H2", "H4", "C"):
         if k in runs and {"V", "R"} <= set(runs):
             h[f"share_{k}"] = float(np.mean(share(F("V"), F(k), F("R"))))
+    # ---- ステップ44.13 の事前登録（s13_H1〜s13_H5）。判定基準は docs の 44.13 設計の通りで変えない。
+    if {"H2", "HR"} <= set(runs):
+        d_after = out["phases"]["HR"].get("drift_after_refresh_mean")
+        pq_level = d_after is not None and d_after <= 0.19  # 44.12 の H2 の PQ 相対復元誤差の範囲（0.02〜0.19）
+        drift_down = both(c["H2->HR_drift_final_past"], "改善")
+        h["s13_H1_mechanism"] = ("再固定化は古さを消す機構として働いた" if pq_level and drift_down else
+                                 "再固定化が古さを消す機構として働いていない"
+                                 f"（作り直し直後の古さ {d_after} が PQ 水準 0.19 以下: {pq_level}、"
+                                 f"最終の古さが H2 より両検定で小さい: {drift_down}）")
+        h["s13_H2_effect"] = ca.h1(c["H2->HR_F_ce"], c["H2->HR_LA_ce"])
+        if {"V", "R"} <= set(runs):
+            share_hr = float(np.mean(share(F("V"), F("HR"), F("R"))))
+            h["s13_H2_share_HR"] = share_hr
+            improved = both(c["H2->HR_F_ce"], "改善")
+            if not (pq_level and drift_down):
+                h["s13_H2_interpretation"] = "H1（機構確認）が満たされないため、効果の有無ではなく機構の失敗として扱う"
+            elif improved and share_hr >= 0.8:
+                h["s13_H2_interpretation"] = "44.12 で H が R に劣った主因は表現の古さだった、を支持する"
+            elif improved:
+                h["s13_H2_interpretation"] = "再固定化は忘却を減らすが、保護の割合は 0.8 に届かない（部分的な回復）"
+            else:
+                h["s13_H2_interpretation"] = ("古さは主因ではなく、再生で下位層を学ばないこと等の古さ以外の要因が主因、"
+                                              "と解釈を移す")
+    if "G" in runs and "V" in runs:
+        h["s13_H3_V->G"] = ca.h1(c["V->G_F_ce"], c["V->G_LA_ce"])
+    if {"S", "G"} <= set(runs):
+        h["s13_H4"] = ("生成された文脈は、頻度を超えて文脈の利得も守る" if both(c["S->G_G_last_past"], "改善")
+                       else "生成された文脈の利得の保護は S と差が示せない")
+        h["s13_H4_share_freq_G"] = float(np.mean(share(F("V"), F("S"), F("G"))))  # (F_V − F_S)/(F_V − F_G)
+    if {"V", "G", "R"} <= set(runs):
+        share_g = float(np.mean(share(F("V"), F("G"), F("R"))))
+        h["s13_H5_share_G"] = share_g
+        h["s13_H5"] = ("索引＋生成は、索引＋実文保存に迫る効率を持つ（保存は R の 1/8 で保護の割合 0.8 以上）"
+                       if share_g >= 0.8 else "索引＋生成の保護の割合は 0.8 に届かない")
     return out
 
 
@@ -107,6 +157,14 @@ def to_markdown(out):
         lines.append(f"| {m} | " + " | ".join(f"{out['phases'][p][m]['mean']:.3f} ({out['phases'][p][m]['sd']:.3f})"
                                               for p in ph) + " |")
     lines.append("| 保存 B（3 タスク計） | " + " | ".join(str(out["phases"][p]["memory_bytes_total"]) for p in ph) + " |")
+    if any("drift_final_past_mean" in out["phases"][p] for p in ph):
+        f = lambda p, key: (f"{out['phases'][p][key]:.3f}" if key in out["phases"][p] else "-")
+        lines.append("| 古さ drift_final_past | " + " | ".join(f(p, "drift_final_past_mean") for p in ph) + " |")
+        lines.append("| 作り直し直後の古さ（HR） | " + " | ".join(f(p, "drift_after_refresh_mean") for p in ph) + " |")
+    if out.get("drift_dose_response"):
+        lines += ["", "| 古さの用量反応（記述的） | seed | drift_final_past | F_ce |", "|---|---|---|---|"]
+        for e in out["drift_dose_response"]:
+            lines.append(f"| {e['condition']} | {e['seed']} | {e['drift_final_past']:.3f} | {e['F_ce']:.3f} |")
     lines += ["", "| 比較（差 = 後 − 前） | 平均差 | paired SE | paired | unpaired SE | unpaired |", "|---|---|---|---|---|---|"]
     for k, c in out["comparisons"].items():
         if any(k.endswith("_" + m) for m in ("F_ce", "LA_ce", "ACC_ce", "dCE_marg", "dG", "G_last_past")):
