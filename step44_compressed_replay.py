@@ -9,6 +9,12 @@
 - H   … 隠れ状態のメモリ。タスクの終わりに保存断片の第 ℓ 層の出力を積直量子化（PQ）で圧縮して保存し、
          再生では復元した隠れ状態を第 ℓ+1 層以降（ℓ = L なら lm_head と海馬ヘッドだけ）に通して学ぶ。
          損失の目標（次の語）のため単語 ID も保存する。下位の層は再生では学ばない（古くなる）。
+- HR  … H ＋再固定化（44.13）。フェーズ境界（新しいタスクの学習を始める前）ごとに、保存済みの隠れ状態を
+         現在のネットワークで作り直して保存し直す（目標 ID 列を入力に現在の下位層を通し、PQ 符号帳も再学習）。
+         保存層は設計で第 2 層に固定。作り直しは重みを変えない順伝播のみで、学習の計算量は H と同一。
+- G   … 生成的リプレイ（44.13）。保存は断片の先頭 PREFIX_LEN トークンの prefix のみ（索引）。
+         フェーズ開始時に現在のモデルが各 prefix の続きを温度 1.0 のサンプリングで自己回帰生成して
+         そのフェーズの再生集合を作り、フェーズの間は R と同じ形で全層に再生する。
 評価は 44.9 と同じ backbone lm_head の CE・正確度に加え、出力の周辺分布（評価位置の予測分布の平均）の CE を測り、
 CE = CE_marg − G（G: 文脈の利得）に分けて、忘却を「出力分布（語の頻度）」と「文脈表現」に切り分ける。
 
@@ -32,12 +38,13 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 import step44_continual_forgetting as cf  # noqa: E402
-from colab_step44_full_scale_experiment import BrainInspiredLLMFullScale, FullScaleTrainer  # noqa: E402
+from colab_step44_full_scale_experiment import BrainInspiredLLMFullScale, FullScaleTrainer, WordChunkDataset  # noqa: E402
 from neurocortex.run_env import env_info  # noqa: E402
 from step44_continual_replay import EpisodicMemory, concat_replay  # noqa: E402
 
-MODES = ("V", "R", "S", "C", "H")
+MODES = ("V", "R", "S", "C", "H", "HR", "G")
 ID_BYTES = 2  # 語彙 9,372 < 65,536 なので単語 ID は uint16
+PREFIX_LEN = 16  # G の保存する索引（断片の先頭トークン数。44.13 設計で固定）
 
 
 # ---------------------------------------------------------------- 層の分割（model.forward と同じ計算）
@@ -132,6 +139,105 @@ class HiddenMemory:
             out.append(float(((cur - h) ** 2).sum() / (cur ** 2).sum()))
         model.train(was)
         return out
+
+    @torch.no_grad()
+    def refresh(self, model) -> None:
+        """保存済みの隠れ状態を現在のネットワークで作り直して保存し直す（再固定化、44.13）。
+
+        入力は保存済みの目標 ID 列（追加の情報は保存しない）。PQ 符号帳はタスクごとに再学習し、
+        復元した隠れ状態と復元誤差を置き換える。符号帳の大きさは変わらないので保存の大きさは不変。
+        重みは変えない（no_grad・eval の決定的な順伝播のみ）。
+        """
+        import faiss
+        was = model.training
+        model.eval()
+        for k, ids in enumerate(self.labels):
+            h = torch.cat([forward_lower(model, ids[j:j + 32], self.layer) for j in range(0, len(ids), 32)])
+            M, T, d = h.shape
+            x = np.ascontiguousarray(h.reshape(-1, d).numpy(), dtype=np.float32)
+            pq = faiss.ProductQuantizer(d, self.pq_m, self.pq_nbits)
+            pq.train(x)
+            codes = pq.compute_codes(x)
+            xr = pq.decode(codes)
+            self.recon_rel_err[k] = float(((xr - x) ** 2).sum() / (x ** 2).sum())
+            self.hidden[k] = torch.from_numpy(xr.reshape(M, T, d).copy())
+        model.train(was)
+
+
+# ---------------------------------------------------------------- 生成的リプレイのメモリ（44.13）
+
+@torch.no_grad()
+def generate_continuations(model, prefixes: torch.Tensor, seq_len: int,
+                           generator: torch.Generator) -> torch.Tensor:
+    """各 prefix の続きを現在のモデルの出力分布から温度 1.0 のサンプリングで自己回帰生成し、(M, seq_len) を返す。
+
+    生成器は呼び出し側が用意した独立の torch.Generator。モデルの重み・モードは変えない。
+    """
+    seq = prefixes.clone()
+    while seq.size(1) < seq_len:
+        logits = model(input_ids=seq, labels=None, attention_mask=torch.ones_like(seq))["logits"][:, -1]
+        probs = torch.softmax(logits.double() / 1.0, dim=-1).float()
+        nxt = torch.multinomial(probs, 1, generator=generator)
+        seq = torch.cat([seq, nxt], dim=1)
+    return seq
+
+
+class GenerativeMemory:
+    """生成的リプレイのメモリ（44.13）。断片の先頭 prefix_len トークンだけを保存する（索引）。
+
+    フェーズ開始時に generate で現在のモデルに各 prefix の続きを生成させ、そのフェーズの再生集合を作る。
+    保存の大きさ = 保存本数 × prefix_len × ID_BYTES（目標の ID 列は生成した断片自体が持つので別に数えない）。
+    """
+
+    def __init__(self, per_task: int, prefix_len: int = PREFIX_LEN):
+        self.per_task, self.prefix_len = per_task, prefix_len
+        self.prefixes: list[torch.Tensor] = []  # 各タスクの (M, prefix_len) の単語 ID
+        self.current: torch.Tensor | None = None  # 現在のフェーズの再生集合（過去タスク分を連結した (総数, T)）
+        self.nbytes: list[int] = []
+
+    def __len__(self):
+        return sum(len(p) for p in self.prefixes)
+
+    def store(self, dataset, generator: torch.Generator) -> torch.Tensor:
+        """R と同じ断片を選び（保存の生成器）、先頭 prefix_len トークンだけを保存する。保存した断片の番号を返す。"""
+        n = len(dataset)
+        idx = torch.randperm(n, generator=generator)[:min(self.per_task, n)]
+        ids = dataset.chunks[idx].clone()
+        self.prefixes.append(ids[:, :self.prefix_len].contiguous())
+        self.nbytes.append(int(len(ids) * self.prefix_len * ID_BYTES))
+        return idx
+
+    @torch.no_grad()
+    def generate(self, model, seq_len: int, generator: torch.Generator) -> torch.Tensor:
+        """保存済みの全タスクの prefix から、現在のモデルで再生集合を作り直す（フェーズ開始時）。"""
+        was = model.training
+        model.eval()
+        outs = [generate_continuations(model, pre, seq_len, generator) for pre in self.prefixes]
+        model.train(was)
+        self.current = torch.cat(outs) if outs else None
+        return self.current
+
+    def sample(self, r: int, generator: torch.Generator) -> torch.Tensor:
+        """現在の再生集合から r 本を一様に復元抽出する（R の sample と同じ流儀）。"""
+        k = torch.randint(0, len(self.current), (r,), generator=generator)
+        return self.current[k]
+
+
+def generated_quality(model, generated: torch.Tensor, train_chunks: torch.Tensor, vocab_size: int) -> dict:
+    """生成した断片の質（記述的な記録、44.13）。
+
+    - unigram_ce: そのタスクの学習語の 1-gram（加算 0.5）で測った生成文の CE（実文の水準は data の unigram_ce）。
+    - freq_l1_vs_train: 学習断片の語頻度分布と生成文の語頻度分布の L1 距離（頻度の再現のずれ）。
+    - gain: 生成文を評価断片として読んだときのモデルの文脈の利得（eval_task_decomp と同じ分解）。
+    """
+    ce1 = unigram_ce(train_chunks, generated, vocab_size)
+    a = torch.bincount(train_chunks.reshape(-1), minlength=vocab_size).double()
+    b = torch.bincount(generated.reshape(-1), minlength=vocab_size).double()
+    l1 = float((a / a.sum() - b / b.sum()).abs().sum())
+    was = model.training
+    gain = eval_task_decomp(model, WordChunkDataset(generated.reshape(-1).clone(), generated.size(1)))["gain"]
+    model.train(was)
+    return {"unigram_ce": ce1, "freq_l1_vs_train": l1, "gain": gain}
 
 
 def shuffle_within(chunks: torch.Tensor, generator: torch.Generator) -> torch.Tensor:
@@ -234,13 +340,15 @@ def run(mode: str, seed: int, data: dict, args, log=print, ckpt: str | None = No
     model = BrainInspiredLLMFullScale(cfg, vocab_size=data["vocab_size"], hidden_size=cfg.hidden_size,
                                       num_layers=cfg.num_layers, nhead=cfg.nhead)
     trainer = FullScaleTrainer(model, cfg)
-    layer = args.num_layers if args.layer is None else args.layer
-    memory = (HiddenMemory(args.memory_per_task, layer, args.pq_m, args.pq_nbits) if mode == "H"
+    layer = layer_of(args, mode)
+    memory = (HiddenMemory(args.memory_per_task, layer, args.pq_m, args.pq_nbits) if mode in ("H", "HR")
+              else GenerativeMemory(args.memory_per_task, getattr(args, "prefix_len", PREFIX_LEN)) if mode == "G"
               else EpisodicMemory(args.memory_per_task) if mode in "RS" else None)
     order = cf.task_order(data["langs"], seed)
     T = len(order)
     rows = [[None] * T for _ in range(T)]
     losses, n_replayed, nbytes, drift, t0 = [], [], [], [], time.time()
+    refresh_log, gen_log = [], []  # HR の作り直し前後の古さ、G のフェーズごとの生成文の質（44.13）
     start = 0
     if ckpt and Path(ckpt).exists():
         st = torch.load(ckpt, weights_only=False)
@@ -250,6 +358,7 @@ def run(mode: str, seed: int, data: dict, args, log=print, ckpt: str | None = No
         if memory is not None:
             memory.__dict__.update(st["memory"])
         rows, losses, n_replayed, nbytes, drift = st["rows"], st["losses"], st["n_replayed"], st["nbytes"], st["drift"]
+        refresh_log, gen_log = st.get("refresh_log", []), st.get("gen_log", [])
         torch.set_rng_state(st["torch_rng"])
         np.random.set_state(st["np_rng"])
         start, t0 = st["next_task"], time.time() - st["elapsed"]
@@ -257,6 +366,22 @@ def run(mode: str, seed: int, data: dict, args, log=print, ckpt: str | None = No
     for i, lang in enumerate(order):
         if i < start:
             continue
+        if mode == "HR" and i > 0:
+            # フェーズ境界の再固定化: 保存済みの過去タスクすべての隠れ状態を作り直す（重みは変えない）。
+            d_before = memory.drift(model)
+            memory.refresh(model)
+            refresh_log.append({"task": i, "n_chunks": int(len(memory)), "before": d_before,
+                                "after": memory.drift(model)})
+        if mode == "G" and i > 0:
+            # フェーズ開始時に、現在のモデルで過去タスクの再生集合を生成し直す（生成専用の生成器）。
+            g_gen = torch.Generator().manual_seed(seed * 1000 + 900 + i)
+            cur = memory.generate(model, args.max_seq_length, g_gen)
+            per, off = {}, 0
+            for j, lj in enumerate(order[:i]):
+                seg = cur[off:off + len(memory.prefixes[j])]
+                off += len(memory.prefixes[j])
+                per[lj] = generated_quality(model, seg, data["tasks"][lj]["train"].chunks, data["vocab_size"])
+            gen_log.append({"task": i, "per_task": per})
         trainer.optimizer.zero_grad()
         task_losses, nrep = [], 0
         g_rep = torch.Generator().manual_seed(seed * 1000 + 700 + i)
@@ -265,13 +390,15 @@ def run(mode: str, seed: int, data: dict, args, log=print, ckpt: str | None = No
             g = torch.Generator().manual_seed(seed * 1000 + i * 10 + epoch)  # 44.9 と同じ並び
             for batch in DataLoader(data["tasks"][lang]["train"], batch_size=cfg.batch_size, shuffle=True,
                                     generator=g):
-                if replay_on and mode == "H":
+                if replay_on and mode in ("H", "HR"):
                     h_rep, y_rep = memory.sample(args.replay_size, g_rep)
                     task_losses.append(latent_step(trainer, model, batch, h_rep, y_rep, layer))
                 else:
                     if replay_on and mode in "RS":
                         rep = memory.sample(args.replay_size, g_rep)
                         batch = concat_replay(batch, shuffle_within(rep, g_rep) if mode == "S" else rep)
+                    elif replay_on and mode == "G":
+                        batch = concat_replay(batch, memory.sample(args.replay_size, g_rep))
                     elif replay_on and mode == "C":
                         cur = data["tasks"][lang]["train"].chunks
                         batch = concat_replay(batch, cur[torch.randint(0, len(cur), (args.replay_size,),
@@ -281,9 +408,12 @@ def run(mode: str, seed: int, data: dict, args, log=print, ckpt: str | None = No
         losses.append(float(np.mean(task_losses[-20:])))
         n_replayed.append(nrep)
         g_store = torch.Generator().manual_seed(seed * 1000 + 500 + i)
-        if mode == "H":
+        if mode in ("H", "HR"):
             drift.append(memory.drift(model))  # 再生してきた過去タスクの隠れ状態の古さ（このタスクの保存前）
             memory.store(model, data["tasks"][lang]["train"], g_store)
+            nbytes.append(memory.nbytes[-1])
+        elif mode == "G":
+            memory.store(data["tasks"][lang]["train"], g_store)
             nbytes.append(memory.nbytes[-1])
         elif mode in "RS":
             memory.store(data["tasks"][lang]["train"], g_store)
@@ -298,6 +428,7 @@ def run(mode: str, seed: int, data: dict, args, log=print, ckpt: str | None = No
             torch.save({"model": model.state_dict(), "optimizer": trainer.optimizer.state_dict(),
                         "step_count": trainer.step_count, "memory": dict(memory.__dict__) if memory is not None else None,
                         "rows": rows, "losses": losses, "n_replayed": n_replayed, "nbytes": nbytes, "drift": drift,
+                        "refresh_log": refresh_log, "gen_log": gen_log,
                         "torch_rng": torch.get_rng_state(), "np_rng": np.random.get_state(), "next_task": i + 1,
                         "elapsed": time.time() - t0}, tmp)
             Path(tmp).replace(ckpt)
@@ -310,12 +441,17 @@ def run(mode: str, seed: int, data: dict, args, log=print, ckpt: str | None = No
            "unigram_ce": {l: data["tasks"][l]["unigram_ce"] for l in order},
            "final_train_loss_per_task": losses, "n_params": sum(p.numel() for p in model.parameters()),
            "memory_per_task": args.memory_per_task if memory is not None else 0, "replay_size": args.replay_size,
-           "layer": layer if mode == "H" else None, "n_replayed_per_task": n_replayed,
+           "layer": layer if mode in ("H", "HR") else None, "n_replayed_per_task": n_replayed,
            "memory_bytes_per_task": nbytes, "memory_bytes_total": int(sum(nbytes[:-1])),  # 最後のタスクの保存は使われない
            "train_seconds": time.time() - t0, "env": env_info()}
-    if mode == "H":
+    if mode in ("H", "HR"):
         res.update({"pq_m": args.pq_m, "pq_nbits": args.pq_nbits, "pq_recon_rel_err": memory.recon_rel_err,
                     "drift_before_store": drift, "drift_final": memory.drift(model)})
+    if mode == "HR":
+        res.update({"refresh_drift": refresh_log,
+                    "refresh_forward_chunks_total": int(sum(e["n_chunks"] for e in refresh_log))})
+    if mode == "G":
+        res.update({"prefix_len": memory.prefix_len, "gen_quality": gen_log})
     return res
 
 
@@ -326,12 +462,19 @@ def add_unigram(data: dict) -> dict:
     return data
 
 
+def layer_of(args, mode: str | None = None) -> int:
+    """保存層。H は既定で最終層（読み出しだけの再生）、HR は 44.13 設計で第 2 層に固定。どちらも --layer で明示できる。"""
+    if args.layer is not None:
+        return args.layer
+    return 2 if (mode or getattr(args, "mode", None)) == "HR" else args.num_layers
+
+
 def tag_of(args) -> str:
-    """結果ファイルの条件名（例: R_M64_r16, H2_M64_r16_pq16x8）。"""
-    t = args.mode + (str(args.num_layers if args.layer is None else args.layer) if args.mode == "H" else "")
+    """結果ファイルの条件名（例: R_M64_r16, H2_M64_r16_pq16x8, HR2_M64_r16_pq16x8, G_M64_r16）。"""
+    t = args.mode + (str(layer_of(args, args.mode)) if args.mode in ("H", "HR") else "")
     if args.mode != "V":
         t += f"_M{args.memory_per_task}_r{args.replay_size}"
-    if args.mode == "H":
+    if args.mode in ("H", "HR"):
         t += f"_pq{args.pq_m}x{args.pq_nbits}"
     return t
 
@@ -346,6 +489,7 @@ def main(argv=None):
     ap.add_argument("--layer", type=int, default=None, help="H の保存層（既定は最終層 = 読み出しだけの再生）")
     ap.add_argument("--pq-m", type=int, default=16)
     ap.add_argument("--pq-nbits", type=int, default=8)
+    ap.add_argument("--prefix-len", type=int, default=PREFIX_LEN, help="G の保存する索引の長さ（44.13 設計で 16 に固定）")
     ap.add_argument("--europarl-dir", default=str(ROOT / "data" / "europarl_raw"))
     ap.add_argument("--langs", nargs="+", default=list(cf.LANGS))
     ap.add_argument("--per-lang-vocab", type=int, default=2500)
