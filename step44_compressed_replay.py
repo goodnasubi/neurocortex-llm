@@ -22,6 +22,10 @@
          貪欲遠点サンプリングで選ぶ（歯状回のパターン分離の保存版）。保存する情報は断片の索引のみ。
 - C4  … 切り出し再生（44.14）。M=4、r=16、保存は R_M4 と同じ無作為抽出。再生のたびに保存断片から
          開始位置を一様に選んだ長さ WINDOW_LEN の連続部分窓を切り出して提示し、提示文脈を毎回変える。
+- CX4 … 切り出し再生と露出制限の併用（44.15）。M=4、保存は R_M4 と同じ無作為抽出。再生数は X4 と同じ
+         保存プール 4 本あたり 1 本（フェーズごとに 1・2・3 本）とし、再生のたびに C4 と同じ長さ
+         WINDOW_LEN の連続部分窓を切り出して提示する。X4 に対しては切り出しの有無だけ、C4 に対しては
+         回数制限の有無だけが違う（2×2 の要因計画の欠けた1マス）。
 評価は 44.9 と同じ backbone lm_head の CE・正確度に加え、出力の周辺分布（評価位置の予測分布の平均）の CE を測り、
 CE = CE_marg − G（G: 文脈の利得）に分けて、忘却を「出力分布（語の頻度）」と「文脈表現」に切り分ける。
 
@@ -49,11 +53,11 @@ from colab_step44_full_scale_experiment import BrainInspiredLLMFullScale, FullSc
 from neurocortex.run_env import env_info  # noqa: E402
 from step44_continual_replay import EpisodicMemory, concat_replay  # noqa: E402
 
-MODES = ("V", "R", "S", "C", "H", "HR", "G", "X4", "D4", "C4")
-EPISODIC_MODES = ("R", "S", "X4", "D4", "C4")  # EpisodicMemory（生の断片の保存）を使う条件
+MODES = ("V", "R", "S", "C", "H", "HR", "G", "X4", "D4", "C4", "CX4")
+EPISODIC_MODES = ("R", "S", "X4", "D4", "C4", "CX4")  # EpisodicMemory（生の断片の保存）を使う条件
 ID_BYTES = 2  # 語彙 9,372 < 65,536 なので単語 ID は uint16
 PREFIX_LEN = 16  # G の保存する索引（断片の先頭トークン数。44.13 設計で固定）
-WINDOW_LEN = 64  # C4 の切り出し窓の長さ（断片 128 トークンの半分。44.14 設計で固定）
+WINDOW_LEN = 64  # C4・CX4 の切り出し窓の長さ（断片 128 トークンの半分。44.14 設計で固定）
 
 
 # ---------------------------------------------------------------- 層の分割（model.forward と同じ計算）
@@ -319,7 +323,7 @@ def mean_pairwise_jaccard(chunks: torch.Tensor) -> float:
 
 
 def crop_windows(chunks: torch.Tensor, window: int, generator: torch.Generator) -> torch.Tensor:
-    """各断片から一様に選んだ開始位置で長さ window の連続部分窓を切り出す（44.14 C4）。開始位置は生成器で引く。"""
+    """各断片から一様に選んだ開始位置で長さ window の連続部分窓を切り出す（44.14 C4、44.15 CX4 と共有）。開始位置は生成器で引く。"""
     T = chunks.size(1)
     w = min(window, T)
     if w >= T:
@@ -408,7 +412,7 @@ def latent_step(trainer, model, batch: dict, h_rep: torch.Tensor, y_rep: torch.T
 
 
 def raw_window_step(trainer, model, batch: dict, rep: torch.Tensor) -> float:
-    """新しいタスクのバッチ（全長）と切り出した窓の再生（短い系列）で 1 回更新する（44.14 C4）。
+    """新しいタスクのバッチ（全長）と切り出した窓の再生（短い系列）で 1 回更新する（44.14 C4、44.15 CX4 と共有）。
 
     長さの違う系列は連結できないため、損失は断片数で重みづけた平均にする
     （長さが揃っている場合は R の連結バッチの全位置平均と一致する。44.14 設計の損失の規則どおり）。
@@ -496,8 +500,8 @@ def run(mode: str, seed: int, data: dict, args, log=print, ckpt: str | None = No
         task_losses, nrep, ntok = [], 0, 0
         g_rep = torch.Generator().manual_seed(seed * 1000 + 700 + i)
         replay_on = args.replay_size > 0 and i > 0 and mode != "V"
-        # X4 は再生数を保存プール 4 本あたり 1 本にする（44.14）。それ以外は従来どおり args.replay_size。
-        r_phase = (max(1, len(memory) // 4) if mode == "X4" else args.replay_size) if replay_on else 0
+        # X4・CX4 は再生数を保存プール 4 本あたり 1 本にする（44.14/44.15）。それ以外は従来どおり args.replay_size。
+        r_phase = (max(1, len(memory) // 4) if mode in ("X4", "CX4") else args.replay_size) if replay_on else 0
         pool = torch.cat(memory.slots) if (replay_on and mode in EPISODIC_MODES) else None
         counts = torch.zeros(len(memory), dtype=torch.long) if pool is not None else None
         for epoch in range(args.epochs):
@@ -516,10 +520,10 @@ def run(mode: str, seed: int, data: dict, args, log=print, ckpt: str | None = No
                         rep = pool[k]
                         if mode == "S":
                             rep = shuffle_within(rep, g_rep)
-                        elif mode == "C4":
+                        elif mode in ("C4", "CX4"):
                             rep = crop_windows(rep, getattr(args, "window_len", WINDOW_LEN), g_rep)
                         ntok += int(rep.numel())
-                        if mode == "C4":  # 窓は長さが違うので連結せず、断片数で重みづけて損失を合成する
+                        if mode in ("C4", "CX4"):  # 窓は長さが違うので連結せず、断片数で重みづけて損失を合成する
                             loss_val = raw_window_step(trainer, model, batch, rep)
                         else:
                             batch = concat_replay(batch, rep)
@@ -609,9 +613,9 @@ def run(mode: str, seed: int, data: dict, args, log=print, ckpt: str | None = No
         res.update({"replay_counts_per_task": replay_counts, "replay_sizes_per_task": replay_sizes,
                     "replay_tokens_per_task": replay_tokens, "stored_eval": stored_eval,
                     "stored_gap": stored_gap, "stored_pairwise_jaccard": pairwise_jac})
-    if mode == "X4":
+    if mode in ("X4", "CX4"):
         res["replay_rule"] = "pool//4"
-    if mode == "C4":
+    if mode in ("C4", "CX4"):
         res["window_len"] = int(min(getattr(args, "window_len", WINDOW_LEN), args.max_seq_length))
     return res
 
@@ -632,9 +636,9 @@ def layer_of(args, mode: str | None = None) -> int:
 
 def tag_of(args) -> str:
     """結果ファイルの条件名（例: R_M64_r16, H2_M64_r16_pq16x8, HR2_M64_r16_pq16x8, G_M64_r16,
-    X4_M4_rdiv4, D4_M4_r16, C4_M4_r16）。"""
+    X4_M4_rdiv4, D4_M4_r16, C4_M4_r16, CX4_M4_rdiv4）。"""
     t = args.mode + (str(layer_of(args, args.mode)) if args.mode in ("H", "HR") else "")
-    if args.mode == "X4":  # 再生数は保存プール連動（4 本あたり 1 本）で、固定の r では書けない
+    if args.mode in ("X4", "CX4"):  # 再生数は保存プール連動（4 本あたり 1 本）で、固定の r では書けない
         t += f"_M{args.memory_per_task}_rdiv4"
     elif args.mode != "V":
         t += f"_M{args.memory_per_task}_r{args.replay_size}"
@@ -654,7 +658,7 @@ def main(argv=None):
     ap.add_argument("--pq-m", type=int, default=16)
     ap.add_argument("--pq-nbits", type=int, default=8)
     ap.add_argument("--prefix-len", type=int, default=PREFIX_LEN, help="G の保存する索引の長さ（44.13 設計で 16 に固定）")
-    ap.add_argument("--window-len", type=int, default=WINDOW_LEN, help="C4 の切り出し窓の長さ（44.14 設計で 64 に固定）")
+    ap.add_argument("--window-len", type=int, default=WINDOW_LEN, help="C4・CX4 の切り出し窓の長さ（44.14 設計で 64 に固定）")
     ap.add_argument("--europarl-dir", default=str(ROOT / "data" / "europarl_raw"))
     ap.add_argument("--langs", nargs="+", default=list(cf.LANGS))
     ap.add_argument("--per-lang-vocab", type=int, default=2500)

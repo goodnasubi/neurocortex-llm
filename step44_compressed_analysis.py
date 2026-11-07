@@ -2,6 +2,7 @@
 """ステップ44.12: 圧縮表現の再生（H2/H4）・生の断片（R）・頻度だけ（S）・計算量の対照（C）・下限（R_M4/R_r2）の比較と、
 事前登録した仮説 H1〜H5 の判定。ステップ44.13 の条件（HR: 再固定化、G: 生成的リプレイ）と仮説 s13_H1〜s13_H5 の判定、
 ステップ44.14 の条件（X4: 露出制限、D4: 多様性最大化の保存選択、C4: 切り出し再生）と仮説 s14_H0〜s14_H4 の判定も扱う。
+ステップ44.15 の条件（CX4: 切り出し再生と回数制限の併用）と仮説 s15_H0〜s15_H4 の判定も扱う。
 44.14 の主判定は F_ce ではなく文脈の利得（G_last_past）の回復である（44.13 の H4 の留保による）。
 
 使い方: python step44_compressed_analysis.py <結果ディレクトリ> <seed...> [--out analysis.json] [--ref44 <44.9 と 44.10 の eval>]
@@ -19,6 +20,7 @@ COND = {"V": "V", "R": "R_M64_r16", "S": "S_M64_r16", "C": "C_M64_r16", "H2": "H
         "H4": "H4_M64_r16_pq16x8", "R_M4": "R_M4_r16", "R_r2": "R_M64_r2"}
 COND13 = {"HR": "HR2_M64_r16_pq16x8", "G": "G_M64_r16"}  # 44.13 の条件（結果ファイルがある場合だけ読み込む）
 COND14 = {"X4": "X4_M4_rdiv4", "D4": "D4_M4_r16", "C4": "C4_M4_r16"}  # 44.14 の条件（同上）
+COND15 = {"CX4": "CX4_M4_rdiv4"}  # 44.15 の条件（同上）
 DECOMP = ("dCE_marg", "dG", "G_last_past", "G_diag", "CE_marg_last_past")
 LOWER = ca.LOWER_BETTER + ("dCE_marg", "CE_marg_last_past")  # dG・G は大きいほどよい
 METRICS = ca.METRICS + DECOMP
@@ -26,12 +28,13 @@ PAIRS = (("V", "H2"), ("R", "H2"), ("R", "H4"), ("V", "H4"), ("H2", "H4"), ("V",
          ("V", "C"), ("C", "R"), ("V", "R_M4"), ("V", "R_r2"), ("R_M4", "R"), ("R_r2", "R"),
          ("H2", "HR"), ("V", "HR"), ("HR", "R"), ("V", "G"), ("S", "G"), ("G", "R"), ("H2", "G"),
          ("R_M4", "X4"), ("R_M4", "D4"), ("R_M4", "C4"), ("X4", "R"), ("D4", "R"), ("C4", "R"),
-         ("V", "X4"), ("V", "D4"), ("V", "C4"), ("D4", "C4"))
+         ("V", "X4"), ("V", "D4"), ("V", "C4"), ("D4", "C4"),
+         ("R_M4", "CX4"), ("CX4", "R"), ("V", "CX4"), ("X4", "CX4"), ("C4", "CX4"))
 
 
 def load(d, seeds):
     runs = {}
-    for k, tag in {**COND, **COND13, **COND14}.items():
+    for k, tag in {**COND, **COND13, **COND14, **COND15}.items():
         paths = [Path(d) / f"{tag}_seed{s}.json" for s in seeds]
         if all(p.exists() for p in paths):
             runs[k] = [json.loads(p.read_text()) for p in paths]
@@ -47,7 +50,7 @@ def analyze(d, seeds):
     runs = load(d, seeds)
     for i, s in enumerate(seeds):
         assert len({tuple(runs[k][i]["order"]) for k in runs}) == 1, f"seed {s}: タスク順が一致しない"
-    out = {"seeds": list(seeds), "conditions": {k: {**COND, **COND13, **COND14}[k] for k in runs}, "phases": {},
+    out = {"seeds": list(seeds), "conditions": {k: {**COND, **COND13, **COND14, **COND15}[k] for k in runs}, "phases": {},
            "comparisons": {}, "hypotheses": {}, "drift_dose_response": []}
     for k, rs in runs.items():
         out["phases"][k] = {m: {"per_seed": [r["metrics"][m] for r in rs],
@@ -192,6 +195,69 @@ def analyze(d, seeds):
                 h[f"s14_H4_{k}_dG"] = (f"paired {c[f'R_M4->{k}_dG']['verdict_paired']} / "
                                        f"unpaired {c[f'R_M4->{k}_dG']['verdict_unpaired']}")
                 h[f"s14_H4_{k}_marg_worsened"] = bool(both(c[f"R_M4->{k}_dCE_marg"], "悪化"))
+    # ---- ステップ44.15 の事前登録（s15_H0〜s15_H4）。判定は文脈の利得 G_last_past の回復で行い、F_ce は H2 の
+    # 実用候補の判定規則でのみ X4 との比較で使う。基準は docs の 44.15 設計の通りで変えない。
+    G15 = lambda k: out["phases"][k]["G_last_past"]["mean"]
+    if {"R", "R_M4"} <= set(runs):
+        neg = G15("R_M4") < 0
+        below_r = both(c["R_M4->R_G_last_past"], "改善")  # R_M4 が R より両検定で小さい
+        h["s15_H0_reproduced"] = bool(neg and below_r)
+        h["s15_H0"] = ("文脈への過適合を再現した（R_M4 の G_last_past が負で、R より両検定で小さい）"
+                       if neg and below_r else
+                       "再現失敗（R_M4 の G_last_past が負: " + str(neg) + "、R より両検定で小さい: " + str(below_r) +
+                       "）。対策の判定より先に、環境差で現象が消えた可能性を優先して解釈する")
+    h1_ok = None
+    if "CX4" in runs and "R_M4" in runs:
+        recov_cx = both(c["R_M4->CX4_G_last_past"], "改善")
+        h1_ok = bool(recov_cx and G15("CX4") >= 0)
+        h["s15_H1_prevented"] = h1_ok
+        name15 = "切り出し再生と回数制限の併用は、保存数が少なくても文脈への過適合を防ぐ"
+        h["s15_H1"] = (name15 if h1_ok else
+                       f"{name15}、とは言えない（R_M4 より両検定で大きい: {recov_cx}、"
+                       f"CX4 の G_last_past が 0 以上: {G15('CX4') >= 0}）")
+        if {"V", "R"} <= set(runs):
+            h["s15_H1_share_CX4"] = float(np.mean(share(F("V"), F("CX4"), F("R"))))  # 記述的（判定には使わない）
+    if h1_ok is not None and "X4" in runs:
+        f_cx, f_x = float(np.mean(F("CX4"))), float(np.mean(F("X4")))
+        h["s15_H2_F_CX4_mean"], h["s15_H2_F_X4_mean"] = f_cx, f_x
+        f_le = f_cx <= f_x
+        h["s15_H2_F_not_worse_than_X4"] = bool(f_le)
+        if h1_ok and f_le:
+            h["s15_H2_candidate"] = "CX4"
+            h["s15_H2"] = (f"CX4 を残課題 (3) へ持っていく実用候補とする（H1 成立、かつ CX4 の F_ce 平均 {f_cx:.3f} が "
+                           f"X4 の {f_x:.3f} 以下）")
+        elif h1_ok:
+            h["s15_H2_candidate"] = "X4"
+            h["s15_H2"] = (f"併用は文脈は守るが忘却の保護で X4 に劣り、実用候補は X4 のまま"
+                           f"（CX4 の F_ce 平均 {f_cx:.3f} が X4 の {f_x:.3f} を上回る）")
+        else:
+            h["s15_H2_candidate"] = "X4"
+            h["s15_H2"] = ("併用は棄却し実用候補は X4（切り出しの利得は再生回数が多いときに限られ、"
+                           "回数制限のもとでは相殺される、と解釈を移す）")
+    if {"R_M4", "X4", "C4", "CX4"} <= set(runs):
+        # H3（記述的）: 要因計画の交互作用 (CX4 − X4) − (C4 − R_M4) を seed ごとに作り、平均と SE を出す
+        per = lambda k, m: np.array([r["metrics"][m] for r in runs[k]], dtype=float)
+        for m, key in (("G_last_past", "G_last_past"), ("F_ce", "F_ce")):
+            inter = (per("CX4", m) - per("X4", m)) - (per("C4", m) - per("R_M4", m))
+            h[f"s15_H3_interaction_{key}_mean"] = float(np.mean(inter))
+            h[f"s15_H3_interaction_{key}_se"] = float(np.std(inter, ddof=1) / np.sqrt(len(inter)))
+        h["s15_H3"] = (f"交互作用（記述的、(CX4 − X4) − (C4 − R_M4)）: G_last_past で "
+                       f"{h['s15_H3_interaction_G_last_past_mean']:+.3f}（SE {h['s15_H3_interaction_G_last_past_se']:.3f}）、"
+                       f"F_ce で {h['s15_H3_interaction_F_ce_mean']:+.3f}（SE {h['s15_H3_interaction_F_ce_se']:.3f}）。"
+                       "正の G の交互作用は切り出しの効果が回数制限のもとで増幅したこと、負は相殺されたことを示す")
+    if "CX4" in runs and "R_M4" in runs:
+        # H4（記述的）: CX4 の F_ce の改善を dCE_marg（頻度）と dG（文脈）に分解する（対 R_M4 と対 X4）
+        h["s15_H4_CX4_dCE_marg"] = (f"paired {c['R_M4->CX4_dCE_marg']['verdict_paired']} / "
+                                    f"unpaired {c['R_M4->CX4_dCE_marg']['verdict_unpaired']}")
+        h["s15_H4_CX4_dG"] = (f"paired {c['R_M4->CX4_dG']['verdict_paired']} / "
+                              f"unpaired {c['R_M4->CX4_dG']['verdict_unpaired']}")
+        h["s15_H4_CX4_marg_worsened"] = bool(both(c["R_M4->CX4_dCE_marg"], "悪化"))
+        if "X4" in runs:
+            h["s15_H4_CX4_vs_X4_dCE_marg"] = (f"paired {c['X4->CX4_dCE_marg']['verdict_paired']} / "
+                                              f"unpaired {c['X4->CX4_dCE_marg']['verdict_unpaired']}")
+            h["s15_H4_CX4_vs_X4_dG"] = (f"paired {c['X4->CX4_dG']['verdict_paired']} / "
+                                        f"unpaired {c['X4->CX4_dG']['verdict_unpaired']}")
+            h["s15_H4_CX4_vs_X4_marg_worsened"] = bool(both(c["X4->CX4_dCE_marg"], "悪化"))
     return out
 
 
