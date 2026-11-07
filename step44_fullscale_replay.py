@@ -143,12 +143,24 @@ def check_clean_tree(allow: bool = False) -> str | None:
 
 
 def write_checkpoint(path: str, state: dict) -> str:
-    """一時ファイルへ書いてから置き換え、SHA-256 のサイドカー（<path>.sha256）を添える。"""
+    """サイドカーを先に確定させ、本体（<path>）を最後に置く順序で保存する。
+
+    本体を一時ファイルへ書き切ってハッシュを計算し、サイドカー（<path>.sha256）を
+    一時ファイル経由で確定させてから、本体を最終名へ rename する。このため最終形の
+    本体が見える時点では、対応するサイドカーが必ず存在して一致する。逆に、本体の
+    rename より前にプロセスが死んだ場合は最終名の組は前回保存の一貫した組のまま
+    残る（本体だけ・サイドカーだけが新しい状態にはならない）。残った一時ファイル
+    （<path>.tmp / <path>.sha256.tmp）は再開側では無視され、次回の保存時に掃除される。
+    """
     tmp = f"{path}.tmp"
+    side_tmp = f"{path}.sha256.tmp"
+    Path(tmp).unlink(missing_ok=True)
+    Path(side_tmp).unlink(missing_ok=True)
     torch.save(state, tmp)
+    digest = sha256_file(Path(tmp))
+    Path(side_tmp).write_text(digest + "\n")
+    Path(side_tmp).replace(f"{path}.sha256")
     Path(tmp).replace(path)
-    digest = sha256_file(Path(path))
-    Path(f"{path}.sha256").write_text(digest + "\n")
     return digest
 
 

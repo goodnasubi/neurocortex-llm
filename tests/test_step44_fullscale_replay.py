@@ -173,6 +173,97 @@ def test_tag_of_matches_analysis():
         assert fs.tag_of(mode) == tag
 
 
+# ---------------------------------------------------------------- チェックポイントの保存順序
+# 本体（.pt）が最終名で見える時点では、対応するサイドカーが既に存在して一致すること。
+# 旧順序（本体を置いてからハッシュ計算→サイドカー書き）は、ハッシュ計算中に死ぬと
+# サイドカーの無い本体が残り、再開できなかった（44.16 パイロットで実証）。
+
+def test_checkpoint_replace_order_sidecar_first(tmp_path, monkeypatch):
+    order = []
+    orig_replace = Path.replace
+
+    def recording(self, target):
+        order.append(str(target))
+        return orig_replace(self, target)
+
+    monkeypatch.setattr(Path, "replace", recording)
+    ck = str(tmp_path / "ck.pt")
+    fs.write_checkpoint(ck, {"v": 1})
+    assert order == [f"{ck}.sha256", ck]  # サイドカーが先、本体が最後
+    assert fs.verify_checkpoint(ck)
+
+
+def test_checkpoint_format_compatible_with_pilot(tmp_path):
+    # パイロットで作られた形式（本体＋「16進64桁＋改行」のサイドカー）がそのまま検証できる
+    ck = str(tmp_path / "ck.pt")
+    digest = fs.write_checkpoint(ck, {"v": 1})
+    side = Path(f"{ck}.sha256").read_bytes()
+    assert side == (digest + "\n").encode() and len(side) == 65
+    assert digest == fs.sha256_file(Path(ck))
+    # 旧手順で手書きした組も検証できる（形式互換）
+    ck2 = str(tmp_path / "ck2.pt")
+    torch.save({"v": 2}, ck2)
+    Path(f"{ck2}.sha256").write_text(fs.sha256_file(Path(ck2)) + "\n")
+    assert fs.verify_checkpoint(ck2)
+
+
+def test_checkpoint_crash_during_save_keeps_previous_pair(tmp_path, monkeypatch):
+    ck = str(tmp_path / "ck.pt")
+    fs.write_checkpoint(ck, {"v": 1})
+    assert fs.verify_checkpoint(ck)
+
+    def dying_save(state, dest):
+        Path(dest).write_bytes(b"partial")  # 書きかけを残して死ぬ
+        raise RuntimeError("simulated crash")
+
+    monkeypatch.setattr(fs.torch, "save", dying_save)
+    with pytest.raises(RuntimeError):
+        fs.write_checkpoint(ck, {"v": 2})
+    monkeypatch.undo()
+    # 前回の組は壊れておらず、そのまま再開に使える
+    assert fs.verify_checkpoint(ck)
+    assert torch.load(ck, weights_only=False)["v"] == 1
+    # 次の正常な保存で一時ファイルは掃除され、新しい組が検証できる
+    fs.write_checkpoint(ck, {"v": 3})
+    assert fs.verify_checkpoint(ck)
+    assert torch.load(ck, weights_only=False)["v"] == 3
+    assert not Path(f"{ck}.tmp").exists() and not Path(f"{ck}.sha256.tmp").exists()
+
+
+def test_checkpoint_crash_before_body_rename_never_shows_new_body(tmp_path, monkeypatch):
+    ck = str(tmp_path / "ck.pt")
+    fs.write_checkpoint(ck, {"v": 1})
+    orig_replace = Path.replace
+
+    def flaky(self, target):
+        if str(target) == ck:  # 本体の rename の直前で死ぬ
+            raise RuntimeError("simulated crash")
+        return orig_replace(self, target)
+
+    monkeypatch.setattr(Path, "replace", flaky)
+    with pytest.raises(RuntimeError):
+        fs.write_checkpoint(ck, {"v": 2})
+    monkeypatch.undo()
+    # 新しい本体がサイドカー無しで見えることはない（本体は旧いまま）
+    assert torch.load(ck, weights_only=False)["v"] == 1
+    # 次の正常な保存で一貫した組に戻る
+    fs.write_checkpoint(ck, {"v": 2})
+    assert fs.verify_checkpoint(ck)
+    assert torch.load(ck, weights_only=False)["v"] == 2
+
+
+def test_checkpoint_stale_temp_files_only(tmp_path):
+    # 一時ファイルだけが残った状態: 最終形は存在せず、検証は False で壊れない
+    ck = str(tmp_path / "ck.pt")
+    Path(f"{ck}.tmp").write_bytes(b"partial")
+    Path(f"{ck}.sha256.tmp").write_text("0" * 64 + "\n")
+    assert not Path(ck).exists() and not fs.verify_checkpoint(ck)
+    # そのまま新規保存でき、一時ファイルは残らない
+    fs.write_checkpoint(ck, {"v": 1})
+    assert fs.verify_checkpoint(ck)
+    assert not Path(f"{ck}.tmp").exists() and not Path(f"{ck}.sha256.tmp").exists()
+
+
 # ---------------------------------------------------------------- 解析の s16 判定
 
 def _fake_run(mode, seed, f, g_gain, commit="abc123"):
