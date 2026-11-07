@@ -132,7 +132,9 @@ def summarize(acc: list[list[float]], ce: list[list[float]]) -> dict[str, float]
 # ---------------------------------------------------------------- 学習
 
 def make_config(phase: str, args) -> Step444Config:
-    return Step444Config(phase=phase, device="cpu", fp16=False, max_seq_length=args.max_seq_length,
+    # device は args に無い呼び出し元（44.9 以来の各ステップ）では従来どおり "cpu"。
+    return Step444Config(phase=phase, device=getattr(args, "device", "cpu") or "cpu", fp16=False,
+                         max_seq_length=args.max_seq_length,
                          hidden_size=args.hidden_size, num_layers=args.num_layers, nhead=args.nhead,
                          batch_size=args.batch_size, learning_rate=args.lr,
                          gradient_accumulation_steps=args.grad_accum)
