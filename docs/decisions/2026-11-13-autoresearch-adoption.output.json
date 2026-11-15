@@ -1,0 +1,29 @@
+{
+  "model": "jev-1.13.0",
+  "answers": {
+    "budget_unit": {
+      "type": "choice",
+      "choice": "fraction",
+      "confidence": 0.83,
+      "probabilities": {
+        "both": 0.11,
+        "fraction": 0.89,
+        "wallclock": 0.0
+      }
+    },
+    "metric_location": {
+      "type": "choice",
+      "choice": "design_ref",
+      "confidence": 0.98,
+      "probabilities": {
+        "both_full": 0.0,
+        "design_ref": 0.99,
+        "program_only": 0.01
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 1172,
+    "output_tokens": 81
+  }
+}
